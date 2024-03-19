@@ -1,0 +1,19 @@
+# edit
+.vscode
+.ipynb_checkpoints
+
+# venv/
+/venv/
+
+# Python : Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+docs/_build
+
