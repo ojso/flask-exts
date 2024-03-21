@@ -1,19 +1,31 @@
-# edit
+### vscode
 .vscode
+
+### JupyterNotebooks ###
 .ipynb_checkpoints
+*/.ipynb_checkpoints/*
 
-# venv/
-/venv/
-
-# Python : Byte-compiled / optimized / DLL files
+### Python ###
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Environments
+venv/
+
+# Distribution / packaging
+dist/
+build/
+
+# Unit test / coverage reports
 .cache/
 .pytest_cache/
 .coverage
 htmlcov/
-dist/
-build/
-docs/_build
 
+# Translations
+*.mo
+
+# Sphinx documentation
+docs/_build/
