@@ -33,11 +33,13 @@ class TestBabel:
             assert "中国标准时间" in format_datetime(datetime.now(), "full")
             # print(format_datetime(datetime.now()))
 
-    def test_babel(self,app):
+    def test_babel(self, app):
         with app.test_request_context():
-            text = "copy"
-            text_zh = "copy"
-            assert gettext(text) == text
+            text = "Home"
+            gettext("Home")
+            text_en = "Main Page"
+            text_zh = "主页"
+            assert gettext(text) == text_en
             session["lang"] = "zh"
             refresh()
             assert gettext(text) == text_zh
@@ -45,9 +47,10 @@ class TestBabel:
     def test_admin_translation(self, app):
         with app.test_request_context():
             text = "Home"
-            # text_zh = "首页"
-            text_zh = "Home"
-            assert admin_gettext(text) == text
+            text_en = "Home"
+            text_zh = "首页"
+            assert admin_gettext(text) == text_en
             session["lang"] = "zh"
             refresh()
             assert admin_gettext(text) == text_zh
+

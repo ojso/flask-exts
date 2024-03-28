@@ -14,6 +14,8 @@ Welcome to Flask-Exts's documentation!
 
    usage
    api
+   develop
+   translation
    changes
 
 Indices and tables
