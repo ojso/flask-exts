@@ -1,8 +1,8 @@
 Translations
 ============
 
-flask-exts
---------------
+src
+---
 
 pybabel::
 
@@ -17,15 +17,15 @@ pybabel::
     pybabel update -i src/flask_exts/translations/admin.pot -d src/flask_exts/translations -D admin 
 
     # edit
-     open the '.po' file
+    open the '.po' file
 
     # compile message catalogs to MO files
 
-    pybabel compile -d src/flask_exts/translations -D admin 
+    $ pybabel compile -d src/flask_exts/translations -D admin 
 
 
 tests
---------
+-----
 
 pybabel::
 
