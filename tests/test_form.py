@@ -36,6 +36,7 @@ class TestForm:
             assert "csrf_token" in form
 
     def test_flask_form(self, app):
+        app.config.update(CSRF_ENABLED=True)
         with app.test_request_context():
             form = FlaskBabelCsrfForm()
             assert "name" in form

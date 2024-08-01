@@ -39,5 +39,6 @@ Publish
 
 .. code-block:: console
 
+    $ pip install -r requirements/build.in
     $ python -m build
 

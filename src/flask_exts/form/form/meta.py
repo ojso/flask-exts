@@ -10,7 +10,8 @@ from .csrf import FlaskFormCSRF
 from ..helpers import get_form_data
 
 
-CSRF_ENABLED = True
+# CSRF_ENABLED = True
+CSRF_ENABLED = False
 CSRF_FIELD_NAME = "csrf_token"
 CSRF_TIME_LIMIT = 1800
 

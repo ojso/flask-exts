@@ -4,7 +4,7 @@ from .babel.babel_setting import flask_babel_init_app
 class Manager:
     """This is used to manager babel,form,admin."""
 
-    def init_flask_babel(self,app):
+    def init_flask_babel(self, app):
         flask_babel_init_app(app)
 
     def __init__(self, app=None):
@@ -19,5 +19,5 @@ class Manager:
 
         app.extensions["manager"] = self
 
-        if 'babel' not in app.extensions:
+        if "babel" not in app.extensions:
             self.init_flask_babel(app)
