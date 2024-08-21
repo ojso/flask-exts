@@ -7,6 +7,7 @@ Install
 .. code-block:: console
 
     $ pip install -e .
+    $ pip install -r requirements/develop.in
 
 Test
 ----
@@ -16,7 +17,7 @@ To run the tests, from the project directory:
 .. code-block:: console
 
     # requirements
-    $ pip install -r requirements/test.in
+    $ pip install -r requirements/test.in    
 
     # update translation
     $ pybabel compile -d src/flask_exts/translations -D admin

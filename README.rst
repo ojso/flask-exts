@@ -5,6 +5,7 @@ Flask-Exts is mainly inspired by:
 
 - `WTForms <https://github.com/wtforms/wtforms/>`_
 - `Flask-WTF <https://github.com/wtforms/flask-wtf/>`_
+- `Bootstrap-Flask <https://github.com/helloflask/bootstrap-flask>`_
 - `Flask-Admin <https://github.com/flask-admin/flask-admin/>`_
 
 Flask-Exts is part rewrited from above and well tested.

@@ -1,3 +1,10 @@
+v0.1.5
+------
+
+Released 2024-08-21
+
+- bootstrap templates
+
 v0.1.4
 ------
 
