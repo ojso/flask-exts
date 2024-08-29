@@ -2,10 +2,13 @@
 field
 ======
 
+FileUpload
+==================
+
 .. module:: flask_exts.form.fields.upload
 
 The FileUploadField class
------------------------------
+----------------------------------
 
 .. class:: FileUploadField
 
@@ -18,7 +21,7 @@ The FileUploadField class
             upload = FileUploadField("Upload", base_path=path)
 
 The FileUploadField class
------------------------------
+----------------------------------
 
 .. class:: ImageUploadField
 

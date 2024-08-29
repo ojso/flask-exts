@@ -3,7 +3,7 @@ import datetime
 from wtforms import fields as wtforms_fields
 from ..widgets.datetime import DateTimePickerWidget
 from ..widgets.datetime import TimePickerWidget
-from ..babel import gettext
+from ...babel import gettext
 
 
 class DateTimeField(wtforms_fields.DateTimeField):

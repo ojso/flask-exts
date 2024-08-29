@@ -11,7 +11,7 @@ from flask import url_for
 from ..widgets.upload import FileUploadInput
 from ..widgets.upload import ImageUploadInput
 
-from ..babel import gettext
+from ...babel import gettext
 
 # Helpers
 def namegen_filename(obj, file_data):

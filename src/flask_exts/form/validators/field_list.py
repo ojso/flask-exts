@@ -1,5 +1,5 @@
 from wtforms.validators import StopValidation
-from ..babel import gettext
+from ...babel import gettext
 
 
 class FieldListInputRequired:

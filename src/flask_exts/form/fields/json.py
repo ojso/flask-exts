@@ -1,6 +1,6 @@
 import json
 from wtforms.fields import TextAreaField
-from ..babel import gettext
+from ...babel import gettext
 
 class JSONField(TextAreaField):
     def process_formdata(self, valuelist):

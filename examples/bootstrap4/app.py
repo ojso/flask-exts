@@ -22,12 +22,12 @@ app.config["TEMPLATE_NAME"] = "bootstrap"
 app.config["BOOTSTRAP_VERSION"] = 4
 
 # custom urls of css and js
-# app.config["JQUERY_JS_URL"] = "https://www.ojso.com/vendor/jquery/dist/jquery.slim.js"
-# app.config["BOOTSTRAP_CSS_URL"] = "https://www.ojso.com/vendor/bootstrap4/dist/css/bootstrap.css"
-# app.config["BOOTSTRAP_JS_URL"] = "https://www.ojso.com/vendor/bootstrap4/dist/js/bootstrap.bundle.js"
+# app.config["JQUERY_JS_URL"] = "/vendor/jquery/dist/jquery.slim.js"
+# app.config["BOOTSTRAP_CSS_URL"] = "/vendor/bootstrap4/dist/css/bootstrap.css"
+# app.config["BOOTSTRAP_JS_URL"] = "/vendor/bootstrap4/dist/js/bootstrap.bundle.js"
 
 # icon sprite
-# app.config["ICON_SPRITE_URL"] = "https://www.ojso.com/vendor/bootstrap-icons/bootstrap-icons.svg"
+# app.config["ICON_SPRITE_URL"] = "/vendor/bootstrap-icons/bootstrap-icons.svg"
     
 # set default button sytle and size, will be overwritten by macro parameters
 app.config['BOOTSTRAP_BTN_STYLE'] = 'primary'

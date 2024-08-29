@@ -30,7 +30,6 @@ dependencies = [
     "WTForms>=3.0",
     "flask-babel>=4.0",
     "Flask-SQLAlchemy>=3.0",
-    "pillow>=10.0",
 ]
 
 [project.urls]

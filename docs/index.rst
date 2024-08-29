@@ -15,8 +15,10 @@ Welcome to Flask-Exts's documentation!
    usage
    api
    form
+   templating
    develop
    translation
+   examples
    changes
 
 Indices and tables

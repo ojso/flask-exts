@@ -1,8 +1,9 @@
+=======
 Develop
 =======
 
 Install
--------
+=======
 
 .. code-block:: console
 
@@ -10,7 +11,7 @@ Install
     $ pip install -r requirements/develop.in
 
 Test
-----
+====
 Tests are run with `pytest <https://pytest.org/>`_.
 To run the tests, from the project directory:
 
@@ -27,7 +28,7 @@ To run the tests, from the project directory:
     $ pytest
 
 Docs
-----
+====
 
 .. code-block:: console
 
@@ -36,7 +37,7 @@ Docs
     $ make html
 
 Publish
---------
+=======
 
 .. code-block:: console
 

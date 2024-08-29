@@ -25,11 +25,11 @@ app.config["BOOTSTRAP_VERSION"] = 5
 
 # custom urls of css and js
 
-# app.config["BOOTSTRAP_CSS_URL"] = "https://www.ojso.com/vendor/bootstrap/dist/css/bootstrap.css"
-# app.config["BOOTSTRAP_JS_URL"] = "https://www.ojso.com/vendor/bootstrap/dist/js/bootstrap.bundle.js"
+# app.config["BOOTSTRAP_CSS_URL"] = "/vendor/bootstrap/dist/css/bootstrap.css"
+# app.config["BOOTSTRAP_JS_URL"] = "/vendor/bootstrap/dist/js/bootstrap.bundle.js"
 
 # icon sprite
-# app.config["ICON_SPRITE_URL"] = "https://www.ojso.com/vendor/bootstrap-icons/bootstrap-icons.svg"
+# app.config["ICON_SPRITE_URL"] = "/vendor/bootstrap-icons/bootstrap-icons.svg"
 
 
 # set default button sytle and size, will be overwritten by macro parameters

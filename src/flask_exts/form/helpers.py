@@ -4,7 +4,7 @@ from wtforms.validators import DataRequired, InputRequired
 from flask import request
 from flask import flash
 from .validators.field_list import FieldListInputRequired
-from .babel import gettext
+from ..babel import gettext
 
 SUBMIT_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
@@ -60,11 +60,3 @@ def is_required_form_field(field):
         if isinstance(validator, (DataRequired, InputRequired, FieldListInputRequired)):
             return True
     return False
-
-
-class FormOpts(object):
-    __slots__ = ["widget_args", "form_rules"]
-
-    def __init__(self, widget_args=None, form_rules=None):
-        self.widget_args = widget_args or {}
-        self.form_rules = form_rules

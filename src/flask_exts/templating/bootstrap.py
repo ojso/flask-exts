@@ -2,8 +2,8 @@ from flask import current_app
 from flask import Blueprint
 from markupsafe import Markup
 
-from .utils import is_hidden_field_filter
-from .utils import get_table_titles
+from ..utils import is_hidden_field_filter
+from ..utils import get_table_titles
 
 DEFAULT_BOOTSTRAP_VERSION = 4
 CDN_JSDELIVR = "https://cdn.jsdelivr.net/npm"

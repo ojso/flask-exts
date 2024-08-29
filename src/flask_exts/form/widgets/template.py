@@ -1,5 +1,5 @@
 from flask import current_app
-from ..babel import gettext, ngettext
+from ...babel import gettext,ngettext
 from ... import helpers as h
 
 
