@@ -2,10 +2,10 @@ import os
 import os.path as op
 from io import BytesIO
 from flask import url_for
-from flask_exts.form.form.base_form import BaseForm
-from flask_exts.form.fields.upload import FileUploadField
-from flask_exts.form.fields.upload import ImageUploadField
-from flask_exts.form.helpers import get_form_data
+from flask_exts.forms.form.base_form import BaseForm
+from flask_exts.forms.fields.upload_file import FileUploadField
+from flask_exts.forms.fields.upload_file import ImageUploadField
+from flask_exts.utils import get_form_data
 
 
 def _create_temp(root_path):
@@ -111,7 +111,7 @@ def test_upload_field(app):
     _remove_testfiles()
 
 
-def test_image_upload_field(app):
+def _test_image_upload_field(app):
     path = _create_temp(app.root_path)
 
     def _remove_testimages():

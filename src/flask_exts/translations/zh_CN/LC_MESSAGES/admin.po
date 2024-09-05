@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-03-28 20:03+0800\n"
+"POT-Creation-Date: 2024-09-06 07:24+0800\n"
 "PO-Revision-Date: 2024-03-28 20:03+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -18,7 +18,53 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.14.0\n"
 
-#: src/flask_exts/babel/babel_text.py:2
+#: src/flask_exts/forms/fields/datetime.py:100
+msgid "Invalid time format"
+msgstr ""
+
+#: src/flask_exts/forms/fields/json.py:15
+msgid "Invalid JSON"
+msgstr ""
+
+#: src/flask_exts/forms/fields/select.py:62
+msgid "Invalid Choice: could not coerce"
+msgstr ""
+
+#: src/flask_exts/forms/fields/upload_file.py:108
+msgid "Invalid file extension"
+msgstr ""
+
+#: src/flask_exts/forms/fields/upload_file.py:118
+#: src/flask_exts/forms/fields/upload_file.py:186
+#, python-format
+msgid "File \"%s\" already exists."
+msgstr ""
+
+#: src/flask_exts/forms/form/csrf.py:51
+msgid "CSRF token expired."
+msgstr ""
+
+#: src/flask_exts/forms/validators/field_list.py:13
+msgid "This field requires at least one item."
+msgstr ""
+
+#: src/flask_exts/forms/validators/file.py:18
+msgid "This field is required."
+msgstr ""
+
+#: src/flask_exts/forms/validators/file.py:53
+msgid "File does not have an approved extension: {extensions}"
+msgstr ""
+
+#: src/flask_exts/forms/validators/file.py:61
+msgid "File does not have an approved extension."
+msgstr ""
+
+#: src/flask_exts/forms/validators/file.py:97
+msgid "File must be between {min_size} and {max_size} bytes."
+msgstr ""
+
+#: src/flask_exts/templates/demo.html:3
 msgid "Home"
 msgstr "首页"
 

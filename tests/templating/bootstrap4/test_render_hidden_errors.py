@@ -1,11 +1,11 @@
 from flask import render_template_string
-from flask_exts.form.form.base_form import BaseForm
+from flask_exts.forms.form.flask_form import FlaskForm
 from wtforms import HiddenField, SubmitField
 from wtforms.validators import DataRequired
 
 
 def test_render_hidden_errors(app, client):
-    class TestForm(BaseForm):
+    class TestForm(FlaskForm):
         hide = HiddenField("Hide", validators=[DataRequired("Hide field is empty.")])
         submit = SubmitField()
 

@@ -1,13 +1,12 @@
 from flask import current_app
 from flask import session
-from flask import request
 
 from werkzeug.utils import cached_property
 from wtforms.meta import DefaultMeta
 from wtforms.i18n import get_translations
 from flask_babel import get_locale
 from .csrf import FlaskFormCSRF
-from ..helpers import get_form_data
+from ...utils import get_form_data
 
 
 # CSRF_ENABLED = True

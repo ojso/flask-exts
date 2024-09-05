@@ -2,9 +2,9 @@ import pytest
 from flask import g
 from wtforms import StringField
 from wtforms.validators import DataRequired
-from flask_exts.form.form.base_form import BaseForm
-from flask_exts.form.form.secure_form import SecureForm
-from flask_exts.form.form.flask_form import FlaskForm
+from flask_exts.forms.form.base_form import BaseForm
+from flask_exts.forms.form.secure_form import SecureForm
+from flask_exts.forms.form.flask_form import FlaskForm
 
 
 class BasicForm(BaseForm):
@@ -36,6 +36,16 @@ class TestForm:
             assert "csrf_token" in form
 
     def test_flask_form(self, app):
+        with app.test_request_context():
+            form = FlaskBabelCsrfForm()
+            assert "name" in form
+            assert "csrf_token" not in form
+            data = {"name": "test"}
+            form.process(data=data)
+            assert form.name.data == "test"
+            assert form.validate()
+
+    def test_flask_form_csrf(self, app):
         app.config.update(CSRF_ENABLED=True)
         with app.test_request_context():
             form = FlaskBabelCsrfForm()

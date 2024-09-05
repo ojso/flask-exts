@@ -11,8 +11,8 @@ from wtforms import (
     DecimalRangeField,
 )
 from wtforms.validators import DataRequired
-from flask_exts.form.form.base_form import BaseForm
-from flask_exts.form.fields.switch import SwitchField
+from flask_exts.forms.form.flask_form import FlaskForm
+from flask_exts.forms.fields.switch import SwitchField
 
 
 def test_render_form(app, client, hello_form):
@@ -35,7 +35,7 @@ def test_render_form(app, client, hello_form):
 
 # test WTForm field description for BooleanField
 def test_form_description_for_booleanfield(app, client):
-    class TestForm(BaseForm):
+    class TestForm(FlaskForm):
         remember = BooleanField("Remember me", description="Just check this")
 
     @app.route("/description")
@@ -57,7 +57,7 @@ def test_form_description_for_booleanfield(app, client):
 
 # test render SwitchField
 def test_switch_field(app, client):
-    class TestForm(BaseForm):
+    class TestForm(FlaskForm):
         remember = SwitchField("Remember me", description="Just check this")
 
     @app.route("/switch")
@@ -80,7 +80,7 @@ def test_switch_field(app, client):
 
 # test render IntegerRangeField and DecimalRangeField
 def test_range_fields(app, client):
-    class TestForm(BaseForm):
+    class TestForm(FlaskForm):
         decimal_slider = DecimalRangeField()
         integer_slider = IntegerRangeField(render_kw={"min": "0", "max": "4"})
 
@@ -104,10 +104,10 @@ def test_range_fields(app, client):
 
 # test WTForm fields for render_form and render_field
 def test_render_form_enctype(app, client):
-    class SingleUploadForm(BaseForm):
+    class SingleUploadForm(FlaskForm):
         avatar = FileField("Avatar")
 
-    class MultiUploadForm(BaseForm):
+    class MultiUploadForm(FlaskForm):
         photos = MultipleFileField("Multiple photos")
 
     @app.route("/single")
@@ -143,7 +143,7 @@ def test_render_form_enctype(app, client):
 
 # test render_kw class for WTForms field
 def test_form_render_kw_class(app, client):
-    class TestForm(BaseForm):
+    class TestForm(FlaskForm):
         username = StringField("Username")
         password = PasswordField("Password", render_kw={"class": "my-password-class"})
         submit = SubmitField(render_kw={"class": "my-awesome-class"})
@@ -257,7 +257,7 @@ def test_button_style(app, client, hello_form):
 
 
 def test_error_message_for_radiofield_and_booleanfield(app, client):
-    class TestForm(BaseForm):
+    class TestForm(FlaskForm):
         remember = BooleanField("Remember me", validators=[DataRequired()])
         option = RadioField(
             choices=[

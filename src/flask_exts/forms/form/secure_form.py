@@ -10,7 +10,6 @@ from .base_form import BaseForm
 class SecureForm(BaseForm):
     """
     BaseForm with CSRF token generation and validation support.
-    Requires WTForms 2+
     """
 
     class Meta:

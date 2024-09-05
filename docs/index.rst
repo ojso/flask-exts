@@ -14,7 +14,7 @@ Welcome to Flask-Exts's documentation!
 
    usage
    api
-   form
+   forms
    templating
    develop
    translation

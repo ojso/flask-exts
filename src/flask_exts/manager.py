@@ -17,8 +17,8 @@ class Manager:
 
         app.extensions["manager"] = self
 
-        if "babel" not in app.extensions:
+        if app.config.get("BABEL_ENABLED", True) and "babel" not in app.extensions:
             flask_babel_init_app(app)
 
-        if "template" not in app.extensions:
+        if app.config.get("TEMPLATE_ENABLED", True) and "template" not in app.extensions:
             template_init_app(app)

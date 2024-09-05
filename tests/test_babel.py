@@ -1,4 +1,3 @@
-import pytest
 from datetime import datetime
 from flask import session
 from flask_babel import get_locale

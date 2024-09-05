@@ -1,5 +1,4 @@
 from flask import current_app
-from flask import Blueprint
 from markupsafe import Markup
 
 from ..utils import is_hidden_field_filter
@@ -37,17 +36,12 @@ class Bootstrap:
             self.init_app(app)
 
     def init_app(self, app):
+        app.extensions["templating"] = self
+
         if app.config.get("BOOTSTRAP_VERSION"):
             self.bootstrap_version = app.config["BOOTSTRAP_VERSION"]
         else:
             self.bootstrap_version = DEFAULT_BOOTSTRAP_VERSION
-
-        if not hasattr(app, "extensions"):
-            app.extensions = {}
-        app.extensions["templating"] = self
-
-        blueprint = Blueprint("bootstrap", __name__, template_folder="../templates")
-        app.register_blueprint(blueprint)
 
         app.jinja_env.globals["bootstrap"] = self
         app.jinja_env.globals["bootstrap_is_hidden_field"] = is_hidden_field_filter
