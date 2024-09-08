@@ -7,7 +7,7 @@ src
 pybabel::
 
     # extract messages from source files and generate a POT file
-    pybabel extract -F babel.cfg -o src/flask_exts/translations/admin.pot src/
+    pybabel extract -F babel.cfg -k _gettext -o src/flask_exts/translations/admin.pot src/
 
     # create new message catalogs from a POT file
     pybabel init -i src/flask_exts/translations/admin.pot -d src/flask_exts/translations -D admin -l en

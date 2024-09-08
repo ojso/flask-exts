@@ -1,6 +1,6 @@
 import json
 from wtforms.fields import TextAreaField
-from ...babel import gettext
+from ...babel import _gettext
 
 class JSONField(TextAreaField):
     def process_formdata(self, valuelist):
@@ -12,7 +12,7 @@ class JSONField(TextAreaField):
                 self.data = json.loads(valuelist[0])
             except ValueError:
                 # raise ValueError(self.gettext('Invalid JSON'))
-                raise ValueError(gettext("Invalid JSON"))
+                raise ValueError(_gettext("Invalid JSON"))
 
     def _value(self):
         if self.data:

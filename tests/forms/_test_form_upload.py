@@ -3,9 +3,9 @@ import os.path as op
 from io import BytesIO
 from flask import url_for
 from flask_exts.forms.form.base_form import BaseForm
-from flask_exts.forms.fields.upload_file import FileUploadField
+from flask_exts.forms.fields.upload_file import UploadFileField
 from flask_exts.forms.fields.upload_file import ImageUploadField
-from flask_exts.utils import get_form_data
+from flask_exts.utils import get_formdata
 
 
 def _create_temp(root_path):
@@ -35,10 +35,10 @@ def test_upload_field(app):
         safe_delete(path, "test2.txt")
 
     class TestForm(BaseForm):
-        upload = FileUploadField("Upload", base_path=path)
+        upload = UploadFileField("Upload", base_path=path)
 
     class TestNoOverWriteForm(BaseForm):
-        upload = FileUploadField("Upload", base_path=path, allow_overwrite=False)
+        upload = UploadFileField("Upload", base_path=path, allow_overwrite=False)
 
     class Dummy:
         pass
@@ -54,7 +54,7 @@ def test_upload_field(app):
     with app.test_request_context(
         method="POST", data={"upload": (BytesIO(b"Hello World 1"), "test1.txt")}
     ):
-        my_form = TestForm(get_form_data())
+        my_form = TestForm(get_formdata())
 
         assert my_form.validate()
 
@@ -67,7 +67,7 @@ def test_upload_field(app):
     with app.test_request_context(
         method="POST", data={"upload": (BytesIO(b"Hello World 2"), "test2.txt")}
     ):
-        my_form = TestForm(get_form_data())
+        my_form = TestForm(get_formdata())
 
         assert my_form.validate()
         my_form.populate_obj(dummy)
@@ -79,7 +79,7 @@ def test_upload_field(app):
     # Check delete
     with app.test_request_context(method="POST", data={"_upload-delete": "checked"}):
 
-        my_form = TestForm(get_form_data())
+        my_form = TestForm(get_formdata())
 
         assert my_form.validate()
 
@@ -94,7 +94,7 @@ def test_upload_field(app):
     with app.test_request_context(
         method="POST", data={"upload": (BytesIO(b"Hullo"), "test1.txt")}
     ):
-        my_form_ow = TestNoOverWriteForm(get_form_data())
+        my_form_ow = TestNoOverWriteForm(get_formdata())
 
         assert my_form_ow.validate()
         my_form_ow.populate_obj(dummy)
@@ -104,7 +104,7 @@ def test_upload_field(app):
     with app.test_request_context(
         method="POST", data={"upload": (BytesIO(b"Hullo"), "test1.txt")}
     ):
-        my_form_ow = TestNoOverWriteForm(get_form_data())
+        my_form_ow = TestNoOverWriteForm(get_formdata())
 
         assert not my_form_ow.validate()
 
@@ -154,7 +154,7 @@ def _test_image_upload_field(app):
         with app.test_request_context(
             method="POST", data={"upload": (fp, "test1.png")}
         ):
-            my_form = TestForm(get_form_data())
+            my_form = TestForm(get_formdata())
 
             assert my_form.validate()
 
@@ -169,7 +169,7 @@ def _test_image_upload_field(app):
         with app.test_request_context(
             method="POST", data={"upload": (fp, "test2.png")}
         ):
-            my_form = TestForm(get_form_data())
+            my_form = TestForm(get_formdata())
 
             assert my_form.validate()
 
@@ -184,7 +184,7 @@ def _test_image_upload_field(app):
 
     # Check delete
     with app.test_request_context(method="POST", data={"_upload-delete": "checked"}):
-        my_form = TestForm(get_form_data())
+        my_form = TestForm(get_formdata())
 
         assert my_form.validate()
 
@@ -199,7 +199,7 @@ def _test_image_upload_field(app):
         with app.test_request_context(
             method="POST", data={"upload": (fp, "test1.png")}
         ):
-            my_form = TestNoResizeForm(get_form_data())
+            my_form = TestNoResizeForm(get_formdata())
 
             assert my_form.validate()
 
@@ -216,7 +216,7 @@ def _test_image_upload_field(app):
         with app.test_request_context(
             method="POST", data={"upload": (fp, "test1.png")}
         ):
-            my_form = TestAutoResizeForm(get_form_data())
+            my_form = TestAutoResizeForm(get_formdata())
 
             assert my_form.validate()
 
@@ -231,7 +231,7 @@ def _test_image_upload_field(app):
         with app.test_request_context(
             method="POST", data={"upload": (fp, "test1.tiff")}
         ):
-            my_form = TestAutoResizeForm(get_form_data())
+            my_form = TestAutoResizeForm(get_formdata())
 
             assert my_form.validate()
 
@@ -248,7 +248,7 @@ def _test_image_upload_field(app):
             with app.test_request_context(
                 method="POST", data={"upload": (fp, filename)}
             ):
-                my_form = TestNoResizeForm(get_form_data())
+                my_form = TestNoResizeForm(get_formdata())
                 assert my_form.validate()
                 my_form.populate_obj(dummy)
                 assert dummy.upload == my_form.upload.data.filename
@@ -262,7 +262,7 @@ def _test_image_upload_field(app):
         with app.test_request_context(
             method="POST", data={"upload": (fp, "copyleft.JPG")}
         ):
-            my_form = TestNoResizeForm(get_form_data())
+            my_form = TestNoResizeForm(get_formdata())
             assert my_form.validate()
 
 
@@ -273,7 +273,7 @@ def test_relative_path(app):
         safe_delete(path, "test1.txt")
 
     class TestForm(BaseForm):
-        upload = FileUploadField("Upload", base_path=path, relative_path="inner/")
+        upload = UploadFileField("Upload", base_path=path, relative_path="inner/")
 
     class Dummy:
         pass
@@ -290,7 +290,7 @@ def test_relative_path(app):
     with app.test_request_context(
         method="POST", data={"upload": (BytesIO(b"Hello World 1"), "test1.txt")}
     ):
-        my_form = TestForm(get_form_data())
+        my_form = TestForm(get_formdata())
 
         assert my_form.validate()
 

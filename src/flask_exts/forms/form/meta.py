@@ -6,7 +6,7 @@ from wtforms.meta import DefaultMeta
 from wtforms.i18n import get_translations
 from flask_babel import get_locale
 from .csrf import FlaskFormCSRF
-from ...utils import get_form_data
+from ...utils import get_formdata
 
 
 # CSRF_ENABLED = True
@@ -38,7 +38,7 @@ class FlaskMeta(DefaultMeta):
 
     def wrap_formdata(self, form, formdata):
         if formdata is None:
-            return get_form_data()
+            return get_formdata()
         return formdata
 
     def get_translations(self, form):
@@ -47,6 +47,8 @@ class FlaskMeta(DefaultMeta):
         :param form: _description_
         :return: _description_
         """
+        if get_locale() is None:
+            return
         locales = [get_locale().language]
         # Make locales be a hashable value
         locales = tuple(locales) if locales else None

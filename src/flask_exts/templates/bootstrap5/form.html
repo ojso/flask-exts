@@ -1,7 +1,7 @@
 {% macro render_hidden_errors(form) %}
     {%- if form.errors %}
         {%- for fieldname, errors in form.errors.items() %}
-            {%- if bootstrap_is_hidden_field(form[fieldname]) %}
+            {%- if is_hidden_field(form[fieldname]) %}
                 {%- for error in errors %}
                     <div class="invalid-feedback d-block">{{ error }}</div>
                 {%- endfor %}
@@ -122,7 +122,7 @@
         <fieldset>
             <legend>{{ field.label }}</legend>
             {%- for subfield in field %}
-                {% if not bootstrap_is_hidden_field(subfield) -%}
+                {% if not is_hidden_field(subfield) -%}
                     {{ render_field(subfield,
                       form_type=form_type,
                       horizontal_columns=horizontal_columns,

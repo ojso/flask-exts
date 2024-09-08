@@ -1,5 +1,5 @@
 from wtforms.validators import StopValidation
-from ...babel import gettext
+from ...babel import _gettext
 
 
 class FieldListInputRequired:
@@ -10,4 +10,4 @@ class FieldListInputRequired:
     def __call__(self, form, field):
         if len(field.entries) == 0:
             field.errors[:] = []
-            raise StopValidation(gettext("This field requires at least one item."))
+            raise StopValidation(_gettext("This field requires at least one item."))

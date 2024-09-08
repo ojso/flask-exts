@@ -1,10 +1,6 @@
 from flask import request
 from flask import session
 from flask import current_app
-from flask_babel import Babel
-
-babel = Babel()
-
 
 def locale_selector():
     if not request:
@@ -35,7 +31,5 @@ def timezone_selector():
         return current_app.config.get("BABEL_DEFAULT_TIMEZONE")
 
 
-def flask_babel_init_app(app):
-    babel.init_app(
-        app, locale_selector=locale_selector, timezone_selector=timezone_selector
-    )
+
+

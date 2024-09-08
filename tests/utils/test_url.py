@@ -1,4 +1,4 @@
-from flask_exts.utils import is_safe_url
+from flask_exts.utils.url import is_safe_url
 
 def test_is_safe_url(app):
     with app.test_request_context('http://127.0.0.1/admin/car/edit/'):

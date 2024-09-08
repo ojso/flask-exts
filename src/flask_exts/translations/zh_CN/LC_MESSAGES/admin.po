@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-09-06 07:24+0800\n"
-"PO-Revision-Date: 2024-03-28 20:03+0800\n"
+"POT-Creation-Date: 2024-09-07 13:53+0800\n"
+"PO-Revision-Date: 2024-09-07 13:53+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
 "Language-Team: zh_Hans_CN <LL@li.org>\n"
@@ -66,5 +66,5 @@ msgstr ""
 
 #: src/flask_exts/templates/demo.html:3
 msgid "Home"
-msgstr "首页"
+msgstr ""
 

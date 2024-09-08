@@ -1,6 +1,4 @@
 from markupsafe import Markup
-from .. import helpers
-
 
 class BaseRule:
     """

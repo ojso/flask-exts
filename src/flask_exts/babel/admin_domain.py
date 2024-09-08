@@ -6,9 +6,9 @@ class AdminDomain(Domain):
         super().__init__(translations.__path__[0], domain="admin")
 
 
-admin_domain = AdminDomain()
+domain = AdminDomain()
 
-gettext = admin_domain.gettext
-ngettext = admin_domain.ngettext
-lazy_gettext = admin_domain.lazy_gettext
+_gettext = domain.gettext
+_ngettext = domain.ngettext
+_lazy_gettext = domain.lazy_gettext
 

@@ -5,7 +5,7 @@ from flask_babel import get_timezone
 from flask_babel import format_datetime
 from flask_babel import refresh
 from flask_babel import gettext
-from flask_exts.babel import gettext as admin_gettext
+from flask_exts.babel import _gettext
 
 
 class TestBabel:
@@ -48,8 +48,8 @@ class TestBabel:
             text = "Home"
             text_en = "Home"
             text_zh = "首页"
-            assert admin_gettext(text) == text_en
+            assert _gettext(text) == text_en
             session["lang"] = "zh"
             refresh()
-            assert admin_gettext(text) == text_zh
+            assert _gettext(text) == text_zh
 

@@ -3,7 +3,7 @@ import os.path as op
 from PIL import Image, ImageOps
 from wtforms import ValidationError
 from ..widgets.upload import ImageUploadInput
-from .upload_file import FileUploadField
+from .upload_file import UploadFileField
 
 
 def thumbgen_filename(filename):
@@ -14,7 +14,7 @@ def thumbgen_filename(filename):
     return "%s_thumb%s" % (name, ext)
 
 
-class UploadImageField(FileUploadField):
+class UploadImageField(UploadFileField):
     """
     Image upload field.
 

@@ -1,9 +1,6 @@
 from flask import current_app
 from markupsafe import Markup
 
-from ..utils import is_hidden_field_filter
-from ..utils import get_table_titles
-
 DEFAULT_BOOTSTRAP_VERSION = 4
 CDN_JSDELIVR = "https://cdn.jsdelivr.net/npm"
 
@@ -38,14 +35,14 @@ class Bootstrap:
     def init_app(self, app):
         app.extensions["templating"] = self
 
+        @app.context_processor
+        def get_bootstrap():
+            return {"bootstrap": self}
+
         if app.config.get("BOOTSTRAP_VERSION"):
             self.bootstrap_version = app.config["BOOTSTRAP_VERSION"]
         else:
             self.bootstrap_version = DEFAULT_BOOTSTRAP_VERSION
-
-        app.jinja_env.globals["bootstrap"] = self
-        app.jinja_env.globals["bootstrap_is_hidden_field"] = is_hidden_field_filter
-        app.jinja_env.globals["get_table_titles"] = get_table_titles
 
         # default settings
         app.config.setdefault("BOOTSTRAP_SERVE_LOCAL", False)
