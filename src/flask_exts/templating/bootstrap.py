@@ -93,4 +93,4 @@ class Bootstrap:
         else:
             bootstrap_js_url = cdns["bootstrap.bundle.min.js@4.6.2"]
 
-        return Markup(f"{jquery_js_url}{bootstrap_js_url}")
+        return Markup(f"{jquery_js_url}\n{bootstrap_js_url}")

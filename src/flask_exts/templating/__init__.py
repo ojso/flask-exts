@@ -9,7 +9,13 @@ def template_init_app(app):
         app.extensions = {}
     app.extensions["templating"] = "none"
 
-    blueprint = Blueprint("templating", __name__, template_folder="../templates")
+    blueprint = Blueprint(
+        "templating",
+        __name__,
+        template_folder="../templates",
+        static_url_path='/templating/static',
+        static_folder="../static",
+    )
     app.register_blueprint(blueprint)
 
     app.jinja_env.globals["csrf_token"] = generate_csrf

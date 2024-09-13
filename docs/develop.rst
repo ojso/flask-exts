@@ -21,7 +21,7 @@ To run the tests, from the project directory:
     $ pip install -r requirements/test.in    
 
     # update translation
-    $ pybabel compile -d src/flask_exts/translations -D admin
+    $ pybabel compile -d src/flask_exts/translations -D messages
     $ pybabel compile -d tests/translations
     
     # test

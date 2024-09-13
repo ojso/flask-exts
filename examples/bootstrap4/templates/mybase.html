@@ -1,13 +1,11 @@
+{% extends 'layout.html' %}
+
 {%- from 'macro/nav.html' import render_nav_item -%}
 {%- from 'bootstrap4/message.html' import render_messages -%}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Flask-Exts Bootstrap 4 Demo Application</title>
-<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
-{{ bootstrap.load_css() }}
+
+{% block title %}Flask-Exts Bootstrap 4 Demo Application{% endblock %}
+
+{% block styles %}
 <style>
     pre {
         background: #ddd;
@@ -20,8 +18,9 @@
         margin: 20px;
     }
 </style>
-</head>
-<body>
+{% endblock %}
+
+{% block body %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
 <div class="container">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
@@ -54,6 +53,5 @@
         </small>
     {%- endblock -%}
 </footer>
-{{ bootstrap.load_js() }}
-</body>
-</html>
+
+{% endblock %}

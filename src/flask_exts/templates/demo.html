@@ -1,4 +1,7 @@
-{% extends "base.html" %}
-{% block lang %}{{ lang }}{% endblock %}
-{% block title %}{{ _gettext("Home") }}{% endblock %}
-{% block main %}Hello world{% endblock %}
+{% extends "layout.html" %}
+
+{% block title %}{{ _("Demo") }}{% endblock %}
+
+{% block main -%}
+<div>Hello world</div>
+{%- endblock %}

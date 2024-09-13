@@ -2,14 +2,15 @@ from io import BytesIO
 from wtforms.fields import FileField
 from wtforms.fields import MultipleFileField
 from wtforms.form import Form
-from wtforms.widgets import TextInput
-from flask_exts.forms.form.flask_form import FlaskForm
 from werkzeug.datastructures import FileStorage
+from flask_exts.forms.form import FlaskForm
 
 
 class F(Form):
     file = FileField()
 
+class MultipleF(Form):
+    files = MultipleFileField()
 
 class FlaskF(FlaskForm):
     file = FileField()
@@ -24,6 +25,12 @@ def test_filefield_without_file_input():
     assert f.file.raw_data is None
     assert f.file.data is None
     assert f.file() == '<input id="file" name="file" type="file">'
+
+def test_multiplefilefield_without_file_input():
+    mf = MultipleF()
+    assert mf.files.raw_data is None
+    assert mf.files.data is None
+    assert mf.files() == '<input id="files" multiple name="files" type="file">'
 
 
 def test_filefield_with_file_input(app):

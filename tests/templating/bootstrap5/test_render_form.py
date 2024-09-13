@@ -1,6 +1,6 @@
 from flask import render_template_string
 from wtforms import IntegerRangeField, DecimalRangeField
-from flask_exts.forms.form.base_form import BaseForm
+from flask_exts.forms.form import BaseForm
 from flask_exts.forms.fields.switch import SwitchField
 
 

@@ -2,9 +2,10 @@ import pytest
 from flask import g
 from wtforms import StringField
 from wtforms.validators import DataRequired
-from flask_exts.forms.form.base_form import BaseForm
+from flask_exts.forms.form import BaseForm
+from flask_exts.forms.form import FlaskForm
 from flask_exts.forms.form.secure_form import SecureForm
-from flask_exts.forms.form.flask_form import FlaskForm
+
 
 
 class BasicForm(BaseForm):

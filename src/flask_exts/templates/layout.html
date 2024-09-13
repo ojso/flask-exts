@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block ns_setting %}
+  {%- if bootstrap %}{% set ns.bootstrap = true %}{% endif -%}
+{% endblock %}
+
+{% block metas %}
+<meta name="description" content="">
+<meta name="keywords" content="">
+{% endblock %}
+
+{% block body %}
+  {%- block header %}{% endblock -%}
+  {%- block main %}{% endblock -%}
+  {%- block footer %}{% endblock -%}
+{% endblock %}
+
+{% block ns_styles -%}
+  {%- if ns.bootstrap -%}
+  {{ bootstrap.load_css() }}
+  {%- endif -%}
+{%- endblock %}
+
+{% block ns_scripts -%}
+  {%- if ns.bootstrap -%}
+    {{ bootstrap.load_js() }}
+  {%- endif -%}
+{%- endblock %}

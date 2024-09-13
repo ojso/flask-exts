@@ -1,17 +1,12 @@
-<!DOCTYPE html>
+{%- from 'macro/form.html' import render_field_errors -%}
 
+<!DOCTYPE html>
 <html>
     <body>
-        {% for upload in filedata %}
-        <h3>{{ upload.data.filename }}</h3>
-        {% endfor %}
+        <h3>{{ form.upload.data.filename }}</h3>
         <form method="POST" enctype="multipart/form-data">
-            {{ form.errors }}
-            {% for upload in form.uploads.entries %}
-            <p>
-            {{ upload }}
-            </p>
-            {% endfor %}
+            {{ form.upload }}
+            {{ render_field_errors(form.upload) }}
             <p>
                 <input type="submit" value="Submit">
             </p>

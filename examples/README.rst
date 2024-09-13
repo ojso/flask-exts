@@ -28,23 +28,15 @@ Type the command in the terminal:
 Bootstrap 4
 -----------------
 
-If not set `app.config["ICON_SPRITE_URL"]`, please link `icons/bootstrap-icons.svg` to `bootstrap4/static/icons/bootstrap-icons.svg`.
-
 .. code-block:: bash
 
-    $ mkdir bootstrap4/static/icons
-    $ ln -s ../../../icons/bootstrap-icons.svg  bootstrap4/static/icons/bootstrap-icons.svg
     $ flask --app bootstrap4/app.py run
 
 Bootstrap 5
 -----------------
 
-If not set `app.config["ICON_SPRITE_URL"]`, please link `icons/bootstrap-icons.svg` to `bootstrap5/static/icons/bootstrap-icons.svg`.
-
 .. code-block:: bash
     
-    $ mkdir bootstrap5/static/icons
-    $ ln -s ../../../icons/bootstrap-icons.svg  bootstrap5/static/icons/bootstrap-icons.svg
     $ flask --app bootstrap5/app.py run
 
 Now go to http://localhost:5000.

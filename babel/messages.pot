@@ -1,14 +1,14 @@
-# Translations template for PROJECT.
+# Translations template for Flask-Exts.
 # Copyright (C) 2024 ORGANIZATION
-# This file is distributed under the same license as the PROJECT project.
+# This file is distributed under the same license as the Flask-Exts project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PROJECT VERSION\n"
+"Project-Id-Version: Flask-Exts VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-09-07 13:53+0800\n"
+"POT-Creation-Date: 2024-09-13 06:24+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,53 +17,53 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.14.0\n"
 
-#: src/flask_exts/forms/fields/datetime.py:100
+#: ../src/flask_exts/forms/fields/datetime.py:98
 msgid "Invalid time format"
 msgstr ""
 
-#: src/flask_exts/forms/fields/json.py:15
+#: ../src/flask_exts/forms/fields/json.py:13
 msgid "Invalid JSON"
 msgstr ""
 
-#: src/flask_exts/forms/fields/select.py:62
+#: ../src/flask_exts/forms/fields/select.py:62
 msgid "Invalid Choice: could not coerce"
 msgstr ""
 
-#: src/flask_exts/forms/fields/upload_file.py:108
+#: ../src/flask_exts/forms/fields/upload_file.py:76
 msgid "Invalid file extension"
 msgstr ""
 
-#: src/flask_exts/forms/fields/upload_file.py:118
-#: src/flask_exts/forms/fields/upload_file.py:186
+#: ../src/flask_exts/forms/fields/upload_file.py:84
+#: ../src/flask_exts/forms/fields/upload_file.py:94
 #, python-format
 msgid "File \"%s\" already exists."
 msgstr ""
 
-#: src/flask_exts/forms/form/csrf.py:51
+#: ../src/flask_exts/forms/form/csrf.py:51
 msgid "CSRF token expired."
 msgstr ""
 
-#: src/flask_exts/forms/validators/field_list.py:13
+#: ../src/flask_exts/forms/validators/field_list.py:11
 msgid "This field requires at least one item."
 msgstr ""
 
-#: src/flask_exts/forms/validators/file.py:18
+#: ../src/flask_exts/forms/validators/file.py:18
 msgid "This field is required."
 msgstr ""
 
-#: src/flask_exts/forms/validators/file.py:53
+#: ../src/flask_exts/forms/validators/file.py:53
 msgid "File does not have an approved extension: {extensions}"
 msgstr ""
 
-#: src/flask_exts/forms/validators/file.py:61
+#: ../src/flask_exts/forms/validators/file.py:61
 msgid "File does not have an approved extension."
 msgstr ""
 
-#: src/flask_exts/forms/validators/file.py:97
+#: ../src/flask_exts/forms/validators/file.py:97
 msgid "File must be between {min_size} and {max_size} bytes."
 msgstr ""
 
-#: src/flask_exts/templates/demo.html:3
-msgid "Home"
+#: ../src/flask_exts/templates/demo.html:3
+msgid "Demo"
 msgstr ""
 

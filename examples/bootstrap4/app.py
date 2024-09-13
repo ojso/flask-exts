@@ -5,7 +5,7 @@ from markupsafe import Markup
 from wtforms.validators import DataRequired, Length, Regexp
 from wtforms.fields import *
 from flask_sqlalchemy import SQLAlchemy
-from flask_exts.forms.form.flask_form import FlaskForm as FlaskForm
+from flask_exts.forms.form import FlaskForm
 from flask_exts.forms.fields.switch import SwitchField
 from flask_exts import Manager
 

@@ -1,16 +1,20 @@
+{%- set ns = namespace() -%}
+{%- block ns_setting %} {% endblock -%}
+
 <!DOCTYPE html>
-<html lang="{% block lang %}{% endblock %}">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{%- block metas %}{% endblock -%}
 <title>{% block title -%}{%- endblock %}</title>
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-{% block styles -%}{%- endblock %}
+{%- block styles %}{% endblock %}
 </head>
 <body>
-  {%- block header %}{% endblock -%}
-  {%- block main %}{% endblock -%}
-  {%- block footer %}{% endblock -%}
-  {%- block scripts %}{% endblock -%}
+{% block body %}{% endblock %}
+{% block ns_styles %}{% endblock %}
+{% block ns_scripts %}{% endblock %}
+{% block scripts %}{% endblock %}
 </body>
 </html>

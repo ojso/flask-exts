@@ -11,7 +11,7 @@
         {%- if sprite -%}
             <use xlink:href="{{ sprite }}#{{ name }}" />
         {%- else -%}
-            <use xlink:href="{{ url_for('static', filename='icons/bootstrap-icons.svg') }}#{{ name }}" />
+            <use xlink:href="{{ url_for('templating.static', filename='icons/bootstrap-icons.svg') }}#{{ name }}" />
         {%- endif -%}
     </svg>
 {%- endmacro %}

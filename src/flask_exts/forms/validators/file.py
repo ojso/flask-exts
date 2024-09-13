@@ -20,14 +20,10 @@ class FileRequired(DataRequired):
 
 
 class FileAllowed:
-    """Validates that the uploaded file(s) is allowed by a given list of
-    extensions or a Flask-Uploads :class:`~flaskext.uploads.UploadSet`.
+    """Validates the uploaded file(s) is allowed by a given list of extensions.
 
-    :param upload_set: A list of extensions or an
-        :class:`~flaskext.uploads.UploadSet`
+    :param upload_set: A list of extensions
     :param message: error message
-
-    You can also use the synonym ``file_allowed``.
     """
 
     def __init__(self, upload_set, message=None):
@@ -55,13 +51,6 @@ class FileAllowed:
                     ).format(extensions=", ".join(self.upload_set))
                 )
 
-            if not self.upload_set.file_allowed(field_data, filename):
-                raise StopValidation(
-                    self.message
-                    or field.gettext("File does not have an approved extension.")
-                )
-
-
 class FileSize:
     """Validates that the uploaded file(s) is within a minimum and maximum
     file size (set in bytes).
@@ -70,7 +59,6 @@ class FileSize:
     :param max_size: maximum allowed file size (in bytes).
     :param message: error message
 
-    You can also use the synonym ``file_size``.
     """
 
     def __init__(self, max_size, min_size=0, message=None):

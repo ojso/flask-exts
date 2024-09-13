@@ -20,5 +20,5 @@ msgstr ""
 
 #: test_babel.py:39
 msgid "Home"
-msgstr "主页"
+msgstr "测试首页"
 

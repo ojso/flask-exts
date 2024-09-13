@@ -3,10 +3,7 @@ from flask import flash
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.datastructures import ImmutableMultiDict
 from wtforms import HiddenField
-from wtforms.validators import DataRequired, InputRequired
-from ..forms.validators.field_list import FieldListInputRequired
-from ..babel import _gettext
-
+from flask_babel import gettext
 
 SUBMIT_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
@@ -63,18 +60,4 @@ def is_field_error(errors):
 def flash_errors(form, message):
     for field_name, errors in form.errors.items():
         errors = form[field_name].label.text + ": " + ", ".join(errors)
-        flash(_gettext(message, error=str(errors)), "error")
-
-
-def is_required_form_field(field):
-    """
-    Check if form field has `DataRequired`, `InputRequired`, or
-    `FieldListInputRequired` validators.
-
-    :param field:
-        WTForms field to check
-    """
-    for validator in field.validators:
-        if isinstance(validator, (DataRequired, InputRequired, FieldListInputRequired)):
-            return True
-    return False
+        flash(gettext(message, error=str(errors)), "error")

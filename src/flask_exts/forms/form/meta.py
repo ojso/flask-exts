@@ -3,7 +3,9 @@ from flask import session
 
 from werkzeug.utils import cached_property
 from wtforms.meta import DefaultMeta
-from wtforms.i18n import get_translations
+
+# from wtforms.i18n import get_translations
+from flask_babel import get_translations
 from flask_babel import get_locale
 from .csrf import FlaskFormCSRF
 from ...utils import get_formdata
@@ -49,16 +51,4 @@ class FlaskMeta(DefaultMeta):
         """
         if get_locale() is None:
             return
-        locales = [get_locale().language]
-        # Make locales be a hashable value
-        locales = tuple(locales) if locales else None
-
-        if self.cache_translations:
-            translations = self.translations_cache.get(locales)
-            if translations is None:
-                translations = self.translations_cache[locales] = get_translations(
-                    locales
-                )
-            return translations
-
-        return get_translations(locales)
+        return get_translations()

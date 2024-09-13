@@ -1,5 +1,4 @@
 from flask import current_app
-from ...babel import _gettext,_ngettext
 from ... import helpers as h
 
 
@@ -18,8 +17,6 @@ class RenderTemplateWidget:
         kwargs.update(
             {
                 "field": field,
-                "_gettext": _gettext,
-                "_ngettext": _ngettext,
                 "h": h,
             }
         )

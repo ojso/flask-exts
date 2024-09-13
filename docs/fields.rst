@@ -5,7 +5,7 @@ fields
 FileUpload
 ==================
 
-.. module:: flask_exts.forms.fields.upload
+.. module:: flask_exts.forms.fields
 
 The FileUploadField class
 ----------------------------------
@@ -14,8 +14,8 @@ The FileUploadField class
 
     Example usage::
 
-        from flask_exts.forms.form.base_form import BaseForm
-        from flask_exts.forms.fields.upload import FileUploadField
+        from flask_exts.forms.form import BaseForm
+        from flask_exts.forms.fields import FileUploadField
 
         class TestForm(BaseForm):
             upload = FileUploadField("Upload", base_path=path)
@@ -27,7 +27,7 @@ The FileUploadField class
 
     Example usage::
 
-        from flask_exts.forms.fields.upload import ImageUploadField
+        from flask_exts.forms.fields import ImageUploadField
 
         class TestForm(BaseForm):
             upload = ImageUploadField(
