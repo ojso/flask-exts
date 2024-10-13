@@ -1,2 +1,2 @@
 sphinx
-Pallets-Sphinx-Themes
+sphinx_rtd_theme
