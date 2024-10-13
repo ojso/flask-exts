@@ -10,8 +10,8 @@ from pallets_sphinx_themes import ProjectLink
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Flask-Exts'
-copyright = '2024, HuaDong'
-author = 'HuaDong'
+copyright = '2024, David Dong Hua'
+author = 'David Dong Hua'
 release, version = get_version("Flask-Exts")
 
 # -- General configuration ---------------------------------------------------
