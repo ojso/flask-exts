@@ -13,35 +13,7 @@ manager = Manager()
 
 app = Flask(__name__)
 app.secret_key = 'dev'
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-
-# set bootstrap4
-app.config["TEMPLATE_NAME"] = "bootstrap"
-app.config["BOOTSTRAP_VERSION"] = 4
-
-# custom urls of css and js
-# app.config["JQUERY_JS_URL"] = "/vendor/jquery/dist/jquery.slim.js"
-# app.config["BOOTSTRAP_CSS_URL"] = "/vendor/bootstrap4/dist/css/bootstrap.css"
-# app.config["BOOTSTRAP_JS_URL"] = "/vendor/bootstrap4/dist/js/bootstrap.bundle.js"
-
-# icon sprite
-# app.config["ICON_SPRITE_URL"] = "/vendor/bootstrap-icons/bootstrap-icons.svg"
-    
-# set default button sytle and size, will be overwritten by macro parameters
-app.config['BOOTSTRAP_BTN_STYLE'] = 'primary'
-app.config['BOOTSTRAP_BTN_SIZE'] = 'sm'
-
-# set default icon title of table actions
-app.config['BOOTSTRAP_TABLE_VIEW_TITLE'] = 'Read'
-app.config['BOOTSTRAP_TABLE_EDIT_TITLE'] = 'Update'
-app.config['BOOTSTRAP_TABLE_DELETE_TITLE'] = 'Remove'
-app.config['BOOTSTRAP_TABLE_NEW_TITLE'] = 'Create'
-
-# svg default color
-# app.config['BOOTSTRAP_ICON_COLOR'] = 'green'
-
 manager.init_app(app)
 db = SQLAlchemy(app)
 
@@ -215,14 +187,7 @@ def test_nav():
 def test_bootswatch():
     form = BootswatchForm()
     if form.validate_on_submit():
-        if form.theme_name.data == 'default':
-            app.config['BOOTSTRAP_BOOTSWATCH_THEME'] = None
-        else:
-            app.config['BOOTSTRAP_BOOTSWATCH_THEME'] = form.theme_name.data
         flash(f'Render style has been set to {form.theme_name.data}.')
-    else:
-        if app.config['BOOTSTRAP_BOOTSWATCH_THEME'] != None:
-            form.theme_name.data = app.config['BOOTSTRAP_BOOTSWATCH_THEME']
     return render_template('bootswatch.html', form=form)
 
 

@@ -2,38 +2,28 @@
 templating
 ============
 
-bootstrap
+bootstrap4
+===================
+
+Default is bootstrap4
+
+bootstrap5
 ============
 
 .. code-block:: python
 
     from flask import Flask
-    from flask_exts import Manager   
+    from flask_exts import Manager
+    from flask_exts.templating.theme import DefaultTheme
+
+    bootstrap5_theme = DefaultTheme(bootstrap_version=5)
 
     app = Flask(__name__)
     manager = Manager()
 
-    # set bootstrap 
-    app.config["TEMPLATE_NAME"] = "bootstrap"
-    app.config["BOOTSTRAP_VERSION"] = 4  # or 5. Default is 4.
-
-    # set local css and js urls. Default is cdn:https://cdn.jsdelivr.net/npm.
-    app.config["JQUERY_JS_URL"] = "/vendor/jquery/dist/jquery.slim.js"
-    app.config["BOOTSTRAP_CSS_URL"] = "/vendor/bootstrap4/dist/css/bootstrap.css"
-    app.config["BOOTSTRAP_JS_URL"] = "/vendor/bootstrap4/dist/js/bootstrap.bundle.js"
-
-    # icon sprite
-    app.config["ICON_SPRITE_URL"] = "/vendor/bootstrap-icons/bootstrap-icons.svg"
+    # set bootstrap 5
+    app.config["TEMPLATE_THEME"] = bootstrap5_theme 
 
     # init Manager
     manager.init_app(app)
 
-templates
----------------
-
-To load css and js.
-
-.. code-block:: jinja
-
-    {{ bootstrap.load_css() }}
-    {{ bootstrap.load_js() }}

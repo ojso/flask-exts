@@ -9,8 +9,6 @@ def app():
     app = Flask(__name__)
     app.secret_key = "1"
     app.config["CSRF_ENABLED"] = True
-    app.config["TEMPLATE_NAME"] = "bootstrap"
-    app.config["BOOTSTRAP_VERSION"] = 4
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///"
     manager = Manager()
     manager.init_app(app)

@@ -1,4 +1,4 @@
-{% macro render_icon(name, size=config.BOOTSTRAP_ICON_SIZE, color=config.BOOTSTRAP_ICON_COLOR, sprite=config.ICON_SPRITE_URL, title=None, desc=None) -%}
+{% macro render_icon(name, size=theme.bootstrap.icon_size, color=theme.bootstrap.icon_color,sprite=theme.bootstrap.icon_sprite_url, title=None, desc=None) -%}
     {%- set bootstrap_colors = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark", "muted"] %}
     {%- if color and color in bootstrap_colors %}
         {%- set text_color = " text-" + color %}
@@ -10,8 +10,6 @@
         {%- if desc is not none %}<desc>{{ desc }}</desc>{% endif -%}
         {%- if sprite -%}
             <use xlink:href="{{ sprite }}#{{ name }}" />
-        {%- else -%}
-            <use xlink:href="{{ url_for('templating.static', filename='icons/bootstrap-icons.svg') }}#{{ name }}" />
         {%- endif -%}
     </svg>
 {%- endmacro %}

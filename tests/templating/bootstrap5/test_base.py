@@ -2,15 +2,16 @@ from flask import current_app
 
 
 class TestBase:
-    def test_version(self, app):
+    def test_theme(self, app):
         with app.test_request_context():
-            templating = current_app.extensions["templating"]
-            assert templating.bootstrap_version == 5
-
-    def test_load_js(self, app):
-        with app.test_request_context():
-            templating = current_app.extensions["templating"]
-            js = templating.load_js()
+            theme = current_app.extensions["template"]
+            # print(theme)
+            assert theme.name == "bootstrap"
+            assert theme.bootstrap_version == 5
+            css = theme.load_css()
+            # print(css)
+            assert "bootstrap.min.css" in css
+            js = theme.load_js()
             # print(js)
-            assert "jquery" not in js
-            assert "bootstrap" in js
+            assert "jquery.slim.min.js" not in js
+            assert "bootstrap.bundle.min.js" in js

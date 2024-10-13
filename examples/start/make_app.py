@@ -6,7 +6,6 @@ def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "dev"
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    app.config["TEMPLATE_NAME"] = "bootstrap"
     init_app(app)
     return app
 

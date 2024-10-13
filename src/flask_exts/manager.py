@@ -24,4 +24,4 @@ class Manager:
             app.config.get("TEMPLATE_ENABLED", True)
             and "template" not in app.extensions
         ):
-            template_init_app(app)
+            template_init_app(app=app)

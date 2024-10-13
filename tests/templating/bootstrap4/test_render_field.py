@@ -85,6 +85,7 @@ def test_render_field_with_kwargs(app, client, hello_form):
 
     response = client.get("/general_kwargs")
     data = response.get_data(as_text=True)
+    # print(data)
     assert 'name="username" placeholder="test"' in data
     assert 'name="password" placeholder="test"' in data
     assert (

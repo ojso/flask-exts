@@ -41,6 +41,15 @@ Bootstrap 5
 
 Now go to http://localhost:5000.
 
+admin
+-----------------
+
+.. code-block:: bash
+    
+    $ flask --app admin/simple run
+
+Now go to http://localhost:5000.
+
 
 Overview of icons
 -----------------

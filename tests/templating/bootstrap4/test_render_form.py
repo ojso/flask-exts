@@ -168,10 +168,7 @@ def test_form_render_kw_class(app, client):
     assert "btn" in data
 
 
-def test_button_size(app, client, hello_form):
-    assert app.config["BOOTSTRAP_BTN_SIZE"] == "md"
-    app.config["BOOTSTRAP_BTN_SIZE"] = "lg"
-
+def test_button(app, client, hello_form):
     @app.route("/form")
     def test():
         form = hello_form()
@@ -189,43 +186,7 @@ def test_button_size(app, client, hello_form):
         return render_template_string(
             """
             {% from 'bootstrap4/form.html' import render_form %}
-            {{ render_form(form, button_size='sm') }}
-            """,
-            form=form,
-        )
-
-    response = client.get("/form")
-    data = response.get_data(as_text=True)
-    assert "btn-lg" in data
-
-    response = client.get("/form2")
-    data = response.get_data(as_text=True)
-    assert "btn-lg" not in data
-    assert "btn-sm" in data
-
-
-def test_button_style(app, client, hello_form):
-    assert app.config["BOOTSTRAP_BTN_STYLE"] == "primary"
-    app.config["BOOTSTRAP_BTN_STYLE"] = "secondary"
-
-    @app.route("/form")
-    def test():
-        form = hello_form()
-        return render_template_string(
-            """
-            {% from 'bootstrap4/form.html' import render_form %}
-            {{ render_form(form) }}
-            """,
-            form=form,
-        )
-
-    @app.route("/form2")
-    def test_overwrite():
-        form = hello_form()
-        return render_template_string(
-            """
-            {% from 'bootstrap4/form.html' import render_form %}
-            {{ render_form(form, button_style='success') }}
+            {{ render_form(form, button_size='sm',button_style='success') }}
             """,
             form=form,
         )
@@ -243,17 +204,18 @@ def test_button_style(app, client, hello_form):
 
     response = client.get("/form")
     data = response.get_data(as_text=True)
-    assert "btn-secondary" in data
+    assert "btn-primary" in data
+    assert "btn-md" in data
 
     response = client.get("/form2")
     data = response.get_data(as_text=True)
-    assert "btn-primary" not in data
     assert "btn-success" in data
+    assert "btn-sm" in data
 
     response = client.get("/form3")
     data = response.get_data(as_text=True)
-    assert "btn-primary" not in data
     assert "btn-warning" in data
+    assert "btn-md" in data
 
 
 def test_error_message_for_radiofield_and_booleanfield(app, client):

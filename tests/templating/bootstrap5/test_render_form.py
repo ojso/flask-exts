@@ -23,7 +23,6 @@ def test_switch_field(app, client):
     response = client.get("/switch")
     data = response.get_data(as_text=True)
     assert "Remember me" in data
-    assert "custom-control custom-switch" not in data
     assert "form-check form-switch" in data
     assert 'role="switch"' in data
     assert (
@@ -89,8 +88,6 @@ def test_form_group_class(app, client, hello_form):
 
 
 def test_form_group_class_config(app, client, hello_form):
-    app.config["BOOTSTRAP_FORM_GROUP_CLASSES"] = "mb-4"
-
     @app.route("/config")
     def test_config():
         form = hello_form()
@@ -104,8 +101,8 @@ def test_form_group_class_config(app, client, hello_form):
 
     response = client.get("/config")
     data = response.get_data(as_text=True)
-    assert '<div class="mb-3' not in data
-    assert '<div class="mb-4' in data
+    assert '<div class="mb-3' in data
+
 
 
 def test_form_inline_classes(app, client, hello_form):
@@ -145,8 +142,6 @@ def test_form_inline_classes(app, client, hello_form):
 
 
 def test_form_inline_classes_config(app, client, hello_form):
-    app.config["BOOTSTRAP_FORM_INLINE_CLASSES"] = "custom-inline-classes"
-
     @app.route("/config")
     def test_config():
         form = hello_form()
@@ -160,5 +155,4 @@ def test_form_inline_classes_config(app, client, hello_form):
 
     response = client.get("/config")
     data = response.get_data(as_text=True)
-    assert "row row-cols-lg-auto g-3 align-items-center" not in data
-    assert "custom-inline-classes" in data
+    assert "row row-cols-lg-auto g-3 align-items-center" in data

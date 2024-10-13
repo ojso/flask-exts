@@ -365,11 +365,6 @@ def test_customize_icon_title_of_table_actions(app, client):
         text = db.Column(db.Text)
         category = db.Column(db.Enum(MyCat), default=MyCat.CAT1, nullable=False)
 
-    app.config["BOOTSTRAP_TABLE_VIEW_TITLE"] = "Read"
-    app.config["BOOTSTRAP_TABLE_EDIT_TITLE"] = "Update"
-    app.config["BOOTSTRAP_TABLE_DELETE_TITLE"] = "Remove"
-    app.config["BOOTSTRAP_TABLE_NEW_TITLE"] = "Create"
-
     @app.route("/table")
     def test():
         db.drop_all()
@@ -396,8 +391,8 @@ def test_customize_icon_title_of_table_actions(app, client):
 
     response = client.get("/table")
     data = response.get_data(as_text=True)
-    assert 'title="Read">' in data
-    assert 'title="Update">' in data
+    assert 'title="View">' in data
+    assert 'title="Edit">' in data
     assert 'title="Remove">' in data
     assert 'title="Create">' in data
     assert "Category A" in data

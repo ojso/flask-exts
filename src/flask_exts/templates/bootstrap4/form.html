@@ -125,8 +125,8 @@
         {% set field_kwargs = kwargs %}
         {# note: same issue as above - should check widget, not field type #}
         {% call _hz_form_wrap(horizontal_columns, form_type, True, required=required) %}
-            {% set default_button_style = button_style or config.BOOTSTRAP_BTN_STYLE %}
-            {% set default_button_size = button_size or config.BOOTSTRAP_BTN_SIZE %}
+            {% set default_button_style = button_style or theme.bootstrap.btn_style %}
+            {% set default_button_size = button_size or theme.bootstrap.btn_size %}
             {{ field(class='btn btn-%s btn-%s%s' % (button_map.get(field.name, default_button_style), default_button_size, extra_classes), **field_kwargs) }}
         {% endcall %}
     {%- elif field.type in ['CSRFTokenField', 'HiddenField'] -%}
