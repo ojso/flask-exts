@@ -6,7 +6,7 @@ DEFAULT_BOOTSTRAP_VERSION = 4
 LOCAL_VENDOR_URL = "/template/static/vendor"
 
 ICON_SPRITE_URL = f"{LOCAL_VENDOR_URL}/bootstrap-icons/bootstrap-icons.svg"
-JQUERY_JS_URL = f"{LOCAL_VENDOR_URL}/jquery/jquery.slim.min.js"
+JQUERY_JS_URL = f"{LOCAL_VENDOR_URL}/jquery/jquery.min.js"
 BOOTSTRAP4_CSS_URL = f"{LOCAL_VENDOR_URL}/bootstrap4/bootstrap.min.css"
 BOOTSTRAP4_JS_URL = f"{LOCAL_VENDOR_URL}/bootstrap4/bootstrap.bundle.min.js"
 BOOTSTRAP5_CSS_URL = f"{LOCAL_VENDOR_URL}/bootstrap5/bootstrap.min.css"
@@ -43,7 +43,7 @@ class Bootstrap:
     btn_style = "primary"
     btn_size = "md"
     icon_size = "1em"
-    navbar_classes = "navbar-expand-lg navbar-dark bg-dark mb-2"
+    navbar_classes = "navbar-dark bg-dark"
     form_group_classes = "mb-3"
     form_inline_classes = "row row-cols-lg-auto g-3 align-items-center"
 
@@ -62,6 +62,7 @@ class DefaultTheme(Theme):
     name = "bootstrap"
     bootstrap_version = DEFAULT_BOOTSTRAP_VERSION
     swatch: str = "default"
+    navbar_fluid: bool = True
     fluid: bool = False
     admin_base_template: str = "admin/base.html"
     bootstrap = Bootstrap()

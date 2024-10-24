@@ -1,19 +1,18 @@
 from functools import wraps
-import os.path as op
 from flask import Blueprint
 from flask import render_template
 from flask import url_for
 from flask import abort
 
-from ..utils.g import set_current_view, get_template_args
+from ..utils.g import set_current_view
 from ..utils.url import prettify_class_name
 
 
 # Base views
 def _wrap_view(f):
     # Avoid wrapping view method twice
-    if hasattr(f, "_wrapped"):
-        raise RuntimeError(f"{f.__name__} has been wrapped.")
+    if hasattr(f, '_wrapped'):
+        return f
 
     @wraps(f)
     def inner(self, *args, **kwargs):
@@ -59,14 +58,6 @@ class BaseView(metaclass=ViewMeta):
     """
     Base view.
     """
-
-    @property
-    def _template_args(self):
-        """
-        Extra template arguments.
-        """
-        args = get_template_args()
-        return args
 
     def __init__(
         self,
@@ -201,10 +192,6 @@ class BaseView(metaclass=ViewMeta):
         kwargs["admin_view"] = self
         # Expose get_url helper
         kwargs["get_url"] = self.get_url
-
-        # Contribute extra arguments
-        kwargs.update(self._template_args)
-
         return render_template(template, **kwargs)
 
     def _prettify_class_name(self, name):

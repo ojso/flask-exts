@@ -15,13 +15,8 @@ class Manager:
         if not hasattr(app, "extensions"):
             app.extensions = {}
 
-        app.extensions["manager"] = self
-
         if app.config.get("BABEL_ENABLED", True) and "babel" not in app.extensions:
             babel_init_app(app)
 
-        if (
-            app.config.get("TEMPLATE_ENABLED", True)
-            and "template" not in app.extensions
-        ):
+        if app.config.get("TEMPLATE_ENABLED", True) and "template" not in app.extensions:
             template_init_app(app=app)

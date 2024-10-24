@@ -1,6 +1,8 @@
 import os.path as op
 from flask import Blueprint
-from ..utils.form import is_hidden_field, get_table_titles
+from ..utils.form import is_hidden_field
+from ..utils.form import is_required_form_field
+from ..utils.form import get_table_titles
 from ..utils.csrf import generate_csrf
 from .theme import DefaultTheme
 
@@ -19,6 +21,7 @@ def template_init_app(app):
 
     app.jinja_env.globals["csrf_token"] = generate_csrf
     app.jinja_env.globals["is_hidden_field"] = is_hidden_field
+    app.jinja_env.globals["is_required_form_field"] = is_required_form_field
     app.jinja_env.globals["get_table_titles"] = get_table_titles
 
     if app.config.get("TEMPLATE_THEME"):

@@ -14,9 +14,7 @@
   {% endif %}
 {%- endmacro %}
 
-{% macro menu(menu_root=None) %}
-  {% set is_main_nav = menu_root == None %}
-  {% if menu_root is none %}{% set menu_root = admin_view.admin.menu() %}{% endif %}
+{% macro menu(menu_root) %}
   {%- for item in menu_root %}
     {%- if item.is_category() -%}
       {% set children = item.get_children() %}
@@ -27,7 +25,7 @@
             {% else -%}
           <li class="dropdown{% if class_name %} {{ class_name }}{% endif %}">
         {%- endif %}
-      <a class="dropdown-toggle {% if is_main_nav %}nav-link{% else %}dropdown-item{% endif %}" data-toggle="dropdown" href="javascript:void(0)">
+      <a class="dropdown-toggle nav-link" data-toggle="dropdown" href="javascript:void(0)">
         {% if item.class_name %}<span class="{{ item.class_name }}"></span> {% endif %}
         {{ menu_icon(item) }}{{ item.name }}
         {%- if 'dropdown-submenu' in class_name -%}
@@ -74,8 +72,7 @@
   {% endfor %}
 {% endmacro %}
 
-{% macro menu_links(links=None) %}
-  {% if links is none %}{% set links = admin_view.admin.menu_links() %}{% endif %}
+{% macro menu_links(links) %}
   {% for item in links %}
     {% set class_name = item.get_class_name() %}
     {% if item.is_accessible() and item.is_visible() %}

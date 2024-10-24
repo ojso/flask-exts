@@ -13,5 +13,5 @@ class TestBase:
             assert "bootstrap.min.css" in css
             js = theme.load_js()
             # print(js)
-            assert "jquery.slim.min.js" in js
+            assert "jquery.min.js" in js
             assert "bootstrap.bundle.min.js" in js

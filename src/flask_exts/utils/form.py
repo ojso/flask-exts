@@ -3,6 +3,7 @@ from flask import flash
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.datastructures import ImmutableMultiDict
 from wtforms import HiddenField
+from wtforms.validators import DataRequired, InputRequired
 from flask_babel import gettext
 
 SUBMIT_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
@@ -15,6 +16,12 @@ def is_hidden_field(field):
 def is_form_submitted():
     """Check if current method is PUT or POST"""
     return request and request.method in SUBMIT_METHODS
+
+def validate_form_on_submit(form):
+    """
+        If current method is PUT or POST, validate form and return validation status.
+    """
+    return is_form_submitted() and form.validate()
 
 
 def get_formdata():
@@ -56,6 +63,17 @@ def is_field_error(errors):
 
     return False
 
+def is_required_form_field(field):
+    """
+        Check if form field has `DataRequired`, `InputRequired`
+
+        :param field:
+            WTForms field to check
+    """
+    for validator in field.validators:
+        if isinstance(validator, (DataRequired, InputRequired)):
+            return True
+    return False
 
 def flash_errors(form, message):
     for field_name, errors in form.errors.items():

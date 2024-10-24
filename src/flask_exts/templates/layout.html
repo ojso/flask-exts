@@ -9,13 +9,13 @@
 <meta name="keywords" content="">
 {% endblock %}
 
-{% block ns_styles -%}
+{% block styles -%}
   {%- if ns.theme -%}
   {{ theme.load_css() }}
   {%- endif -%}
 {%- endblock %}
 
-{% block ns_scripts -%}
+{% block scripts -%}
   {%- if ns.theme -%}
     {{ theme.load_js() }}
   {%- endif -%}

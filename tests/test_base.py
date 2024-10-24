@@ -5,7 +5,6 @@ from .funcs import print_routes
 def test_extensions(app):
     # print(app.extensions.keys())
     # print(app.extensions)
-    assert "manager" in app.extensions
     assert "babel" in app.extensions
     assert "template" in app.extensions
 
