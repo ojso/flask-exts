@@ -50,6 +50,15 @@ admin
 
 Now go to http://localhost:5000.
 
+login
+-----------------
+
+.. code-block:: bash
+    
+    $ flask --app admin/authlogin run
+
+Now go to http://localhost:5000.
+
 
 Overview of icons
 -----------------

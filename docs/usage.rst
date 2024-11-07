@@ -43,6 +43,8 @@ Configuration
                            Default is ``csrf_token``.
 ``CSRF_TIME_LIMIT``        Max age in seconds for CSRF tokens. 
                            Default is ``1800``. 
+``FLASK_LOGIN_ENABLED``    Set to ``False`` to disable ``Flask-Login``. 
+                           Default is ``True``. 
 ========================== =====================================================================
 
 Start

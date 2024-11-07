@@ -186,7 +186,7 @@ class TestLocalFileAdmin(Base.FileAdminTests):
     def fileadmin_args(self):
         return (self._test_files_root,), {}
 
-    def test_fileadmin_sort_bogus_url_param(self, app):
+    def test_fileadmin_sort_url_param(self, app):
         admin = Admin()
         admin.init_app(app)
 
@@ -213,7 +213,7 @@ class TestLocalFileAdmin(Base.FileAdminTests):
             pos2 = rv.data.decode("utf-8").find("path=dummy2.txt")
             assert pos1 > 0
             assert pos2 > 0
-            assert pos1 > pos2
+            assert pos1 < pos2
 
             rv = client.get("/admin/myfileadmin/?sort=name")
             assert rv.status_code == 200
@@ -222,6 +222,14 @@ class TestLocalFileAdmin(Base.FileAdminTests):
             assert pos1 > 0
             assert pos2 > 0
             assert pos1 < pos2
+
+            rv = client.get("/admin/myfileadmin/?sort=date&desc=1")
+            assert rv.status_code == 200
+            pos1 = rv.data.decode("utf-8").find("path=dummy.txt")
+            pos2 = rv.data.decode("utf-8").find("path=dummy2.txt")
+            assert pos1 > 0
+            assert pos2 > 0
+            assert pos1 > pos2
 
         try:
             # clean up

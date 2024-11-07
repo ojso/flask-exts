@@ -104,13 +104,12 @@ class MenuView(BaseMenu):
     def get_url(self):
         if self._view is None:
             return None
-
+        if self._view._default_view is None:
+            return None
         if self._cached_url:
             return self._cached_url
 
-        url = self._view.get_url(
-            "%s.%s" % (self._view.endpoint, self._view._default_view)
-        )
+        url = url_for("%s.%s" % (self._view.endpoint, self._view._default_view))
 
         if self._cache:
             self._cached_url = url

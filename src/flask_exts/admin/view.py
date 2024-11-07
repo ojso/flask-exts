@@ -1,23 +1,20 @@
 from functools import wraps
 from flask import Blueprint
-from flask import render_template
 from flask import url_for
 from flask import abort
 
-from ..utils.g import set_current_view
 from ..utils.url import prettify_class_name
 
 
-# Base views
 def _wrap_view(f):
+    """ wrapping f with self._handle_view and self._run_view
+    """
     # Avoid wrapping view method twice
     if hasattr(f, '_wrapped'):
         return f
 
     @wraps(f)
     def inner(self, *args, **kwargs):
-        # Store current admin view
-        set_current_view(self)
         # Check if piece is accessible
         abort = self._handle_view(f.__name__, **kwargs)
         if abort is not None:
@@ -139,12 +136,11 @@ class BaseView(metaclass=ViewMeta):
         """
         if self.url is None:
             url_prefix = self.admin.url.rstrip("/") + "/" + self.endpoint
+        elif self.url.startswith("/"):
+            # index_view.url which has already been set startswith("/")
+            url_prefix = self.url
         else:
-            if self.url.startswith("/"):
-                # index_view.url which has already been set startswith("/")
-                url_prefix = self.url
-            else:
-                url_prefix = self.admin.url.rstrip("/") + "/" + self.url
+            url_prefix = self.admin.url.rstrip("/") + "/" + self.url
 
         return url_prefix
 
@@ -158,11 +154,6 @@ class BaseView(metaclass=ViewMeta):
         # If we're working from the root of the site, set prefix to None
         if self.url_prefix == "/":
             self.url_prefix = None
-
-            # prevent admin static files from conflicting with flask static files
-            if self == self.admin.index_view and not self.static_url_path:
-                self.static_url_path = f'/{self.endpoint}/static'
-        
 
         # Create blueprint and register rules
         self.blueprint = Blueprint(
@@ -179,30 +170,6 @@ class BaseView(metaclass=ViewMeta):
 
         return self.blueprint
 
-    def render(self, template, **kwargs):
-        """
-        Render template
-
-        :param template:
-            Template path to render
-        :param kwargs:
-            Template arguments
-        """
-        # Store self as admin_view
-        kwargs["admin_view"] = self
-        # Expose get_url helper
-        kwargs["get_url"] = self.get_url
-        return render_template(template, **kwargs)
-
-    def _prettify_class_name(self, name):
-        """
-        Split words in PascalCase string into separate words.
-
-        :param name:
-            String to prettify
-        """
-        return prettify_class_name(name)
-
     def get_url(self, endpoint, **kwargs):
         """
         Generate URL for the endpoint. If you want to customize URL generation
@@ -215,6 +182,29 @@ class BaseView(metaclass=ViewMeta):
             Arguments for `url_for`
         """
         return url_for(endpoint, **kwargs)
+    
+    def render(self, template, **kwargs):
+        """
+        Render template
+
+        :param template:
+            Template path to render
+        :param kwargs:
+            Template arguments
+        """
+        # Store self as admin_view
+        kwargs["view"] = self
+
+        return self.admin.render(template, **kwargs)
+
+    def _prettify_class_name(self, name):
+        """
+        Split words in PascalCase string into separate words.
+
+        :param name:
+            String to prettify
+        """
+        return prettify_class_name(name)
 
     def is_visible(self):
         """
@@ -256,8 +246,7 @@ class BaseView(metaclass=ViewMeta):
         """
         This method will run actual view function.
 
-        While it is similar to _handle_view, can be used to change
-        arguments that are passed to the view.
+        While it is similar to _handle_view, can be used to change arguments that are passed to the view.
 
         :param fn:
             View function

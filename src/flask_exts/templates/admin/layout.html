@@ -20,7 +20,7 @@
       {% set children = item.get_children() %}
       {%- if children %}
         {% set class_name = item.get_class_name() or '' %}
-        {%- if item.is_active(admin_view) %}
+        {%- if item.is_active(view) %}
           <li class="active dropdown{% if class_name %} {{ class_name }}{% endif %}">
             {% else -%}
           <li class="dropdown{% if class_name %} {{ class_name }}{% endif %}">
@@ -41,7 +41,7 @@
           {% else %}
             {% set class_name = child.get_class_name() %}
             <li{% if class_name %} class="{{ class_name }}"{% endif %}>
-              {%- if child.is_active(admin_view) %}
+              {%- if child.is_active(view) %}
                 <a class="dropdown-item active" href="{{ child.get_url() }}"{% if child.target %}
                    target="{{ child.target }}"{% endif %}>
                   {{ menu_icon(child) }}{{ child.name }}</a>
@@ -59,7 +59,7 @@
     {%- else %}
       {%- if item.is_accessible() and item.is_visible() -%}
         {% set class_name = item.get_class_name() %}
-        {%- if item.is_active(admin_view) %}
+        {%- if item.is_active(view) %}
           <li class="active{% if class_name %} {{ class_name }}{% endif %}">
             {%- else %}
           <li{% if class_name %} class="{{ class_name }}"{% endif %}>

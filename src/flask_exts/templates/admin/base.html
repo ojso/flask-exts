@@ -24,16 +24,16 @@
             <!-- navbar content -->
             <div class="collapse navbar-collapse" id="admin-navbar-collapse">
                 {% block brand -%}
-                <a class="navbar-brand" href="{{ admin_view.admin.url }}">{{ admin_view.admin.name }}</a>
+                <a class="navbar-brand" href="{{ admin.url }}">{{ admin.name }}</a>
                 {%- endblock %}
                 {% block main_menu -%}
                 <ul class="navbar-nav mr-auto">
-                    {{ layout.menu(admin_view.admin.menu()) }}
+                    {{ layout.menu(admin.menu()) }}
                 </ul>
                 {%- endblock %}
                 {% block menu_links -%}
                 <ul class="navbar-nav navbar-right">
-                    {{ layout.menu_links(admin_view.admin.menu_links()) }}
+                    {{ layout.menu_links(admin.menu_links()) }}
                 </ul>
                 {%- endblock %}
                 {% block access_control %}{% endblock %}

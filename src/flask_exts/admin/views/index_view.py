@@ -1,11 +1,13 @@
-from .wraps import expose
-from .view import BaseView
+from ..wraps import expose
+from ..view import BaseView
 
 
 class AdminIndexView(BaseView):
     """
     Default administrative interface index page when visiting the ``/admin/`` URL.
     """
+
+    index_template = "admin/index.html"
 
     def __init__(
         self,
@@ -19,7 +21,6 @@ class AdminIndexView(BaseView):
         menu_class_name=None,
         menu_icon_type=None,
         menu_icon_value=None,
-        index_template=None,
     ):
         super().__init__(
             name=name,
@@ -33,8 +34,7 @@ class AdminIndexView(BaseView):
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
         )
-        self._index_template = index_template or "admin/index.html"
 
-    @expose()
+    @expose("/")
     def index(self):
-        return self.render(self._index_template)
+        return self.render(self.index_template)

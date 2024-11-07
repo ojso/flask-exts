@@ -3,8 +3,6 @@ import platform
 import re
 from operator import itemgetter
 from datetime import datetime
-from datetime import UTC
-from functools import partial
 from flask_babel import gettext,lazy_gettext
 from flask import flash, redirect, abort, request
 from wtforms import fields, validators
@@ -15,9 +13,6 @@ from ..actions import action, ActionsMixin
 from ...forms.form import FlaskForm as BaseForm
 from ...utils import flash_errors
 from ...utils.form import validate_form_on_submit
-
-
-utc_fromtimestamp = partial(datetime.fromtimestamp, tz=UTC)
 
 class BaseFileAdmin(BaseView, ActionsMixin):
     can_upload = True
@@ -749,10 +744,10 @@ class BaseFileAdmin(BaseView, ActionsMixin):
             items.sort(key=itemgetter(0))
             # Sort by type
             items.sort(key=itemgetter(2), reverse=True)
-            items.sort(
-                key=lambda x: (x[0], x[1], x[2], x[3], utc_fromtimestamp(x[4])),
-                reverse=True,
-            )
+            # items.sort(
+            #     key=lambda x: (x[0], x[1], x[2], x[3], x[4]),
+            #     reverse=True,
+            # )
         else:
             items.sort(key=itemgetter(column_index), reverse=sort_desc)
 

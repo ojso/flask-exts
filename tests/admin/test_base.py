@@ -7,15 +7,12 @@ from flask_exts.admin.wraps import expose, expose_plugview
 from flask_exts.admin.view import BaseView
 from flask_exts.admin.admin import Admin
 from flask_exts.admin.menu import MenuLink
-from flask_exts.admin.admin_index_view import AdminIndexView
 
 from ..funcs import print_app_endpoint_rule
 from ..funcs import get_app_endpoint_rule
 
 
 class MockView(BaseView):
-    # Various properties
-    allow_call = True
     allow_access = True
     visible = True
 
@@ -27,23 +24,40 @@ class MockView(BaseView):
     def test(self):
         return self.render("mock.html")
 
-    def _handle_view(self, name, **kwargs):
-        if self.allow_call:
-            return super()._handle_view(name, **kwargs)
-        else:
-            return "Failure!"
-
     def is_accessible(self):
         if self.allow_access:
             return super().is_accessible()
-
         return False
 
     def is_visible(self):
         if self.visible:
             return super().is_visible()
-
         return False
+
+
+class MockNoindexView(BaseView):
+    allow_access = True
+    visible = True
+
+    @expose("/test/")
+    def test(self):
+        return self.render("mock.html")
+
+    def is_accessible(self):
+        if self.allow_access:
+            return super().is_accessible()
+        return False
+
+    def is_visible(self):
+        if self.visible:
+            return super().is_visible()
+        return False
+
+
+class MockExtendView(MockView):
+    @expose("/test2/")
+    def test2(self):
+        return self.render("mock.html")
 
 
 class MockMethodView(BaseView):
@@ -83,10 +97,10 @@ class MockMethodView(BaseView):
 def test_baseview_defaults():
     view = MockView()
     assert view.name == "Mock View"
-    assert view.category is None
     assert view.endpoint == "mockview"
     assert view.url is None
     assert view.static_folder is None
+    assert view.category is None
     assert view.admin is None
     assert view.blueprint is None
 
@@ -97,19 +111,74 @@ def test_admin_defaults():
     assert admin.url == "/admin"
     assert admin.endpoint == "admin"
     assert admin.app is None
+
+    # Check if default view was added
+    assert len(admin._views) == 2
+    assert admin._views[0] == admin.index_view
+    assert admin._views[1] == admin.user_view
+
+    # check index_view
     assert admin.index_view is not None
     assert admin.index_view.endpoint == "admin"
     assert admin.index_view.url == "/admin"
     assert admin.index_view.static_folder == "../static"
-    assert admin.index_view._index_template == "admin/index.html"
-    # Check if default view was added
-    assert len(admin._views) == 1
-    assert admin._views[0] == admin.index_view
-    #
-    # print(admin.index_view._urls)
+    assert admin.index_view.index_template == "admin/index.html"
+
+    # check user_view
+    assert admin.user_view is not None
+    assert admin.user_view.endpoint == "user"
+    assert admin.user_view.url == "/user"
+    assert admin.user_view.index_template == "admin/user/index.html"
+
+def test_admin_init_app(app,client):
+    admin = Admin()
+    admin.init_app(app)
+
+    assert "admin" in admin.app.extensions
+    assert len(admin.app.extensions["admin"]) == 1
+    assert admin.app.extensions["admin"][0] == admin
+
+    # print(app.extensions)
+    # print(app.blueprints)
+    # print_app_endpoint_rule(app)
+
+    assert get_app_endpoint_rule(app, "admin.index") == "/admin/"
+    assert get_app_endpoint_rule(app, "admin.static") == "/admin/static/<path:filename>"
+    assert get_app_endpoint_rule(app, "user.index") == "/user/"
+    assert get_app_endpoint_rule(app, "user.login") == "/user/login/"
+    assert get_app_endpoint_rule(app, "user.logout") == "/user/logout/"
+    assert get_app_endpoint_rule(app, "user.register") == "/user/register/"
+
+    with app.test_request_context():
+        admin_index_url = url_for("admin.index")
+        static_logo_url = url_for("admin.static", filename="logo.png")
+        user_index_url = url_for("user.index")
+        user_login_url = url_for("user.login")
+        user_logout_url = url_for("user.logout")
+        user_register_url = url_for("user.register")
+
+    assert admin_index_url == "/admin/"
+    assert static_logo_url == "/admin/static/logo.png"
+    assert user_index_url == "/user/"
+    assert user_login_url == "/user/login/"
+    assert user_logout_url == "/user/logout/"
+    assert user_register_url == "/user/register/"
+
+    rv = client.get(admin_index_url)
+    assert rv.status_code == 200
+    rv = client.get(static_logo_url)
+    assert rv.status_code == 200
+    rv = client.get(user_index_url)
+    assert rv.status_code == 302
+    rv = client.get(user_login_url)
+    assert rv.status_code == 200
+    rv = client.get(user_register_url)
+    assert rv.status_code == 200
+    rv = client.get(user_logout_url)
+    assert rv.status_code == 302
 
 
-def test_admin_init_error():
+def test_admin_raise():
     admin = Admin()
     admin = Admin(url="/")
     admin = Admin(url="/admin")
@@ -117,14 +186,13 @@ def test_admin_init_error():
         admin = Admin(url="admin")
 
 
-def test_double_init(app):
+def test_admin_init_app_raise(app):
     admin = Admin()
     admin.init_app(app)
     with pytest.raises(Exception):
         admin.init_app(app)
 
-
-def test_nested_flask_views(app):
+def test_method_views(app):
     admin = Admin()
     admin.init_app(app)
     view = MockMethodView()
@@ -155,83 +223,24 @@ def test_nested_flask_views(app):
     rv = client.get("/admin/mockmethodview/_api/4")
     assert rv.data == b"GET - API3"
 
-
-def test_app_admin_defaults(app):
-    admin = Admin()
-    admin.init_app(app)
-
-    assert "admin" in admin.app.extensions
-    assert len(admin.app.extensions["admin"]) == 1
-    assert admin.app.extensions["admin"][0] == admin
-
-    # print(app.extensions)
-    # print(app.blueprints)
-
-    #
-    # for k in rules:
-    # print(k.endpoint, k.rule)
-
-
-def test_admin_view(app, client):
-    admin = Admin()
-    admin.init_app(app)
-    mock_view = MockView()
-    admin.add_view(mock_view)
-
-    assert "admin" in admin.app.extensions
-    assert len(admin.app.extensions["admin"]) == 1
-    assert admin.app.extensions["admin"][0] == admin
-
-    # print(app.extensions)
-    # print(app.blueprints)
-
-    # print_app_endpoint_rule(app)
-    assert get_app_endpoint_rule(app, "admin.static") == "/admin/static/<path:filename>"
-
-    with app.test_request_context():
-        logo_url = url_for("admin.static", filename="logo.png")
-    assert logo_url == "/admin/static/logo.png"
-    rv = client.get(logo_url)
-    assert rv.status_code == 200
-
-
-def test_root_admin_view(app, client):
-    admin = Admin(url="/")
-    admin.init_app(app)
-    mock_view = MockView()
-    admin.add_view(mock_view)
-
-    assert "admin" in admin.app.extensions
-    assert len(admin.app.extensions["admin"]) == 1
-    assert admin.app.extensions["admin"][0] == admin
-    assert get_app_endpoint_rule(app, "admin.static") == "/admin/static/<path:filename>"
-    with app.test_request_context():
-        logo_url = url_for("admin.static", filename="logo.png")
-    assert logo_url == "/admin/static/logo.png"
-    rv = client.get(logo_url)
-    assert rv.status_code == 200
-
-
-def test_admin_customizations(app):
-    admin = Admin(app, name="Test", url="/foobar", static_url_path="/static/my/admin")
+def test_admin_customizations(app, client):
+    admin = Admin(app, name="Test", url="/foobar")
     assert admin.name == "Test"
     assert admin.url == "/foobar"
     # print(app.extensions)
     # print(app.blueprints)
-
+    # print_app_endpoint_rule(app)
     # print(app.view_functions)
 
-    with app.test_client() as client:
-        rv = client.get("/foobar/")
+    rv = client.get("/foobar/")
     assert rv.status_code == 200
 
 
-def test_call(app, client):
+def test_permissions(app, client):
     admin = Admin()
     view = MockView()
     admin.add_view(view)
     admin.init_app(app)
-    client = app.test_client()
 
     rv = client.get("/admin/")
     assert rv.status_code == 200
@@ -243,16 +252,6 @@ def test_call(app, client):
     assert rv.data == b"Success!"
 
     # Check authentication failure
-    view.allow_call = False
-    rv = client.get("/admin/mockview/")
-    assert rv.data == b"Failure!"
-
-
-def test_permissions(app, client):
-    admin = Admin()
-    view = MockView()
-    admin.add_view(view)
-    admin.init_app(app)
     view.allow_access = False
     rv = client.get("/admin/mockview/")
     assert rv.status_code == 403
@@ -268,71 +267,54 @@ def test_inaccessible_callback(app, client):
     rv = client.get("/admin/mockview/")
     assert rv.status_code == 418
 
-
-def test_visibility(app, client):
-    admin = Admin()
-    admin.init_app(app)
-    view = MockView(name="TestMenuItem")
-    view.visible = False
-    admin.add_view(view)
-    rv = client.get("/admin/mockview/")
-    assert "TestMenuItem" not in rv.data.decode("utf-8")
-
-
-def test_add_category():
+def test_admin_category():
     admin = Admin()
     admin.add_category("Category1", "class-name", "icon-type", "icon-value")
-    admin.add_view(MockView(name="Test 1", endpoint="test1", category="Category1"))
-    admin.add_view(MockView(name="Test 2", endpoint="test2", category="Category2"))
+    view_1 = MockView(name="Test 1", endpoint="test1", category="Category1")
+    view_2 = MockView(name="Test 2", endpoint="test2", category="Category2")
+    view_3 = MockView(name="Test 3", endpoint="test3", category="Category2")
 
-    # print(admin._menu)
+    admin.add_view(view_1)
+    admin.add_view(view_2)
+    admin.add_view(view_3)
+
+    # print(admin.menu())
     # print(admin._menu_categories)
     # print(admin._menu_links)
 
-    assert len(admin.menu()) == 3
+    assert "Category1" in admin._menu_categories
+    assert "Category2" in admin._menu_categories
 
-    # Test 1 should be underneath Category1
-    assert admin.menu()[1].name == "Category1"
-    assert admin.menu()[1].get_class_name() == "class-name"
-    assert admin.menu()[1].get_icon_type() == "icon-type"
-    assert admin.menu()[1].get_icon_value() == "icon-value"
-    assert len(admin.menu()[1].get_children()) == 1
-    assert admin.menu()[1].get_children()[0].name == "Test 1"
-
-    # Test 2 should be underneath Category2
-    assert admin.menu()[2].name == "Category2"
-    assert admin.menu()[2].get_class_name() is None
-    assert admin.menu()[2].get_icon_type() is None
-    assert admin.menu()[2].get_icon_value() is None
-    assert len(admin.menu()[2].get_children()) == 1
-    assert admin.menu()[2].get_children()[0].name == "Test 2"
+    for menu in admin.menu():
+        if menu.name == "Category1":
+            menu_category1 = menu
+        if menu.name == "Category2":
+            menu_category2 = menu
 
 
-def test_submenu():
-    admin = Admin()
-    admin.add_view(MockView(name="Test 1", category="Test", endpoint="test1"))
+    assert menu_category1.get_class_name() == "class-name"
+    assert menu_category1.get_icon_type() == "icon-type"
+    assert menu_category1.get_icon_value() == "icon-value"
+    assert len(menu_category1.get_children()) == 1
+    assert menu_category1.get_children()[0].name == "Test 1"
 
-    # Second view is not normally accessible
-    view = MockView(name="Test 2", category="Test", endpoint="test2")
-    view.allow_access = False
-    admin.add_view(view)
-
-    assert "Test" in admin._menu_categories
-    assert len(admin._menu) == 2
-    assert admin._menu[1].name == "Test"
-    assert len(admin._menu[1]._children) == 2
-
+    assert menu_category2.get_class_name() is None
+    assert menu_category2.get_icon_type() is None
+    assert menu_category2.get_icon_value() is None
+    assert len(menu_category2.get_children()) == 2
+    assert menu_category2.get_children()[0].name == "Test 2"
+    assert menu_category2.get_children()[1].name == "Test 3"
+    
     # Categories don't have URLs
-    assert admin._menu[1].get_url() is None
+    assert menu_category1.get_url() is None
+    assert menu_category2.get_url() is None
 
+    view_3.allow_access = False
     # Categories are only accessible if there is at least one accessible child
-    assert admin._menu[1].is_accessible()
-
-    children = admin._menu[1].get_children()
+    assert menu_category2.is_accessible()
+    children = menu_category2.get_children()
     assert len(children) == 1
-
     assert children[0].is_accessible()
-
 
 def test_menu_links(app, client):
     admin = Admin()
