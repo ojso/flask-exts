@@ -1,3 +1,11 @@
+v0.1.8
+------
+
+Unreleased
+
+- install python-plugins
+- user.login and user.register
+
 v0.1.7
 ------
 

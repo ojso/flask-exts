@@ -1,5 +1,26 @@
+{% macro render_field(field) -%}
+<div class="mb-3">
+  {{ field.label }}
+  {{ field(class_="form-control",**kwargs)|safe }}
+  {%- if field.errors %}
+  <ul class="error">
+    {% for error in field.errors %}
+    <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
 {% macro render_field_errors(field) -%}
     {%- for error in field.errors %}
         <div class="d-block invalid-feedback">{{ error }}</div>
     {%- endfor %}
+{%- endmacro %}
+
+{% macro render_checkbox_field(field) -%}
+<div class="mb-3 form-check">
+  {{ field(type='checkbox', **kwargs) }}
+  {{ field.label }}
+</div>
 {%- endmacro %}

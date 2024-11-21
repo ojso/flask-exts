@@ -5,10 +5,10 @@ from flask import flash
 from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
+from ...utils.form import validate_form_on_submit
 from ..wraps import expose
 from ..view import BaseView
-from ...forms.forms.user import LoginForm
-from ...forms.forms.user import RegistrationForm
+from flask import current_app
 
 
 class UserView(BaseView):
@@ -17,10 +17,8 @@ class UserView(BaseView):
     """
 
     index_template = "admin/user/index.html"
-    login_template = "admin/user/index.html"
-    register_template = "admin/user/index.html"
-
-    login_form = LoginForm
+    login_template = "admin/user/login.html"
+    register_template = "admin/user/register.html"
 
     def __init__(
         self,
@@ -48,6 +46,13 @@ class UserView(BaseView):
             menu_icon_value=menu_icon_value,
         )
 
+    def create_user(self, form):
+        raise NotImplementedError()
+
+    def validate_register(self, form):
+        """validate submit form"""
+        raise NotImplementedError()
+
     @expose("/")
     def index(self):
         if not current_user.is_authenticated:
@@ -60,69 +65,43 @@ class UserView(BaseView):
         if current_user.is_authenticated:
             return redirect(url_for(".index"))
 
-        form = self.login_form()
-        if form.validate_on_submit():
-            user = form.get_user()
-            login_user(user)
-            if (
-                user is None
-                or user.password is None
-                or not user.check_password(form.password.data)
-            ):
+        usercenter = current_app.extensions["usercenter"]
+
+        form = usercenter.login_form_class()
+        if validate_form_on_submit(form):
+
+            user = usercenter.get_user_by_username(form.username.data)
+            if user is None:
+                flash("not found user")
+            elif not usercenter.validate_login(form.username.data, form.password.data):
                 flash("Invalid username or password")
-            elif login_user(user, remember=form.remember_me.data):
-                flash("Logged in successfully.")
+            else:
+                if hasattr(form, "remember_me"):
+                    login_user(user, remember=form.remember_me.data)
+                else:
+                    login_user(user)
                 next_page = request.args.get("next")
                 if not next_page:
-                    next_page = url_for("index")
+                    next_page = url_for(".index")
                 return redirect(next_page)
-            else:
-                flash("user is not active.")
-
-        title = "login"
-        link = (
-            "<p>Don't have an account? <a href=\""
-            + url_for(".register")
-            + '">Click here to register.</a></p>'
-        )
-        return self.render(self.login_template, form=form, title=title, link=link)
+        return self.render(self.login_template, form=form)
 
     @expose("/register/", methods=("GET", "POST"))
     def register(self):
         if current_user.is_authenticated:
-            return redirect(url_for("index"))
-        form = RegistrationForm()
-        if form.validate_on_submit():
-            username = form.username.data
-            if len(username) < 6 or len(username) > 50:
-                flash("用户名长度限制6-50.")
-            elif not re.match("^[a-z][a-z0-9_]+", username):
-                flash("用户名只能包含小写字母，数字，下划线，且字母开头，请重新输入")
-            else:
-                # user = User(username=username)
-                user = User()
-                form.populate_obj(user)
+            return redirect(url_for(".index"))
 
-                # email 数据未验证前存储在data中
-                # user.email = form.email.data
-                user.data = {"unverified_email": form.email.data}
-                user.set_password(form.password.data)
-                # 目前默认激活，否则无法登录
-                user.isactive = True
-                db.session.add(user)
-                db.session.commit()
-                flash("Congratulations, you are now a registered user!")
-                return redirect(url_for("user.login"))
-                login_user(user)
-                return redirect(url_for(".index"))
+        usercenter = current_app.extensions["usercenter"]
 
-        title = "Register"
-        link = (
-            '<p>Already have an account? <a href="'
-            + url_for(".login")
-            + '">Click here to log in.</a></p>'
-        )
-        return self.render(self.register_template, form=form, link=link)
+        form = usercenter.register_form_class()
+        if validate_form_on_submit(form):
+            if self.validate_register(form):
+                user = self.create_user(form)
+                if user is not None:
+                    login_user(user)
+                    return redirect(url_for(".index"))
+
+        return self.render(self.register_template, form=form)
 
     @expose("/logout/")
     def logout(self):

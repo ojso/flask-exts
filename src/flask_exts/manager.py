@@ -1,6 +1,6 @@
 from .babel import babel_init_app
 from .templating import template_init_app
-from .login import login_init_app
+from .users import user_init_app
 
 
 class Manager:
@@ -23,7 +23,7 @@ class Manager:
             app.config.get("TEMPLATE_ENABLED", True)
             and "template" not in app.extensions
         ):
-            template_init_app(app=app)
+            template_init_app(app)
 
-        if app.config.get("FLASK_LOGIN_ENABLED", True) and getattr(app,"login_manager",None) is None:
-            self.login_manager = login_init_app(app)
+        if app.config.get("USER_ENABLED", True) and "usercenter" not in app.extensions:
+            user_init_app(app)

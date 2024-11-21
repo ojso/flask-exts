@@ -1,0 +1,20 @@
+{% extends 'admin/master.html' %}
+
+{% from 'macro/form.html' import render_field %}
+{% from 'macro/form.html' import render_checkbox_field %}
+
+{% block title %}register{% endblock %}
+
+{% block main %}
+<form action="" method="post">
+    {{ render_field(form.username) }}
+    {{ render_field(form.email) }}
+    {{ render_field(form.password) }}
+    {{ render_field(form.password_repeat) }}
+    {{ form.submit() }}
+    {{ form.render_csrf_token() }}
+</form>
+
+<div>Already have an account?  Click <a href="{{url_for('.login')}}"> here </a> to log in.</div>'
+
+{% endblock %}

@@ -23,18 +23,14 @@ Configuration
                            Default is ``None``.
 ``BABEL_DEFAULT_TIMEZONE`` Set to ``Asia/Shanghai`` to babel's default timezone.
                            Default is ``None``.
-``TEMPLATE_ENABLED``       Set to ``False`` to disable templating extension.
-                           Default is ``True``.
-``TEMPLATE_THEME``         Set to ``theme`` to create custom theme                           
-                           Default is ``templating.theme.DefaultTheme()``
 ``JQUERY_JS_URL``          Set to ``jquery js url`` to active ``jquery``.
-                           Default is in ``jsdelivr``.
+                           Default is in ``template.static``.
 ``BOOTSTRAP_CSS_URL``      Set to ``bootstrap css url`` to active ``bootstrap css``.
-                           Default is in ``jsdelivr``.
+                           Default is in ``template.static``.
 ``BOOTSTRAP_JS_URL``       Set to ``bootstrap js url`` to active ``bootstrap js``.
-                           Default is in ``jsdelivr``.
+                           Default is in ``template.static``.
 ``ICON_SPRITE_URL``        Set to ``icon url`` to active ``icon``.
-                           Default is in ``/template/static/vendor/bootstrap-icons/bootstrap-icons.svg``.
+                           Default is in ``template.static``.
 ``CSRF_ENABLED``           Set to ``True`` to enable form's CSRF .
                            Default is ``False``.
 ``CSRF_SECRET_KEY``        Random data for generating secure tokens.
@@ -43,6 +39,14 @@ Configuration
                            Default is ``csrf_token``.
 ``CSRF_TIME_LIMIT``        Max age in seconds for CSRF tokens. 
                            Default is ``1800``. 
+``TEMPLATE_ENABLED``       Set to ``False`` to disable templating extension.
+                           Default is ``True``.
+``TEMPLATE_THEME``         Set to ``theme`` to create custom theme                           
+                           Default is ``templating.theme.DefaultTheme()``
+``USER_ENABLED``           Set to ``False`` to disable ``User`` support. 
+                           Default is ``True``. 
+``USER_CENTER``            set to ``user center`` to create custom user_center
+                           Default is ``users.user_center.DefaultUserCenter()``
 ``FLASK_LOGIN_ENABLED``    Set to ``False`` to disable ``Flask-Login``. 
                            Default is ``True``. 
 ========================== =====================================================================
