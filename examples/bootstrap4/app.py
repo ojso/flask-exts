@@ -6,7 +6,7 @@ from wtforms.validators import DataRequired, Length, Regexp
 from wtforms.fields import *
 from flask_sqlalchemy import SQLAlchemy
 from flask_exts.forms.form import FlaskForm
-from flask_exts.forms.fields.switch import SwitchField
+from python_plugins.forms.fields.switch import SwitchField
 from flask_exts import Manager
 
 manager = Manager()
@@ -32,7 +32,7 @@ class ExampleForm(FlaskForm):
     email = EmailField()
     url = URLField()
     telephone = TelField()
-    image = FileField(render_kw={'class': 'my-class'}, validators=[Regexp('.+\.jpg$')])  # add your class
+    image = FileField(render_kw={'class': 'my-class'}, validators=[Regexp(r'.+\.jpg$')])  # add your class
     option = RadioField(choices=[('dog', 'Dog'), ('cat', 'Cat'), ('bird', 'Bird'), ('alien', 'Alien')])
     select = SelectField(choices=[('dog', 'Dog'), ('cat', 'Cat'), ('bird', 'Bird'), ('alien', 'Alien')])
     select_multiple = SelectMultipleField(choices=[('dog', 'Dog'), ('cat', 'Cat'), ('bird', 'Bird'), ('alien', 'Alien')])

@@ -12,7 +12,7 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired
 from flask_exts.forms.form import FlaskForm
-from flask_exts.forms.fields.switch import SwitchField
+from python_plugins.forms.fields.switch import SwitchField
 
 
 def test_render_form(app, client, hello_form):

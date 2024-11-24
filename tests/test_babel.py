@@ -9,7 +9,7 @@ from flask_babel import get_translations
 from wtforms.fields import StringField
 from wtforms.validators import DataRequired
 from flask_exts.forms.form import FlaskForm
-from flask_exts.forms.fields import JSONField
+from python_plugins.forms.fields import JSONField
 
 def test_locale(app):
     with app.test_request_context():

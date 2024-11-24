@@ -1,0 +1,7 @@
+{% extends 'admin/master.html' %}
+
+{% block main %}
+{%- for user in users -%}
+  <div>{{ user.id }} : {{ user.username }} : {{ user.email }}</div>
+{%- endfor %}
+{% endblock %}
