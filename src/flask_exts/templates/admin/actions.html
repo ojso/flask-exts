@@ -23,9 +23,32 @@
     {% endif %}
 {% endmacro %}
 
-{% macro script(message, actions, actions_confirmation) %}
+{% macro add_action_js(message, actions, actions_confirmation) %}
     {% if actions %}
         <div id="actions-confirmation-data" class="d-none">{{ actions_confirmation|tojson|safe }}</div>
         <div id="message-data" class="d-none">{{ message|tojson|safe }}</div>
+        <script src="{{ url_for('template.static',filename='admin/js/actions.js') }}"></script>
     {% endif %}
+{% endmacro %}
+
+{# ---------------------- Modal Window ------------------- #}
+
+{% macro add_modal_button(url='', title='', content='', modal_window_id='fa_modal_window', btn_class='icon') %}
+  <a class="{{ btn_class }}" data-target="#{{ modal_window_id }}" title="{{ title }}" href="{{ url }}" data-toggle="modal">
+    {{ caller() }} 
+    {{ content|safe }}
+  </a>
+{% endmacro %}
+
+{% macro add_modal_window(modal_window_id='fa_modal_window', modal_label_id='fa_modal_label') %}
+  <div class="modal fade" id="{{ modal_window_id }}" tabindex="-1" role="dialog" aria-labelledby="{{ modal_label_id }}">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro add_modal_js() %}
+  <script src="{{ url_for('template.static',filename='admin/js/modal.js') }}"></script>
 {% endmacro %}

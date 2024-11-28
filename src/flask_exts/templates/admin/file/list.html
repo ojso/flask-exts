@@ -1,7 +1,6 @@
 {% extends 'admin/master.html' %}
 
 {% from 'macro/icon.html' import render_icon %}
-{% import 'admin/lib.html' as lib with context %}
 {% import 'admin/actions.html' as actionslib with context %}
 
 
@@ -75,7 +74,7 @@
                 {% block list_row_actions scoped %}
                 {% if view.can_rename and path and name != '..' %}
                   {%- if view.rename_modal -%}
-                    {% call lib.add_modal_button(url=get_url('.rename', path=path, modal=True),
+                    {% call actionslib.add_modal_button(url=get_url('.rename', path=path, modal=True),
                                             title=gettext('Rename File'),
                                             content='<i class="fa fa-pencil glyphicon glyphicon-pencil"></i>') %}
                         {{ render_icon('pencil') }}
@@ -119,7 +118,7 @@
             <td>
                 {% if view.can_download %}
                   {%- if view.edit_modal and view.is_file_editable(path) -%}
-                    {% call lib.add_modal_button(url=get_file_url(path, modal=True)|safe,
+                    {% call actionslib.add_modal_button(url=get_file_url(path, modal=True)|safe,
                                             btn_class='', content=name) %}
                     {% endcall %}
                   {% else %}
@@ -151,7 +150,7 @@
         {% if view.can_upload %}
         <div class="btn-group">
             {%- if view.upload_modal -%}
-              {% call lib.add_modal_button(url=get_dir_url('.upload', path=dir_path, modal=True),
+              {% call actionslib.add_modal_button(url=get_dir_url('.upload', path=dir_path, modal=True),
                                       btn_class="btn btn-secondary",
                                       content=gettext('Upload File')) %}
               {% endcall %}
@@ -163,7 +162,7 @@
         {% if view.can_mkdir %}
         <div class="mx-1">
             {%- if view.mkdir_modal -%}
-              {% call lib.add_modal_button(url=get_dir_url('.mkdir', path=dir_path, modal=True),
+              {% call actionslib.add_modal_button(url=get_dir_url('.mkdir', path=dir_path, modal=True),
                                       btn_class="btn btn-secondary",
                                       content=gettext('Create Directory')) %}
               {% endcall %}
@@ -184,15 +183,18 @@
     {{ actionslib.form(actions, get_url('.action_view')) }}
     {% endblock %}
 
-    {%- if view.rename_modal or view.mkdir_modal
-           or view.upload_modal or view.edit_modal -%}
-        {{ lib.add_modal_window() }}
+    {%- if view.rename_modal or view.mkdir_modal or view.upload_modal or view.edit_modal -%}
+        {{ actionslib.add_modal_window() }}
     {%- endif -%}
 {% endblock %}
 
 {% block tail %}
     {{ super() }}
-    {{ actionslib.script(gettext('Please select at least one file.'),
-                         actions,
-                         actions_confirmation) }}
+
+    {%- if view.rename_modal or view.mkdir_modal or view.upload_modal or view.edit_modal -%}
+        {{ actionslib.add_modal_js() }}
+    {%- endif -%}
+
+    {{ actionslib.add_action_js(gettext('Please select at least one file.'), actions, actions_confirmation) }}
+    
 {% endblock %}

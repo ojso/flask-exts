@@ -1,3 +1,5 @@
-$('body').on('click.modal.data-api', '[data-toggle="modal"]', function () {
-    $($(this).data("target") + ' .modal-content').load($(this).attr('href'));
-});
+$('#fa_modal_window').on('show.bs.modal', function (event) {
+    let relatedTarget = $(event.relatedTarget)
+    let modal = $(this)
+    modal.find('.modal-content').load(relatedTarget.attr('href'))
+})

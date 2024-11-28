@@ -6,12 +6,6 @@
   <link rel="stylesheet" href="{{ url_for('template.static',filename='admin/css/admin.css') }}">
 {%- endblock %}
 
-{% block scripts -%}
-  {{ super() }}
-  <script src="{{ url_for('template.static',filename='admin/js/modal.js') }}"></script>
-  <script src="{{ url_for('template.static',filename='admin/js/actions.js') }}"></script>
-{%- endblock %}
-
 {%- block body -%}
 <div class="container{% if theme.navbar_fluid %}-fluid{% endif %}">
     <nav class="navbar navbar-expand-lg {{ theme.bootstrap.navbar_classes }} mb-2" role="navigation">
@@ -36,7 +30,7 @@
                     {{ layout.menu_links(admin.menu_links()) }}
                 </ul>
                 {%- endblock %}
-                {% block access_control %}{% endblock %}
+                {% block access_control %} {{ layout.login() }}{% endblock %}
             </div>
         </div>
     </nav>
@@ -47,7 +41,5 @@
     {# set render_ctx = h.resolve_ctx() #}
     {% block main %}{% endblock %}
 </div>
-
-{% block tail %}{% endblock %}
 
 {%- endblock -%}
