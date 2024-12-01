@@ -2,19 +2,20 @@ from ..wraps import expose
 from ..view import BaseView
 
 
-class AdminIndexView(BaseView):
+class IndexView(BaseView):
     """
     Default administrative interface index page when visiting the ``/admin/`` URL.
     """
 
     index_template = "admin/index.html"
+    admin_index_template = "admin/admin.html"
 
     def __init__(
         self,
-        name=None,
+        name="Index",
         category=None,
-        endpoint=None,
-        url=None,
+        endpoint="index",
+        url="/",
         template_folder=None,
         static_folder=None,
         static_url_path=None,
@@ -38,3 +39,7 @@ class AdminIndexView(BaseView):
     @expose("/")
     def index(self):
         return self.render(self.index_template)
+    
+    @expose("/admin/")
+    def admin_index(self):
+        return self.render(self.admin_index_template)

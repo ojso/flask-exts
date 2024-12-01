@@ -3,7 +3,6 @@
 {% from 'macro/icon.html' import render_icon %}
 {% import 'admin/actions.html' as actionslib with context %}
 
-
 {% block main %}
     {% block breadcrums %}
       <nav area-label="breadcrumb">
@@ -180,11 +179,11 @@
     {% endblock %}
 
     {% block actions %}
-    {{ actionslib.form(actions, get_url('.action_view')) }}
+      {{ actionslib.form(actions, get_url('.action_view')) }}
     {% endblock %}
 
     {%- if view.rename_modal or view.mkdir_modal or view.upload_modal or view.edit_modal -%}
-        {{ actionslib.add_modal_window() }}
+      {{ actionslib.add_modal_window() }}
     {%- endif -%}
 {% endblock %}
 

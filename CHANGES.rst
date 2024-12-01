@@ -1,10 +1,16 @@
+v0.1.9
+------
+
+Released 2024-12-01
+
+- add index_view
+
 v0.1.8
 ------
 
-Unreleased
+Released 2024-11-24
 
-- install python-plugins
-- user.login and user.register
+- add user_view
 
 v0.1.7
 ------

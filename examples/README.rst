@@ -16,14 +16,38 @@ Type these commands in the terminal:
     $ pip install flask-exts
     
 
-Run the demo applications
-==========================
+Run the examples
+===============================
 
 Type the command in the terminal:
 
+simple 
+---------
+
+run only one file.
+
 .. code-block:: bash
 
-    $ flask --app start run --debug --port=5000
+    $ python simple.py
+
+Now go to http://localhost:5000.
+
+demo
+-----------------
+
+With sqlite db.
+
+.. code-block:: bash
+    
+    $ flask --app demo run --debug --port=5000
+
+
+fileadmin
+-----------------
+
+.. code-block:: bash
+    
+    $ flask --app admin/fileadmin run
 
 Bootstrap 4
 -----------------
@@ -39,34 +63,5 @@ Bootstrap 5
     
     $ flask --app bootstrap5/app.py run
 
-Now go to http://localhost:5000.
 
-admin
------------------
-
-.. code-block:: bash
-    
-    $ flask --app admin/simple run
-
-Now go to http://localhost:5000.
-
-login
------------------
-
-.. code-block:: bash
-    
-    $ flask --app admin/authlogin run
-
-Now go to http://localhost:5000.
-
-
-Overview of icons
------------------
-
-When Bootstrap-Flask updates the icon file, the overview page can be upgraded with:
-
-
-.. code-block:: bash
-
-    $ python3 update-icons.py
 

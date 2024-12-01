@@ -51,16 +51,14 @@ Configuration
                            Default is ``True``. 
 ========================== =====================================================================
 
-Start
-======
+Examples
+===========
 
-.. code-block:: python
+``python simple.py`` to run a simple example.
 
-   from flask_exts import Manager
-   from flask import Flask   
+.. literalinclude:: ../examples/simple.py
+  :language: python
 
-   manager = Manager()
-   app = Flask(__name__)
+More examples, please click :doc:`examples`.
 
-   # init Manager
-   manager.init_app(app)
+

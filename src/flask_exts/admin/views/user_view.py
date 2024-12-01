@@ -126,4 +126,4 @@ class UserView(BaseView):
     @expose("/logout/")
     def logout(self):
         logout_user()
-        return redirect(url_for("admin.index"))
+        return redirect(url_for("index.index"))

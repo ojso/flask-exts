@@ -2,7 +2,7 @@ from flask import render_template
 from flask import url_for
 from .menu import MenuCategory, MenuView, MenuLink, SubMenuCategory
 from .view import BaseView
-from .views.index_view import AdminIndexView
+from .views.index_view import IndexView
 from .views.user_view import UserView
 
 
@@ -19,7 +19,7 @@ class Admin:
         endpoint="admin",
         template_folder=None,
         static_folder=None,
-        index_view=AdminIndexView(),
+        index_view=IndexView(),
         user_view=UserView(),
         category_icon_classes=None,
     ):
@@ -64,16 +64,11 @@ class Admin:
 
         self.index_view = index_view
         if self.index_view is not None:
-            self.index_view.name = self.name
-            self.index_view.url = self.url
-            self.index_view.endpoint = self.endpoint
-            self.index_view.static_folder = self.static_folder
-            # Add index view
-            self.add_view(self.index_view,False)
+            self.add_view(self.index_view, False)
 
         self.user_view = user_view
         if self.user_view is not None:
-            self.add_view(self.user_view,False)
+            self.add_view(self.user_view, False)
 
         # Register with application
         if app is not None:
