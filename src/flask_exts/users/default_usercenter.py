@@ -1,30 +1,12 @@
-from abc import ABC, abstractmethod
+from .usercenter import UserCenter
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+
 from .forms import LoginForm
 from .forms import RegisterForm
 
 
-class User(UserMixin):
-    def __init__(self, id, username, password, email):
-        self.id = id
-        self.username = username
-        self.password = password
-        self.email = email
-
-    def get_roles(self):
-        raise NotImplemented
-
-
-class UserCenter(ABC):
-    login_view = "user.login"
-
-    @abstractmethod
-    def user_loader(self, id): ...
-
-
 class DefaultUserCenter(UserCenter):
-    user_class = User
+    
     login_form_class = LoginForm
     register_form_class = RegisterForm
 

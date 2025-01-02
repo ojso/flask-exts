@@ -1,7 +1,5 @@
 from wtforms import StringField
 from wtforms import SubmitField
-
-
 from ...forms.form import FlaskForm
 
 

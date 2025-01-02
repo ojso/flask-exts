@@ -1,5 +1,5 @@
 from .babel import babel_init_app
-from .templating import template_init_app
+from .template import template_init_app
 from .users import user_init_app
 
 
@@ -25,5 +25,5 @@ class Manager:
         ):
             template_init_app(app)
 
-        if app.config.get("USER_ENABLED", True) and "usercenter" not in app.extensions:
+        if app.config.get("USER_ENABLED", True) and "user" not in app.extensions:
             user_init_app(app)

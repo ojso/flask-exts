@@ -8,8 +8,9 @@ from flask_babel import gettext
 from flask_babel import get_translations
 from wtforms.fields import StringField
 from wtforms.validators import DataRequired
-from flask_exts.forms.form import FlaskForm
-from python_plugins.forms.fields import JSONField
+from flask_exts.forms import FlaskForm
+from flask_exts.forms.fields import JSONField
+
 
 def test_locale(app):
     with app.test_request_context():
@@ -34,6 +35,7 @@ def test_locale(app):
         assert "中国标准时间" in format_datetime(datetime.now(), "full")
         # print(format_datetime(datetime.now()))
 
+
 def test_translation(app):
     text = "Home"
     text_en = "Main Page"
@@ -43,6 +45,7 @@ def test_translation(app):
         session["lang"] = "zh"
         refresh()
         assert gettext(text) == text_zh
+
 
 def test_translation_form(app):
     text_required = "This field is required."
@@ -56,11 +59,10 @@ def test_translation_form(app):
         name = StringField(validators=[DataRequired()])
         json = JSONField()
 
-
-    with app.test_request_context(method="POST",data={"json":"abc"}):
+    with app.test_request_context(method="POST", data={"json": "abc"}):
         session["lang"] = "en"
         # print(gettext("Invalid JSON"))
-        f=F()
+        f = F()
         f.validate()
         # print(f.name.errors)
         # print(f.json.errors)
@@ -71,29 +73,33 @@ def test_translation_form(app):
 
         session["lang"] = "zh"
         refresh()
-        f=F()
+        f = F()
         f.validate()
         # print(f.name.errors)
         # print(f.json.errors)
         assert text_required_zh in f.name.errors
         assert text_invalid_json_zh in f.json.errors
 
+
 def _test_babel_get_translations(app):
     with app.test_request_context():
         session["lang"] = "zh"
         t = get_translations()
         # print(t._catalog)
-        for k,v in t._catalog.items():
+        for k, v in t._catalog.items():
             print(f"{k} -> {v}")
-        
+
+
 def _test_GNUTranslations(app):
     from gettext import GNUTranslations
     import os.path
-    messages_mo = os.path.join(app.root_path,'translations','zh_CN','LC_MESSAGES','messages.mo')
+
+    messages_mo = os.path.join(
+        app.root_path, "translations", "zh_CN", "LC_MESSAGES", "messages.mo"
+    )
     print(messages_mo)
-    with open(messages_mo,'rb') as f:
+    with open(messages_mo, "rb") as f:
         g = GNUTranslations(f)
     print(g._catalog)
-    for k,v in g._catalog.items():
-        print(k,v)
-
+    for k, v in g._catalog.items():
+        print(k, v)

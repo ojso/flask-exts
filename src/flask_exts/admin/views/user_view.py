@@ -7,7 +7,6 @@ from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ...utils.form import validate_form_on_submit
 from ..wraps import expose
 from ..view import BaseView
 from flask import current_app
@@ -51,7 +50,7 @@ class UserView(BaseView):
 
     @property
     def usercenter(self):
-        return current_app.extensions["usercenter"]
+        return current_app.extensions["user"]
 
     def get_login_form_class(self):
         return self.usercenter.login_form_class
@@ -93,7 +92,7 @@ class UserView(BaseView):
         if current_user.is_authenticated:
             return redirect(url_for(".index"))
         form = self.get_login_form_class()()
-        if validate_form_on_submit(form):
+        if form.validate_on_submit():
             (user, error) = self.validate_login_and_get_user(form)
             if user is None:
                 flash(error)
@@ -113,7 +112,7 @@ class UserView(BaseView):
         if current_user.is_authenticated:
             return redirect(url_for(".index"))
         form = self.get_register_form_class()()
-        if validate_form_on_submit(form):
+        if form.validate_on_submit():
             (user, error) = self.validate_register_and_create_user(form)
             if user is None:
                 flash(error)

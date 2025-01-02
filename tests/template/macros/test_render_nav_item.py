@@ -1,6 +1,5 @@
 from flask import render_template_string
 
-
 def test_render_nav_item_active(app, client):
     @app.route('/active')
     def foo():

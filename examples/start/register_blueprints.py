@@ -19,7 +19,7 @@ def register_blueprints(app):
 
     @app.route("/")
     def hello():
-        return render_template("demo.html")
+        return render_template("hello.html")
 
     @app.route("/upload", methods=("GET", "POST"))
     def upload():

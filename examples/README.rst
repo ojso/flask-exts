@@ -2,7 +2,7 @@
 Examples
 ========================
 
-Install
+Download
 =========
 
 Type these commands in the terminal:
@@ -16,10 +16,13 @@ Type these commands in the terminal:
     $ pip install flask-exts
     
 
-Run the demo applications
+Run the applications
 ==========================
 
-Type the command in the terminal:
+Type the command in the terminal, then go to http://localhost:5000.
+
+Start
+----------
 
 .. code-block:: bash
 
@@ -39,34 +42,10 @@ Bootstrap 5
     
     $ flask --app bootstrap5/app.py run
 
-Now go to http://localhost:5000.
-
 admin
 -----------------
 
 .. code-block:: bash
     
     $ flask --app admin/simple run
-
-Now go to http://localhost:5000.
-
-login
------------------
-
-.. code-block:: bash
-    
-    $ flask --app admin/authlogin run
-
-Now go to http://localhost:5000.
-
-
-Overview of icons
------------------
-
-When Bootstrap-Flask updates the icon file, the overview page can be upgraded with:
-
-
-.. code-block:: bash
-
-    $ python3 update-icons.py
 

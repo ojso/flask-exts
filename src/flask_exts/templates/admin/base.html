@@ -7,8 +7,8 @@
 {%- endblock %}
 
 {%- block body -%}
-<div class="container{% if theme.navbar_fluid %}-fluid{% endif %}">
-    <nav class="navbar navbar-expand-lg {{ theme.bootstrap.navbar_classes }} mb-2" role="navigation">
+<div class="container{% if template.bootstrap.navbar_fluid %}-fluid{% endif %}">
+    <nav class="navbar navbar-expand-lg {{ template.bootstrap.navbar_classes }} mb-2" role="navigation">
         <div class="container">
             <!-- Brand and toggle get grouped for better mobile display -->
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#admin-navbar-collapse"
@@ -35,7 +35,7 @@
         </div>
     </nav>
 </div>
-<div class="container{% if theme.fluid %}-fluid{% endif %}">
+<div class="container{% if template.bootstrap.fluid %}-fluid{% endif %}">
     {% block messages %}{{ layout.messages() }}{% endblock %}
     {# store the jinja2 context for form_rules rendering logic #}
     {# set render_ctx = h.resolve_ctx() #}

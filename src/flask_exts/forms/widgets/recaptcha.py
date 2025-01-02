@@ -32,9 +32,5 @@ class RecaptchaWidget:
     def __call__(self, field, error=None, **kwargs):
         """Returns the recaptcha input HTML."""
 
-        try:
-            public_key = current_app.config["RECAPTCHA_PUBLIC_KEY"]
-        except KeyError:
-            raise RuntimeError("RECAPTCHA_PUBLIC_KEY config not set") from None
-
+        public_key = current_app.config["RECAPTCHA_PUBLIC_KEY"]
         return self.recaptcha_html(public_key)

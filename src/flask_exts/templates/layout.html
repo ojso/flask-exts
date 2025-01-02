@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block ns_setting %}
-  {%- if theme %}{% set ns.theme = true %}{% endif -%}
 {% endblock %}
 
 {% block metas %}
@@ -10,13 +9,13 @@
 {% endblock %}
 
 {% block styles -%}
-  {%- if ns.theme -%}
-  {{ theme.load_css() }}
+  {%- if template -%}
+    {{ template.load_css() }}
   {%- endif -%}
 {%- endblock %}
 
 {% block scripts -%}
-  {%- if ns.theme -%}
-    {{ theme.load_js() }}
+  {%- if template -%}
+    {{ template.load_js() }}
   {%- endif -%}
 {%- endblock %}

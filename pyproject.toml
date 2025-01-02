@@ -31,7 +31,6 @@ dependencies = [
     "flask-babel>=4.0",
     "Flask-SQLAlchemy>=3.0",
     "Flask-Login>=0.6",
-    "Python-Plugins>=0.2",
 ]
 
 [project.urls]

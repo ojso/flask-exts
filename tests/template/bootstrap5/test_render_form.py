@@ -1,12 +1,12 @@
 from flask import render_template_string
 from wtforms import IntegerRangeField, DecimalRangeField
-from flask_exts.forms.form import BaseForm
-from python_plugins.forms.fields.switch import SwitchField
+from flask_exts.forms import FlaskForm
+from flask_exts.forms.fields import SwitchField
 
 
 def test_switch_field(app, client):
 
-    class TestForm(BaseForm):
+    class TestForm(FlaskForm):
         remember = SwitchField("Remember me", description="Just check this")
 
     @app.route("/switch")
@@ -33,7 +33,7 @@ def test_switch_field(app, client):
 # test render IntegerRangeField and DecimalRangeField
 def test_range_fields(app, client):
 
-    class TestForm(BaseForm):
+    class TestForm(FlaskForm):
         decimal_slider = DecimalRangeField()
         integer_slider = IntegerRangeField(render_kw={"min": "0", "max": "4"})
 

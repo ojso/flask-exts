@@ -2,10 +2,9 @@ import pytest
 import os
 import os.path as op
 from io import BytesIO
-from flask_exts.forms.form import BaseForm
-from flask_exts.forms.form import FlaskForm
-from flask_exts.forms.fields import FileField
-from flask_exts.forms.fields import ImageField
+from wtforms import Form
+from flask_exts.forms import FlaskForm
+from flask_exts.forms.fields import FileField, ImageField
 from flask_exts.forms.validators import FileRequired
 
 
@@ -27,16 +26,16 @@ def safe_delete(path, name):
 def test_base_upload_file_form(app):
     path = _create_temp(app.root_path)
 
-    class TestBaseForm(BaseForm):
+    class TestFlaskForm(Form):
         upload = FileField("Upload")
 
-    class TestForm(BaseForm):
+    class TestForm(Form):
         upload = FileField("Upload", save_path=path)
 
-    class TestOverwriteForm(BaseForm):
+    class TestOverwriteForm(Form):
         upload = FileField("Upload", save_path=path, allow_overwrite=True)
 
-    my_base_form = TestBaseForm()
+    my_base_form = TestFlaskForm()
     assert my_base_form.upload.save_path is None
     assert my_base_form.upload.allow_overwrite == False
     assert not my_base_form.validate()
@@ -55,31 +54,40 @@ def test_base_upload_file_form(app):
     assert my_form.validate()
     assert my_ow_form.upload() == '<input id="upload" name="upload" type="file">'
 
+
 def test_base_upload_image_form(app):
     path = _create_temp(app.root_path)
 
-    class TestUploadImageForm(BaseForm):
+    class TestUploadImageForm(Form):
         upload = ImageField("Upload")
 
     my_image_form = TestUploadImageForm()
     # print(my_image_form.upload())
-    assert my_image_form.upload() == '<input accept="image/*" id="upload" name="upload" type="file">'
+    assert (
+        my_image_form.upload()
+        == '<input accept="image/*" id="upload" name="upload" type="file">'
+    )
+
 
 def test_base_upload_required_field(app):
     path = _create_temp(app.root_path)
 
-    class TestRequiredForm(BaseForm):
-        upload = FileField("Upload",validators=[FileRequired()])
+    class TestRequiredForm(Form):
+        upload = FileField("Upload", validators=[FileRequired()])
 
     my_required_form = TestRequiredForm()
-    assert my_required_form.upload() == '<input id="upload" name="upload" required type="file">'
+    assert (
+        my_required_form.upload()
+        == '<input id="upload" name="upload" required type="file">'
+    )
     # assert my_base_form.upload.save_path is None
     # assert my_base_form.upload.allow_overwrite == False
     assert not my_required_form.validate()
     # assert len(my_required_form.upload.errors) > 0
     # print(my_required_form.upload.errors)
-    assert 'This field is required.' in my_required_form.upload.errors
-    
+    assert "This field is required." in my_required_form.upload.errors
+
+
 def test_upload_file_field(app):
     path = _create_temp(app.root_path)
 
@@ -94,6 +102,7 @@ def test_upload_file_field(app):
         upload = FileField("Upload", save_path=path, allow_overwrite=True)
 
     # Check upload
+    app.config.update(CSRF_ENABLED=False)
     with app.test_request_context(
         method="POST", data={"upload": (BytesIO(b"Hello World 1"), "test1.txt")}
     ):
@@ -133,5 +142,3 @@ def test_upload_file_field(app):
             my_form.upload.save_file()
 
     _remove_testfiles()
-
-

@@ -1,17 +1,16 @@
 v0.1.8
 ------
 
-Unreleased
+Released 2025-01-03
 
-- install python-plugins
-- user.login and user.register
+- add usercenter
 
 v0.1.7
 ------
 
 Released 2024-10-13
 
-- add theme for templating
+- add theme for template
 - admin view framework
 
 v0.1.6
@@ -22,7 +21,6 @@ Released 2024-09-14
 - merge translations of wtforms, flask_exts and app into flask_babel.get_translations()
 - update FileField and ImageField
 - add url for template.static
-- use namespace ns.bootstrap to control bootstrap's css and js
 
 v0.1.5
 ------

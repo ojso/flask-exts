@@ -3,16 +3,16 @@ import platform
 import re
 from operator import itemgetter
 from datetime import datetime
-from flask_babel import gettext,lazy_gettext
+from flask_babel import gettext, lazy_gettext
 from flask import flash, redirect, abort, request
 from wtforms import fields, validators
 from werkzeug.utils import secure_filename
 from ..view import BaseView
 from ..wraps import expose
 from ..actions import action, ActionsMixin
-from ...forms.form import FlaskForm as BaseForm
+from ...forms.form import BaseForm
 from ...utils import flash_errors
-from ...utils.form import validate_form_on_submit
+
 
 class BaseFileAdmin(BaseView, ActionsMixin):
     can_upload = True
@@ -466,7 +466,7 @@ class BaseFileAdmin(BaseView, ActionsMixin):
         :param form:
             Form to validate
         """
-        return validate_form_on_submit(form)
+        return form.validate_on_submit()
 
     def _get_dir_url(self, endpoint, path=None, **kwargs):
         """

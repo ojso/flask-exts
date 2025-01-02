@@ -17,9 +17,8 @@ class FlaskFormCSRF(CSRF):
         return super().setup_form(form)
 
     def generate_csrf_token(self, csrf_token_field):
-        meta = self.meta
-        secret_key = meta.csrf_secret
-        field_name = meta.csrf_field_name
+        secret_key = self.meta.csrf_secret
+        field_name = self.meta.csrf_field_name
 
         if field_name not in g:
             s = URLSafeTimedSerializer(secret_key, salt=SALT_CSRF_TOKEN)
@@ -31,10 +30,9 @@ class FlaskFormCSRF(CSRF):
         return g.get(field_name)
 
     def validate_csrf_token(self, form, field):
-        meta = self.meta
-        secret_key = meta.csrf_secret
-        field_name = meta.csrf_field_name
-        time_limit = meta.csrf_time_limit
+        secret_key = self.meta.csrf_secret
+        field_name = self.meta.csrf_field_name
+        time_limit = self.meta.csrf_time_limit
         data = field.data
 
         if not data:

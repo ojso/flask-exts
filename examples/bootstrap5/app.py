@@ -7,11 +7,11 @@ from wtforms.fields import *
 from flask_sqlalchemy import SQLAlchemy
 
 from flask_exts.forms.form import FlaskForm
-from python_plugins.forms.fields.switch import SwitchField
+from flask_exts.forms.fields import SwitchField
 from flask_exts import Manager
-from flask_exts.templating.theme import DefaultTheme
+from flask_exts.template.theme import BootstrapTheme
 
-theme = DefaultTheme(bootstrap_version=5)
+theme = BootstrapTheme(version=5)
 
 manager = Manager()
 app = Flask(__name__)

@@ -15,7 +15,7 @@ def print_blueprints(app):
     print("\n===== app.blueprints =====")
     # print(app.blueprints)
     for k, v in app.blueprints.items():
-        print(k, v,v.static_folder)
+        print(k, v, v.static_folder)
 
 
 def print_routes(app):

@@ -6,8 +6,7 @@ class TestBase:
         with app.test_request_context():
             theme = current_app.extensions["template"]
             # print(theme)
-            assert theme.name == "bootstrap"
-            assert theme.bootstrap_version == 5
+            assert theme.bootstrap.version == 5
             css = theme.load_css()
             # print(css)
             assert "bootstrap.min.css" in css

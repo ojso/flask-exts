@@ -6,7 +6,7 @@ from wtforms.validators import DataRequired, Length, Regexp
 from wtforms.fields import *
 from flask_sqlalchemy import SQLAlchemy
 from flask_exts.forms.form import FlaskForm
-from python_plugins.forms.fields.switch import SwitchField
+from flask_exts.forms.fields import SwitchField
 from flask_exts import Manager
 
 manager = Manager()
