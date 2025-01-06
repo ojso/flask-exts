@@ -1,9 +1,16 @@
+v0.1.9
+------
+
+Released 2024-12-01
+
+- add index_view
+
 v0.1.8
 ------
 
-Released 2025-01-03
+Released 2024-11-24
 
-- add usercenter
+- add user_view
 
 v0.1.7
 ------

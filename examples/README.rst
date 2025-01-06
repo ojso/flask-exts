@@ -14,19 +14,32 @@ Type these commands in the terminal:
     $ python3 -m venv venv
     $ source venv/bin/activate
     $ pip install flask-exts
-    
 
-Run the applications
-==========================
+Run the examples
+===============================
 
 Type the command in the terminal, then go to http://localhost:5000.
 
 Start
 ----------
 
+simple 
+---------
+
+run only one file.
+
 .. code-block:: bash
 
-    $ flask --app start run --debug --port=5000
+    $ python simple.py
+
+demo
+-----------------
+
+With sqlite db.
+
+.. code-block:: bash
+    
+    $ flask --app demo run --debug --port=5000
 
 Bootstrap 4
 -----------------
@@ -49,3 +62,9 @@ admin
     
     $ flask --app admin/simple run
 
+fileadmin
+-----------------
+
+.. code-block:: bash
+    
+    $ flask --app admin/fileadmin run

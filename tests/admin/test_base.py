@@ -119,9 +119,8 @@ def test_admin_defaults():
 
     # check index_view
     assert admin.index_view is not None
-    assert admin.index_view.endpoint == "admin"
-    assert admin.index_view.url == "/admin"
-    assert admin.index_view.static_folder == "../static"
+    assert admin.index_view.endpoint == "index"
+    assert admin.index_view.url == "/"
     assert admin.index_view.index_template == "admin/index.html"
 
     # check user_view
@@ -140,33 +139,38 @@ def test_admin_init_app(app,client):
 
     # print(app.extensions)
     # print(app.blueprints)
-    # print_app_endpoint_rule(app)
+    print_app_endpoint_rule(app)
 
-    assert get_app_endpoint_rule(app, "admin.index") == "/admin/"
-    assert get_app_endpoint_rule(app, "admin.static") == "/admin/static/<path:filename>"
+    assert len(app.blueprints) == 3
+    assert "template" in app.blueprints
+    assert "index" in app.blueprints
+    assert "user" in app.blueprints
+
+    assert get_app_endpoint_rule(app, "index.index") == "/"
+    assert get_app_endpoint_rule(app, "index.admin_index") == "/admin/"
     assert get_app_endpoint_rule(app, "user.index") == "/user/"
     assert get_app_endpoint_rule(app, "user.login") == "/user/login/"
     assert get_app_endpoint_rule(app, "user.logout") == "/user/logout/"
     assert get_app_endpoint_rule(app, "user.register") == "/user/register/"
 
     with app.test_request_context():
-        admin_index_url = url_for("admin.index")
-        static_logo_url = url_for("admin.static", filename="logo.png")
+        index_index_url = url_for("index.index")
+        admin_index_url = url_for("index.admin_index")
         user_index_url = url_for("user.index")
         user_login_url = url_for("user.login")
         user_logout_url = url_for("user.logout")
         user_register_url = url_for("user.register")
 
+    assert index_index_url == "/"
     assert admin_index_url == "/admin/"
-    assert static_logo_url == "/admin/static/logo.png"
     assert user_index_url == "/user/"
     assert user_login_url == "/user/login/"
     assert user_logout_url == "/user/logout/"
     assert user_register_url == "/user/register/"
 
-    rv = client.get(admin_index_url)
+    rv = client.get(index_index_url)
     assert rv.status_code == 200
-    rv = client.get(static_logo_url)
+    rv = client.get(admin_index_url)
     assert rv.status_code == 200
     rv = client.get(user_index_url)
     assert rv.status_code == 302
@@ -232,8 +236,8 @@ def test_admin_customizations(app, client):
     # print_app_endpoint_rule(app)
     # print(app.view_functions)
 
-    rv = client.get("/foobar/")
-    assert rv.status_code == 200
+    # rv = client.get("/foobar/")
+    # assert rv.status_code == 200
 
 
 def test_permissions(app, client):

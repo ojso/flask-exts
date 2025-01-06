@@ -2,8 +2,6 @@
 Configure
 ==========
 
-
-
 Configuration
 ==============
 
@@ -33,5 +31,4 @@ Configuration
 ``FLASK_LOGIN_ENABLED``    Set to ``False`` to disable ``Flask-Login``. 
                            Default is ``True``. 
 ========================== =====================================================================
-
 
