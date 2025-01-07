@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% import 'admin/layout.html' as layout with context -%}
+{%- from 'macro/message.html' import render_messages -%}
 
 {% block styles -%}
   {{ super() }}
@@ -36,7 +37,7 @@
     </nav>
 </div>
 <div class="container{% if template.bootstrap.fluid %}-fluid{% endif %}">
-    {% block messages %}{{ layout.messages() }}{% endblock %}
+    {% block messages %}{{ render_messages() }}{% endblock %}
     {# store the jinja2 context for form_rules rendering logic #}
     {# set render_ctx = h.resolve_ctx() #}
     {% block main %}{% endblock %}

@@ -1,11 +1,10 @@
 import os.path
 from flask import Flask
-from flask import render_template
 from flask_exts import Manager
 from flask_exts.admin import Admin
 from .models import db
 from .user_center import UserCenter
-from .views.index_view import myview
+from .views.my_view import myview
 
 
 def get_sqlite_path():
@@ -15,9 +14,6 @@ def get_sqlite_path():
 
 
 def build_sample_db(app):
-    import string
-    import random
-
     # db.drop_all()
     db.create_all()
     user_center = app.config["USER_CENTER"]
@@ -48,7 +44,7 @@ def init_app(app: Flask):
 
     admin = Admin(name="Demo")
     admin.init_app(app)
-    admin.add_view(myview,is_menu=False)
+    admin.add_view(myview)
 
     if not os.path.exists(app.config["DATABASE_FILE"]):
         with app.app_context():

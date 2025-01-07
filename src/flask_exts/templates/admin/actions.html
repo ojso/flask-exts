@@ -1,3 +1,5 @@
+{% from 'macro/icon.html' import render_icon %}
+
 {% macro dropdown(actions, btn_class='nav-link dropdown-toggle') -%}
     <a class="{{ btn_class }}" data-toggle="dropdown" href="javascript:void(0)" role="button" aria-haspopup="true"
        aria-expanded="false">{{ gettext('With selected') }}<b class="caret"></b></a>
@@ -33,9 +35,11 @@
 
 {# ---------------------- Modal Window ------------------- #}
 
-{% macro add_modal_button(url='', title='', content='', modal_window_id='fa_modal_window', btn_class='icon') %}
+{% macro add_modal_button(url='', title='', content='', modal_window_id='fa_modal_window', btn_class='icon',icon=None) %}
   <a class="{{ btn_class }}" data-target="#{{ modal_window_id }}" title="{{ title }}" href="{{ url }}" data-toggle="modal">
-    {{ caller() }} 
+    {% if icon %} 
+      {{ render_icon(icon) }}
+    {% endif %}
     {{ content|safe }}
   </a>
 {% endmacro %}

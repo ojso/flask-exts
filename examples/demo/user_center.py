@@ -1,5 +1,5 @@
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_exts.users.user_center import DefaultUserCenter
+from flask_exts.users.default_usercenter import DefaultUserCenter
 from .models import db,select
 from .models.user import User
 

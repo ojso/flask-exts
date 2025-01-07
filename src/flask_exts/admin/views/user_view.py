@@ -95,7 +95,8 @@ class UserView(BaseView):
         if form.validate_on_submit():
             (user, error) = self.validate_login_and_get_user(form)
             if user is None:
-                flash(error)
+                flash(error,'error')
+                # form.username.errors.append(error)
             else:
                 if hasattr(form, "remember_me"):
                     login_user(user, remember=form.remember_me.data)

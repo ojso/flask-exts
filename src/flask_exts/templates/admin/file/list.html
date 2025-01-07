@@ -73,11 +73,11 @@
                 {% block list_row_actions scoped %}
                 {% if view.can_rename and path and name != '..' %}
                   {%- if view.rename_modal -%}
-                    {% call actionslib.add_modal_button(url=get_url('.rename', path=path, modal=True),
+                    {{ actionslib.add_modal_button(url=get_url('.rename', path=path, modal=True),
                                             title=gettext('Rename File'),
-                                            content='<i class="fa fa-pencil glyphicon glyphicon-pencil"></i>') %}
-                        {{ render_icon('pencil') }}
-                    {% endcall %}
+                                            content='<i class="fa fa-pencil glyphicon glyphicon-pencil"></i>',
+                                            icon='pencil') }}
+                        
                   {% else %}
                     <a class="icon" href="{{ get_url('.rename', path=path) }}" title="{{ gettext('Rename File') }}">
                       {{ render_icon('pencil') }}
@@ -117,9 +117,8 @@
             <td>
                 {% if view.can_download %}
                   {%- if view.edit_modal and view.is_file_editable(path) -%}
-                    {% call actionslib.add_modal_button(url=get_file_url(path, modal=True)|safe,
-                                            btn_class='', content=name) %}
-                    {% endcall %}
+                    {{ actionslib.add_modal_button(url=get_file_url(path, modal=True)|safe,
+                                            btn_class='', content=name) }}
                   {% else %}
                     <a href="{{ get_file_url(path)|safe }}">{{ name }}</a>
                   {%- endif -%}
@@ -149,10 +148,7 @@
         {% if view.can_upload %}
         <div class="btn-group">
             {%- if view.upload_modal -%}
-              {% call actionslib.add_modal_button(url=get_dir_url('.upload', path=dir_path, modal=True),
-                                      btn_class="btn btn-secondary",
-                                      content=gettext('Upload File')) %}
-              {% endcall %}
+              {{ actionslib.add_modal_button(url=get_dir_url('.upload', path=dir_path, modal=True),btn_class="btn btn-secondary",content=gettext('Upload File')) }}
             {% else %}
               <a class="btn btn-secondary" href="{{ get_dir_url('.upload', path=dir_path) }}">{{ gettext('Upload File') }}</a>
             {%- endif -%}
@@ -161,10 +157,7 @@
         {% if view.can_mkdir %}
         <div class="mx-1">
             {%- if view.mkdir_modal -%}
-              {% call actionslib.add_modal_button(url=get_dir_url('.mkdir', path=dir_path, modal=True),
-                                      btn_class="btn btn-secondary",
-                                      content=gettext('Create Directory')) %}
-              {% endcall %}
+              {{ actionslib.add_modal_button(url=get_dir_url('.mkdir', path=dir_path, modal=True),btn_class="btn btn-secondary",content=gettext('Create Directory')) }}
             {% else %}
               <a class="btn btn-secondary" href="{{ get_dir_url('.mkdir', path=dir_path) }}">{{ gettext('Create Directory') }}</a>
             {%- endif -%}

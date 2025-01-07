@@ -1,3 +1,10 @@
+v0.2.0
+------
+
+Released 2025-01-07
+
+- update templates.macros
+
 v0.1.9
 ------
 

@@ -55,13 +55,6 @@ Bootstrap 5
     
     $ flask --app bootstrap5/app.py run
 
-admin
------------------
-
-.. code-block:: bash
-    
-    $ flask --app admin/simple run
-
 fileadmin
 -----------------
 
