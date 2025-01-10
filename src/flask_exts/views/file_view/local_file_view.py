@@ -1,8 +1,8 @@
-from .base_file_admin import BaseFileAdmin
+from .base_file_view import BaseFileView
 from .local_file_storage import LocalFileStorage
 
 
-class LocalFileAdmin(BaseFileAdmin):
+class LocalFileView(BaseFileView):
     """
     Local file-management interface.
 

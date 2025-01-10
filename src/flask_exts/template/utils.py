@@ -5,6 +5,9 @@ from wtforms.validators import DataRequired, InputRequired
 from ..forms.form import FlaskForm
 
 
+def type_name(item):
+    return type(item).__name__
+
 def is_hidden_field(field):
     return isinstance(field, HiddenField)
 

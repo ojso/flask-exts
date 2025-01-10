@@ -11,7 +11,7 @@ def is_form_submitted():
     return request and request.method in SUBMIT_METHODS
 
 
-def get_formdata():
+def get_form_data():
     """If current method is PUT or POST,
     return concatenated `request.form` with `request.files` or `None` otherwise.
     """

@@ -1,7 +1,6 @@
 import os.path
 from flask import Flask
 from flask_exts import Manager
-from flask_exts.admin import Admin
 from .models import db
 from .user_center import UserCenter
 from .views.my_view import myview
@@ -42,8 +41,7 @@ def init_app(app: Flask):
     manager = Manager()
     manager.init_app(app)
 
-    admin = Admin(name="Demo")
-    admin.init_app(app)
+    admin = app.extensions["admin"][0]
     admin.add_view(myview)
 
     if not os.path.exists(app.config["DATABASE_FILE"]):

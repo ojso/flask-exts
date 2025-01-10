@@ -1,4 +1,4 @@
-{% import 'admin/lib.html' as lib with context %}
+{%- from 'macro/form.html' import render_form -%}
 
 <div class="modal-header">
   {% block header %}<h3>{{ header_text }}</h3>{% endblock %}
@@ -6,7 +6,7 @@
 </div>
 <div class="modal-body">
   {% block fa_form %}
-    {{ lib.render_form(form, dir_url, action=request.url, is_modal=True) }}
+    {{ render_form(form, dir_url, action=request.url, is_modal=True) }}
   {% endblock %}
 </div>
 

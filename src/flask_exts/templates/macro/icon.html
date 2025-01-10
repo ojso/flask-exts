@@ -1,4 +1,4 @@
-{% macro render_icon(name, size=template.bootstrap.icon_size, color=template.bootstrap.icon_color,sprite=template.icon_sprite_url, title=None, desc=None) -%}
+{% macro render_icon(name, size=template.icon_size, color=None,sprite=template.icon_sprite_url, title=None, desc=None) -%}
     {%- set bootstrap_colors = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark", "muted"] %}
     {%- if color and color in bootstrap_colors %}
         {%- set text_color = " text-" + color %}

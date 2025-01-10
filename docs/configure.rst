@@ -26,6 +26,8 @@ Configuration
                            Default is ``template.theme.BootstrapTheme(4)``
 ``USER_ENABLED``           Set to ``False`` to disable ``User`` support. 
                            Default is ``True``. 
+``ADMIN_ENABLED``          Set to ``False`` to disable ``Admin`` support. 
+                           Default is ``True``. 
 ``USER_CENTER``            set to ``user center`` to create custom user_center
                            Default is ``users.user_center.DefaultUserCenter()``
 ``FLASK_LOGIN_ENABLED``    Set to ``False`` to disable ``Flask-Login``. 

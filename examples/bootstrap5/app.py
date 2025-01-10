@@ -21,7 +21,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 # set bootstrap5
 app.config["TEMPLATE_THEME"] = theme
-
+app.config['ADMIN_ENABLED'] = False
 manager.init_app(app)
 db = SQLAlchemy(app)
 

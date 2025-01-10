@@ -9,6 +9,7 @@ def test_extensions(app):
     assert "template" in app.extensions
     assert "user" in app.extensions
     assert getattr(app, "login_manager", None) is not None
+    assert "admin" in app.extensions
 
 
 def _test_prints(app):

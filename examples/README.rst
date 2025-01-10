@@ -41,6 +41,28 @@ With sqlite db.
     
     $ flask --app demo run --debug --port=5000
 
+fileadmin
+-----------------
+
+.. code-block:: bash
+    
+    $ flask --app fileadmin run
+
+rediscli
+-----------------
+
+First install redis,
+
+.. code-block:: bash
+
+    $ pip install redis
+
+then run:
+
+.. code-block:: bash
+    
+    $ flask --app rediscli run
+
 Bootstrap 4
 -----------------
 
@@ -55,9 +77,4 @@ Bootstrap 5
     
     $ flask --app bootstrap5/app.py run
 
-fileadmin
------------------
 
-.. code-block:: bash
-    
-    $ flask --app admin/fileadmin run

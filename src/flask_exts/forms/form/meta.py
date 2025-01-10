@@ -10,7 +10,7 @@ from flask_babel import get_locale
 # from .session_csrf import SessionCSRF
 from .csrf import FlaskFormCSRF
 from ..utils import is_form_submitted
-from ..utils import get_formdata
+from ..utils import get_form_data
 
 
 CSRF_ENABLED = True
@@ -44,7 +44,7 @@ class FlaskMeta(DefaultMeta):
 
     def wrap_formdata(self, form, formdata):
         if formdata is None:
-            return get_formdata()
+            return get_form_data()
         return formdata
 
     def get_translations(self, form):

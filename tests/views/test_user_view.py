@@ -6,13 +6,10 @@ from flask import session
 from flask import g
 from flask_exts.admin.admin import Admin
 
-admin = Admin()
-
 
 class TestUserView:
     def test_register(self, app, client):
         app.config.update(CSRF_ENABLED=False)
-        admin.init_app(app)
 
         with app.test_request_context():
             user_login_url = url_for("user.login")

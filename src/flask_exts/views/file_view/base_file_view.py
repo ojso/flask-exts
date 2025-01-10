@@ -7,14 +7,14 @@ from flask_babel import gettext, lazy_gettext
 from flask import flash, redirect, abort, request
 from wtforms import fields, validators
 from werkzeug.utils import secure_filename
-from ..view import BaseView
-from ..wraps import expose
-from ..actions import action, ActionsMixin
 from ...forms.form import BaseForm
 from ...utils import flash_errors
+from ...admin.view import BaseView
+from ...admin.wraps import expose
+from ...admin.actions import action, ActionsMixin
 
 
-class BaseFileAdmin(BaseView, ActionsMixin):
+class BaseFileView(BaseView, ActionsMixin):
     can_upload = True
     """
         Is file upload allowed.

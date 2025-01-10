@@ -14,6 +14,7 @@ manager = Manager()
 app = Flask(__name__)
 app.secret_key = 'dev'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+app.config['ADMIN_ENABLED'] = False
 manager.init_app(app)
 db = SQLAlchemy(app)
 

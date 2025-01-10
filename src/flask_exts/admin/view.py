@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask import url_for
 from flask import abort
 
-from ..utils.url import prettify_class_name
+from ..utils import prettify_class_name
 
 
 def _wrap_view(f):

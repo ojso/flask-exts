@@ -15,7 +15,6 @@ class Bootstrap:
     version = 4
     btn_style = "primary"
     btn_size = "md"
-    icon_size = "1em"
     navbar_classes = "navbar-dark bg-dark"
     form_group_classes = "mb-3"
     form_inline_classes = "row row-cols-lg-auto g-3 align-items-center"
@@ -32,8 +31,9 @@ class Title:
     new = "Create"
 
 class BootstrapTheme:
-    icon_sprite_url = ICON_SPRITE_URL
     admin_base_template: str = "admin/base.html"
+    icon_sprite_url = ICON_SPRITE_URL
+    icon_size = "1em"    
     title = Title()
 
     def __init__(self,version=4):

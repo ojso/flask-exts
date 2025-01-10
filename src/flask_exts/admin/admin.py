@@ -1,9 +1,6 @@
 from flask import render_template
 from flask import url_for
 from .menu import MenuCategory, MenuView, MenuLink, SubMenuCategory
-from .view import BaseView
-from .views.index_view import IndexView
-from .views.user_view import UserView
 
 
 class Admin:
@@ -19,8 +16,8 @@ class Admin:
         endpoint="admin",
         template_folder=None,
         static_folder=None,
-        index_view=IndexView(),
-        user_view=UserView(),
+        index_view=None,
+        user_view=None,
         category_icon_classes=None,
     ):
         """
@@ -242,9 +239,6 @@ class Admin:
             app.register_blueprint(view.create_blueprint())
 
     def _init_extension(self):
-        if not hasattr(self.app, "extensions"):
-            self.app.extensions = dict()
-
         admins = self.app.extensions.get("admin", [])
 
         for p in admins:

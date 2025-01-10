@@ -3,13 +3,13 @@ from flask import request
 from flask import redirect
 from flask import flash
 from flask import abort
+from flask import current_app
 from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ..wraps import expose
-from ..view import BaseView
-from flask import current_app
+from ..admin.view import BaseView
+from ..admin.wraps import expose
 
 
 class UserView(BaseView):
@@ -95,7 +95,7 @@ class UserView(BaseView):
         if form.validate_on_submit():
             (user, error) = self.validate_login_and_get_user(form)
             if user is None:
-                flash(error,'error')
+                flash(error, "error")
                 # form.username.errors.append(error)
             else:
                 if hasattr(form, "remember_me"):

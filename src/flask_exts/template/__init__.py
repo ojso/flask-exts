@@ -1,5 +1,6 @@
 import os.path as op
 from flask import Blueprint
+from .utils import type_name
 from .utils import is_hidden_field
 from .utils import is_required_form_field
 from .utils import get_table_titles
@@ -19,6 +20,7 @@ def template_init_app(app):
     )
     app.register_blueprint(blueprint)
     
+    app.jinja_env.globals["type_name"] = type_name
     app.jinja_env.globals["is_hidden_field"] = is_hidden_field
     app.jinja_env.globals["is_required_form_field"] = is_required_form_field
     app.jinja_env.globals["get_table_titles"] = get_table_titles
