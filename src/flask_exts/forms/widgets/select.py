@@ -34,6 +34,8 @@ class AjaxSelect2Widget:
 
     def __call__(self, field, **kwargs):
         kwargs.setdefault('data-role', 'select2-ajax')
+        # todo
+        # kwargs.setdefault("data-url", url_for(".ajax_lookup", name=field.loader.name))
         kwargs.setdefault('data-url', kwargs.pop("data_url", ""))
 
         allow_blank = getattr(field, 'allow_blank', False)
@@ -55,7 +57,8 @@ class AjaxSelect2Widget:
             separator = getattr(field, 'separator', ',')
 
             kwargs['value'] = separator.join(ids)
-            kwargs['data-json'] = json.dumps(result)
+            kwargs["data-json"] = json.dumps(result, default=str)
+            kwargs["data-json"] = str(result)
             kwargs['data-multiple'] = u'1'
             kwargs['data-separator'] = separator
         else:
@@ -63,7 +66,8 @@ class AjaxSelect2Widget:
 
             if data:
                 kwargs['value'] = data[0]
-                kwargs['data-json'] = json.dumps(data)
+                kwargs['data-json'] = json.dumps(data, default=str)
+
 
         placeholder = field.loader.options.get('placeholder', field.gettext('Please select model'))
         kwargs.setdefault('data-placeholder', placeholder)

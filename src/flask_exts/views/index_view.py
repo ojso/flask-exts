@@ -1,5 +1,5 @@
-from ..admin.view import BaseView
-from ..admin.wraps import expose
+from ..admin import BaseView
+from ..admin import expose
 
 
 class IndexView(BaseView):

@@ -14,17 +14,24 @@ class XEditableWidget:
     def __call__(self, field, **kwargs):
         display_value = kwargs.pop("display_value", "")
         kwargs.setdefault("data-value", display_value)
+        # todo
+        # kwargs.setdefault('data-url', './ajax/update/')
         data_url = kwargs.pop("data_url", "")
         kwargs.setdefault("data-url", data_url)
+
         kwargs.setdefault("data-role", "x-editable")
+
         kwargs.setdefault("id", field.id)
         kwargs.setdefault("name", field.name)
         kwargs.setdefault("href", "#")
+
         if not kwargs.get("pk"):
             raise Exception("pk required")
         kwargs["data-pk"] = str(kwargs.pop("pk"))
+
         kwargs["data-csrf"] = kwargs.pop("csrf", "")
         kwargs = self.get_kwargs(field, kwargs)
+
         return Markup("<a %s>%s</a>" % (html_params(**kwargs), escape(display_value)))
 
     def get_kwargs(self, field, kwargs):
@@ -99,7 +106,7 @@ class XEditableWidget:
                     selected_ids.append(value)
 
             # blank field is already included if allow_blank
-            kwargs["data-source"] = json.dumps(choices)
+            kwargs["data-source"] = json.dumps(choices,default=str)
 
             if field.type == "QuerySelectMultipleField":
                 kwargs["data-role"] = "x-editable-select2-multiple"

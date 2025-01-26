@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Flask-Exts VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-09-13 06:24+0800\n"
+"POT-Creation-Date: 2025-01-26 23:11+0800\n"
 "PO-Revision-Date: 2024-09-13 06:30+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -16,55 +16,562 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.16.0\n"
 
-#: ../src/flask_exts/forms/fields/datetime.py:98
+#: src/flask_exts/admin/model/base.py:1751
+msgid "There are no items in the table."
+msgstr ""
+
+#: src/flask_exts/admin/model/base.py:1760
+#, python-format
+msgid "Invalid Filter Value: %(value)s"
+msgstr ""
+
+#: src/flask_exts/admin/model/base.py:2174
+msgid "Record was successfully created."
+msgstr ""
+
+#: src/flask_exts/admin/model/base.py:2220
+#: src/flask_exts/admin/model/base.py:2273
+#: src/flask_exts/admin/model/base.py:2308
+#: src/flask_exts/admin/model/base.py:2505
+msgid "Record does not exist."
+msgstr ""
+
+#: src/flask_exts/admin/model/base.py:2229
+#: src/flask_exts/admin/model/base.py:2509
+msgid "Record was successfully saved."
+msgstr ""
+
+#: src/flask_exts/admin/model/base.py:2315
+#: src/flask_exts/admin/sqla/view.py:1251
+#, python-format
+msgid "Record was successfully deleted."
+msgid_plural "%(count)s records were successfully deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/flask_exts/admin/model/base.py:2377
+#: src/flask_exts/views/file_view/base_file_view.py:707
+#: src/flask_exts/views/file_view/base_file_view.py:809
+#: src/flask_exts/views/file_view/base_file_view.py:873
+#: src/flask_exts/views/file_view/base_file_view.py:937
+#: src/flask_exts/views/file_view/base_file_view.py:995
+#: src/flask_exts/views/file_view/base_file_view.py:1058
+msgid "Permission denied."
+msgstr ""
+
+#: src/flask_exts/admin/model/base.py:2456
+#, python-format
+msgid "Export type \"%(type)s not supported."
+msgstr ""
+
+#: src/flask_exts/admin/model/base.py:2513
+#: src/flask_exts/admin/model/base.py:2522
+#: src/flask_exts/admin/model/base.py:2528
+#: src/flask_exts/admin/sqla/view.py:1189
+#, python-format
+msgid "Failed to update record. %(error)s"
+msgstr ""
+
+#: src/flask_exts/admin/model/fields.py:172
+#: src/flask_exts/admin/model/fields.py:221
+#: src/flask_exts/admin/sqla/fields.py:121
+#: src/flask_exts/admin/sqla/fields.py:174
+#: src/flask_exts/admin/sqla/fields.py:179
+msgid "Not a valid choice"
+msgstr ""
+
+#: src/flask_exts/admin/model/filters.py:105
+#: src/flask_exts/forms/widgets/xeditable.py:53
+msgid "Yes"
+msgstr ""
+
+#: src/flask_exts/admin/model/filters.py:105
+#: src/flask_exts/forms/widgets/xeditable.py:52
+msgid "No"
+msgstr ""
+
+#: src/flask_exts/admin/model/filters.py:179
+#: src/flask_exts/admin/model/filters.py:225
+#: src/flask_exts/admin/model/filters.py:269
+msgid "between"
+msgstr ""
+
+#: src/flask_exts/admin/model/template.py:80
+#: src/flask_exts/admin/model/template.py:87
+#: src/flask_exts/templates/admin/model/modals/details.html:4
+msgid "View Record"
+msgstr ""
+
+#: src/flask_exts/admin/model/template.py:94
+#: src/flask_exts/admin/model/template.py:101
+#: src/flask_exts/templates/admin/model/modals/edit.html:6
+msgid "Edit Record"
+msgstr ""
+
+#: src/flask_exts/admin/model/template.py:108
+#: src/flask_exts/templates/macro/row_actions.html:34
+msgid "Delete Record"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/fields.py:210
+msgid "Key"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/fields.py:211
+msgid "Value"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:43
+msgid "equals"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:51
+msgid "not equal"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:60
+msgid "contains"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:69
+msgid "not contains"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:77
+msgid "greater than"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:85
+msgid "smaller than"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:96
+msgid "empty"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:112
+msgid "in list"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:122
+msgid "not in list"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filters.py:215
+#: src/flask_exts/admin/sqla/filters.py:251
+#: src/flask_exts/admin/sqla/filters.py:287
+msgid "not between"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/validators.py:25
+msgid "Already exists."
+msgstr ""
+
+#: src/flask_exts/admin/sqla/validators.py:56
+#, python-format
+msgid "At least %(num)d item is required"
+msgid_plural "At least %(num)d items are required"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/flask_exts/admin/sqla/view.py:1127
+#, python-format
+msgid "Integrity error. %(message)s"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/view.py:1163
+#, python-format
+msgid "Failed to create record. %(error)s"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/view.py:1214
+#, python-format
+msgid "Failed to delete record. %(error)s"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/view.py:1234
+#: src/flask_exts/views/file_view/base_file_view.py:1139
+msgid "Delete"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/view.py:1235
+msgid "Are you sure you want to delete selected records?"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/view.py:1259
+#, python-format
+msgid "Failed to delete records. %(error)s"
+msgstr ""
+
+#: src/flask_exts/forms/fields/datetime.py:98
 msgid "Invalid time format"
 msgstr ""
 
-#: ../src/flask_exts/forms/fields/json.py:13
-msgid "Invalid JSON"
-msgstr ""
-
-#: ../src/flask_exts/forms/fields/select.py:62
-msgid "Invalid Choice: could not coerce"
-msgstr ""
-
-#: ../src/flask_exts/forms/fields/upload_file.py:76
-msgid "Invalid file extension"
-msgstr ""
-
-#: ../src/flask_exts/forms/fields/upload_file.py:84
-#: ../src/flask_exts/forms/fields/upload_file.py:94
+#: src/flask_exts/forms/fields/file.py:66
+#: src/flask_exts/forms/fields/file.py:76
 #, python-format
 msgid "File \"%s\" already exists."
 msgstr ""
 
-#: ../src/flask_exts/forms/form/csrf.py:51
+#: src/flask_exts/forms/fields/json.py:13
+msgid "Invalid JSON"
+msgstr ""
+
+#: src/flask_exts/forms/fields/select.py:63
+msgid "Invalid Choice: could not coerce"
+msgstr ""
+
+#: src/flask_exts/forms/form/csrf.py:49
 msgid "CSRF token expired."
 msgstr ""
 
-#: ../src/flask_exts/forms/validators/field_list.py:11
+#: src/flask_exts/forms/validators/field_list.py:11
 msgid "This field requires at least one item."
 msgstr ""
 
-#: ../src/flask_exts/forms/validators/file.py:18
+#: src/flask_exts/forms/validators/file.py:18
 msgid "This field is required."
 msgstr ""
 
-#: ../src/flask_exts/forms/validators/file.py:53
+#: src/flask_exts/forms/validators/file.py:49
 msgid "File does not have an approved extension: {extensions}"
 msgstr ""
 
-#: ../src/flask_exts/forms/validators/file.py:61
-msgid "File does not have an approved extension."
-msgstr ""
-
-#: ../src/flask_exts/forms/validators/file.py:97
+#: src/flask_exts/forms/validators/file.py:85
 msgid "File must be between {min_size} and {max_size} bytes."
 msgstr ""
 
-#: ../src/flask_exts/templates/demo.html:3
-msgid "Demo"
+#: src/flask_exts/forms/widgets/select.py:72
+msgid "Please select model"
 msgstr ""
+
+#: src/flask_exts/templates/admin/model/create.html:15
+#: src/flask_exts/templates/admin/model/details.html:7
+#: src/flask_exts/templates/admin/model/edit.html:15
+#: src/flask_exts/templates/admin/model/list.html:19
+msgid "List"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/create.html:18
+#: src/flask_exts/templates/admin/model/details.html:11
+#: src/flask_exts/templates/admin/model/edit.html:19
+#: src/flask_exts/templates/admin/model/list.html:25
+#: src/flask_exts/templates/admin/model/list.html:27
+msgid "Create"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/details.html:16
+#: src/flask_exts/templates/admin/model/edit.html:23
+#: src/flask_exts/views/file_view/base_file_view.py:1160
+msgid "Edit"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/details.html:20
+#: src/flask_exts/templates/admin/model/edit.html:27
+msgid "Details"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/details.html:27
+#: src/flask_exts/templates/admin/model/modals/details.html:11
+msgid "Filter"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/inline_field_list.html:14
+msgid "Delete?"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/inline_field_list.html:16
+#: src/flask_exts/templates/admin/model/inline_field_list.html:35
+#: src/flask_exts/templates/macro/row_actions.html:34
+msgid "Are you sure you want to delete this record?"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/inline_field_list.html:33
+msgid "New"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/inline_field_list.html:43
+msgid "Add"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/list.html:25
+#: src/flask_exts/templates/admin/model/list.html:27
+#: src/flask_exts/templates/admin/model/modals/create.html:5
+msgid "Create New Record"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/list.html:78
+msgid "Select all records"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/list.html:91
+#: src/flask_exts/templates/admin/model/list.html:100
+#: src/flask_exts/templates/views/file/list.html:42
+#: src/flask_exts/templates/views/file/list.html:51
+#, python-format
+msgid "Sort by %(name)s"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/list.html:121
+msgid "Select record"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/list.html:194
+msgid "Please select at least one record."
+msgstr ""
+
+#: src/flask_exts/templates/macro/actions.html:5
+msgid "With selected"
+msgstr ""
+
+#: src/flask_exts/templates/macro/form.html:119
+#: src/flask_exts/templates/macro/form.html:128
+msgid "Save"
+msgstr ""
+
+#: src/flask_exts/templates/macro/form.html:122
+#: src/flask_exts/templates/macro/form.html:131
+msgid "Cancel"
+msgstr ""
+
+#: src/flask_exts/templates/macro/form.html:149
+msgid "Save and Add Another"
+msgstr ""
+
+#: src/flask_exts/templates/macro/form.html:152
+msgid "Save and Continue Editing"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:2
+msgid "Add Filter"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:14
+#: src/flask_exts/templates/macro/layout.html:19
+#: src/flask_exts/templates/macro/layout.html:26
+msgid "Export"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:49
+msgid "Apply"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:51
+msgid "Reset Filters"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:80
+#: src/flask_exts/templates/macro/layout.html:93
+#, python-format
+msgid "%(placeholder)s"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:88
+#: src/flask_exts/templates/macro/layout.html:94
+msgid "Search"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:102
+msgid "items"
+msgstr ""
+
+#: src/flask_exts/templates/views/file/list.html:10
+msgid "Root"
+msgstr ""
+
+#: src/flask_exts/templates/views/file/list.html:76
+#: src/flask_exts/templates/views/file/list.html:81
+msgid "Rename File"
+msgstr ""
+
+#: src/flask_exts/templates/views/file/list.html:92
+#, python-format
+msgid "Are you sure you want to delete \\'%(name)s\\' recursively?"
+msgstr ""
+
+#: src/flask_exts/templates/views/file/list.html:101
+#, python-format
+msgid "Are you sure you want to delete \\'%(name)s\\'?"
+msgstr ""
+
+#: src/flask_exts/templates/views/file/list.html:150
+#: src/flask_exts/templates/views/file/list.html:152
+#: src/flask_exts/views/file_view/base_file_view.py:835
+msgid "Upload File"
+msgstr ""
+
+#: src/flask_exts/templates/views/file/list.html:159
+#: src/flask_exts/templates/views/file/list.html:161
+#: src/flask_exts/views/file_view/base_file_view.py:906
+msgid "Create Directory"
+msgstr ""
+
+#: src/flask_exts/templates/views/file/list.html:189
+msgid "Please select at least one file."
+msgstr ""
+
+#: src/flask_exts/views/rediscli_view.py:110
+msgid "Cli: Invalid command."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:246
+msgid "File to upload"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:254
+msgid "File required."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:259
+msgid "Invalid file type."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:272
+msgid "Content"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:289
+msgid "Invalid name"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:299
+#: tests/admin/sqla/test_translation.py:13
+msgid "Name"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:668
+#, python-format
+msgid "File \"%(name)s\" already exists."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:805
+msgid "File uploading is disabled."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:817
+#, python-format
+msgid "Successfully saved file: %(name)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:825
+#, python-format
+msgid "Failed to save file: %(error)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:869
+msgid "Directory creation is disabled."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:883
+#, python-format
+msgid "Successfully created directory: %(directory)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:892
+#, python-format
+msgid "Failed to create directory: %(error)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:933
+msgid "Deletion is disabled."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:942
+msgid "Directory deletion is disabled."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:949
+#, python-format
+msgid "Directory \"%(path)s\" was successfully deleted."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:956
+#, python-format
+msgid "Failed to delete directory: %(error)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:965
+#: src/flask_exts/views/file_view/base_file_view.py:1154
+#, python-format
+msgid "File \"%(name)s\" was successfully deleted."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:969
+#: src/flask_exts/views/file_view/base_file_view.py:1158
+#, python-format
+msgid "Failed to delete file: %(name)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:991
+msgid "Renaming is disabled."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:999
+msgid "Path does not exist."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1013
+#, python-format
+msgid "Successfully renamed \"%(src)s\" to \"%(dst)s\""
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1019
+#, python-format
+msgid "Failed to rename: %(error)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1036
+#, python-format
+msgid "Rename %(name)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1074
+#, python-format
+msgid "Error saving changes to %(name)s."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1080
+#, python-format
+msgid "Changes to %(name)s saved successfully."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1090
+#, python-format
+msgid "Error reading %(name)s."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1094
+#: src/flask_exts/views/file_view/base_file_view.py:1106
+#, python-format
+msgid "Unexpected error while reading from %(name)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1102
+#, python-format
+msgid "Cannot edit %(name)s."
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1129
+#, python-format
+msgid "Editing %(path)s"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1140
+msgid "Are you sure you want to delete these files?"
+msgstr ""
+
+#: src/flask_exts/views/file_view/base_file_view.py:1144
+msgid "File deletion is disabled."
+msgstr ""
+
+#~ msgid "Invalid file extension"
+#~ msgstr ""
+
+#~ msgid "File does not have an approved extension."
+#~ msgstr ""
+
+#~ msgid "Demo"
+#~ msgstr ""
 

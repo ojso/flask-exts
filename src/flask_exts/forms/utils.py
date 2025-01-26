@@ -1,6 +1,7 @@
 from flask import request
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.datastructures import ImmutableMultiDict
+from wtforms.fields.core import UnboundField
 
 
 SUBMIT_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
@@ -30,3 +31,27 @@ def validate_form_on_submit(form):
     If current method is PUT or POST, validate form and return validation status.
     """
     return is_form_submitted() and form.validate()
+
+
+def recreate_field(unbound):
+    """
+    Create new instance of the unbound field, resetting wtforms creation counter.
+
+    :param unbound:
+        UnboundField instance
+    """
+    if not isinstance(unbound, UnboundField):
+        raise ValueError(
+            "recreate_field expects UnboundField instance, %s was passed."
+            % type(unbound)
+        )
+
+    return unbound.field_class(*unbound.args, **unbound.kwargs)
+
+
+class FormOpts:
+    __slots__ = ["widget_args", "form_rules"]
+
+    def __init__(self, widget_args=None, form_rules=None):
+        self.widget_args = widget_args or {}
+        self.form_rules = form_rules

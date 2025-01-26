@@ -8,8 +8,8 @@ from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ..admin.view import BaseView
-from ..admin.wraps import expose
+from ..admin import BaseView
+from ..admin import expose
 
 
 class UserView(BaseView):
@@ -17,10 +17,10 @@ class UserView(BaseView):
     Default administrative interface index page when visiting the ``/user/`` URL.
     """
 
-    index_template = "admin/user/index.html"
-    list_template = "admin/user/list.html"
-    login_template = "admin/user/login.html"
-    register_template = "admin/user/register.html"
+    index_template = "views/user/index.html"
+    list_template = "views/user/list.html"
+    login_template = "views/user/login.html"
+    register_template = "views/user/register.html"
 
     def __init__(
         self,

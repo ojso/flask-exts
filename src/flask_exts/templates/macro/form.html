@@ -8,6 +8,18 @@
 </div>
 {%- endmacro %}
 
+{% macro render_inline_field(field) %}
+    {{ field }}
+
+    {% if h.is_field_error(field.errors) %}
+    <ul class="help-block input-errors">
+      {% for e in field.errors if e is string %}
+        <li>{{ e }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+{% endmacro %}
+
 {% macro render_checkbox_field(field) -%}
 <div class="mb-3 form-check">
   {{ field(type='checkbox', **kwargs) }}
@@ -105,9 +117,7 @@
 {% macro render_form_buttons(cancel_url, extra=None, is_modal=False) %}
   {% if is_modal %}
         <input type="submit" class="btn btn-primary" value="{{ gettext('Save') }}" />
-        {% if extra %}
-        {{ extra }}
-        {% endif %}
+        {% if extra %}{{ extra }}{% endif %}
         {% if cancel_url %}
           <a href="{{ cancel_url }}" class="btn btn-danger" role="button" {% if is_modal %}data-dismiss="modal"{% endif %}>{{ gettext('Cancel') }}</a>
         {% endif %}
@@ -116,9 +126,7 @@
     <div class="form-group">
       <div class="col-md-offset-2 col-md-10 submit-row">
         <input type="submit" class="btn btn-primary" value="{{ gettext('Save') }}" />
-        {% if extra %}
-        {{ extra }}
-        {% endif %}
+        {% if extra %}{{ extra }}{% endif %}
         {% if cancel_url %}
           <a href="{{ cancel_url }}" class="btn btn-danger" role="button" {% if is_modal %}data-dismiss="modal"{% endif %}>{{ gettext('Cancel') }}</a>
         {% endif %}
@@ -134,4 +142,13 @@
     {{ render_form_buttons(cancel_url, extra, is_modal) }}
   </fieldset>
   </form>
+{% endmacro %}
+
+{% macro extra(view) %}
+  {% if view.can_create %}
+  <input name="_add_another" type="submit" class="btn btn-secondary" value="{{ gettext('Save and Add Another') }}" />
+  {% endif %}
+  {% if view.can_edit %}
+  <input name="_continue_editing" type="submit" class="btn btn-secondary" value="{{ gettext('Save and Continue Editing') }}" />
+  {% endif %}
 {% endmacro %}

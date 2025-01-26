@@ -1,4 +1,5 @@
 from markupsafe import Markup
+from jinja2 import pass_context
 
 class BaseRule:
     """
@@ -174,12 +175,7 @@ class Macro(BaseRule):
         """
         parts = name.split(".")
 
-        try:
-            field = context.resolve(parts[0])
-        except AttributeError:
-            raise Exception(
-                "Your template is missing " '"{% set render_ctx = h.resolve_ctx() %}"'
-            )
+        field = context.resolve(parts[0])
 
         if not field:
             return None
@@ -203,8 +199,7 @@ class Macro(BaseRule):
         :param field_args:
             Optional arguments that should be passed to the macro
         """
-        context = helpers.get_render_ctx()
-        macro = self._resolve(context, self.macro_name)
+        macro = self._resolve(self.macro_name)
 
         if not macro:
             raise ValueError(
@@ -262,9 +257,9 @@ class Container(Macro):
         :param field_args:
             Optional arguments that should be passed to template or the field
         """
-        context = helpers.get_render_ctx()
 
-        def caller(**kwargs):
+        @pass_context
+        def caller(context,**kwargs):
             return context.call(self.child_rule, form, form_opts, kwargs)
 
         args = dict(field_args)

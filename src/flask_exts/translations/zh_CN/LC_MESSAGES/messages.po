@@ -3,64 +3,562 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  flask-exts\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-09-13 06:24+0800\n"
-"PO-Revision-Date: 2024-09-12 23:26+0000\n"
+"POT-Creation-Date: 2025-01-26 23:11+0800\n"
+"PO-Revision-Date: 2025-01-25 03:28+0000\n"
 "Last-Translator: \n"
 "Language: zh_CN\n"
 "Language-Team: Chinese Simplified\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.16.0\n"
 
-#: ../src/flask_exts/forms/fields/datetime.py:98
+#: src/flask_exts/admin/model/base.py:1751
+msgid "There are no items in the table."
+msgstr "表中没有任何记录"
+
+#: src/flask_exts/admin/model/base.py:1760
+#, python-format
+msgid "Invalid Filter Value: %(value)s"
+msgstr "无效的筛选器值： %(value)s"
+
+#: src/flask_exts/admin/model/base.py:2174
+msgid "Record was successfully created."
+msgstr "创建记录成功。"
+
+#: src/flask_exts/admin/model/base.py:2220
+#: src/flask_exts/admin/model/base.py:2273
+#: src/flask_exts/admin/model/base.py:2308
+#: src/flask_exts/admin/model/base.py:2505
+msgid "Record does not exist."
+msgstr "记录不存在。"
+
+#: src/flask_exts/admin/model/base.py:2229
+#: src/flask_exts/admin/model/base.py:2509
+msgid "Record was successfully saved."
+msgstr "保存记录成功"
+
+#: src/flask_exts/admin/model/base.py:2315
+#: src/flask_exts/admin/sqla/view.py:1251
+#, python-format
+msgid "Record was successfully deleted."
+msgid_plural "%(count)s records were successfully deleted."
+msgstr[0] "记录被成功删除。"
+msgstr[1] "%(count)s 条记录被成功删除。"
+
+#: src/flask_exts/admin/model/base.py:2377
+#: src/flask_exts/views/file_view/base_file_view.py:707
+#: src/flask_exts/views/file_view/base_file_view.py:809
+#: src/flask_exts/views/file_view/base_file_view.py:873
+#: src/flask_exts/views/file_view/base_file_view.py:937
+#: src/flask_exts/views/file_view/base_file_view.py:995
+#: src/flask_exts/views/file_view/base_file_view.py:1058
+msgid "Permission denied."
+msgstr "权限被拒绝。"
+
+#: src/flask_exts/admin/model/base.py:2456
+#, python-format
+msgid "Export type \"%(type)s not supported."
+msgstr "不支持导出类型 \"%(type)s 。"
+
+#: src/flask_exts/admin/model/base.py:2513
+#: src/flask_exts/admin/model/base.py:2522
+#: src/flask_exts/admin/model/base.py:2528
+#: src/flask_exts/admin/sqla/view.py:1189
+#, python-format
+msgid "Failed to update record. %(error)s"
+msgstr "更新记录失败。%(error)s"
+
+#: src/flask_exts/admin/model/fields.py:172
+#: src/flask_exts/admin/model/fields.py:221
+#: src/flask_exts/admin/sqla/fields.py:121
+#: src/flask_exts/admin/sqla/fields.py:174
+#: src/flask_exts/admin/sqla/fields.py:179
+msgid "Not a valid choice"
+msgstr "无效选项"
+
+#: src/flask_exts/admin/model/filters.py:105
+#: src/flask_exts/forms/widgets/xeditable.py:53
+msgid "Yes"
+msgstr "是"
+
+#: src/flask_exts/admin/model/filters.py:105
+#: src/flask_exts/forms/widgets/xeditable.py:52
+msgid "No"
+msgstr "否"
+
+#: src/flask_exts/admin/model/filters.py:179
+#: src/flask_exts/admin/model/filters.py:225
+#: src/flask_exts/admin/model/filters.py:269
+msgid "between"
+msgstr "介于"
+
+#: src/flask_exts/admin/model/template.py:80
+#: src/flask_exts/admin/model/template.py:87
+#: src/flask_exts/templates/admin/model/modals/details.html:4
+msgid "View Record"
+msgstr "查看记录"
+
+#: src/flask_exts/admin/model/template.py:94
+#: src/flask_exts/admin/model/template.py:101
+#: src/flask_exts/templates/admin/model/modals/edit.html:6
+msgid "Edit Record"
+msgstr "编辑记录"
+
+#: src/flask_exts/admin/model/template.py:108
+#: src/flask_exts/templates/macro/row_actions.html:34
+msgid "Delete Record"
+msgstr "删除记录"
+
+#: src/flask_exts/admin/sqla/fields.py:210
+msgid "Key"
+msgstr "键"
+
+#: src/flask_exts/admin/sqla/fields.py:211
+msgid "Value"
+msgstr "值"
+
+#: src/flask_exts/admin/sqla/filters.py:43
+msgid "equals"
+msgstr "等于"
+
+#: src/flask_exts/admin/sqla/filters.py:51
+msgid "not equal"
+msgstr "不等于"
+
+#: src/flask_exts/admin/sqla/filters.py:60
+msgid "contains"
+msgstr "包含"
+
+#: src/flask_exts/admin/sqla/filters.py:69
+msgid "not contains"
+msgstr "不包含"
+
+#: src/flask_exts/admin/sqla/filters.py:77
+msgid "greater than"
+msgstr "大于"
+
+#: src/flask_exts/admin/sqla/filters.py:85
+msgid "smaller than"
+msgstr "小于"
+
+#: src/flask_exts/admin/sqla/filters.py:96
+msgid "empty"
+msgstr "为空"
+
+#: src/flask_exts/admin/sqla/filters.py:112
+msgid "in list"
+msgstr "在列表中"
+
+#: src/flask_exts/admin/sqla/filters.py:122
+msgid "not in list"
+msgstr "不在列表中"
+
+#: src/flask_exts/admin/sqla/filters.py:215
+#: src/flask_exts/admin/sqla/filters.py:251
+#: src/flask_exts/admin/sqla/filters.py:287
+msgid "not between"
+msgstr "不介于"
+
+#: src/flask_exts/admin/sqla/validators.py:25
+msgid "Already exists."
+msgstr "已经存在"
+
+#: src/flask_exts/admin/sqla/validators.py:56
+#, python-format
+msgid "At least %(num)d item is required"
+msgid_plural "At least %(num)d items are required"
+msgstr[0] "至少需要 %(num)d 个选项"
+msgstr[1] ""
+
+#: src/flask_exts/admin/sqla/view.py:1127
+#, python-format
+msgid "Integrity error. %(message)s"
+msgstr "完整性错误。%(message)s"
+
+#: src/flask_exts/admin/sqla/view.py:1163
+#, python-format
+msgid "Failed to create record. %(error)s"
+msgstr "创建记录失败。%(error)s"
+
+#: src/flask_exts/admin/sqla/view.py:1214
+#, python-format
+msgid "Failed to delete record. %(error)s"
+msgstr "删除记录失败。%(error)s"
+
+#: src/flask_exts/admin/sqla/view.py:1234
+#: src/flask_exts/views/file_view/base_file_view.py:1139
+msgid "Delete"
+msgstr "删除"
+
+#: src/flask_exts/admin/sqla/view.py:1235
+msgid "Are you sure you want to delete selected records?"
+msgstr "您确定删除所选记录吗？"
+
+#: src/flask_exts/admin/sqla/view.py:1259
+#, python-format
+msgid "Failed to delete records. %(error)s"
+msgstr "删除记录失败。%(error)s"
+
+#: src/flask_exts/forms/fields/datetime.py:98
 msgid "Invalid time format"
 msgstr "无效的时间格式"
 
-#: ../src/flask_exts/forms/fields/json.py:13
+#: src/flask_exts/forms/fields/file.py:66
+#: src/flask_exts/forms/fields/file.py:76
+#, python-format
+msgid "File \"%s\" already exists."
+msgstr "文件 %s 已经存在。"
+
+#: src/flask_exts/forms/fields/json.py:13
 msgid "Invalid JSON"
 msgstr "无效的JSON"
 
-#: ../src/flask_exts/forms/fields/select.py:62
+#: src/flask_exts/forms/fields/select.py:63
 msgid "Invalid Choice: could not coerce"
-msgstr ""
+msgstr "选择无效：无法转化类型"
 
-#: ../src/flask_exts/forms/fields/upload_file.py:76
-msgid "Invalid file extension"
-msgstr ""
-
-#: ../src/flask_exts/forms/fields/upload_file.py:84
-#: ../src/flask_exts/forms/fields/upload_file.py:94
-#, python-format
-msgid "File \"%s\" already exists."
-msgstr ""
-
-#: ../src/flask_exts/forms/form/csrf.py:51
+#: src/flask_exts/forms/form/csrf.py:49
 msgid "CSRF token expired."
-msgstr ""
+msgstr "CSRF 验证令牌过期"
 
-#: ../src/flask_exts/forms/validators/field_list.py:11
+#: src/flask_exts/forms/validators/field_list.py:11
 msgid "This field requires at least one item."
-msgstr ""
+msgstr "此字段需要至少一个项目。"
 
-#: ../src/flask_exts/forms/validators/file.py:18
+#: src/flask_exts/forms/validators/file.py:18
 msgid "This field is required."
-msgstr ""
+msgstr "此字段是必需项."
 
-#: ../src/flask_exts/forms/validators/file.py:53
+#: src/flask_exts/forms/validators/file.py:49
 msgid "File does not have an approved extension: {extensions}"
-msgstr ""
+msgstr "文件没有所需的扩展名: {extensions}"
 
-#: ../src/flask_exts/forms/validators/file.py:61
-msgid "File does not have an approved extension."
-msgstr ""
-
-#: ../src/flask_exts/forms/validators/file.py:97
+#: src/flask_exts/forms/validators/file.py:85
 msgid "File must be between {min_size} and {max_size} bytes."
+msgstr "文件必须介于 {min_size} 和{max_size} bytes."
+
+#: src/flask_exts/forms/widgets/select.py:72
+msgid "Please select model"
+msgstr "请选择模型"
+
+#: src/flask_exts/templates/admin/model/create.html:15
+#: src/flask_exts/templates/admin/model/details.html:7
+#: src/flask_exts/templates/admin/model/edit.html:15
+#: src/flask_exts/templates/admin/model/list.html:19
+msgid "List"
+msgstr "列表"
+
+#: src/flask_exts/templates/admin/model/create.html:18
+#: src/flask_exts/templates/admin/model/details.html:11
+#: src/flask_exts/templates/admin/model/edit.html:19
+#: src/flask_exts/templates/admin/model/list.html:25
+#: src/flask_exts/templates/admin/model/list.html:27
+msgid "Create"
+msgstr "创建"
+
+#: src/flask_exts/templates/admin/model/details.html:16
+#: src/flask_exts/templates/admin/model/edit.html:23
+#: src/flask_exts/views/file_view/base_file_view.py:1160
+msgid "Edit"
+msgstr "编辑"
+
+#: src/flask_exts/templates/admin/model/details.html:20
+#: src/flask_exts/templates/admin/model/edit.html:27
+msgid "Details"
+msgstr "详情"
+
+#: src/flask_exts/templates/admin/model/details.html:27
+#: src/flask_exts/templates/admin/model/modals/details.html:11
+msgid "Filter"
+msgstr "筛选"
+
+#: src/flask_exts/templates/admin/model/inline_field_list.html:14
+msgid "Delete?"
+msgstr "删除？"
+
+#: src/flask_exts/templates/admin/model/inline_field_list.html:16
+#: src/flask_exts/templates/admin/model/inline_field_list.html:35
+#: src/flask_exts/templates/macro/row_actions.html:34
+msgid "Are you sure you want to delete this record?"
+msgstr "你确定要删除此条记录？"
+
+#: src/flask_exts/templates/admin/model/inline_field_list.html:33
+msgid "New"
+msgstr "新建"
+
+#: src/flask_exts/templates/admin/model/inline_field_list.html:43
+msgid "Add"
+msgstr "添加"
+
+#: src/flask_exts/templates/admin/model/list.html:25
+#: src/flask_exts/templates/admin/model/list.html:27
+#: src/flask_exts/templates/admin/model/modals/create.html:5
+msgid "Create New Record"
+msgstr "创建新记录"
+
+#: src/flask_exts/templates/admin/model/list.html:78
+msgid "Select all records"
+msgstr "选择所有记录"
+
+#: src/flask_exts/templates/admin/model/list.html:91
+#: src/flask_exts/templates/admin/model/list.html:100
+#: src/flask_exts/templates/views/file/list.html:42
+#: src/flask_exts/templates/views/file/list.html:51
+#, python-format
+msgid "Sort by %(name)s"
+msgstr "根据 %(name)s 进行排序"
+
+#: src/flask_exts/templates/admin/model/list.html:121
+msgid "Select record"
+msgstr "选择记录"
+
+#: src/flask_exts/templates/admin/model/list.html:194
+msgid "Please select at least one record."
+msgstr "请选择至少一个记录。"
+
+#: src/flask_exts/templates/macro/actions.html:5
+msgid "With selected"
+msgstr "选中的"
+
+#: src/flask_exts/templates/macro/form.html:119
+#: src/flask_exts/templates/macro/form.html:128
+msgid "Save"
+msgstr "保存"
+
+#: src/flask_exts/templates/macro/form.html:122
+#: src/flask_exts/templates/macro/form.html:131
+msgid "Cancel"
+msgstr "取消"
+
+#: src/flask_exts/templates/macro/form.html:149
+msgid "Save and Add Another"
+msgstr "保存并添加另一个"
+
+#: src/flask_exts/templates/macro/form.html:152
+msgid "Save and Continue Editing"
+msgstr "保存并继续编辑"
+
+#: src/flask_exts/templates/macro/layout.html:2
+msgid "Add Filter"
+msgstr "添加筛选器"
+
+#: src/flask_exts/templates/macro/layout.html:14
+#: src/flask_exts/templates/macro/layout.html:19
+#: src/flask_exts/templates/macro/layout.html:26
+msgid "Export"
+msgstr "导出"
+
+#: src/flask_exts/templates/macro/layout.html:49
+msgid "Apply"
+msgstr "应用"
+
+#: src/flask_exts/templates/macro/layout.html:51
+msgid "Reset Filters"
+msgstr "重置筛选器"
+
+#: src/flask_exts/templates/macro/layout.html:80
+#: src/flask_exts/templates/macro/layout.html:93
+#, python-format
+msgid "%(placeholder)s"
 msgstr ""
 
-#: ../src/flask_exts/templates/demo.html:3
-msgid "Demo"
-msgstr "演示版"
+#: src/flask_exts/templates/macro/layout.html:88
+#: src/flask_exts/templates/macro/layout.html:94
+msgid "Search"
+msgstr "搜索"
+
+#: src/flask_exts/templates/macro/layout.html:102
+msgid "items"
+msgstr "项目"
+
+#: src/flask_exts/templates/views/file/list.html:10
+msgid "Root"
+msgstr "根"
+
+#: src/flask_exts/templates/views/file/list.html:76
+#: src/flask_exts/templates/views/file/list.html:81
+msgid "Rename File"
+msgstr "重命名文件"
+
+#: src/flask_exts/templates/views/file/list.html:92
+#, python-format
+msgid "Are you sure you want to delete \\'%(name)s\\' recursively?"
+msgstr "你确定要完全删除 \\\\'%(name)s\\\\' 吗？"
+
+#: src/flask_exts/templates/views/file/list.html:101
+#, python-format
+msgid "Are you sure you want to delete \\'%(name)s\\'?"
+msgstr "你确定要删除 \\\\'%(name)s\\\\' 吗？"
+
+#: src/flask_exts/templates/views/file/list.html:150
+#: src/flask_exts/templates/views/file/list.html:152
+#: src/flask_exts/views/file_view/base_file_view.py:835
+msgid "Upload File"
+msgstr "上传文件"
+
+#: src/flask_exts/templates/views/file/list.html:159
+#: src/flask_exts/templates/views/file/list.html:161
+#: src/flask_exts/views/file_view/base_file_view.py:906
+msgid "Create Directory"
+msgstr "创建目录"
+
+#: src/flask_exts/templates/views/file/list.html:189
+msgid "Please select at least one file."
+msgstr "请至少选择一个文件"
+
+#: src/flask_exts/views/rediscli_view.py:110
+msgid "Cli: Invalid command."
+msgstr "Cli：无效命令。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:246
+msgid "File to upload"
+msgstr "要上传的文件"
+
+#: src/flask_exts/views/file_view/base_file_view.py:254
+msgid "File required."
+msgstr "文件必填。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:259
+msgid "Invalid file type."
+msgstr "无效的文件类型"
+
+#: src/flask_exts/views/file_view/base_file_view.py:272
+msgid "Content"
+msgstr "内容"
+
+#: src/flask_exts/views/file_view/base_file_view.py:289
+msgid "Invalid name"
+msgstr "无效的名称"
+
+#: src/flask_exts/views/file_view/base_file_view.py:299
+#: tests/admin/sqla/test_translation.py:13
+msgid "Name"
+msgstr "名称"
+
+#: src/flask_exts/views/file_view/base_file_view.py:668
+#, python-format
+msgid "File \"%(name)s\" already exists."
+msgstr "文件 %(name)s 已经存在。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:805
+msgid "File uploading is disabled."
+msgstr "文件上传功能已被禁用。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:817
+#, python-format
+msgid "Successfully saved file: %(name)s"
+msgstr "已成功保存的文件: %(name)s"
+
+#: src/flask_exts/views/file_view/base_file_view.py:825
+#, python-format
+msgid "Failed to save file: %(error)s"
+msgstr "保存文件失败：%(error)s"
+
+#: src/flask_exts/views/file_view/base_file_view.py:869
+msgid "Directory creation is disabled."
+msgstr "文件夹创建功能已被禁用。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:883
+#, python-format
+msgid "Successfully created directory: %(directory)s"
+msgstr "成功创建的目录: %(directory)s"
+
+#: src/flask_exts/views/file_view/base_file_view.py:892
+#, python-format
+msgid "Failed to create directory: %(error)s"
+msgstr "创建文件夹失败：%(error)s"
+
+#: src/flask_exts/views/file_view/base_file_view.py:933
+msgid "Deletion is disabled."
+msgstr "删除功能已被禁用。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:942
+msgid "Directory deletion is disabled."
+msgstr "删除文件夹功能已被禁用。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:949
+#, python-format
+msgid "Directory \"%(path)s\" was successfully deleted."
+msgstr "已成功删除目录\"%(path)s\"。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:956
+#, python-format
+msgid "Failed to delete directory: %(error)s"
+msgstr "删除文件夹失败。%(error)s"
+
+#: src/flask_exts/views/file_view/base_file_view.py:965
+#: src/flask_exts/views/file_view/base_file_view.py:1154
+#, python-format
+msgid "File \"%(name)s\" was successfully deleted."
+msgstr "已成功删除文件\"%(name)s\"。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:969
+#: src/flask_exts/views/file_view/base_file_view.py:1158
+#, python-format
+msgid "Failed to delete file: %(name)s"
+msgstr "删除文件 %(name)s 失败"
+
+#: src/flask_exts/views/file_view/base_file_view.py:991
+msgid "Renaming is disabled."
+msgstr "重命名功能已禁用。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:999
+msgid "Path does not exist."
+msgstr "路径不存在."
+
+#: src/flask_exts/views/file_view/base_file_view.py:1013
+#, python-format
+msgid "Successfully renamed \"%(src)s\" to \"%(dst)s\""
+msgstr "重命名 %(src)s 为 %(dst)s 成功"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1019
+#, python-format
+msgid "Failed to rename: %(error)s"
+msgstr "重命名失败：%(error)s"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1036
+#, python-format
+msgid "Rename %(name)s"
+msgstr "重命名 %(name)s"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1074
+#, python-format
+msgid "Error saving changes to %(name)s."
+msgstr "保存修改到文件%(name)s 发生错误。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1080
+#, python-format
+msgid "Changes to %(name)s saved successfully."
+msgstr "保存修改到 %(name)s 成功。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1090
+#, python-format
+msgid "Error reading %(name)s."
+msgstr "读取 %(name)s 错误。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1094
+#: src/flask_exts/views/file_view/base_file_view.py:1106
+#, python-format
+msgid "Unexpected error while reading from %(name)s"
+msgstr "读取 %(name)s 发生未知错误"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1102
+#, python-format
+msgid "Cannot edit %(name)s."
+msgstr "无法编辑 %(name)s。"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1129
+#, python-format
+msgid "Editing %(path)s"
+msgstr "正在编辑 %(path)s"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1140
+msgid "Are you sure you want to delete these files?"
+msgstr "您确定要删除这些文件吗？"
+
+#: src/flask_exts/views/file_view/base_file_view.py:1144
+msgid "File deletion is disabled."
+msgstr "文件删除功能已禁用"
 

@@ -1,0 +1,24 @@
+{% from 'macro/form.html' import render_form_fields, render_form_buttons with context %}
+
+{% block body %}
+  <div class="modal-header">
+    {% block header_text %}<h5 class="modal-title">{{ gettext('Create New Record') }}</h5>{% endblock %}
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <form action="{{ url_for('.create_view', url=return_url) }}" method="POST" role="form" class="admin-form" enctype="multipart/form-data">
+    <fieldset>
+      <div class="modal-body">
+        {{ render_form_fields(form, form_opts=form_opts) }}
+      </div>
+      <div class="modal-footer">
+        {{ render_form_buttons(return_url, extra=None, is_modal=True) }}
+      </div>
+    </fieldset>
+  </form>
+{% endblock %}
+
+{% block tail %}
+  <script>window.faForm.applyGlobalStyles(document.getElementsByClassName('modal-content'));</script>
+{% endblock %}

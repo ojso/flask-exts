@@ -4,6 +4,7 @@ from flask_exts import Manager
 from .models import db
 from .user_center import UserCenter
 from .views.my_view import myview
+from .views.user_view import userview
 
 
 def get_sqlite_path():
@@ -22,7 +23,10 @@ def build_sample_db(app):
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "dev"
+
     # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+    # app.config['SQLALCHEMY_ECHO'] = True
     app.config["DATABASE_FILE"] = get_sqlite_path()
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + app.config["DATABASE_FILE"]
 
@@ -42,7 +46,10 @@ def init_app(app: Flask):
     manager.init_app(app)
 
     admin = app.extensions["admin"][0]
+
     admin.add_view(myview)
+
+    admin.add_view(userview)
 
     if not os.path.exists(app.config["DATABASE_FILE"]):
         with app.app_context():

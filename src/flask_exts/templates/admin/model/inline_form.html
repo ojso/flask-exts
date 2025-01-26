@@ -1,0 +1,5 @@
+{% from 'macro/form.html' import render_form_fields with context %}
+
+<div class="inline-form-field">
+  {{ render_form_fields(field.form, form_opts=form_opts) }}
+</div>

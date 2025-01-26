@@ -5,6 +5,24 @@ from flask import abort
 
 from ..utils import prettify_class_name
 
+def expose(url="/", methods=("GET",)):
+    """
+    Use this decorator to expose views in your view classes.
+
+    :param url:
+        Relative URL for the view
+    :param methods:
+        Allowed HTTP methods. By default only GET is allowed.
+    """
+
+    def wrap(f):
+        if not hasattr(f, "_urls"):
+            f._urls = []
+        f._urls.append((url, methods))
+        return f
+
+    return wrap
+
 
 def _wrap_view(f):
     """ wrapping f with self._handle_view and self._run_view
@@ -93,10 +111,10 @@ class BaseView(metaclass=ViewMeta):
         :param menu_icon_type:
             Optional icon. Possible icon types:
 
-             - `flask_admin.consts.ICON_TYPE_GLYPH` - Bootstrap glyph icon
-             - `flask_admin.consts.ICON_TYPE_FONT_AWESOME` - Font Awesome icon
-             - `flask_admin.consts.ICON_TYPE_IMAGE` - Image relative to Flask static directory
-             - `flask_admin.consts.ICON_TYPE_IMAGE_URL` - Image with full URL
+             - `template.consts.ICON_TYPE_GLYPH` - Bootstrap glyph icon
+             - `template.consts.ICON_TYPE_FONT_AWESOME` - Font Awesome icon
+             - `template.consts.ICON_TYPE_IMAGE` - Image relative to Flask static directory
+             - `template.consts.ICON_TYPE_IMAGE_URL` - Image with full URL
         :param menu_icon_value:
             Icon glyph name or URL, depending on `menu_icon_type` setting
         """
@@ -208,8 +226,7 @@ class BaseView(metaclass=ViewMeta):
 
     def is_visible(self):
         """
-        Override this method if you want dynamically hide or show administrative views
-        from Flask-Admin menu structure
+        Override this method if you want dynamically hide or show administrative views from menu structure
 
         By default, item is visible in menu.
 
@@ -221,7 +238,7 @@ class BaseView(metaclass=ViewMeta):
         """
         Override this method to add permission checks.
 
-        Flask-Admin does not make any assumptions about the authentication system used in your application, so it is
+        It does not make any assumptions about the authentication system used in your application, so it is
         up to you to implement it.
 
         By default, it will allow access for everyone.
@@ -253,10 +270,7 @@ class BaseView(metaclass=ViewMeta):
         :param kwargs:
             Arguments
         """
-        try:
-            return fn(self, *args, **kwargs)
-        except TypeError:
-            return fn(cls=self, **kwargs)
+        return fn(self, *args, **kwargs)
 
     def inaccessible_callback(self, name, **kwargs):
         """

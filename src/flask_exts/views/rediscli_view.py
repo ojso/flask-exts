@@ -3,8 +3,8 @@ import shlex
 from flask import request
 from markupsafe import Markup
 from flask_babel import gettext
-from ..admin.view import BaseView
-from ..admin.wraps import expose
+from ..admin import BaseView
+from ..admin import expose
 
 # Set up logger
 log = logging.getLogger("flask-exts.redis")
@@ -137,7 +137,7 @@ class RedisCli(BaseView):
             :param msg:
                 Result to format.
         """
-        return self.render('admin/rediscli/response.html',
+        return self.render('views/rediscli/response.html',
                            type_name=lambda d: type(d).__name__,
                            result=result)
 
@@ -167,7 +167,7 @@ class RedisCli(BaseView):
         """
             Console view.
         """
-        return self.render('admin/rediscli/console.html')
+        return self.render('views/rediscli/console.html')
 
     @expose('/run/', methods=('POST',))
     def execute_view(self):

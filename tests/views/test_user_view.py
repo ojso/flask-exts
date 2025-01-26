@@ -1,10 +1,6 @@
 import pytest
 from flask import url_for
-from flask import abort
-from flask import request
 from flask import session
-from flask import g
-from flask_exts.admin.admin import Admin
 
 
 class TestUserView:

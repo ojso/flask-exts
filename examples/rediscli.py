@@ -1,7 +1,6 @@
 from redis import Redis
 from flask import Flask
 from flask_exts import Manager
-from flask_exts.admin import Admin
 from flask_exts.views.rediscli_view import RedisCli
 
 app = Flask(__name__)

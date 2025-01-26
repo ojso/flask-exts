@@ -9,8 +9,8 @@ from wtforms import fields, validators
 from werkzeug.utils import secure_filename
 from ...forms.form import BaseForm
 from ...utils import flash_errors
-from ...admin.view import BaseView
-from ...admin.wraps import expose
+from ...admin import BaseView
+from ...admin import expose
 from ...admin.actions import action, ActionsMixin
 
 
@@ -65,47 +65,47 @@ class BaseFileView(BaseView, ActionsMixin):
                 editable_extensions = ('md', 'html', 'txt')
     """
 
-    list_template = "admin/file/list.html"
+    list_template = "views/file/list.html"
     """
         File list template
     """
 
-    upload_template = "admin/file/form.html"
+    upload_template = "views/file/form.html"
     """
         File upload template
     """
 
-    upload_modal_template = "admin/file/modals/form.html"
+    upload_modal_template = "views/file/modals/form.html"
     """
         File upload template for modal dialog
     """
 
-    mkdir_template = "admin/file/form.html"
+    mkdir_template = "views/file/form.html"
     """
         Directory creation (mkdir) template
     """
 
-    mkdir_modal_template = "admin/file/modals/form.html"
+    mkdir_modal_template = "views/file/modals/form.html"
     """
         Directory creation (mkdir) template for modal dialog
     """
 
-    rename_template = "admin/file/form.html"
+    rename_template = "views/file/form.html"
     """
         Rename template
     """
 
-    rename_modal_template = "admin/file/modals/form.html"
+    rename_modal_template = "views/file/modals/form.html"
     """
         Rename template for modal dialog
     """
 
-    edit_template = "admin/file/form.html"
+    edit_template = "views/file/form.html"
     """
         Edit template
     """
 
-    edit_modal_template = "admin/file/modals/form.html"
+    edit_modal_template = "views/file/modals/form.html"
     """
         Edit template for modal dialog
     """
@@ -246,7 +246,7 @@ class BaseFileView(BaseView, ActionsMixin):
             upload = fields.FileField(lazy_gettext("File to upload"))
 
             def __init__(self, *args, **kwargs):
-                super(UploadForm, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
                 self.admin = kwargs["admin"]
 
             def validate_upload(self, field):

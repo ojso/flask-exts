@@ -1,7 +1,6 @@
 import pytest
 from flask import Flask
 from flask_exts import Manager
-from flask_sqlalchemy import SQLAlchemy
 
 
 @pytest.fixture
@@ -22,4 +21,13 @@ def client(app):
     return app.test_client()
 
 
-
+@pytest.fixture
+def admin(app):
+    if (
+        hasattr(app, "extensions")
+        and "admin" in app.extensions
+        and len(app.extensions["admin"]) > 0
+    ):
+        return app.extensions["admin"][0]
+    else:
+        return None

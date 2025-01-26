@@ -1,11 +1,9 @@
 import pytest
 from flask import url_for
 from flask import abort
-from flask import request
-from flask.views import MethodView
-from flask_exts.admin.wraps import expose, expose_plugview
-from flask_exts.admin.view import BaseView
-from flask_exts.admin.admin import Admin
+from flask_exts.admin import expose
+from flask_exts.admin import BaseView
+from flask_exts.admin import Admin
 from flask_exts.admin.menu import MenuLink
 
 from ..funcs import print_app_endpoint_rule
@@ -59,39 +57,6 @@ class MockExtendView(MockView):
     def test2(self):
         return self.render("mock.html")
 
-
-class MockMethodView(BaseView):
-    @expose("/")
-    def index(self):
-        return "Success!"
-
-    @expose_plugview("/_api/1")
-    class API1(MethodView):
-        def get(self, cls):
-            return cls.render("method.html", request=request, name="API1")
-
-        def post(self, cls):
-            return cls.render("method.html", request=request, name="API1")
-
-        def put(self, cls):
-            return cls.render("method.html", request=request, name="API1")
-
-        def delete(self, cls):
-            return cls.render("method.html", request=request, name="API1")
-
-    @expose_plugview("/_api/2")
-    class API2(MethodView):
-        def get(self, cls):
-            return cls.render("method.html", request=request, name="API2")
-
-        def post(self, cls):
-            return cls.render("method.html", request=request, name="API2")
-
-    @expose_plugview("/_api/3")
-    @expose_plugview("/_api/4")
-    class DoubleExpose(MethodView):
-        def get(self, cls):
-            return cls.render("method.html", request=request, name="API3")
 
 
 def test_baseview_defaults():
@@ -154,7 +119,7 @@ def test_admin_category():
     assert children[0].is_accessible()
 
 
-def test_admin_defaults(app,client):
+def test_admin_defaults(app, client, admin):
     assert "admin" in app.extensions
     assert len(app.extensions["admin"]) == 1
 
@@ -167,7 +132,7 @@ def test_admin_defaults(app,client):
     assert "index" in app.blueprints
     assert "user" in app.blueprints
 
-    admin = app.extensions["admin"][0]
+    assert admin is not None
     assert admin.name == "Admin"
     assert admin.url == "/admin"
     assert admin.endpoint == "admin"
@@ -188,7 +153,7 @@ def test_admin_defaults(app,client):
     assert admin.user_view is not None
     assert admin.user_view.endpoint == "user"
     assert admin.user_view.url == "/user"
-    assert admin.user_view.index_template == "admin/user/index.html"
+    assert admin.user_view.index_template == "views/user/index.html"
 
     assert get_app_endpoint_rule(app, "index.index") == "/"
     assert get_app_endpoint_rule(app, "index.admin_index") == "/admin/"
@@ -232,37 +197,6 @@ def test_admin_init_app_raise(app):
         admin.init_app(app)
 
 
-def test_method_views(app):
-    admin = app.extensions["admin"][0]
-    view = MockMethodView()
-    admin.add_view(view)
-
-    client = app.test_client()
-
-    rv = client.get("/admin/mockmethodview/_api/1")
-    assert rv.data == b"GET - API1"
-    rv = client.put("/admin/mockmethodview/_api/1")
-    assert rv.data == b"PUT - API1"
-    rv = client.post("/admin/mockmethodview/_api/1")
-    assert rv.data == b"POST - API1"
-    rv = client.delete("/admin/mockmethodview/_api/1")
-    assert rv.data == b"DELETE - API1"
-
-    rv = client.get("/admin/mockmethodview/_api/2")
-    assert rv.data == b"GET - API2"
-    rv = client.post("/admin/mockmethodview/_api/2")
-    assert rv.data == b"POST - API2"
-    rv = client.delete("/admin/mockmethodview/_api/2")
-    assert rv.status_code == 405
-    rv = client.put("/admin/mockmethodview/_api/2")
-    assert rv.status_code == 405
-
-    rv = client.get("/admin/mockmethodview/_api/3")
-    assert rv.data == b"GET - API3"
-    rv = client.get("/admin/mockmethodview/_api/4")
-    assert rv.data == b"GET - API3"
-
-
 def test_admin_customizations(app, client):
     admin = Admin(app, endpoint="test", name="Test", url="/foobar")
     assert admin.name == "Test"
@@ -276,8 +210,7 @@ def test_admin_customizations(app, client):
     # assert rv.status_code == 200
 
 
-def test_permissions(app, client):
-    admin = app.extensions["admin"][0]
+def test_permissions(client, admin):
     view = MockView()
     admin.add_view(view)
 
@@ -296,8 +229,7 @@ def test_permissions(app, client):
     assert rv.status_code == 403
 
 
-def test_inaccessible_callback(app, client):
-    admin = app.extensions["admin"][0]
+def test_inaccessible_callback(client, admin):
     view = MockView()
     admin.add_view(view)
     view.allow_access = False
@@ -306,8 +238,7 @@ def test_inaccessible_callback(app, client):
     assert rv.status_code == 418
 
 
-def test_menu_links(app, client):
-    admin = app.extensions["admin"][0]
+def test_menu_links(client, admin):
     admin.add_link(MenuLink("TestMenuLink1", endpoint=".index"))
     admin.add_link(MenuLink("TestMenuLink2", url="http://python.org/"))
     rv = client.get("/admin/")

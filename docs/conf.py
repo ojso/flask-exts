@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Flask-Exts'
-copyright = '2024, David Dong Hua'
-author = 'David Dong Hua'
+copyright = '2024, David Hua'
+author = 'David Hua'
 
 # -- General configuration ---------------------------------------------------
 # -- General configuration

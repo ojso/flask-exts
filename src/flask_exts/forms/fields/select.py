@@ -1,7 +1,6 @@
 import re
 import wtforms.fields
-from ..widgets.select import Select2Widget
-from ..widgets.select import Select2TagsWidget
+from ..widgets.select import Select2Widget, Select2TagsWidget
 
 
 class Select2Field(wtforms.fields.SelectField):
@@ -24,22 +23,23 @@ class Select2Field(wtforms.fields.SelectField):
         blank_text=None,
         **kwargs
     ):
-        super(Select2Field, self).__init__(label, validators, coerce, choices, **kwargs)
+        super().__init__(label, validators, coerce, choices, **kwargs)
         self.allow_blank = allow_blank
         self.blank_text = blank_text or " "
 
     def iter_choices(self):
         if self.allow_blank:
-            yield ("__None", self.blank_text, self.data is None)
+            yield ("__None", self.blank_text, self.data is None,{})
 
         for choice in self.choices:
             if isinstance(choice, tuple):
-                yield (choice[0], choice[1], self.coerce(choice[0]) == self.data)
+                yield (choice[0], choice[1], self.coerce(choice[0]) == self.data,{})
             else:
                 yield (
                     choice.value,
                     choice.name,
                     self.coerce(choice.value) == self.data,
+                    {}
                 )
 
     def process_data(self, value):
@@ -65,7 +65,7 @@ class Select2Field(wtforms.fields.SelectField):
         if self.allow_blank and self.data is None:
             return
 
-        super(Select2Field, self).pre_validate(form)
+        super().pre_validate(form)
 
 
 class Select2TagsField(wtforms.fields.StringField):
@@ -98,7 +98,7 @@ class Select2TagsField(wtforms.fields.StringField):
         self.allow_duplicates = allow_duplicates
         self.coerce = coerce
 
-        super(Select2TagsField, self).__init__(label, validators, **kwargs)
+        super().__init__(label, validators, **kwargs)
 
     def process_formdata(self, valuelist):
         if valuelist:

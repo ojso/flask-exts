@@ -14,7 +14,7 @@
   {% endif %}
 {%- endmacro %}
 
-{% macro menu(menu_root) %}
+{% macro render_menu(menu_root) %}
   {%- for item in menu_root %}
     {%- if item.is_category() -%}
       {% set children = item.get_children() %}
@@ -84,7 +84,7 @@
   {% endfor %}
 {% endmacro %}
 
-{% macro login() %}
+{% macro menu_user() %}
 {% if current_user is defined -%}
     {% if current_user.is_authenticated -%}
     <ul class="navbar-nav">

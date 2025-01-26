@@ -10,7 +10,7 @@ readme = "README.rst"
 license = { file = "LICENSE.rst" }
 keywords = ["flask","babel", "admin", "form", "widget", "sql"]
 authors = [
-  { name = "huadong", email = "david.dong.hua@gmail.com" },
+  { name = "David Hua", email = "david.dong.hua@gmail.com" },
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",

@@ -74,12 +74,12 @@
        * Process Leaflet (map) widget
        */
       function processLeafletWidget($el, name) {
-        if (!window.FLASK_ADMIN_MAPS) {
-          console.error("You must set FLASK_ADMIN_MAPS in your Flask settings to use the map widget");
+        if (!window.FLASK_EXTS_MAPS) {
+          console.error("You must set FLASK_EXTS_MAPS in your Flask settings to use the map widget");
           return false;
         }
-        if (!window.FLASK_ADMIN_DEFAULT_CENTER_LAT || !window.FLASK_ADMIN_DEFAULT_CENTER_LONG) {
-          console.error("You must set FLASK_ADMIN_DEFAULT_CENTER_LAT and FLASK_ADMIN_DEFAULT_CENTER_LONG in your Flask settings to use the map widget");
+        if (!window.FLASK_EXTS_DEFAULT_CENTER_LAT || !window.FLASK_EXTS_DEFAULT_CENTER_LONG) {
+          console.error("You must set FLASK_EXTS_DEFAULT_CENTER_LAT and FLASK_EXTS_DEFAULT_CENTER_LONG in your Flask settings to use the map widget");
           return false;
         }
 
@@ -154,11 +154,11 @@
           }
         } else {
           // use the default map center
-          map.setView([window.FLASK_ADMIN_DEFAULT_CENTER_LAT, window.FLASK_ADMIN_DEFAULT_CENTER_LONG], 12);
+          map.setView([window.FLASK_EXTS_DEFAULT_CENTER_LAT, window.FLASK_EXTS_DEFAULT_CENTER_LONG], 12);
         }
 
         // set up tiles
-        var mapboxHostnameAndPath = $el.data('tile-layer-url') || 'api.mapbox.com/styles/v1/mapbox/'+window.FLASK_ADMIN_MAPBOX_MAP_ID+'/tiles/{z}/{x}/{y}?access_token={accessToken}';
+        var mapboxHostnameAndPath = $el.data('tile-layer-url') || 'api.mapbox.com/styles/v1/mapbox/'+window.FLASK_EXTS_MAPBOX_MAP_ID+'/tiles/{z}/{x}/{y}?access_token={accessToken}';
         var attribution = $el.data('tile-layer-attribution') || 'Map data &copy; <a href="//openstreetmap.org">OpenStreetMap</a> contributors, <a href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//mapbox.com">Mapbox</a>';
         L.tileLayer('//' + mapboxHostnameAndPath, {
           // Attributes from https://docs.mapbox.com/help/troubleshooting/migrate-legacy-static-tiles-api/
@@ -166,7 +166,7 @@
           maxZoom: 18,
           tileSize: 512,
           zoomOffset: -1,
-          accessToken: window.FLASK_ADMIN_MAPBOX_ACCESS_TOKEN
+          accessToken: window.FLASK_EXTS_MAPBOX_ACCESS_TOKEN
         }).addTo(map);
 
         // everything below here is to set up editing, so if we're not editable,
@@ -201,7 +201,7 @@
         }
         var drawControl = new L.Control.Draw(drawOptions);
         map.addControl(drawControl);
-        if (window.FLASK_ADMIN_MAPS_SEARCH) {
+        if (window.FLASK_EXTS_MAPS_SEARCH) {
           var circle = L.circleMarker([0, 0]);
           var $autocompleteEl = $('<input style="position: absolute; z-index: 9999; display: block; margin: -42px 0 0 10px; width: 50%">');
           var $form = $($el.get(0).form);
@@ -338,7 +338,7 @@
                 if (allowDuplicateTags) {
                     // To allow duplicate tags, we need to have a unique ID for each entry.
                     // The easiest way to do this is appending the current Unix timestamp.
-                    // However, this causes the ID to change (the ID is what flask-admin receives later on).
+                    // However, this causes the ID to change (the ID is what flask receives later on).
                     // We separate the date with a '#' and put a space at the end of the ID
                     // (something the user can't do due to 'trim') to specially mark these entries.
                     var createSearchChoice = function (term) {
@@ -486,7 +486,6 @@
                 return true;
             case 'x-editable-combodate':
                 // Fixes bootstrap4 issue where data-template breaks bs4 popover.
-                // https://github.com/pallets-eco/flask-admin/issues/2022
                 let template = $el.data('template');
                 $el.removeAttr('data-template');
                 $el.editable({

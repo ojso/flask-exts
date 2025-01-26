@@ -20,7 +20,7 @@ def test_render_pagination(app, client):
         messages = pagination.items
         return render_template_string(
             """
-            {% from 'macro/pagination.html' import render_pagination %}
+            {% from 'bootstrap4/pagination.html' import render_pagination %}
             {{ render_pagination(pagination) }}
             """,
             pagination=pagination,

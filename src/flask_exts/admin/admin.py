@@ -33,9 +33,6 @@ class Admin:
             Subdomain to use
         :param index_view:
             Home page view to use. Defaults to `AdminIndexView`.
-        :param translations_path:
-            Location of the translation message catalogs. By default will use the translations
-            shipped with Flask-Admin.
         :param endpoint:
             Base endpoint name for index view. If you use multiple instances of the `Admin` class with
             a single Flask application, you have to set a unique endpoint name for each instance.

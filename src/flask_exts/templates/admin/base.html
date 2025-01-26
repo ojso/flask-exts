@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% import 'admin/layout.html' as layout with context -%}
+{% import 'macro/menu.html' as menu with context -%}
 {%- from 'macro/message.html' import render_messages -%}
 
 {% block styles -%}
@@ -23,23 +23,21 @@
                 {%- endblock %}
                 {% block main_menu -%}
                 <ul class="navbar-nav mr-auto">
-                    {{ layout.menu(admin.menu()) }}
+                    {{ menu.render_menu(admin.menu()) }}
                 </ul>
                 {%- endblock %}
                 {% block menu_links -%}
                 <ul class="navbar-nav navbar-right">
-                    {{ layout.menu_links(admin.menu_links()) }}
+                    {{ menu.menu_links(admin.menu_links()) }}
                 </ul>
                 {%- endblock %}
-                {% block access_control %} {{ layout.login() }}{% endblock %}
+                {% block access_control %} {{ menu.menu_user() }}{% endblock %}
             </div>
         </div>
     </nav>
 </div>
 <div class="container{% if template.bootstrap.fluid %}-fluid{% endif %}">
     {% block messages %}{{ render_messages() }}{% endblock %}
-    {# store the jinja2 context for form_rules rendering logic #}
-    {# set render_ctx = h.resolve_ctx() #}
     {% block main %}{% endblock %}
 </div>
 

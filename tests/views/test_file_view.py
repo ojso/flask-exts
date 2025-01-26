@@ -4,6 +4,7 @@ import os.path as op
 
 from flask_exts.views.file_view import LocalFileView
 
+
 class FileViewTests:
     _test_files_root = op.join(op.dirname(__file__), "files")
 
@@ -13,9 +14,7 @@ class FileViewTests:
     def fileadmin_args(self):
         raise NotImplementedError
 
-    def test_file_admin(self, app):
-        admin = app.extensions["admin"][0]
-
+    def test_file_admin(self, client, admin):
         fileadmin_class = self.fileadmin_class()
         fileadmin_args, fileadmin_kwargs = self.fileadmin_args()
         # print(fileadmin_args)
@@ -26,10 +25,7 @@ class FileViewTests:
         view_kwargs = dict(fileadmin_kwargs)
         view_kwargs.setdefault("name", "Files")
         view = MyFileAdmin(*fileadmin_args, **view_kwargs)
-
         admin.add_view(view)
-
-        client = app.test_client()
 
         # index
         rv = client.get("/admin/myfileadmin/")
@@ -133,9 +129,7 @@ class FileViewTests:
         assert "path=dummy_renamed_dir" not in rv.data.decode("utf-8")
         assert "path=dummy.txt" in rv.data.decode("utf-8")
 
-    def test_modal_edit(self, app):
-        admin = app.extensions["admin"][0]
-
+    def test_modal_edit(self, client, admin):
         fileadmin_class = self.fileadmin_class()
         fileadmin_args, fileadmin_kwargs = self.fileadmin_args()
 
@@ -158,19 +152,17 @@ class FileViewTests:
         admin.add_view(edit_modal_on)
         admin.add_view(edit_modal_off)
 
-        client_bs4 = app.test_client()
-
         # bootstrap 3 - ensure modal window is added when edit_modal is
         # enabled
-        rv = client_bs4.get("/admin/edit_modal_on/")
+        rv = client.get("/admin/edit_modal_on/")
         assert rv.status_code == 200
-        data = rv.data.decode("utf-8")
+        data = rv.get_data(as_text=True)
         assert "fa_modal_window" in data
 
         # bootstrap 3 - test modal disabled
-        rv = client_bs4.get("/admin/edit_modal_off/")
+        rv = client.get("/admin/edit_modal_off/")
         assert rv.status_code == 200
-        data = rv.data.decode("utf-8")
+        data = rv.get_data(as_text=True)
         assert "fa_modal_window" not in data
 
 
@@ -181,9 +173,7 @@ class TestLocalFileAdmin(FileViewTests):
     def fileadmin_args(self):
         return (self._test_files_root,), {}
 
-    def test_fileadmin_sort_url_param(self, app):
-        admin = app.extensions["admin"][0]
-
+    def test_fileadmin_sort_url_param(self, client, admin):
         fileadmin_class = self.fileadmin_class()
         fileadmin_args, fileadmin_kwargs = self.fileadmin_args()
 
@@ -196,7 +186,6 @@ class TestLocalFileAdmin(FileViewTests):
 
         admin.add_view(view)
 
-        client = app.test_client()
         with open(op.join(self._test_files_root, "dummy2.txt"), "w") as fp:
             # make sure that 'files/dummy2.txt' exists, is newest and has bigger size
             fp.write("test")

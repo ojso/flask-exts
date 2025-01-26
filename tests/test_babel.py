@@ -37,9 +37,9 @@ def test_locale(app):
 
 
 def test_translation(app):
-    text = "Home"
-    text_en = "Main Page"
-    text_zh = "测试首页"
+    text = "Name"
+    text_en = "Name"
+    text_zh = "名称"
     with app.test_request_context():
         assert gettext(text) == text_en
         session["lang"] = "zh"
@@ -50,7 +50,7 @@ def test_translation(app):
 def test_translation_form(app):
     text_required = "This field is required."
     text_required_en = "This field is required."
-    text_required_zh = "该字段是必填字段。"
+    text_required_zh = "此字段是必需项."
     text_invalid_json = "Invalid JSON"
     text_invalid_json_en = "Invalid JSON"
     text_invalid_json_zh = "无效的JSON"
