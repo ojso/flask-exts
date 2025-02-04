@@ -1,9 +1,10 @@
 from markupsafe import Markup
-from jinja2 import pass_context
+
 
 class BaseRule:
     """
-    Base form rule. All form formatting rules should derive from `BaseRule`.
+    Base form rule.
+    All form formatting rules should derive from `BaseRule`.
     """
 
     def __init__(self):
@@ -44,73 +45,29 @@ class BaseRule:
         raise NotImplementedError()
 
 
-class NestedRule(BaseRule):
+class BaseTextRule(BaseRule):
     """
-    Nested rule. Can contain child rules and render them.
+    Render text (or HTML snippet) from string.
     """
 
-    def __init__(self, rules=[], separator=""):
+    def __init__(self, escape=True):
         """
         Constructor.
-
-        :param rules:
-            Child rule list
-        :param separator:
-            Default separator between rules when rendering them.
+        :param escape:
+            Should text be escaped or not. Default is `True`.
         """
         super().__init__()
-        self.rules = list(rules)
-        self.separator = separator
+        self.type = "text"
+        self.escape = escape
 
-    def configure(self, rule_set, parent):
-        """
-        Configure rule.
-
-        :param rule_set:
-            Rule set
-        :param parent:
-            Parent rule (if any)
-        """
-        self.rules = rule_set.configure_rules(self.rules, self)
-        return super().configure(rule_set, parent)
-
-    @property
-    def visible_fields(self):
-        """
-        Return visible fields for all child rules.
-        """
-        visible_fields = []
-        for rule in self.rules:
-            for field in rule.visible_fields:
-                visible_fields.append(field)
-        return visible_fields
-
-    def __iter__(self):
-        """
-        Return rules.
-        """
-        return self.rules
-
-    def __call__(self, form, form_opts=None, field_args={}):
-        """
-        Render all children.
-
-        :param form:
-            Form object
-        :param form_opts:
-            Form options
-        :param field_args:
-            Optional arguments that should be passed to template or the field
-        """
-        result = []
-
-        for r in self.rules:
-            result.append(str(r(form, form_opts, field_args)))
-
-        return Markup(self.separator.join(result))
+    def __markup__(self, text):
+        if self.escape:
+            return Markup(text)
+        else:
+            return text
 
 
-class Text(BaseRule):
+class Text(BaseTextRule):
     """
     Render text (or HTML snippet) from string.
     """
@@ -124,172 +81,44 @@ class Text(BaseRule):
         :param escape:
             Should text be escaped or not. Default is `True`.
         """
-        super().__init__()
-
+        super().__init__(escape)
         self.text = text
-        self.escape = escape
 
     def __call__(self, form, form_opts=None, field_args={}):
-        if self.escape:
-            return self.text
-
-        return Markup(self.text)
+        return self.__markup__(self.text)
 
 
-class HTML(Text):
+class Header(Text):
     """
-    Shortcut for `Text` rule with `escape` set to `False`.
+    Render header text.
     """
-
-    def __init__(self, html):
-        super().__init__(html, escape=False)
-
-
-class Macro(BaseRule):
-    """
-    Render macro by its name from current Jinja2 context.
-    """
-
-    def __init__(self, macro_name, **kwargs):
-        """
-        Constructor.
-
-        :param macro_name:
-            Macro name
-        :param kwargs:
-            Default macro parameters
-        """
-        super().__init__()
-
-        self.macro_name = macro_name
-        self.default_args = kwargs
-
-    def _resolve(self, context, name):
-        """
-        Resolve macro in a Jinja2 context
-
-        :param context:
-            Jinja2 context
-        :param name:
-            Macro name. May be full path (with dots)
-        """
-        parts = name.split(".")
-
-        field = context.resolve(parts[0])
-
-        if not field:
-            return None
-
-        for p in parts[1:]:
-            field = getattr(field, p, None)
-
-            if not field:
-                return field
-
-        return field
 
     def __call__(self, form, form_opts=None, field_args={}):
-        """
-        Render macro rule.
-
-        :param form:
-            Form object
-        :param form_opts:
-            Form options
-        :param field_args:
-            Optional arguments that should be passed to the macro
-        """
-        macro = self._resolve(self.macro_name)
-
-        if not macro:
-            raise ValueError(
-                "Cannot find macro %s in current context." % self.macro_name
-            )
-
-        opts = dict(self.default_args)
-        opts.update(field_args)
-        return macro(**opts)
+        text = f"<h3>{self.text}</h3>"
+        return self.__markup__(text)
 
 
-class Container(Macro):
-    """
-    Render container around child rule.
-    """
-
-    def __init__(self, macro_name, child_rule, **kwargs):
-        """
-        Constructor.
-
-        :param macro_name:
-            Macro name that will be used as a container
-        :param child_rule:
-            Child rule to be rendered inside of container
-        :param kwargs:
-            Container macro arguments
-        """
-        super().__init__(macro_name, **kwargs)
-        self.child_rule = child_rule
-
-    def configure(self, rule_set, parent):
-        """
-        Configure rule.
-
-        :param rule_set:
-            Rule set
-        :param parent:
-            Parent rule (if any)
-        """
-        self.child_rule.configure(rule_set, self)
-        return super().configure(rule_set, parent)
-
-    @property
-    def visible_fields(self):
-        return self.child_rule.visible_fields
-
-    def __call__(self, form, form_opts=None, field_args={}):
-        """
-        Render container.
-
-        :param form:
-            Form object
-        :param form_opts:
-            Form options
-        :param field_args:
-            Optional arguments that should be passed to template or the field
-        """
-
-        @pass_context
-        def caller(context,**kwargs):
-            return context.call(self.child_rule, form, form_opts, kwargs)
-
-        args = dict(field_args)
-        args["caller"] = caller
-
-        return super().__call__(form, form_opts, args)
-
-
-class Field(Macro):
+class Field(BaseRule):
     """
     Form field rule.
     """
 
-    def __init__(self, field_name, render_field="lib.render_field"):
+    def __init__(self, field_name):
         """
         Constructor.
 
         :param field_name:
             Field name to render
-        :param render_field:
-            Macro that will be used to render the field.
         """
-        super().__init__(render_field)
+        super().__init__()
+        self.type = "field"
         self.field_name = field_name
 
     @property
     def visible_fields(self):
         return [self.field_name]
 
-    def __call__(self, form, form_opts=None, field_args={}):
+    def get_params(self, form, form_opts=None, field_args={}):
         """
         Render field.
 
@@ -311,78 +140,17 @@ class Field(Macro):
             opts.update(form_opts.widget_args.get(self.field_name, {}))
 
         opts.update(field_args)
-
         params = {"form": form, "field": field, "kwargs": opts}
 
-        return super().__call__(form, form_opts, params)
+        return params
 
 
-class Header(Macro):
-    """
-    Render header text.
-    """
-
-    def __init__(self, text, header_macro="lib.render_header"):
-        """
-        Constructor.
-
-        :param text:
-            Text to render
-        :param header_macro:
-            Header rendering macro
-        """
-        super().__init__(header_macro, text=text)
-
-
-class FieldSet(NestedRule):
-    """
-    Field set with header.
-    """
-
-    def __init__(self, rules, header=None, separator=""):
-        """
-        Constructor.
-
-        :param rules:
-            Child rules
-        :param header:
-            Header text
-        :param separator:
-            Child rule separator
-        """
-        if header:
-            rule_set = [Header(header)] + list(rules)
-        else:
-            rule_set = list(rules)
-
-        super().__init__(rule_set, separator=separator)
-
-
-class Row(NestedRule):
-    def __init__(self, *columns, **kw):
-        super().__init__()
-        self.rules = columns
-
-    def __call__(self, form, form_opts=None, field_args={}):
-        cols = []
-        for col in self.rules:
-            if col.visible_fields:
-                w_args = form_opts.widget_args.setdefault(col.visible_fields[0], {})
-                w_args.setdefault("column_class", "col")
-            cols.append(col(form, form_opts, field_args))
-
-        return Markup('<div class="form-row">%s</div>' % "".join(cols))
-
-
-class Group(Macro):
-
+class Group(Field):
     def __init__(self, field_name, prepend=None, append=None, **kwargs):
         """
         Bootstrap Input group.
         """
-        render_field = kwargs.get("render_field", "lib.render_field")
-        super().__init__(render_field)
-        self.field_name = field_name
+        super().__init__(field_name)
         self._addons = []
 
         if prepend:
@@ -411,8 +179,6 @@ class Group(Macro):
                     cnf["pos"] = "append"
                     self._addons.append(cnf)
 
-        print(self._addons)
-
     @property
     def visible_fields(self):
         fields = [self.field_name]
@@ -421,7 +187,7 @@ class Group(Macro):
                 fields.append(cnf["name"])
         return fields
 
-    def __call__(self, form, form_opts=None, field_args={}):
+    def get_params(self, form, form_opts=None, field_args={}):
         """
         Render field.
 
@@ -479,8 +245,96 @@ class Group(Macro):
         opts.update(field_args)
 
         params = {"form": form, "field": field, "kwargs": opts}
+        return params
 
-        return super().__call__(form, form_opts, params)
+
+class NestedRule(BaseRule):
+    """
+    Nested rule. Can contain child rules and render them.
+    """
+
+    def __init__(self, rules=[], separator=""):
+        """
+        Constructor.
+
+        :param rules:
+            Child rule list
+        :param separator:
+            Default separator between rules when rendering them.
+        """
+        super().__init__()
+        self.type = "nest"
+        self.rules = list(rules)
+        self.separator = separator
+
+    def configure(self, rule_set, parent):
+        """
+        Configure rule.
+
+        :param rule_set:
+            Rule set
+        :param parent:
+            Parent rule (if any)
+        """
+        self.rules = rule_set.configure_rules(self.rules, self)
+        return super().configure(rule_set, parent)
+
+    @property
+    def visible_fields(self):
+        """
+        Return visible fields for all child rules.
+        """
+        visible_fields = []
+        for rule in self.rules:
+            for field in rule.visible_fields:
+                visible_fields.append(field)
+        return visible_fields
+
+    def __iter__(self):
+        """
+        Return rules.
+        """
+        return self.rules
+
+
+class FieldSet(NestedRule):
+    """
+    Field set with header.
+    """
+
+    def __init__(self, rules, header=None, separator=""):
+        """
+        Constructor.
+
+        :param rules:
+            Child rules
+        :param header:
+            Header text
+        :param separator:
+            Child rule separator
+        """
+        if header:
+            rule_set = [Header(header)] + list(rules)
+        else:
+            rule_set = list(rules)
+
+        super().__init__(rule_set, separator=separator)
+
+
+class Row(NestedRule):
+    def __init__(self, *columns, **kw):
+        super().__init__(columns)
+        self.type = "row"
+
+    def __call__(self, form, form_opts=None, field_args={}):
+        cols = []
+        for col in self.rules:
+            if col.visible_fields:
+                w_args = form_opts.widget_args.setdefault(col.visible_fields[0], {})
+                w_args.setdefault("column_class", "col")
+            cols.append(col(form, form_opts, field_args))
+
+        return Markup('<div class="form-row">%s</div>' % "".join(cols))
 
 
 class RuleSet:
@@ -508,14 +362,6 @@ class RuleSet:
                 visible_fields.append(field)
         return visible_fields
 
-    def convert_string(self, value):
-        """
-        Convert string to rule.
-
-        Override this method to change default behavior.
-        """
-        return Field(value)
-
     def configure_rules(self, rules, parent=None):
         """
         Configure all rules recursively - bind them to current RuleSet and
@@ -530,7 +376,7 @@ class RuleSet:
 
         for r in rules:
             if isinstance(r, str):
-                result.append(self.convert_string(r).configure(self, parent))
+                result.append(Field(r).configure(self, parent))
             elif isinstance(r, (tuple, list)):
                 row = Row(*r)
                 result.append(row.configure(self, parent))

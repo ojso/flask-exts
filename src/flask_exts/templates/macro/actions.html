@@ -11,26 +11,22 @@
     </div>
 {% endmacro %}
 
-{% macro form(actions, url) %}
-    {% if actions %}
-        <form id="action_form" action="{{ url }}" method="POST" class="d-none">
-            {% if action_form.csrf_token %}
-                {{ action_form.csrf_token }}
-            {% elif csrf_token %}
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            {% endif %}
-            {{ action_form.url(value=return_url) }}
-            {{ action_form.action() }}
-        </form>
+{% macro form(url) %}
+  <form id="action_form" action="{{ url }}" method="POST" class="d-none">
+    {% if action_form.csrf_token %}
+      {{ action_form.csrf_token }}
+    {% elif csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     {% endif %}
+    {{ action_form.url(value=return_url) }}
+    {{ action_form.action() }}
+  </form>
 {% endmacro %}
 
 {% macro add_action_js(message, actions, actions_confirmation) %}
-    {% if actions %}
-        <div id="actions-confirmation-data" class="d-none">{{ actions_confirmation|tojson|safe }}</div>
-        <div id="message-data" class="d-none">{{ message|tojson|safe }}</div>
-        <script src="{{ url_for('template.static',filename='admin/js/actions.js') }}"></script>
-    {% endif %}
+  <div id="actions-confirmation-data" class="d-none">{{ actions_confirmation|tojson|safe }}</div>
+  <div id="message-data" class="d-none">{{ message|tojson|safe }}</div>
+  <script src="{{ url_for('template.static',filename='admin/js/actions.js') }}"></script>
 {% endmacro %}
 
 {# ---------------------- Modal Window ------------------- #}

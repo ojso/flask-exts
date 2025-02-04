@@ -8,18 +8,6 @@
 </div>
 {%- endmacro %}
 
-{% macro render_inline_field(field) %}
-    {{ field }}
-
-    {% if h.is_field_error(field.errors) %}
-    <ul class="help-block input-errors">
-      {% for e in field.errors if e is string %}
-        <li>{{ e }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-{% endmacro %}
-
 {% macro render_checkbox_field(field) -%}
 <div class="mb-3 form-check">
   {{ field(type='checkbox', **kwargs) }}
@@ -27,9 +15,6 @@
 </div>
 {%- endmacro %}
 
-{% macro render_header(form, text) %}
-    <h3>{{ text }}</h3>
-{% endmacro %}
 
 {% macro render_form_field(form, field, kwargs={}) %}
   {% set direct_error = field.errors | length %}
@@ -85,6 +70,30 @@
 {% endmacro %}
 
 
+{% macro render_rule(rule, form, form_opts) %}
+  {%- if rule.type == 'text' %}
+    {{ rule(form, from_opts) }}
+  {%- elif rule.type == 'field' %}
+    {% set params=rule.get_params(form, form_opts) %}
+    {{ render_form_field(form, params.field, params.kwargs) }}
+  {%- elif rule.type == 'nest' %}
+    {% for r in rule.rules %}
+      {% if not loop.first %}
+        {{ rule.separator|safe }}
+      {% endif %}
+      {{ render_rule(r, form, form_opts) }}
+    {% else %}
+    {% endfor %}
+  {%- elif rule.type == 'row' %}
+    <div class="form-row">
+      {% for r in rule.rules %}
+        {{ render_rule(r, form, form_opts) }}
+      {% endfor %}
+    </div>
+  {%- else %}
+    {{ rule.type or 'rule.type is None' }}
+  {%- endif %}
+{% endmacro %}
 
 {% macro render_form_fields(form, form_opts=None) %}
     {% if form.hidden_tag is defined %}
@@ -100,7 +109,7 @@
 
     {% if form_opts and form_opts.form_rules %}
         {% for r in form_opts.form_rules %}
-            {{ r(form, form_opts=form_opts) }}
+            {{ render_rule(r, form, form_opts) }}
         {% endfor %}
     {% else %}
         {% for f in form if f.widget.input_type != 'hidden' %}

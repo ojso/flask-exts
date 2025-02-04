@@ -171,7 +171,9 @@
     {% endblock %}
 
     {% block actions %}
-      {{ actionslib.form(actions, get_url('.action_view')) }}
+      {% if actions %}
+        {{ actionslib.form(get_url('.action_view')) }}
+      {% endif %}
     {% endblock %}
 
     {%- if view.rename_modal or view.mkdir_modal or view.upload_modal or view.edit_modal -%}
@@ -186,6 +188,7 @@
         {{ actionslib.add_modal_js() }}
     {%- endif -%}
 
-    {{ actionslib.add_action_js(gettext('Please select at least one file.'), actions, actions_confirmation) }}
-    
+    {% if actions %}
+      {{ actionslib.add_action_js(gettext('Please select at least one file.'), actions, actions_confirmation) }}
+    {% endif %}
 {% endblock %}

@@ -8,6 +8,7 @@ from ..forms.form import FlaskForm
 def type_name(item):
     return type(item).__name__
 
+
 def is_hidden_field(field):
     return isinstance(field, HiddenField)
 
@@ -35,20 +36,6 @@ def get_table_titles(data, primary_key, primary_key_title):
             titles.append((k, k.replace("_", " ").title()))
     titles[0] = (primary_key, primary_key_title)
     return titles
-
-
-def is_field_error(errors):
-    """Check if wtforms field has error without checking its children.
-
-    :param errors:
-        Errors list.
-    """
-    if isinstance(errors, (list, tuple)):
-        for e in errors:
-            if isinstance(e, str):
-                return True
-
-    return False
 
 
 def generate_csrf():

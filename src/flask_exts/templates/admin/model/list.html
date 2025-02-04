@@ -4,7 +4,7 @@
 {% from 'macro/pagination.html' import render_pager, render_simple_pager %}
 {% import 'macro/layout.html' as model_layout with context %}
 {% import 'macro/actions.html' as actionlib with context %}
-{% import 'macro/row_actions.html' as row_actions with context %}
+{% from 'macro/row_actions.html' import render_row_action with context %}
 
 {% block styles -%}
   {{ super() }}
@@ -126,7 +126,7 @@
                     <td class="list-buttons-column">
                         {% block list_row_actions scoped %}
                           {% for action in list_row_actions %}
-                          {{ action.render_ctx(get_pk_value(row), row) }}
+                            {{ render_row_action(action, get_pk_value(row), row) }}
                           {% endfor %}
                         {% endblock %}
                     </td>
@@ -136,16 +136,16 @@
                 {% for c, name in list_columns %}
                     <td class="col-{{c}}">
                     {% if view.is_editable(c) %}
-                        {% set form = list_forms[get_pk_value(row)] %}
-                        {% if form.csrf_token %}
+                      {% set form = list_forms[get_pk_value(row)] %}
+                      {% if form.csrf_token %}
                         {{ form[c](pk=get_pk_value(row), display_value=get_value(row, c), csrf=form.csrf_token._value()) }}
-                        {% elif csrf_token %}
+                      {% elif csrf_token %}
                         {{ form[c](pk=get_pk_value(row), display_value=get_value(row, c), csrf=csrf_token()) }}
-                        {% else %}
+                      {% else %}
                         {{ form[c](pk=get_pk_value(row), display_value=get_value(row, c)) }}
-                        {% endif %}
+                      {% endif %}
                     {% else %}
-                    {{ get_value(row, c) }}
+                      {{ get_value(row, c) }}
                     {% endif %}
                     </td>
                 {% endfor %}
@@ -174,7 +174,9 @@
     {% endblock %}
 
     {% block actions %}
-    {{ actionlib.form(actions, get_url('.action_view')) }}
+      {% if actions %}
+        {{ actionlib.form(get_url('.action_view')) }}
+      {% endif %}
     {% endblock %}
 
     {%- if view.edit_modal or view.create_modal or view.details_modal -%}
@@ -191,5 +193,7 @@
     {{ form_js() }}
     <script src="{{ url_for('template.static',filename='admin/js/bs4_modal.js') }}"></script>
     <script src="{{ url_for('template.static',filename='admin/js/bs4_filters.js') }}"></script>
-    {{ actionlib.add_action_js(gettext('Please select at least one record.'), actions, actions_confirmation) }}
+    {% if actions %}
+      {{ actionlib.add_action_js(gettext('Please select at least one record.'), actions, actions_confirmation) }}
+    {% endif %}
 {% endblock %}

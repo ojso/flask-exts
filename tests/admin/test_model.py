@@ -2,7 +2,6 @@ from wtforms.fields import StringField
 from flask_exts.forms.form import BaseForm, FlaskForm
 from flask_exts.admin.model.base import BaseModelView
 from flask_exts.admin.model.filters import BaseFilter
-from flask_exts.admin.model.template import macro
 
 
 class Model:
@@ -522,7 +521,7 @@ def test_export_csv(client,admin):
         Model,
         can_export=True,
         column_list=["col1", "col2"],
-        column_formatters=dict(col1=macro("render_macro")),
+        # column_formatters=dict(col1=macro("render_macro")),
         endpoint="macro_exception",
     )
     admin.add_view(view8)
@@ -537,7 +536,7 @@ def test_export_csv(client,admin):
         view_data_v3,
         can_export=True,
         column_list=["col1", "col2"],
-        column_formatters=dict(col1=macro("render_macro")),
+        # column_formatters=dict(col1=macro("render_macro")),
         column_formatters_export=dict(col1=export_formatter),
         endpoint="macro_exception_formatter_override",
     )
@@ -550,7 +549,7 @@ def test_export_csv(client,admin):
         view_data_v3,
         can_export=True,
         column_list=["col1", "col2"],
-        column_formatters=dict(col1=macro("render_macro")),
+        # column_formatters=dict(col1=macro("render_macro")),
         column_export_exclude_list=["col1"],
         endpoint="macro_exception_exclude_override",
     )
@@ -563,7 +562,7 @@ def test_export_csv(client,admin):
         view_data_v3,
         can_export=True,
         column_list=["col1", "col2"],
-        column_formatters=dict(col1=macro("render_macro")),
+        # column_formatters=dict(col1=macro("render_macro")),
         column_export_list=["col2"],
         endpoint="macro_exception_list_override",
     )
@@ -576,7 +575,7 @@ def test_export_csv(client,admin):
         view_data_v3,
         can_export=True,
         column_list=["col1", "col2"],
-        column_formatters=dict(col1=macro("render_macro")),
+        # column_formatters=dict(col1=macro("render_macro")),
         endpoint="macro_exception_macro_override",
     )
     admin.add_view(view12)
@@ -633,7 +632,7 @@ def test_export_csv(client,admin):
 
     rv = client.get("/admin/macro_exception/export/csv/")
     data = rv.get_data(as_text=True)
-    assert rv.status_code == 500
+    assert rv.status_code == 200
 
     rv = client.get("/admin/macro_exception_formatter_override/export/csv/")
     data = rv.get_data(as_text=True)
@@ -652,7 +651,7 @@ def test_export_csv(client,admin):
 
     rv = client.get("/admin/macro_exception_macro_override/export/csv/")
     data = rv.get_data(as_text=True)
-    assert rv.status_code == 500
+    assert rv.status_code == 200
 
 
 def test_export_tablib(client,admin):
@@ -687,15 +686,15 @@ def test_export_tablib(client,admin):
 
 
 def test_list_row_actions(client,admin):
-    from flask_exts.admin.model import template
+    from flask_exts.admin import row_action
 
     # Test default actions
     view = MockModelView(Model, endpoint="test")
     admin.add_view(view)
 
     actions = view.get_list_row_actions()
-    assert isinstance(actions[0], template.EditRowAction)
-    assert isinstance(actions[1], template.DeleteRowAction)
+    assert isinstance(actions[0], row_action.EditRowAction)
+    assert isinstance(actions[1], row_action.DeleteRowAction)
 
     # Test default actions
     view = MockModelView(
@@ -705,7 +704,7 @@ def test_list_row_actions(client,admin):
 
     actions = view.get_list_row_actions()
     assert len(actions) == 1
-    assert isinstance(actions[0], template.ViewRowAction)
+    assert isinstance(actions[0], row_action.ViewRowAction)
 
     # Test popups
     view = MockModelView(
@@ -718,30 +717,26 @@ def test_list_row_actions(client,admin):
     admin.add_view(view)
 
     actions = view.get_list_row_actions()
-    assert isinstance(actions[0], template.ViewPopupRowAction)
-    assert isinstance(actions[1], template.EditPopupRowAction)
-    assert isinstance(actions[2], template.DeleteRowAction)
+    assert isinstance(actions[0], row_action.ViewPopupRowAction)
+    assert isinstance(actions[1], row_action.EditPopupRowAction)
+    assert isinstance(actions[2], row_action.DeleteRowAction)
 
     # Test custom views
     view = MockModelView(
         Model,
         endpoint="test3",
         column_extra_row_actions=[
-            template.LinkRowAction(
-                "glyphicon glyphicon-off", "http://localhost/?id={row_id}"
-            ),
-            template.EndpointLinkRowAction(
-                "glyphicon glyphicon-test", "test1.index_view"
-            ),
+            row_action.LinkRowAction("http://localhost/?id={row_id}",icon="off"),
+            row_action.EndpointLinkRowAction("test1.index_view",icon='test'),
         ],
     )
     admin.add_view(view)
 
     actions = view.get_list_row_actions()
-    assert isinstance(actions[0], template.EditRowAction)
-    assert isinstance(actions[1], template.DeleteRowAction)
-    assert isinstance(actions[2], template.LinkRowAction)
-    assert isinstance(actions[3], template.EndpointLinkRowAction)
+    assert isinstance(actions[0], row_action.EditRowAction)
+    assert isinstance(actions[1], row_action.DeleteRowAction)
+    assert isinstance(actions[2], row_action.LinkRowAction)
+    assert isinstance(actions[3], row_action.EndpointLinkRowAction)
 
     rv = client.get("/admin/test/")
     assert rv.status_code == 200
@@ -756,7 +751,6 @@ def test_list_row_actions(client,admin):
     assert rv.status_code == 200
 
     data = rv.get_data(as_text=True)
-
-    assert "glyphicon-off" in data
+    assert "off" in data
     assert "http://localhost/?id=" in data
-    assert "glyphicon-test" in data
+    assert "test" in data

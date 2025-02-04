@@ -8,6 +8,7 @@ class UserView(ModelView):
     column_sortable_list = ("id", "username")
     column_filters = ("id", "username")
     form_columns = ("username",)
+    can_view_details = True
 
 
 userview = UserView(User, db.session, endpoint="users")

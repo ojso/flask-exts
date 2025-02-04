@@ -25,6 +25,7 @@ class InlineFieldList(FieldList):
 
         template.process(None)
 
+        return "todo inline"
         return self.widget(self,
                            template=template,
                            check=self.display_row_controls,

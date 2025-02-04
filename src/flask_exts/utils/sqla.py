@@ -55,6 +55,11 @@ def has_multiple_pks(model):
     if not hasattr(model, '_sa_class_manager'):
         raise TypeError('model must be a sqlalchemy mapped model')
 
+    if len(model._sa_class_manager.mapper.primary_key) > 1:
+        print('*'*10)
+        print(model)
+        print(model._sa_class_manager.mapper.primary_key)
+        print('*'*10)
     return len(model._sa_class_manager.mapper.primary_key) > 1
 
 

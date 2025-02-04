@@ -14,3 +14,5 @@ def init_db(app):
     db.init_app(app)
 
     from . import user
+    from . import post
+    from . import tree

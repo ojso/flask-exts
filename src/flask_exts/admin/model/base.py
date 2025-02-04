@@ -25,13 +25,13 @@ from wtforms.fields.core import UnboundField
 from wtforms.validators import ValidationError, InputRequired
 from flask_babel import gettext, ngettext
 from . import typefmt
-from . import template
 from .filters import BaseFilter
 from .ajax import AjaxModelLoader
 from ..._types import T_COLUMN_LIST, T_FORMATTERS
 from ..view import BaseView
 from ..actions import ActionsMixin
-from .. import expose
+from .. import row_action
+from ..view import expose
 from ...forms.form import BaseForm
 from ...forms import FormOpts
 from ...forms.rules import RuleSet
@@ -249,18 +249,6 @@ class BaseModelView(BaseView, ActionsMixin):
 
             class MyModelView(BaseModelView):
                 column_formatters = dict(price=lambda v, c, m, p: m.price*2)
-
-        or using Jinja2 `macro` in template::
-
-            from .model.template import macro
-
-            class MyModelView(BaseModelView):
-                column_formatters = dict(price=macro('render_price'))
-
-            # in template
-            {% macro render_price(model, column) %}
-                {{ model.price * 2 }}
-            {% endmacro %}
 
         The Callback function has the prototype::
 
@@ -1020,24 +1008,24 @@ class BaseModelView(BaseView, ActionsMixin):
     def get_list_row_actions(self):
         """
         Return list of row action objects, each is instance of
-        :class:`~.model.template.BaseListRowAction`
+        :class:`~.row_action.BaseListRowAction`
         """
         actions = []
 
         if self.can_view_details:
             if self.details_modal:
-                actions.append(template.ViewPopupRowAction())
+                actions.append(row_action.ViewPopupRowAction())
             else:
-                actions.append(template.ViewRowAction())
+                actions.append(row_action.ViewRowAction())
 
         if self.can_edit:
             if self.edit_modal:
-                actions.append(template.EditPopupRowAction())
+                actions.append(row_action.EditPopupRowAction())
             else:
-                actions.append(template.EditRowAction())
+                actions.append(row_action.EditRowAction())
 
         if self.can_delete:
-            actions.append(template.DeleteRowAction())
+            actions.append(row_action.DeleteRowAction())
 
         return actions + (self.column_extra_row_actions or [])
 

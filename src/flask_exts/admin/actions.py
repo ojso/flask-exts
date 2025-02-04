@@ -38,9 +38,6 @@ class ActionsMixin:
     """
 
     def __init__(self):
-        """
-        Default constructor.
-        """
         self._actions = []
         self._actions_data = {}
 
