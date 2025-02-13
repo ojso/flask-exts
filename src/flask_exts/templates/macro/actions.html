@@ -5,8 +5,7 @@
        aria-expanded="false">{{ gettext('With selected') }}<b class="caret"></b></a>
     <div class="dropdown-menu">
         {% for p in actions %}
-            <a class="dropdown-item" href="javascript:void(0)"
-               onclick="return modelActions.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>
+            <a class="dropdown-item" href="javascript:void(0)" onclick="return modelActions.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>
         {% endfor %}
     </div>
 {% endmacro %}
@@ -26,7 +25,7 @@
 {% macro add_action_js(message, actions, actions_confirmation) %}
   <div id="actions-confirmation-data" class="d-none">{{ actions_confirmation|tojson|safe }}</div>
   <div id="message-data" class="d-none">{{ message|tojson|safe }}</div>
-  <script src="{{ url_for('template.static',filename='admin/js/actions.js') }}"></script>
+  <script src="{{ url_for('template.static',filename='js/actions.js') }}"></script>
 {% endmacro %}
 
 {# ---------------------- Modal Window ------------------- #}
@@ -50,5 +49,5 @@
 {% endmacro %}
 
 {% macro add_modal_js() %}
-  <script src="{{ url_for('template.static',filename='admin/js/modal.js') }}"></script>
+  <script src="{{ url_for('template.static',filename='js/modal.js') }}"></script>
 {% endmacro %}

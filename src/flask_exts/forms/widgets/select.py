@@ -1,5 +1,6 @@
 import json
 from markupsafe import Markup
+from flask import url_for
 from wtforms.widgets import html_params
 from wtforms.widgets import Select
 from wtforms.widgets import TextInput
@@ -35,8 +36,8 @@ class AjaxSelect2Widget:
     def __call__(self, field, **kwargs):
         kwargs.setdefault('data-role', 'select2-ajax')
         # todo
-        # kwargs.setdefault("data-url", url_for(".ajax_lookup", name=field.loader.name))
-        kwargs.setdefault('data-url', kwargs.pop("data_url", ""))
+        kwargs.setdefault("data-url", url_for(".ajax_lookup", name=field.loader.name))
+        # kwargs.setdefault('data-url', kwargs.pop("data_url", ""))
 
         allow_blank = getattr(field, 'allow_blank', False)
         if allow_blank and not self.multiple:
@@ -52,13 +53,12 @@ class AjaxSelect2Widget:
             for value in field.data:
                 data = field.loader.format(value)
                 result.append(data)
-                ids.append(data[0])
+                ids.append(str(data[0]))
 
             separator = getattr(field, 'separator', ',')
 
             kwargs['value'] = separator.join(ids)
             kwargs["data-json"] = json.dumps(result, default=str)
-            kwargs["data-json"] = str(result)
             kwargs['data-multiple'] = u'1'
             kwargs['data-separator'] = separator
         else:
@@ -77,5 +77,5 @@ class AjaxSelect2Widget:
 
         kwargs.setdefault('data-separator', ',')
 
-        return Markup('<input %s>' % html_params(name=field.name, **kwargs))
+        return Markup('<select %s></select>' % html_params(name=field.name, **kwargs))
 

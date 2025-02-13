@@ -53,7 +53,7 @@ class QueryAjaxModelLoader(AjaxModelLoader):
         if not model:
             return None
 
-        return getattr(model, self.pk), model
+        return getattr(model, self.pk), str(model)
 
     def get_query(self):
         return self.session.query(self.model)
@@ -66,10 +66,17 @@ class QueryAjaxModelLoader(AjaxModelLoader):
     def get_list(self, term, offset=0, limit=DEFAULT_PAGE_SIZE):
         query = self.get_query()
 
-        # no type casting to string if a ColumnAssociationProxyInstance is given
-        filters = (field.ilike(u'%%%s%%' % term) if is_association_proxy(field)
-                   else cast(field, String).ilike(u'%%%s%%' % term) for field in self._cached_fields)
-        query = query.filter(or_(*filters))
+        # debug
+        # for field in self._cached_fields:
+        #     if is_association_proxy(field):
+        #         a = field.ilike(u'%%%s%%' % term)
+        #     else:
+        #         a = cast(field, String).ilike(u'%%%s%%' % term)
+        if term:
+            # no type casting to string if a ColumnAssociationProxyInstance is given
+            filters = (field.ilike(u'%%%s%%' % term) if is_association_proxy(field)
+                    else cast(field, String).ilike(u'%%%s%%' % term) for field in self._cached_fields)
+            query = query.filter(or_(*filters))
 
         if self.filters:
             filters = [text("%s.%s" % (self.model.__tablename__.lower(), value)) for value in self.filters]

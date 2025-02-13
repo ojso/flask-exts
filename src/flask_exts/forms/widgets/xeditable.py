@@ -15,9 +15,9 @@ class XEditableWidget:
         display_value = kwargs.pop("display_value", "")
         kwargs.setdefault("data-value", display_value)
         # todo
-        # kwargs.setdefault('data-url', './ajax/update/')
-        data_url = kwargs.pop("data_url", "")
-        kwargs.setdefault("data-url", data_url)
+        kwargs.setdefault('data-url', './ajax/update/')
+        # data_url = kwargs.pop("data_url", "")
+        # kwargs.setdefault("data-url", data_url)
 
         kwargs.setdefault("data-role", "x-editable")
 

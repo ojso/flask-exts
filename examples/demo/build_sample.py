@@ -1,10 +1,24 @@
 import random
 import datetime
 from .models import db
-from .models.post import AVAILABLE_USER_TYPES
-from .models.post import Author, Post, Tag
-from .models.post import AssociationPostTag
+from .models.author import Author
+from .models.author import AVAILABLE_USER_TYPES
+from .models.tag import Tag
+from .models.post import Post
 from .models.tree import Tree
+from .models.keyword import Keyword
+from .models.user import User
+
+
+def build_sample_userkeyword():
+    user_log = User()
+    user_log.username = "log"
+    user_log.email = "log"
+    user_log.password = "log"
+    for kw in (Keyword("blammo"), Keyword("itsig")):
+        user_log.keywords.append(kw)
+    db.session.add(user_log)
+    db.session.commit()
 
 
 def build_sample_tree():
@@ -179,14 +193,16 @@ doloribus asperiores repellat.",
         tmp = int(1000 * random.random())  # random number between 0 and 1000:
         post.date = datetime.datetime.now() - datetime.timedelta(days=tmp)
         # select a couple of tags at random
-        for tag in random.sample(tag_list, 2):
-            a=AssociationPostTag()
-            a.tag = tag
-            post.tags.append(a)
+        post.tags = random.sample(tag_list, 2)
+        # for tag in random.sample(tag_list, 2):
+        #     a=AssociationPostTag()
+        #     a.tag = tag
+        #     post.tags.append(a)
         db.session.add(post)
 
     db.session.commit()
     return
+
 
 def build_sample_db():
     """
@@ -196,6 +212,7 @@ def build_sample_db():
     db.drop_all()
     db.create_all()
 
+    build_sample_userkeyword()
     build_sample_tree()
     build_sample_post()
 

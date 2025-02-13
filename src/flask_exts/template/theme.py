@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 LOCAL_VENDOR_URL = "/template/static/vendor"
 ICON_SPRITE_URL = f"{LOCAL_VENDOR_URL}/bootstrap-icons/bootstrap-icons.svg"
+ICON_FONT_CSS = f"{LOCAL_VENDOR_URL}/bootstrap-icons/font/bootstrap-icons.css"
 JQUERY_JS_URL = f"{LOCAL_VENDOR_URL}/jquery/jquery.min.js"
 BOOTSTRAP4_CSS_URL = f"{LOCAL_VENDOR_URL}/bootstrap4/bootstrap.min.css"
 BOOTSTRAP4_JS_URL = f"{LOCAL_VENDOR_URL}/bootstrap4/bootstrap.bundle.min.js"
@@ -33,7 +34,8 @@ class Title:
 class BootstrapTheme:
     admin_base_template: str = "admin/base.html"
     icon_sprite_url = ICON_SPRITE_URL
-    icon_size = "1em"    
+    icon_font_css = ICON_FONT_CSS
+    icon_size = "1em"
     title = Title()
 
     def __init__(self,version=4):
@@ -42,8 +44,12 @@ class BootstrapTheme:
         self.bootstrap = bootstrap
 
     def load_css(self):
-        url = BOOTSTRAP4_CSS_URL if self.bootstrap.version < 5 else BOOTSTRAP5_CSS_URL
-        return Markup(f'<link rel="stylesheet" href="{url}">')
+        bootstrap_css_url = BOOTSTRAP4_CSS_URL if self.bootstrap.version < 5 else BOOTSTRAP5_CSS_URL
+        css = (
+            f'<link rel="stylesheet" href="{bootstrap_css_url}">'
+            f'<link rel="stylesheet" href="{self.icon_font_css}">'
+            )
+        return Markup(css)
 
     def load_js(self):
         urls = []

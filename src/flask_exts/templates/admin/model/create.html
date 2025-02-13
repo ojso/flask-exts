@@ -1,11 +1,11 @@
 {% extends 'admin/master.html' %}
 
-{% from 'macro/plugin.html' import form_css, form_js with context %}
+{% from 'macro/vendor.html' import form_css, form_js %}
 {% from 'macro/form.html' import render_form, extra with context %}
 
 {% block styles %}
   {{ super() }}
-  {{ form_css() }}
+  {{ form_css(xeditable=editable_columns) }}
 {% endblock %}
 
 {% block main %}
@@ -27,5 +27,5 @@
 
 {% block tail %}
   {{ super() }}
-  {{ form_js() }}
+  {{ form_js(xeditable=editable_columns) }}
 {% endblock %}

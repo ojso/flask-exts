@@ -23,7 +23,8 @@
                 limit: 10
               };
             },
-            results: function(data, page) {
+            processResults: function(data, page) {
+            // processResults: function(data, page) {
               var results = [];
 
               for (var k in data) {
@@ -374,10 +375,10 @@
                 return true;
             case 'datepicker':
                 $el.daterangepicker({
+                  "locale": {format: $el.attr('data-date-format')},
                   timePicker: false,
                   showDropdowns: true,
                   singleDatePicker: true,
-                  format: $el.attr('data-date-format')
                 },
                 function(start, end) {
                     $('.filter-val').trigger("change");
@@ -385,10 +386,10 @@
                 return true;
             case 'daterangepicker':
                 $el.daterangepicker({
+                  "locale": {format: $el.attr('data-date-format')},
                   timePicker: false,
                   showDropdowns: true,
                   separator: ' to ',
-                  format: $el.attr('data-date-format')
                 },
                 function(start, end) {
                     $('.filter-val').trigger("change");
@@ -396,12 +397,12 @@
                 return true;
             case 'datetimepicker':
                 $el.daterangepicker({
+                  "locale": {format: $el.attr('data-date-format')},
                   timePicker: true,
                   showDropdowns: true,
                   singleDatePicker: true,
                   timePickerIncrement: 1,
-                  timePicker12Hour: false,
-                  format: $el.attr('data-date-format')
+                  timePicker24Hour: true,
                 },
                 function(start, end) {
                     $('.filter-val').trigger("change");
@@ -416,12 +417,12 @@
                 return true;
             case 'datetimerangepicker':
                 $el.daterangepicker({
+                  "locale": {format: $el.attr('data-date-format')},
                   timePicker: true,
                   showDropdowns: true,
                   timePickerIncrement: 1,
                   timePicker12Hour: false,
                   separator: ' to ',
-                  format: $el.attr('data-date-format')
                 },
                 function(start, end) {
                     $('.filter-val').trigger("change");
@@ -429,10 +430,9 @@
                 return true;
             case 'timepicker':
                 $el.daterangepicker({
-                  // Bootstrap 2 option
+                  "locale": {format: $el.attr('data-date-format')},
                   timePicker: true,
                   showDropdowns: true,
-                  format: $el.attr('data-date-format'),
                   timePicker12Hour: false,
                   timePickerIncrement: 1,
                   singleDatePicker: true
@@ -449,10 +449,9 @@
                 return true;
             case 'timerangepicker':
                 $el.daterangepicker({
-                  // Bootstrap 2 option
+                  "locale": {format: $el.attr('data-date-format')},
                   timePicker: true,
                   showDropdowns: true,
-                  format: $el.attr('data-date-format'),
                   timePicker12Hour: false,
                   separator: ' to ',
                   timePickerIncrement: 1

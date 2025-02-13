@@ -2,7 +2,7 @@
 
 {% block styles -%}
   {{ super() }}
-  <link rel="stylesheet" href="{{ url_for('template.static',filename='admin/css/rediscli.css') }}">
+  <link rel="stylesheet" href="{{ url_for('template.static',filename='css/rediscli.css') }}">
 {%- endblock %}
 
 
@@ -21,7 +21,7 @@
 {% block tail %}
   {{ super() }}
   <div id="execute-view-data" class="d-none">{{ get_url('.execute_view')|tojson|safe }}</div>
-  <script src="{{ url_for('template.static',filename='admin/js/rediscli.js') }}"></script>
+  <script src="{{ url_for('template.static',filename='js/rediscli.js') }}"></script>
 {% endblock %}
 
 

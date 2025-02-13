@@ -1102,14 +1102,6 @@ class ModelView(BaseModelView):
         """
             Return a single model by its id.
 
-            Example::
-
-                def get_one(self, id):
-                    query = self.get_query()
-                    return query.filter(self.model.id == id).one()
-
-            Also see `get_query` for how to filter the list view.
-
             :param id:
                 Model id
         """
@@ -1128,6 +1120,17 @@ class ModelView(BaseModelView):
             return True
 
         return super().handle_view_exception(exc)
+    
+    def edit_form(self, obj=None):
+        """
+        Instantiate model editing form and return it.
+
+        Override to implement custom behavior.
+        """
+        form = super().edit_form(obj)
+        # preserve obj in form for Unique
+        form._obj = obj
+        return form
 
     def build_new_instance(self):
         """

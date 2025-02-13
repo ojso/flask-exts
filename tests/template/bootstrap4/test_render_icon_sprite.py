@@ -6,8 +6,8 @@ def test_render_icon(app, client):
     def icon():
         return render_template_string(
             """
-            {% from 'macro/icon.html' import render_icon %}
-                {{ render_icon('heart') }}
+            {% from 'macro/icon.html' import render_icon_sprite %}
+                {{ render_icon_sprite('heart') }}
             """
         )
 
@@ -15,8 +15,8 @@ def test_render_icon(app, client):
     def icon_size():
         return render_template_string(
             """
-            {% from 'macro/icon.html' import render_icon %}
-                {{ render_icon('heart', 32) }}
+            {% from 'macro/icon.html' import render_icon_sprite %}
+                {{ render_icon_sprite('heart', 32) }}
             """
         )
 
@@ -24,8 +24,8 @@ def test_render_icon(app, client):
     def icon_style():
         return render_template_string(
             """
-            {% from 'macro/icon.html' import render_icon %}
-                {{ render_icon('heart', color='primary') }}
+            {% from 'macro/icon.html' import render_icon_sprite %}
+                {{ render_icon_sprite('heart', color='primary') }}
             """
         )
 
@@ -33,8 +33,8 @@ def test_render_icon(app, client):
     def icon_color():
         return render_template_string(
             """
-            {% from 'macro/icon.html' import render_icon %}
-                {{ render_icon('heart', color='green') }}
+            {% from 'macro/icon.html' import render_icon_sprite %}
+                {{ render_icon_sprite('heart', color='green') }}
             """
         )
 
@@ -42,8 +42,8 @@ def test_render_icon(app, client):
     def icon_title():
         return render_template_string(
             """
-            {% from 'macro/icon.html' import render_icon %}
-                {{ render_icon('heart', title='Heart') }}
+            {% from 'macro/icon.html' import render_icon_sprite %}
+                {{ render_icon_sprite('heart', title='Heart') }}
             """
         )
 
@@ -51,8 +51,8 @@ def test_render_icon(app, client):
     def icon_desc():
         return render_template_string(
             """
-            {% from 'macro/icon.html' import render_icon %}
-                {{ render_icon('heart', desc='A heart.') }}
+            {% from 'macro/icon.html' import render_icon_sprite %}
+                {{ render_icon_sprite('heart', desc='A heart.') }}
             """
         )
 

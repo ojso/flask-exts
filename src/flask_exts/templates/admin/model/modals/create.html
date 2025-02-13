@@ -1,4 +1,4 @@
-{% from 'macro/form.html' import render_form_fields, render_form_buttons with context %}
+{% from 'macro/form.html' import render_modal_form with context %}
 
 {% block body %}
   <div class="modal-header">
@@ -7,16 +7,7 @@
       <span aria-hidden="true">&times;</span>
     </button>
   </div>
-  <form action="{{ url_for('.create_view', url=return_url) }}" method="POST" role="form" class="admin-form" enctype="multipart/form-data">
-    <fieldset>
-      <div class="modal-body">
-        {{ render_form_fields(form, form_opts=form_opts) }}
-      </div>
-      <div class="modal-footer">
-        {{ render_form_buttons(return_url, extra=None, is_modal=True) }}
-      </div>
-    </fieldset>
-  </form>
+  {{ render_modal_form(form,cancel_url,extra,form_opts,action=url_for('.create_view', url=return_url)) }}
 {% endblock %}
 
 {% block tail %}

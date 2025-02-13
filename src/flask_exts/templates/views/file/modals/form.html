@@ -1,13 +1,9 @@
-{%- from 'macro/form.html' import render_form -%}
+{%- from 'macro/form.html' import render_modal_form -%}
 
 <div class="modal-header">
   {% block header %}<h3>{{ header_text }}</h3>{% endblock %}
   <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 </div>
-<div class="modal-body">
-  {% block fa_form %}
-    {{ render_form(form, dir_url, action=request.url, is_modal=True) }}
-  {% endblock %}
-</div>
-
-
+{% block fa_form %}
+  {{ render_modal_form(form, dir_url, action=request.url) }}
+{% endblock %}

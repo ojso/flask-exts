@@ -13,8 +13,8 @@ from flask import request
 from flask import redirect
 from flask import flash
 from flask import abort
-from flask import json
 from flask import Response
+from flask import jsonify
 from flask import get_flashed_messages
 from flask import stream_with_context
 from jinja2 import pass_context
@@ -1437,8 +1437,6 @@ class BaseModelView(BaseView, ActionsMixin):
 
         return missing_fields
 
-    def _show_missing_fields_warning(self, text):
-        warnings.warn(text)
 
     def _validate_form_class(self, ruleset, form_class, remove_missing=True):
         form_fields = []
@@ -1454,20 +1452,16 @@ class BaseModelView(BaseView, ActionsMixin):
                     missing_fields.append(field_name)
 
         if missing_fields:
-            self._show_missing_fields_warning(
-                "Fields missing from ruleset: %s" % (",".join(missing_fields))
-            )
-        if remove_missing:
-            self._remove_fields_from_form_class(missing_fields, form_class)
+            # warnings.warn("Fields missing from ruleset: %s" % (",".join(missing_fields)))
+            if remove_missing:
+                self._remove_fields_from_form_class(missing_fields, form_class)
 
     def _validate_form_instance(self, ruleset, form, remove_missing=True):
         missing_fields = self._get_ruleset_missing_fields(ruleset=ruleset, form=form)
         if missing_fields:
-            self._show_missing_fields_warning(
-                "Fields missing from ruleset: %s" % (",".join(missing_fields))
-            )
-        if remove_missing:
-            self._remove_fields_from_form_instance(missing_fields, form)
+            # warnings.warn("Fields missing from ruleset: %s" % (",".join(missing_fields)))
+            if remove_missing:
+                self._remove_fields_from_form_instance(missing_fields, form)
 
     def _remove_fields_from_form_instance(self, field_names, form):
         for field_name in field_names:
@@ -2465,7 +2459,7 @@ class BaseModelView(BaseView, ActionsMixin):
             abort(404)
 
         data = [loader.format(m) for m in loader.get_list(query, offset, limit)]
-        return Response(json.dumps(data,default=str), mimetype="application/json")
+        return jsonify(data)
 
     @expose("/ajax/update/", methods=("POST",))
     def ajax_update(self):

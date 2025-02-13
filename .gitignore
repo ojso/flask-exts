@@ -29,3 +29,6 @@ htmlcov/
 
 # Sphinx documentation
 docs/_build/
+
+# sqlite db
+*.sqlite
