@@ -6,7 +6,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import cast
 from flask_exts.forms.form import BaseForm
 from flask_exts.forms.fields import Select2Field
-from flask_exts.forms.fields import DateTimeField
 from flask_exts.admin.sqla import ModelView, filters
 from flask_exts.utils import sqla
 
@@ -223,6 +222,7 @@ def test_model(app, client, db, admin):
                 enum_field="model1_v1",
             ),
         )
+
         assert rv.status_code == 302
 
         # check that the new record was persisted
@@ -1363,14 +1363,14 @@ def test_column_filters(app, client, db, admin):
         assert "date_obj2" in data
 
         # date - between
-        rv = client.get("/admin/_datetime/?flt0_4=2014-11-13+to+2014-11-20")
+        rv = client.get("/admin/_datetime/?flt0_4=2014-11-13+-+2014-11-20")
         assert rv.status_code == 200
         data = rv.get_data(as_text=True)
         assert "date_obj1" in data
         assert "date_obj2" not in data
 
         # date - not between
-        rv = client.get("/admin/_datetime/?flt0_5=2014-11-13+to+2014-11-20")
+        rv = client.get("/admin/_datetime/?flt0_5=2014-11-13+-+2014-11-20")
         assert rv.status_code == 200
         data = rv.get_data(as_text=True)
         assert "date_obj1" not in data
@@ -1422,7 +1422,7 @@ def test_column_filters(app, client, db, admin):
 
         # datetime - between
         rv = client.get(
-            "/admin/_datetime/?flt0_11=2014-04-02+00%3A00%3A00+to+2014-11-20+23%3A59%3A59"
+            "/admin/_datetime/?flt0_11=2014-04-02+00%3A00%3A00+-+2014-11-20+23%3A59%3A59"
         )
         assert rv.status_code == 200
         data = rv.get_data(as_text=True)
@@ -1431,7 +1431,7 @@ def test_column_filters(app, client, db, admin):
 
         # datetime - not between
         rv = client.get(
-            "/admin/_datetime/?flt0_12=2014-04-02+00%3A00%3A00+to+2014-11-20+23%3A59%3A59"
+            "/admin/_datetime/?flt0_12=2014-04-02+00%3A00%3A00+-+2014-11-20+23%3A59%3A59"
         )
         assert rv.status_code == 200
         data = rv.get_data(as_text=True)
@@ -1483,14 +1483,14 @@ def test_column_filters(app, client, db, admin):
         assert "timeonly_obj2" in data
 
         # time - between
-        rv = client.get("/admin/_datetime/?flt0_18=10%3A40%3A00+to+11%3A50%3A59")
+        rv = client.get("/admin/_datetime/?flt0_18=10%3A40%3A00+-+11%3A50%3A59")
         assert rv.status_code == 200
         data = rv.get_data(as_text=True)
         assert "timeonly_obj1" in data
         assert "timeonly_obj2" not in data
 
         # time - not between
-        rv = client.get("/admin/_datetime/?flt0_19=10%3A40%3A00+to+11%3A50%3A59")
+        rv = client.get("/admin/_datetime/?flt0_19=10%3A40%3A00+-+11%3A50%3A59")
         assert rv.status_code == 200
         data = rv.get_data(as_text=True)
         assert "timeonly_obj1" not in data

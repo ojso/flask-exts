@@ -3,35 +3,34 @@ from enum import Enum
 from wtforms import fields, validators
 from sqlalchemy import Boolean, Column
 from sqlalchemy.orm import ColumnProperty
+from wtforms.fields import DateTimeLocalField as DateTimeField 
+# from wtforms.fields import TimeField
+from ...forms.fields import TimeField
+from ...forms.fields import Select2Field
+from ...forms.fields import Select2TagsField
+from ...forms.fields import JSONField
+from ...forms.fields.ajax_select import AjaxSelectField
+from ...forms.fields.ajax_select import AjaxSelectMultipleField
+from ...forms.fields.sqla import QuerySelectField
+from ...forms.fields.sqla import QuerySelectMultipleField
+from ...forms.fields.sqla import InlineModelFormList
+from ...forms.fields.sqla import InlineHstoreList
+from ...forms.fields.sqla import HstoreForm
+from ...forms.fields.sqla import InlineModelOneToOneField
+from ...forms.fields.inline import InlineFormField
+from ...forms.widgets import DatePickerWidget
 from ...forms.form import BaseForm
 from ...forms.utils import recreate_field
-from ...forms.fields import (
-    Select2Field,
-    JSONField,
-    DateTimeField,
-    TimeField,
-    Select2TagsField,
-)
-from ...forms.widgets import DatePickerWidget
+from ...forms.validators.sqla import Unique
+from ...forms.validators.sqla import TimeZoneValidator
 from ..model.form import (
     converts,
     ModelConverterBase,
     InlineModelConverterBase,
     FieldPlaceholder,
 )
-from ...forms.fields.ajax_select import AjaxSelectField, AjaxSelectMultipleField
-from ...utils import prettify_name
 
-from ...forms.validators.sqla import Unique, TimeZoneValidator
-from ...forms.fields.sqla import (
-    QuerySelectField,
-    QuerySelectMultipleField,
-    InlineModelFormList,
-    InlineHstoreList,
-    HstoreForm,
-    InlineModelOneToOneField,
-)
-from ...forms.fields.inline import InlineFormField
+from ...utils import prettify_name
 from ...utils.sqla import (
     has_multiple_pks,
     filter_foreign_columns,
@@ -343,7 +342,7 @@ class AdminModelConverter(ModelConverterBase):
         field_args["widget"] = DatePickerWidget()
         return fields.DateField(**field_args)
 
-    @converts("DateTime")  # includes TIMESTAMP
+    @converts("DateTime")
     def convert_datetime(self, field_args, **extra):
         return DateTimeField(**field_args)
 
@@ -442,30 +441,6 @@ def avoid_empty_strings(value):
             # values are not always strings
             pass
     return value if value else None
-
-
-def choice_type_coerce_factory(type_):
-    """
-    Return a function to coerce a ChoiceType column, for use by Select2Field.
-    :param type_: ChoiceType object
-    """
-    from sqlalchemy_utils import Choice
-
-    choices = type_.choices
-    if isinstance(choices, type) and issubclass(choices, Enum):
-        key, choice_cls = "value", choices
-    else:
-        key, choice_cls = "code", Choice
-
-    def choice_coerce(value):
-        if value is None:
-            return None
-        if isinstance(value, choice_cls):
-            return getattr(value, key)
-        return type_.python_type(value)
-
-    return choice_coerce
-
 
 def _resolve_prop(prop):
     """

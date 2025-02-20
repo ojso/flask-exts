@@ -3,8 +3,8 @@ from .funcs import print_routes
 
 
 def test_extensions(app):
-    print(app.extensions)
-    print(app.extensions.keys())
+    # print(app.extensions)
+    # print(app.extensions.keys())
     assert "babel" in app.extensions
     assert "template" in app.extensions
     assert "user" in app.extensions

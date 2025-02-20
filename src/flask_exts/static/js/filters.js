@@ -35,7 +35,8 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
     // triggered when the filter operation (equals, not equals, etc) is changed
     function changeOperation(subfilters, $el, filter, $select) {
         // get the filter_group subfilter based on the index of the selected option
-        var selectedFilter = subfilters[$select.select2('data').element[0].index];
+        // var selectedFilter = subfilters[$select.select2('data').element[0].index];
+        var selectedFilter = subfilters.find(el => el.index == $select.select2('data')[0].id);
         var $inputContainer = $el.find('td').last();
 
         // recreate and style the input field (turn into date range or select2 if necessary)
@@ -68,6 +69,11 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
             $field.val(filterValue);
         }
         inputContainer.replaceWith($('<td/>').append($field));
+
+        // show "Apply Filter" button when filter input is changed
+        $field.on('input change', function() {
+            $('button', $root).removeClass('d-none');
+        });
 
         return $field;
     }
@@ -180,16 +186,20 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
     lastCount += 1;
 };
 
+
 (function($) {
     $('[data-role=tooltip]').tooltip({
         html: true,
         placement: 'bottom'
     });
-    if ($('#filter-groups-data').length == 1) {
-        var filter = new AdminFilters(
-            '#filter_form', '.field-filters',
-            JSON.parse($('#filter-groups-data').text()),
-            JSON.parse($('#active-filters-data').text())
-        );
-    }
+    $(document).on('adminFormReady', function(evt){
+        if ($('#filter-groups-data').length == 1) {
+            var filter = new AdminFilters(
+                '#filter_form', '.field-filters',
+                JSON.parse($('#filter-groups-data').text()),
+                JSON.parse($('#active-filters-data').text())
+            );
+        }
+    });
+    $(document).trigger('adminFormReady');  // trigger event to allow dynamic filter form to function properly
 })(jQuery);

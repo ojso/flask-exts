@@ -3,10 +3,10 @@ Flask Exts
 
 Flask-Exts is mainly inspired by:
 
-- `WTForms <https://github.com/wtforms/wtforms/>`_
-- `Flask-Admin <https://github.com/flask-admin/flask-admin/>`_
+- `Flask-Admin <https://github.com/pallets-eco/flask-admin/>`_
+- `Flask-Security <https://github.com/pallets-eco/flask-security/>`_
 
-Flask-Exts is part rewrited from above and well tested.
+Flask-Exts is partially rewrited from above and well tested.
 
 License
 -------

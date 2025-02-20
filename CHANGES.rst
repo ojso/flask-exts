@@ -1,3 +1,11 @@
+v0.2.2
+------
+
+UnReleased
+
+- fix datetimepicker
+- icons
+
 v0.2.1
 ------
 

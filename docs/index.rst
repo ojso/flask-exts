@@ -6,7 +6,14 @@
 Welcome to Flask-Exts's documentation!
 ======================================
 
-**Flask-Exts** is a Flask extensions with admin, SQLAlchemy, babel, forms, fields, widgets, and so on.
+**Flask-Exts** is a Flask extensions with SQLAlchemy, babel, forms, fields, widgets, and so on.
+
+Flask-Exts is mainly inspired by:
+
+- `Flask-Admin <https://github.com/pallets-eco/flask-admin/>`_
+- `Flask-Security <https://github.com/pallets-eco/flask-security/>`_
+
+Flask-Exts is partially rewrited from above and well tested.
 
 .. _installation:
 

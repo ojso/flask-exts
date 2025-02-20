@@ -42,3 +42,8 @@
 </div>
 
 {%- endblock -%}
+
+{% block tail %}
+  {{ super() }}
+  <script src="{{ url_for('template.static',filename='js/helper.js') }}"></script>
+{% endblock %}
