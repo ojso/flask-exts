@@ -43,11 +43,6 @@ def create_app():
 
 
 def init_app(app: Flask):
-
-    from .models import init_db
-
-    init_db(app)
-
     app.save_image = save_image
 
     from .models.model import Location

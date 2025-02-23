@@ -1,16 +1,12 @@
 from flask import render_template_string, request
+from ...models import db, reset_models
+from ...models.message import Message
 
 
 def test_render_pagination(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-
     @app.route("/pagination")
     def test():
-        db.drop_all()
-        db.create_all()
+        reset_models()
         for i in range(100):  # noqa: F841
             msg = Message()
             db.session.add(msg)

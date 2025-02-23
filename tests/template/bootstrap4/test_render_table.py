@@ -1,18 +1,12 @@
-from enum import Enum
 from flask import render_template_string, request
+from ...models import db, reset_models
+from ...models.message import Message
 
 
 def test_render_simple_table(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        text = db.Column(db.Text)
-
     @app.route("/table")
     def test():
-        db.drop_all()
-        db.create_all()
+        reset_models()
         for i in range(3):
             msg = Message(text=f"Test message {i+1}")
             db.session.add(msg)
@@ -41,12 +35,6 @@ def test_render_simple_table(app, client):
 
 
 def test_render_safe_table(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        text = db.Column(db.Text)
-
     @app.route("/table")
     def test():
         db.drop_all()
@@ -78,12 +66,6 @@ def test_render_safe_table(app, client):
 
 
 def test_render_urlize_table(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        text = db.Column(db.Text)
-
     @app.route("/table")
     def test():
         db.drop_all()
@@ -117,12 +99,6 @@ def test_render_urlize_table(app, client):
 
 
 def test_render_customized_table(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        text = db.Column(db.Text)
-
     @app.route("/table")
     def test():
         db.drop_all()
@@ -155,12 +131,6 @@ def test_render_customized_table(app, client):
 
 
 def test_render_responsive_table(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        text = db.Column(db.Text)
-
     @app.route("/table")
     def test():
         db.drop_all()
@@ -189,12 +159,6 @@ def test_render_responsive_table(app, client):
 
 
 def test_build_table_titles(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        text = db.Column(db.Text)
-
     @app.route("/table")
     def test():
         db.drop_all()
@@ -224,7 +188,6 @@ def test_build_table_titles(app, client):
 
 
 def test_build_table_titles_with_empty_data(app, client):
-
     @app.route("/table")
     def test():
         messages = []
@@ -241,14 +204,6 @@ def test_build_table_titles_with_empty_data(app, client):
 
 
 def todo_test_render_table_with_actions(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        sender = db.Column(db.String(20))
-        recipient = db.Column(db.String(20))
-        text = db.Column(db.Text)
-
     @app.route("/table/<string:recipient>/<int:message_id>/resend")
     def test_resend_message(recipient, message_id):
         return f"Re-sending {message_id} to {recipient}"
@@ -352,19 +307,7 @@ def todo_test_render_table_with_actions(app, client):
         assert 'href="/table/new-message"' in data
 
 
-class MyCat(Enum):
-    CAT1 = "Category A"
-    CAT2 = "Category B"
-
-
 def test_customize_icon_title_of_table_actions(app, client):
-    db = app.extensions["sqlalchemy"]
-
-    class Message(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        text = db.Column(db.Text)
-        category = db.Column(db.Enum(MyCat), default=MyCat.CAT1, nullable=False)
-
     @app.route("/table")
     def test():
         db.drop_all()

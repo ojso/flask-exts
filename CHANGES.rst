@@ -4,6 +4,7 @@ v0.2.2
 UnReleased
 
 - fix datetimepicker
+- set sqlalchemy db as default for sqla.ModelView
 - icons
 
 v0.2.1

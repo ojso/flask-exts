@@ -7,8 +7,6 @@ from flask_exts import Manager
 def app():
     app = Flask(__name__)
     app.secret_key = "1"
-    # app.config["BABEL_ENABLED"] = True  # default is True
-    # app.config["TEMPLATE_ENABLED"] = True  # default is True
     app.config["BABEL_ACCEPT_LANGUAGES"] = "en;zh;fr;de;ru"
     app.config["BABEL_DEFAULT_TIMEZONE"] = "Asia/Shanghai"
     manager = Manager()

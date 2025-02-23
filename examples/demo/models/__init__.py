@@ -1,18 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import select
+from flask_exts.database import db
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-db = SQLAlchemy(model_class=Base)
-
-
-def init_db(app):
-    db.init_app(app)
-
+def init_models():
     from . import user
     from . import keyword
     from . import user_keyword
@@ -21,4 +10,3 @@ def init_db(app):
     from . import post
     from . import post_tag
     from . import tree
-    

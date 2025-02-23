@@ -34,12 +34,12 @@ def create_app():
 
 def init_app(app: Flask):
 
-    from .models import init_db
-
-    init_db(app)
-
     manager = Manager()
     manager.init_app(app)
+
+    from .models import init_models
+    
+    init_models()
 
     from .admin_views import add_views
 

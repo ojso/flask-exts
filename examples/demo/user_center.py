@@ -1,6 +1,7 @@
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import select
 from flask_exts.users.default_usercenter import DefaultUserCenter
-from .models import db,select
+from .models import db
 from .models.user import User
 
 class UserCenter(DefaultUserCenter):

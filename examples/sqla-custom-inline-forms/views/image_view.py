@@ -41,8 +41,8 @@ class LocationImageInlineModelForm(InlineFormAdmin):
     form_ajax_refs = {
         "image_type": QueryAjaxModelLoader(
             name="image_type",
-            session=db.session,
             model=ImageType,
+            session=db.session,
             fields=("name",),
             order_by="name",
             placeholder="Please use an AJAX query to select an image type for the image",
@@ -72,7 +72,7 @@ class LocationView(ModelView):
     inline_models = (LocationImageInlineModelForm(),)
 
     def __init__(self):
-        super().__init__(Location, db.session, name="Locations")
+        super().__init__(Location, name="Locations")
 
 
 locationview = LocationView()

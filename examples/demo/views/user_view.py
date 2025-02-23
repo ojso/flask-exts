@@ -11,4 +11,4 @@ class UserView(ModelView):
     can_view_details = True
 
 
-userview = UserView(User, db.session, endpoint="users")
+userview = UserView(User, endpoint="users")

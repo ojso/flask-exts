@@ -24,10 +24,10 @@ from wtforms.fields import HiddenField
 from wtforms.fields.core import UnboundField
 from wtforms.validators import ValidationError, InputRequired
 from flask_babel import gettext, ngettext
+from ...types import T_COLUMN_LIST, T_FORMATTERS
 from . import typefmt
 from .filters import BaseFilter
 from .ajax import AjaxModelLoader
-from ..._types import T_COLUMN_LIST, T_FORMATTERS
 from ..view import BaseView
 from ..actions import ActionsMixin
 from .. import row_action
@@ -686,7 +686,7 @@ class BaseModelView(BaseView, ActionsMixin):
 
             class MyModelView(BaseModelView):
                 form_ajax_refs = {
-                    'user': QueryAjaxModelLoader('user', db.session, User, fields=['email'], page_size=10)
+                    'user': QueryAjaxModelLoader('user', User, self.session, fields=['email'], page_size=10)
                 }
 
         If you need custom loading functionality, you can implement your custom loading behavior

@@ -1,7 +1,6 @@
 from wtforms import validators
 from flask_exts.admin.sqla import ModelView
 from flask_exts.admin.sqla.filters import FilterLike
-from ..models import db
 from ..models.post import Post
 from ..models.author import Author
 
@@ -84,4 +83,4 @@ class PostView(ModelView):
 # Add views
 
 
-postview = PostView(Post, db.session)
+postview = PostView(Post)

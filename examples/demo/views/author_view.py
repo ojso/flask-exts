@@ -4,10 +4,8 @@ from flask_babel import gettext
 from flask_exts.admin.sqla.filters import BaseSQLAFilter
 from flask_exts.admin.sqla.filters import FilterEqual
 from flask_exts.admin.sqla import ModelView
-from ..models import db
-from ..models.author import Author,AVAILABLE_USER_TYPES
+from ..models.author import Author, AVAILABLE_USER_TYPES
 from ..models.post import Post
-
 
 
 # Custom filter class
@@ -133,4 +131,4 @@ class AuthorView(ModelView):
         return form
 
 
-authorview = AuthorView(Author, db.session)
+authorview = AuthorView(Author)
