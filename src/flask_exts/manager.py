@@ -13,28 +13,49 @@ class Manager:
 
         if app.config.get("BABEL_ENABLED", True) and "babel" not in app.extensions:
             from .babel import babel_init_app
+
             babel_init_app(app)
 
-        if app.config.get("TEMPLATE_ENABLED", True) and "template" not in app.extensions:
+        if (
+            app.config.get("TEMPLATE_ENABLED", True)
+            and "template" not in app.extensions
+        ):
             from .template import template_init_app
+
             template_init_app(app)
 
-        if app.config.get("DB_ENABLED",True):
+        if app.config.get("DB_ENABLED", True):
             from .database import init_db
-            if not app.config.get("SQLALCHEMY_DATABASE_URI",None):
+
+            if not app.config.get("SQLALCHEMY_DATABASE_URI", None):
                 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
             init_db(app)
 
         if app.config.get("USER_ENABLED", True) and "user" not in app.extensions:
             from .users import user_init_app
+
             user_init_app(app)
 
         if app.config.get("ADMIN_ENABLED", True):
             from .admin import Admin
-            from .views.index_view import IndexView
-            from .views.user_view import UserView
-            # Admin init for index_view and user_view
-            admin_index_view = app.config.get("ADMIN_INDEX_VIEW", IndexView())
-            admin_user_view = app.config.get("ADMIN_USER_VIEW", UserView())
-            admin = Admin(index_view=admin_index_view, user_view=admin_user_view)
+
+            admin = Admin()
             admin.init_app(app)
+
+            if "ADMIN_INDEX_VIEW" in app.config:
+                admin_index_view = app.config.get("ADMIN_INDEX_VIEW")
+            else:
+                from .views.index_view import IndexView
+
+                admin_index_view = IndexView()
+            if admin_index_view:
+                admin.add_view(admin_index_view, is_menu=False)
+
+            if "ADMIN_USER_VIEW" in app.config:
+                admin_user_view = app.config.get("ADMIN_USER_VIEW")
+            else:
+                from .views.user_view import UserView
+
+                admin_user_view = UserView()
+            if admin_user_view:
+                admin.add_view(admin_user_view, is_menu=False)

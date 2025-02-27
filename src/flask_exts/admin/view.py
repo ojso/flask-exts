@@ -77,7 +77,6 @@ class BaseView(metaclass=ViewMeta):
     def __init__(
         self,
         name=None,
-        category=None,
         endpoint=None,
         url=None,
         template_folder=None,
@@ -92,9 +91,6 @@ class BaseView(metaclass=ViewMeta):
 
         :param name:
             Name of this view. If not provided, will default to the class name.
-        :param category:
-            View category. If not provided, this view will be shown as a top-level menu item. Otherwise, it will
-            be in a submenu.
         :param endpoint:
             Base endpoint name for the view. For example, if there's a view method called "index" and
             endpoint is set to "myadmin", you can use `url_for('myadmin.index')` to get the URL to the
@@ -110,16 +106,13 @@ class BaseView(metaclass=ViewMeta):
             Optional class name for the menu item.
         :param menu_icon_type:
             Optional icon. Possible icon types:
-
-             - `template.consts.ICON_TYPE_GLYPH` - Bootstrap glyph icon
-             - `template.consts.ICON_TYPE_FONT_AWESOME` - Font Awesome icon
-             - `template.consts.ICON_TYPE_IMAGE` - Image relative to Flask static directory
-             - `template.consts.ICON_TYPE_IMAGE_URL` - Image with full URL
+             - `bi` - Bootstrap icon
+             - `image` - Image relative to Flask static directory
+             - `image_url` - Image with full URL
         :param menu_icon_value:
-            Icon glyph name or URL, depending on `menu_icon_type` setting
+            Icon name or URL, depending on `menu_icon_type` setting
         """
         self.name = name or self._prettify_class_name(self.__class__.__name__)
-        self.category = category
         self.endpoint = endpoint or self._get_endpoint()
         self.url = url
         self.template_folder = template_folder

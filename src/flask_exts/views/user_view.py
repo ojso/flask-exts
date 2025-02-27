@@ -25,7 +25,6 @@ class UserView(BaseView):
     def __init__(
         self,
         name="User",
-        category=None,
         endpoint="user",
         url="/user",
         template_folder=None,
@@ -37,7 +36,6 @@ class UserView(BaseView):
     ):
         super().__init__(
             name=name,
-            category=category,
             endpoint=endpoint,
             url=url,
             template_folder=template_folder,

@@ -166,7 +166,6 @@ class BaseFileView(BaseView, ActionsMixin):
     def __init__(
         self,
         name=None,
-        category=None,
         endpoint=None,
         url=None,
         menu_class_name=None,
@@ -179,8 +178,6 @@ class BaseFileView(BaseView, ActionsMixin):
 
         :param name:
             Name of this view. If not provided, will default to the class name.
-        :param category:
-            View category
         :param endpoint:
             Endpoint name for the view
         :param url:
@@ -204,7 +201,6 @@ class BaseFileView(BaseView, ActionsMixin):
 
         super().__init__(
             name,
-            category,
             endpoint,
             url,
             menu_class_name=menu_class_name,

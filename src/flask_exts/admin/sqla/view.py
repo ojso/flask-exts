@@ -295,9 +295,8 @@ class ModelView(BaseModelView):
     def __init__(
         self,
         model,
-        session=db.session,
+        session=None,
         name=None,
-        category=None,
         endpoint=None,
         url=None,
         static_folder=None,
@@ -314,8 +313,6 @@ class ModelView(BaseModelView):
             SQLAlchemy session
         :param name:
             View name. If not set, defaults to the model name
-        :param category:
-            Category name
         :param endpoint:
             Endpoint name. If not set, defaults to the model name
         :param url:
@@ -323,16 +320,13 @@ class ModelView(BaseModelView):
         :param menu_class_name:
             Optional class name for the menu item.
         :param menu_icon_type:
-            Optional icon. Possible icon types:
-
-             - `template.consts.ICON_TYPE_GLYPH` - Bootstrap glyph icon
-             - `template.consts.ICON_TYPE_FONT_AWESOME` - Font Awesome icon
-             - `template.consts.ICON_TYPE_IMAGE` - Image relative to Flask static directory
-             - `template.consts.ICON_TYPE_IMAGE_URL` - Image with full URL
+            Optional icon. 
         :param menu_icon_value:
-            Icon glyph name or URL, depending on `menu_icon_type` setting
+            Icon name or URL.
         """
-        self.session = session
+        # set db.session as default session
+        self.session = session if session is not None else db.session
+
         self._search_fields = None
         self._filter_joins = dict()
         self._sortable_joins = dict()
@@ -343,7 +337,6 @@ class ModelView(BaseModelView):
         super().__init__(
             model,
             name,
-            category,
             endpoint,
             url,
             static_folder,

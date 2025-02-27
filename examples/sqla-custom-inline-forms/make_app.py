@@ -63,7 +63,7 @@ def init_app(app: Flask):
     admin = app.extensions["admin"][0]
 
     admin.add_view(locationview)
-    admin.add_link(MenuLink(name='locationlist', url='/locationlist', category='List'))
+    admin.menu.add_link(MenuLink(name='locationlist', url='/locationlist', category='List'))
 
     @app.route('/locationlist')
     def location_list():

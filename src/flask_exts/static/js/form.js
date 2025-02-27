@@ -6,7 +6,7 @@
     /**
     * Process AJAX fk-widget
     */
-    function processAjaxWidget($el, name) {
+    function processAjaxWidget($el, name,$parent) {
       var multiple = $el.attr('data-multiple') == '1';
 
       var opts = {
@@ -16,26 +16,24 @@
         separator: $el.attr('data-separator'),
         ajax: {
           url: $el.attr('data-url'),
-          data: function (term, page) {
+          data: function (params) {
             return {
-              query: term,
-              offset: (page - 1) * 10,
+              query: params.term,
+              offset: (params.page||1 - 1) * 10,
               limit: 10
             };
           },
           processResults: function (data, page) {
-            // processResults: function(data, page) {
             var results = [];
-
             for (var k in data) {
               var v = data[k];
-
               results.push({ id: v[0], text: v[1] });
             }
-
             return {
               results: results,
-              more: results.length == 10
+              pagination:{
+                more: results.length == 10
+              }              
             };
           }
         },
@@ -46,29 +44,27 @@
 
       opts['multiple'] = multiple;
 
+      if($parent){opts['dropdownParent'] = $parent}
+
       $el.select2(opts);
 
-      var value = JSON.parse($el.attr('data-json'));
-      var result = null;
-
-      if (value) {
-        if (multiple) {
-          result = [];
-          for (var k in value) {
-            var v = value[k];
-            var newOption = new Option(v[1], v[0], true, true);
+      if ($el.attr('data-json')){
+        var value = JSON.parse($el.attr('data-json'));
+        if (value) {
+          if (multiple) {
+            for (var k in value) {
+              var v = value[k];
+              var newOption = new Option(v[1], v[0], true, true);
+              $el.append(newOption).trigger('change');
+            }
+          } else {
+            var newOption = new Option(value[1], value[0], true, true);
             $el.append(newOption).trigger('change');
           }
-        } else {
-          var newOption = new Option(value[1], value[0], true, true);
-          $el.append(newOption).trigger('change');
         }
       }
-
+      
     }
-
-
-
 
     /**
      * Process Leaflet (map) widget
@@ -270,8 +266,9 @@
     *
     * @param {Selector} $el jQuery selector
     * @param {String} name data-role value
+    * @param {Element} $parent 
     */
-    this.applyStyle = function ($el, name) {
+    this.applyStyle = function ($el, name, $parent=null) {
       // Process converters first
       for (var conv in fieldConverters) {
         var fieldConv = fieldConverters[conv];
@@ -295,7 +292,7 @@
       switch (name) {
         case 'select2':
           var opts = {
-            width: 'resolve'
+            width: '100%'
           };
 
           if ($el.attr('data-allow-blank'))
@@ -369,7 +366,7 @@
           });
           return true;
         case 'select2-ajax':
-          processAjaxWidget($el, name);
+          processAjaxWidget($el, name,$parent);
           return true;
         case 'datetimepicker':
           $el.daterangepicker({
@@ -634,13 +631,21 @@
     * @method applyGlobalStyles
     * @param {Selector} jQuery element
     */
-    this.applyGlobalStyles = function (parent) {
+    this.applyGlobalStyles = function (parent,isModal=false) {
       var self = this;
 
-      $(':input[data-role], a[data-role]', parent).each(function () {
-        var $el = $(this);
-        self.applyStyle($el, $el.attr('data-role'));
-      });
+      if(isModal){
+        $(':input[data-role], a[data-role]', parent).each(function () {
+          var $el = $(this);
+          self.applyStyle($el, $el.attr('data-role'),parent);
+        });
+      }else{
+        $(':input[data-role], a[data-role]', parent).each(function () {
+          var $el = $(this);
+          self.applyStyle($el, $el.attr('data-role'));
+        });
+      }
+      
     };
 
     /**

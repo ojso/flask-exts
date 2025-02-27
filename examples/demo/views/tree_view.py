@@ -24,4 +24,4 @@ class TreeView(ModelView):
         return super().render(template, foo="bar", **kwargs)
 
 
-treeview = TreeView(Tree, category="tree")
+treeview = TreeView(Tree)

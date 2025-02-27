@@ -41,11 +41,7 @@
                     {% if sort_column == column %}
                         <a href="{{ sort_url(column, dir_path, True) }}" title="{{ gettext('Sort by %(name)s', name=column) }}">
                             {{ view.column_label(column) }}
-                            {% if sort_desc %}
-                                <span class="fa fa-chevron-up glyphicon glyphicon-chevron-up"></span>
-                            {% else %}
-                                <span class="fa fa-chevron-down glyphicon glyphicon-chevron-down"></span>
-                            {% endif %}
+                            <span>{% if sort_desc %}&uarr;{% else %}&darr;{% endif %}</span>
                         </a>
                     {% else %}
                         <a href="{{ sort_url(column, dir_path) }}" title="{{ gettext('Sort by %(name)s', name=column) }}">{{ view.column_label(column) }}</a>
@@ -74,8 +70,8 @@
                   {%- if view.rename_modal -%}
                     {{ actionslib.add_modal_button(url=get_url('.rename', path=path, modal=True),
                                             title=gettext('Rename File'),
-                                            content='<i class="fa fa-pencil glyphicon glyphicon-pencil"></i>',
-                                            icon='pencil') }}
+                                            content='<i class="bi-pencil"></i>'
+                                            ) }}
                         
                   {% else %}
                     <a class="icon" href="{{ get_url('.rename', path=path) }}" title="{{ gettext('Rename File') }}">
@@ -116,8 +112,7 @@
             <td>
                 {% if view.can_download %}
                   {%- if view.edit_modal and view.is_file_editable(path) -%}
-                    {{ actionslib.add_modal_button(url=get_file_url(path, modal=True)|safe,
-                                            btn_class='', content=name) }}
+                    {{ actionslib.add_modal_button(url=get_file_url(path, modal=True)|safe, btn_class='', content=name) }}
                   {% else %}
                     <a href="{{ get_file_url(path)|safe }}">{{ name }}</a>
                   {%- endif -%}

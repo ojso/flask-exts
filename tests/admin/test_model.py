@@ -33,7 +33,6 @@ class MockModelView(BaseModelView):
         model,
         data=None,
         name=None,
-        category=None,
         endpoint=None,
         url=None,
         **kwargs,
@@ -42,7 +41,7 @@ class MockModelView(BaseModelView):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-        super().__init__(model, name, category, endpoint, url)
+        super().__init__(model, name, endpoint, url)
 
         self.created_models = []
         self.updated_models = []

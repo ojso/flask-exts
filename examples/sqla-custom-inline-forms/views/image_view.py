@@ -8,7 +8,6 @@ from flask_exts.admin.model.form import InlineFormAdmin
 from flask_exts.admin.sqla import ModelView
 from flask_exts.admin.sqla.form import InlineModelConverter
 from flask_exts.forms.fields.sqla import InlineModelFormList
-from ..models import db
 from ..models.model import ImageType, Location, LocationImage
 
 
@@ -42,7 +41,6 @@ class LocationImageInlineModelForm(InlineFormAdmin):
         "image_type": QueryAjaxModelLoader(
             name="image_type",
             model=ImageType,
-            session=db.session,
             fields=("name",),
             order_by="name",
             placeholder="Please use an AJAX query to select an image type for the image",

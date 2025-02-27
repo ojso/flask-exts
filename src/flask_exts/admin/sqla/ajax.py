@@ -11,7 +11,7 @@ from ...utils.sqla import (
 
 
 class QueryAjaxModelLoader(AjaxModelLoader):
-    def __init__(self, name, model, session, **options):
+    def __init__(self, name, model, session=None, **options):
         """
         Constructor.
 
@@ -22,8 +22,10 @@ class QueryAjaxModelLoader(AjaxModelLoader):
         """
         super().__init__(name, options)
 
+        # set db.session as default session
+        self.session = session if session is not None else db.session
+        
         self.model = model
-        self.session = session
         self.fields = options.get("fields")
         self.order_by = options.get("order_by")
         self.filters = options.get("filters")

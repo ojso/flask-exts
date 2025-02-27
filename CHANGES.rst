@@ -4,8 +4,10 @@ v0.2.2
 UnReleased
 
 - fix datetimepicker
-- set sqlalchemy db as default for sqla.ModelView
-- icons
+- set session = db.session as default if ModelView of sqla init session is None
+- set session = db.session as default if QueryAjaxModelLoader init session is None
+- fix select.ajax for select2@4.1.0 
+- fix select in modal
 
 v0.2.1
 ------

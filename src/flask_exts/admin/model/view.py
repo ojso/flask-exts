@@ -511,8 +511,8 @@ class BaseModelView(BaseView, ActionsMixin):
 
             class MyModelView(BaseModelView):
                 column_extra_row_actions = [
-                    LinkRowAction('glyphicon glyphicon-off', 'http://direct.link/?id={row_id}'),
-                    EndpointLinkRowAction('glyphicon glyphicon-test', 'my_view.index_view')
+                    LinkRowAction('bi-off', 'http://direct.link/?id={row_id}'),
+                    EndpointLinkRowAction('bi-test', 'my_view.index_view')
                 ]
     """
 
@@ -778,7 +778,6 @@ class BaseModelView(BaseView, ActionsMixin):
         self,
         model,
         name=None,
-        category=None,
         endpoint=None,
         url=None,
         static_folder=None,
@@ -793,8 +792,6 @@ class BaseModelView(BaseView, ActionsMixin):
             Model class
         :param name:
             View name. If not provided, will use the model class name
-        :param category:
-            Optional category name, for grouping views in the menu
         :param endpoint:
             Base endpoint. If not provided, will use the model name.
         :param url:
@@ -802,14 +799,9 @@ class BaseModelView(BaseView, ActionsMixin):
         :param menu_class_name:
             Optional class name for the menu item.
         :param menu_icon_type:
-            Optional icon. Possible icon types:
-
-             - `template.consts.ICON_TYPE_GLYPH` - Bootstrap glyph icon
-             - `template.consts.ICON_TYPE_FONT_AWESOME` - Font Awesome icon
-             - `template.consts.ICON_TYPE_IMAGE` - Image relative to Flask static directory
-             - `template.consts.ICON_TYPE_IMAGE_URL` - Image with full URL
+            Optional icon. 
         :param menu_icon_value:
-            Icon glyph name or URL, depending on `menu_icon_type` setting
+            Icon name or URL.
         """
         self.model = model
 
@@ -819,7 +811,6 @@ class BaseModelView(BaseView, ActionsMixin):
 
         super().__init__(
             name,
-            category,
             endpoint,
             url,
             static_folder,
@@ -827,6 +818,7 @@ class BaseModelView(BaseView, ActionsMixin):
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
         )
+
 
         # Actions
         self.init_actions()

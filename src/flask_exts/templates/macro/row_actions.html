@@ -1,9 +1,9 @@
 {% from 'macro/icon.html' import render_icon %}
 {% from 'macro/actions.html' import add_modal_button %}
 
-{% macro link(action, url, icon=None) %}
+{% macro link(action, url) %}
 <a class="icon" href="{{ url }}" title="{{ action.title or '' }}">
-  {{ render_icon(icon or action.icon) }}
+  {{ render_icon(action.icon) }}
 </a>
 {% endmacro %}
 
@@ -13,11 +13,11 @@
   {%- elif action.type == 'view_row' -%}
     {{ link(action, url_for('.details_view', id=row_id, url=return_url)) }}
   {%- elif action.type == 'view_row_popup' -%}
-    {{ add_modal_button(url=url_for('.details_view', id=row_id, url=return_url, modal=True), title=action.title, content='<span class="fa fa-eye"></span>',icon=action.icon) }}
+    {{ add_modal_button(url=url_for('.details_view', id=row_id, url=return_url, modal=True), title=action.title, content='<span class="bi-eye"></span>') }}
   {%- elif action.type == 'edit_row' -%}
     {{ link(action, url_for('.edit_view', id=row_id, url=return_url)) }}
   {%- elif action.type == 'edit_row_popup' -%}
-    {{ add_modal_button(url=url_for('.edit_view', id=row_id, url=return_url, modal=True), title=action.title, content='<span class="fa fa-pencil"></span>',icon=action.icon) }}
+    {{ add_modal_button(url=url_for('.edit_view', id=row_id, url=return_url, modal=True), title=action.title, content='<span class="bi-pencil"></span>') }}
   {%- elif action.type == 'delete_row' -%}
     {{ delete_row(action, row_id, row) }}
   {%- endif %}

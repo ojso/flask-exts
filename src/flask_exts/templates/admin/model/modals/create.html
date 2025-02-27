@@ -10,6 +10,3 @@
   {{ render_modal_form(form,cancel_url,extra,form_opts,action=url_for('.create_view', url=return_url)) }}
 {% endblock %}
 
-{% block tail %}
-  <script>window.faForm.applyGlobalStyles(document.getElementsByClassName('modal-content'));</script>
-{% endblock %}

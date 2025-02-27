@@ -2,10 +2,8 @@
   {% set icon_type = item.get_icon_type() %}
   {%- if icon_type %}
     {% set icon_value = item.get_icon_value() %}
-    {% if icon_type == 'glyph' %}
-      <i class="glyphicon {{ icon_value }}"></i>
-    {% elif icon_type == 'fa' %}
-      <i class="fa {{ icon_value }}"></i>
+    {% if icon_type == 'bi' %}
+      <i class="bi-{{ icon_value }}"></i>
     {% elif icon_type == 'image' %}
       <img src="{{ url_for('static', filename=icon_value) }}" alt="menu image">
     {% elif icon_type == 'image-url' %}
@@ -14,13 +12,13 @@
   {% endif %}
 {%- endmacro %}
 
-{% macro render_menu(menu_root) %}
+{% macro render_menu(menu_root,current_view) %}
   {%- for item in menu_root %}
     {%- if item.is_category() -%}
       {% set children = item.get_children() %}
       {%- if children %}
         {% set class_name = item.get_class_name() or '' %}
-        {%- if item.is_active(view) %}
+        {%- if item.is_active(current_view) %}
           <li class="active dropdown{% if class_name %} {{ class_name }}{% endif %}">
             {% else -%}
           <li class="dropdown{% if class_name %} {{ class_name }}{% endif %}">
@@ -28,20 +26,15 @@
       <a class="dropdown-toggle nav-link" data-toggle="dropdown" href="javascript:void(0)">
         {% if item.class_name %}<span class="{{ item.class_name }}"></span> {% endif %}
         {{ menu_icon(item) }}{{ item.name }}
-        {%- if 'dropdown-submenu' in class_name -%}
-          <i class="glyphicon glyphicon-chevron-right small"></i>
-        {%- else -%}
-          <i class="glyphicon glyphicon-chevron-down small"></i>
-        {%- endif -%}
       </a>
       <ul class="dropdown-menu">
         {%- for child in children -%}
           {%- if child.is_category() -%}
-            {{ menu(menu_root=[child]) }}
+            {{ render_menu([child]) }}
           {% else %}
             {% set class_name = child.get_class_name() %}
             <li{% if class_name %} class="{{ class_name }}"{% endif %}>
-              {%- if child.is_active(view) %}
+              {%- if child.is_active(current_view) %}
                 <a class="dropdown-item active" href="{{ child.get_url() }}"{% if child.target %}
                    target="{{ child.target }}"{% endif %}>
                   {{ menu_icon(child) }}{{ child.name }}</a>
@@ -59,9 +52,9 @@
     {%- else %}
       {%- if item.is_accessible() and item.is_visible() -%}
         {% set class_name = item.get_class_name() %}
-        {%- if item.is_active(view) %}
+        {%- if item.is_active(current_view) %}
           <li class="active{% if class_name %} {{ class_name }}{% endif %}">
-            {%- else %}
+        {%- else %}
           <li{% if class_name %} class="{{ class_name }}"{% endif %}>
         {%- endif %}
       <a class="nav-link" href="{{ item.get_url() }}"{% if item.target %} target="{{ item.target }}"{% endif %}>
@@ -84,7 +77,7 @@
   {% endfor %}
 {% endmacro %}
 
-{% macro menu_user() %}
+{% macro menu_user(current_user) %}
 {% if current_user is defined -%}
     {% if current_user.is_authenticated -%}
     <ul class="navbar-nav">
@@ -103,7 +96,6 @@
         <li class="nav-item"><a class="nav-link" href="{{ url_for('user.register') }}">Register</a></li>
     </ul>
     {% endif %}
-</ul>
 {% endif %}
 {% endmacro %}
 

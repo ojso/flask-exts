@@ -20,7 +20,6 @@ class CustomModelView(ModelView):
         self,
         model,
         name=None,
-        category=None,
         endpoint=None,
         url=None,
         **kwargs,
@@ -29,7 +28,7 @@ class CustomModelView(ModelView):
             setattr(self, k, v)
 
         super().__init__(
-            model, name=name, category=category, endpoint=endpoint, url=url
+            model, name=name, endpoint=endpoint, url=url
         )
 
     form_choices = {"choice_field": [("choice-1", "One"), ("choice-2", "Two")]}
@@ -2457,35 +2456,6 @@ def test_multipath_joins(app, client, admin):
         admin.add_view(view)
 
         rv = client.get("/admin/modelmult/")
-        assert rv.status_code == 200
-
-
-def _test_different_bind_joins(request, app, client, admin):
-    app.config["SQLALCHEMY_BINDS"] = {"other": "sqlite:///"}
-
-    # db = request.getfixturevalue("db")
-    # admin = request.getfixturevalue("admin")
-
-    with app.app_context():
-
-        class ModelBind1(db.Model):
-            id = db.Column(db.Integer, primary_key=True)
-            val1 = db.Column(db.String(20))
-
-        class ModelBind2(db.Model):
-            __bind_key__ = "other"
-            id = db.Column(db.Integer, primary_key=True)
-            val1 = db.Column(db.String(20))
-            first_id = db.Column(db.Integer, db.ForeignKey(ModelBind1.id))
-            first = db.relationship(ModelBind1)
-
-        db.drop_all()
-        db.create_all()
-
-        view = CustomModelView(ModelBind2)
-        admin.add_view(view)
-
-        rv = client.get("/admin/modelbind2/")
         assert rv.status_code == 200
 
 

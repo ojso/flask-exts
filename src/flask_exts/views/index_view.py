@@ -7,13 +7,12 @@ class IndexView(BaseView):
     Default administrative interface index page when visiting the ``/admin/`` URL.
     """
 
-    index_template = "admin/index.html"
-    admin_index_template = "admin/admin.html"
+    index_template = "index.html"
+    admin_index_template = "admin/index.html"
 
     def __init__(
         self,
         name="Index",
-        category=None,
         endpoint="index",
         url="/",
         template_folder=None,
@@ -25,7 +24,6 @@ class IndexView(BaseView):
     ):
         super().__init__(
             name=name,
-            category=category,
             endpoint=endpoint,
             url=url,
             template_folder=template_folder,

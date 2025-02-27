@@ -7,6 +7,7 @@ from ..models.author import Author
 
 # Customized Post model admin
 class PostView(ModelView):
+    can_view_details = True
     column_display_pk = True
     column_list = [
         "id",
@@ -23,6 +24,8 @@ class PostView(ModelView):
     column_default_sort = ("date", True)
     create_modal = True
     # edit_modal = True
+    # details_modal = True
+
     column_sortable_list = [
         "id",
         "title",
@@ -78,6 +81,10 @@ class PostView(ModelView):
         #     "page_size": 5,
         # },
     }
+
+    column_descriptions = dict(
+        color='favorite color'
+        )
 
 
 # Add views

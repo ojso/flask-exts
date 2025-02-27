@@ -1,6 +1,6 @@
 from flask import render_template
 from flask import url_for
-from .menu import MenuCategory, MenuView, MenuLink, SubMenuCategory
+from .menu import Menu
 
 
 class Admin:
@@ -16,9 +16,6 @@ class Admin:
         endpoint="admin",
         template_folder=None,
         static_folder=None,
-        index_view=None,
-        user_view=None,
-        category_icon_classes=None,
     ):
         """
         Constructor.
@@ -29,46 +26,26 @@ class Admin:
             Application name. Will be displayed in the main menu and as a page title. Defaults to "Admin"
         :param url:
             Base URL
-        :param subdomain:
-            Subdomain to use
-        :param index_view:
-            Home page view to use. Defaults to `AdminIndexView`.
         :param endpoint:
             Base endpoint name for index view. If you use multiple instances of the `Admin` class with
             a single Flask application, you have to set a unique endpoint name for each instance.
-        :param theme:
-            Base theme. Defaults to `Bootstrap4Theme()`.
-        :param category_icon_classes:
-            A dict of category names as keys and html classes as values to be added to menu category icons.
-            Example: {'Favorites': 'glyphicon glyphicon-star'}
+
         """
         self.app = app
         self.name = name
-        self._views = []
-        self._menu = []
-        self._menu_categories = dict()
-        self._menu_links = []
         self.endpoint = endpoint
         self.url = url
         if not self.url.startswith("/"):
             raise ValueError("admin.url must startswith /")
         self.template_folder = template_folder or "../templates"
         self.static_folder = static_folder or "../static"
-        self.category_icon_classes = category_icon_classes or dict()
-
-        self.index_view = index_view
-        if self.index_view is not None:
-            self.add_view(self.index_view, False)
-
-        self.user_view = user_view
-        if self.user_view is not None:
-            self.add_view(self.user_view, False)
-
+        self._views = []
+        self.menu = Menu(self)
         # Register with application
         if app is not None:
             self._init_extension()
 
-    def add_view(self, view, is_menu=True):
+    def add_view(self, view, is_menu=True, category=None):
         """
         Add a view to the collection.
 
@@ -86,111 +63,7 @@ class Admin:
             self.app.register_blueprint(view.create_blueprint())
 
         if is_menu:
-            self._add_view_to_menu(view)
-
-    def add_category(self, name, class_name=None, icon_type=None, icon_value=None):
-        """
-        Add a category of a given name
-
-        :param name:
-            The name of the new menu category.
-        :param class_name:
-            The class name for the new menu category.
-        :param icon_type:
-            The icon name for the new menu category.
-        :param icon_value:
-            The icon value for the new menu category.
-        """
-        cat_text = name
-
-        category = self.get_category_menu_item(name)
-        if category:
-            return
-
-        category = MenuCategory(
-            name, class_name=class_name, icon_type=icon_type, icon_value=icon_value
-        )
-        self._menu_categories[cat_text] = category
-        self._menu.append(category)
-
-    def add_sub_category(self, name, parent_name):
-        """
-        Add a category of a given name underneath
-        the category with parent_name.
-
-        :param name:
-            The name of the new menu category.
-        :param parent_name:
-            The name of a parent_name category
-        """
-
-        category = self.get_category_menu_item(name)
-        parent = self.get_category_menu_item(parent_name)
-        if category is None and parent is not None:
-            category = SubMenuCategory(name)
-            self._menu_categories[name] = category
-            parent.add_child(category)
-
-    def add_link(self, link):
-        """
-        Add link to menu links collection.
-
-        :param link:
-            Link to add.
-        """
-        if link.category:
-            self.add_menu_item(link, link.category)
-        else:
-            self._menu_links.append(link)
-
-    def add_links(self, *args):
-        """
-        Add one or more links to the menu links collection.
-
-        Examples::
-
-            admin.add_links(link1)
-            admin.add_links(link1, link2, link3, link4)
-            admin.add_links(*my_list)
-
-        :param args:
-            Argument list including the links to add.
-        """
-        for link in args:
-            self.add_link(link)
-
-    def add_menu_item(self, menu_item, target_category=None):
-        """
-        Add menu item to menu tree hierarchy.
-
-        :param menu_item:
-            MenuItem class instance
-        :param target_category:
-            Target category name
-        """
-        if target_category:
-            category = self._menu_categories.get(target_category)
-            # create a new menu category if one does not exist already
-            if category is None:
-                category = MenuCategory(target_category)
-                category.class_name = self.category_icon_classes.get(target_category)
-                self._menu_categories[target_category] = category
-                self._menu.append(category)
-            category.add_child(menu_item)
-        else:
-            self._menu.append(menu_item)
-
-    def _add_view_to_menu(self, view):
-        """
-        Add a view to the menu tree
-
-        :param view:
-            View to add
-        """
-        self.add_menu_item(MenuView(view.name, view), view.category)
-
-    def get_category_menu_item(self, name):
-        return self._menu_categories.get(name)
+            self.menu.add_view(view, category)
 
     def get_url(self, endpoint, **kwargs):
         """
@@ -249,15 +122,3 @@ class Admin:
 
         admins.append(self)
         self.app.extensions["admin"] = admins
-
-    def menu(self):
-        """
-        Return the menu hierarchy.
-        """
-        return self._menu
-
-    def menu_links(self):
-        """
-        Return menu links.
-        """
-        return self._menu_links
