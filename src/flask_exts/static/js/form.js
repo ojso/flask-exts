@@ -482,7 +482,7 @@
           return true;
         case 'x-editable':
           $el.editable({
-            params: overrideXeditableParams,
+            processResult: overrideXeditableParams,
             combodate: {
               // prevent minutes from showing in 5 minute increments
               minuteStep: 1,
@@ -495,7 +495,7 @@
           let template = $el.data('template');
           $el.removeAttr('data-template');
           $el.editable({
-            params: overrideXeditableParams,
+            processResult: overrideXeditableParams,
             template: template,
             combodate: {
               // prevent minutes from showing in 5 minute increments
@@ -506,7 +506,7 @@
           return true;
         case 'x-editable-select2-multiple':
           $el.editable({
-            params: overrideXeditableParams,
+            processResult: overrideXeditableParams,
             ajaxOptions: {
               // prevents keys with the same value from getting converted into arrays
               traditional: true
@@ -532,7 +532,7 @@
           return true;
         case 'x-editable-boolean':
           $el.editable({
-            params: overrideXeditableParams,
+            processResult: overrideXeditableParams,
             display: function (value, response) {
               // display boolean value as an icon
               var glyph = (value == '1') ? 'ok-circle' : 'minus-sign';
