@@ -1,0 +1,8 @@
+p,alice,/item,GET
+p,bob,/item,GET
+p,data2_admin,/item,GET
+p,data2_admin,/item,POST
+p,data2_admin,/item,DELETE
+g,alice,data2_admin
+g,users,data2_admin
+g,group with space,data2_admin
