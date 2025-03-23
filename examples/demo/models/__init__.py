@@ -1,4 +1,4 @@
-from flask_exts.database import db
+from flask_exts.datastore import db
 
 
 def init_models():

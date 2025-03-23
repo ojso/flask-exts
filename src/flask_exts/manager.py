@@ -25,7 +25,7 @@ class Manager:
             template_init_app(app)
 
         if app.config.get("DB_ENABLED", True):
-            from .database import init_db
+            from .datastore import init_db
 
             if not app.config.get("SQLALCHEMY_DATABASE_URI", None):
                 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"

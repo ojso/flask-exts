@@ -1,6 +1,6 @@
 from sqlalchemy import or_, and_, cast, text
 from sqlalchemy.types import String
-from ...database import db
+from ...datastore import db
 from ..model.ajax import AjaxModelLoader, DEFAULT_PAGE_SIZE
 from ...utils.sqla import (
     get_primary_key,
