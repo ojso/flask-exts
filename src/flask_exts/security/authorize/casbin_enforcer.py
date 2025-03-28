@@ -1,19 +1,38 @@
-"""flask-casbin: Flask module for using Casbin with flask apps"""
-
 from functools import wraps
 from abc import ABC
 from abc import abstractmethod
 from flask import request, jsonify
-import casbin
-from .utils import authorization_decoder
-from .utils import UnSupportedAuthType
+from ..utils import authorization_decoder
+from ..utils import UnSupportedAuthType
+
+import os.path
+from casbin.model import Model
+from casbin import Enforcer
+from .sqlalchemy_adapter import Adapter
+
+CASBIN_RBAC_MODEL="""
+[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act
+
+[role_definition]
+g = _, _
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+"""
 
 
 class CasbinEnforcer:
     """
     Casbin Enforce decorator
     """
-
+    m = None
     e = None
 
     def __init__(self, app=None, adapter=None, watcher=None):
@@ -23,8 +42,7 @@ class CasbinEnforcer:
             adapter: Casbin Adapter
         """
         self.app = app
-        self.adapter = adapter
-        self.e = None
+        self.adapter = adapter or Adapter()
         self.watcher = watcher
         self._owner_loader = None
         if self.app is not None:
@@ -32,10 +50,21 @@ class CasbinEnforcer:
 
     def init_app(self, app):
         self.app = app
-        self.e = casbin.Enforcer(app.config.get("CASBIN_MODEL"), self.adapter)
-        if self.watcher:
-            self.e.set_watcher(self.watcher)
+        m = Model()
+        if app.config.get("CASBIN_MODEL",None) is not None:
+            m_path = os.path.join(app.instance_path, app.config.get("CASBIN_MODEL"))
+            m.load_model(m_path)
+        else:
+            m.load_model_from_text(CASBIN_RBAC_MODEL)
+        self.m = m
         self.user_name_headers = app.config.get("CASBIN_USER_NAME_HEADERS", "Authorization")
+
+    def get_enforcer(self):
+        if self.e is None:
+            self.e = Enforcer(self.m, self.adapter)
+            if self.watcher:
+                self.e.set_watcher(self.watcher)
+        return self.e
 
     def set_watcher(self, watcher):
         """
@@ -45,7 +74,7 @@ class CasbinEnforcer:
         Returns:
             None
         """
-        self.e.set_watcher(watcher)
+        self.watcher = watcher
 
     def owner_loader(self, callback):
         """
@@ -60,12 +89,12 @@ class CasbinEnforcer:
     def enforcer(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            if self.e is None:
+                self.get_enforcer()
             if self.e.watcher and self.e.watcher.should_reload():
                 self.e.watcher.update_callback()
-
             # Set resource URI from request
             uri = str(request.path)
-
             # Get owner from owner_loader
             if self._owner_loader:
                 for owner in self._owner_loader():
@@ -79,6 +108,8 @@ class CasbinEnforcer:
     def enforcer_header(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            if self.e is None:
+                self.get_enforcer()
             if self.e.watcher and self.e.watcher.should_reload():
                 self.e.watcher.update_callback()
 
@@ -95,15 +126,6 @@ class CasbinEnforcer:
                 except Exception as e:
                     return (jsonify({"message": str(e)}), 401)
             return (jsonify({"message": "Unauthorized"}), 401)
-
-        return wrapper
-
-    def manager(self, func):
-        """Get the Casbin Enforcer Object to manager Casbin"""
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(self.e, *args, **kwargs)
 
         return wrapper
 

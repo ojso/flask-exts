@@ -11,6 +11,13 @@ class Manager:
         if not hasattr(app, "extensions"):
             app.extensions = {}
 
+        if app.config.get("DB_ENABLED", True):
+            from .datastore import init_db
+
+            if not app.config.get("SQLALCHEMY_DATABASE_URI", None):
+                app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+            init_db(app)
+
         if app.config.get("BABEL_ENABLED", True) and "babel" not in app.extensions:
             from .babel import babel_init_app
 
@@ -24,12 +31,10 @@ class Manager:
 
             template_init_app(app)
 
-        if app.config.get("DB_ENABLED", True):
-            from .datastore import init_db
+        if app.config.get("SECURITY_ENABLED", True) and "security" not in app.extensions:
+            from .security import security_init_app
 
-            if not app.config.get("SQLALCHEMY_DATABASE_URI", None):
-                app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-            init_db(app)
+            security_init_app(app)
 
         if app.config.get("USER_ENABLED", True) and "user" not in app.extensions:
             from .users import user_init_app

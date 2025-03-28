@@ -1,41 +1,36 @@
 import pytest
 import os
 from flask import request, jsonify
-from casbin.enforcer import Enforcer
 from casbin.persist.adapters import FileAdapter
-from flask_exts.security import CasbinEnforcer
-
+from flask_exts.security.authorize.sqlalchemy_adapter import CasbinRule
+from flask_exts.datastore import db
 
 @pytest.fixture
-def enforcer(app):
-    # from sqlalchemy import create_engine
-    # from sqlalchemy.orm import sessionmaker
-    # from casbin_sqlalchemy_adapter import Adapter
-    # from casbin_sqlalchemy_adapter import Base
-    # from casbin_sqlalchemy_adapter import CasbinRule
-    # engine = create_engine("sqlite://")
-    # adapter = Adapter(engine)
-
-    # session = sessionmaker(bind=engine)
-    # Base.metadata.create_all(engine)
-    # s = session()
-    # s.query(CasbinRule).delete()
-    # s.add(CasbinRule(ptype="p", v0="alice", v1="/item", v2="GET"))
-    # s.add(CasbinRule(ptype="p", v0="bob", v1="/item", v2="GET"))
-    # s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="POST"))
-    # s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="DELETE"))
-    # s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="GET"))
-    # s.add(CasbinRule(ptype="g", v0="alice", v1="data2_admin"))
-    # s.add(CasbinRule(ptype="g", v0="users", v1="data2_admin"))
-    # s.add(CasbinRule(ptype="g", v0="group with space", v1="data2_admin"))
-    # s.commit()
-    # s.close()
-
+def enforcer_file_adapter(app):
     adapter = FileAdapter(
         os.path.split(os.path.realpath(__file__))[0] + "/casbin_files/rbac_policy.csv"
     )
-    yield CasbinEnforcer(app, adapter=adapter)
+    c = app.extensions["security"].casbin
+    c.adapter = adapter
+    yield c
 
+@pytest.fixture
+def enforcer(app):
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        s = db.session
+        s.add(CasbinRule(ptype="p", v0="alice", v1="/item", v2="GET"))
+        s.add(CasbinRule(ptype="p", v0="bob", v1="/item", v2="GET"))
+        s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="POST"))
+        s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="DELETE"))
+        s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="GET"))
+        s.add(CasbinRule(ptype="g", v0="alice", v1="data2_admin"))
+        s.add(CasbinRule(ptype="g", v0="users", v1="data2_admin"))
+        s.add(CasbinRule(ptype="g", v0="group with space", v1="data2_admin"))
+        db.session.commit()
+    c = app.extensions["security"].casbin
+    yield c
 
 @pytest.fixture
 def watcher():
@@ -73,7 +68,7 @@ def watcher():
     ],
 )
 def test_enforcer(app, client, enforcer, header, user, method, status):
-    @app.route("/")
+    @app.route("/a")
     @enforcer.enforcer
     def index():
         return jsonify({"message": "passed"}), 200
@@ -90,7 +85,9 @@ def test_enforcer(app, client, enforcer, header, user, method, status):
 
     headers = {header: user}
     # client.post('/add', data=dict(title='2nd Item', text='The text'))
-    rv = client.get("/")
+    rv = client.get("/a")
+    # print(rv.get_data(as_text=True))
+    # print(rv.status_code)
     assert rv.status_code == 401
     caller = getattr(client, method.lower())
     rv = caller("/item", headers=headers)
@@ -109,7 +106,7 @@ def test_enforcer_with_watcher(
 ):
     enforcer.set_watcher(watcher())
 
-    @app.route("/")
+    @app.route("/a")
     @enforcer.enforcer
     def index():
         return jsonify({"message": "passed"}), 200
@@ -126,27 +123,12 @@ def test_enforcer_with_watcher(
 
     headers = {header: user}
     # client.post('/add', data=dict(title='2nd Item', text='The text'))
-    rv = client.get("/")
+    rv = client.get("/a")
     assert rv.status_code == 401
     caller = getattr(client, method.lower())
     rv = caller("/item", headers=headers)
     assert rv.status_code == status
 
-
-def test_manager(app, client, enforcer):
-    @app.route("/manager", methods=["POST"])
-    @enforcer.manager
-    def manager(manager):
-        assert isinstance(manager, Enforcer)
-        return jsonify({"message": "passed"}), 200
-
-    client.post("/manager")
-
-
-def test_enforcer_set_watcher(enforcer, watcher):
-    assert enforcer.e.watcher is None
-    enforcer.set_watcher(watcher())
-    assert isinstance(enforcer.e.watcher, watcher)
 
 
 @pytest.mark.parametrize(
@@ -169,7 +151,7 @@ def test_enforcer_with_owner_loader(app, client, enforcer, owner, method, status
     def owner_loader():
         return owner
 
-    @app.route("/")
+    @app.route("/a")
     @enforcer.enforcer
     def index():
         return jsonify({"message": "passed"}), 200
@@ -185,7 +167,7 @@ def test_enforcer_with_owner_loader(app, client, enforcer, owner, method, status
             return jsonify({"message": "passed"}), 200
 
     # client.post('/add', data=dict(title='2nd Item', text='The text'))
-    rv = client.get("/")
+    rv = client.get("/a")
     assert rv.status_code == 401
     caller = getattr(client, method.lower())
     rv = caller("/item")

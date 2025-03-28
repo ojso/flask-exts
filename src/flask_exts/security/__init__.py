@@ -1,2 +1,8 @@
-from .casbin_enforcer import CasbinEnforcer
-from .casbin_enforcer import Watcher
+from .proxies import _security
+
+
+def security_init_app(app):
+    from .core import Security
+
+    security = Security()
+    security.init_app(app)

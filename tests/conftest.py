@@ -9,6 +9,10 @@ def app():
     app.secret_key = "1"
     app.config["BABEL_ACCEPT_LANGUAGES"] = "en;zh;fr;de;ru"
     app.config["BABEL_DEFAULT_TIMEZONE"] = "Asia/Shanghai"
+    # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+    # app.config["SQLALCHEMY_ECHO"] = True
+    app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
+    app.config["JWT_HASH"] = "HS256"
     manager = Manager()
     manager.init_app(app)
     yield app
