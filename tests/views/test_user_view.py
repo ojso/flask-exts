@@ -1,11 +1,13 @@
 import pytest
 from flask import url_for
 from flask import session
-
+from flask_exts.datastore.sqla import db
 
 class TestUserView:
     def test_register(self, app, client):
         app.config.update(CSRF_ENABLED=False)
+        with app.app_context():
+            db.create_all()
 
         with app.test_request_context():
             user_login_url = url_for("user.login")

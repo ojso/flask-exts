@@ -1,8 +1,6 @@
-from .proxies import _security
+from .core import Security
 
 
 def security_init_app(app):
-    from .core import Security
-
     security = Security()
     security.init_app(app)

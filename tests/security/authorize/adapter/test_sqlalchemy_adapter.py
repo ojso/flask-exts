@@ -1,8 +1,8 @@
 import re
-from flask_exts.datastore import db
+from flask_exts.datastore.sqla import db
 from flask_exts.security.authorize.sqlalchemy_adapter import CasbinRule
 from flask_exts.security.authorize.sqlalchemy_adapter import Filter
-from flask_exts.security.proxies import _casbin
+from flask_exts.security.proxies import current_casbinenforcer
 
 def reset_models():
     db.drop_all()
@@ -19,7 +19,7 @@ def fill_db():
 def get_enforcer():
     reset_models()
     fill_db()
-    e = _casbin.get_enforcer()
+    e = current_casbinenforcer
     return e
 
 # from unittest import TestCase

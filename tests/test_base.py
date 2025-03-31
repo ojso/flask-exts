@@ -7,7 +7,6 @@ def test_extensions(app):
     # print(app.extensions.keys())
     assert "babel" in app.extensions
     assert "template" in app.extensions
-    assert "user" in app.extensions
     assert getattr(app, "login_manager", None) is not None
     assert "admin" in app.extensions
 

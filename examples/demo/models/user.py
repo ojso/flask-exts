@@ -5,12 +5,12 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.associationproxy import AssociationProxy
-from flask_login import UserMixin
 from . import db
 from .keyword import Keyword
 from .user_keyword import UserKeywordAssociation
 
-class User(db.Model, UserMixin):
+class MyUser(db.Model):
+    __tablename__="myuser"
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
     email: Mapped[str]
@@ -21,7 +21,7 @@ class User(db.Model, UserMixin):
     )
 
     user_keyword_associations: Mapped[List["UserKeywordAssociation"]] = relationship(
-        back_populates="user",
+        back_populates="myuser",
         cascade="all, delete-orphan",
     )
 

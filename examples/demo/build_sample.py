@@ -7,11 +7,11 @@ from .models.tag import Tag
 from .models.post import Post
 from .models.tree import Tree
 from .models.keyword import Keyword
-from .models.user import User
+from .models.user import MyUser
 
 
 def build_sample_userkeyword():
-    user_log = User()
+    user_log = MyUser()
     user_log.username = "log"
     user_log.email = "log"
     user_log.password = "log"

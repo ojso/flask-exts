@@ -4,7 +4,7 @@ from flask_exts.admin.sqla import ModelView
 from flask_exts.forms.fields.sqla import InlineModelFormList
 from flask_exts.forms.validators.sqla import ItemsRequired
 from ...models import db, reset_models
-from ...models.user import User, UserInfo, UserEmail, Tag
+from ...models.user import MyUser, UserInfo, UserEmail, Tag
 from ...models.tree import Tree
 
 
@@ -15,7 +15,7 @@ def test_inline_form(app, client, admin):
         class UserModelView(ModelView):
             inline_models = (UserInfo,)
 
-        view = UserModelView(User, endpoint="users")
+        view = UserModelView(MyUser, endpoint="users")
         admin.add_view(view)
 
         # Basic tests
@@ -36,13 +36,13 @@ def test_inline_form(app, client, admin):
         # Create
         rv = client.post("/admin/users/new/", data=dict(name="äõüxyz"))
         assert rv.status_code == 302
-        assert User.query.count() == 1
+        assert MyUser.query.count() == 1
         assert UserInfo.query.count() == 0
 
         data = {"name": "fbar", "info-0-key": "foo", "info-0-val": "bar"}
         rv = client.post("/admin/users/new/", data=data)
         assert rv.status_code == 302
-        assert User.query.count() == 2
+        assert MyUser.query.count() == 2
         assert UserInfo.query.count() == 1
 
         # Edit
@@ -72,18 +72,18 @@ def test_inline_form(app, client, admin):
         }
         rv = client.post("/admin/users/edit/?id=2", data=data)
         assert rv.status_code == 302
-        assert User.query.count() == 2
-        assert db.session.get(User, 2).name == "barf"
+        assert MyUser.query.count() == 2
+        assert db.session.get(MyUser, 2).name == "barf"
         assert UserInfo.query.count() == 1
         assert UserInfo.query.one().key == "bar"
 
         # Delete
         rv = client.post("/admin/users/delete/?id=2")
         assert rv.status_code == 302
-        assert User.query.count() == 1
+        assert MyUser.query.count() == 1
         rv = client.post("/admin/users/delete/?id=1")
         assert rv.status_code == 302
-        assert User.query.count() == 0
+        assert MyUser.query.count() == 0
         assert UserInfo.query.count() == 0
 
 
@@ -95,13 +95,13 @@ def test_inline_form_required(app, client, admin):
             inline_models = (UserEmail,)
             form_args = {"emails": {"validators": [ItemsRequired()]}}
 
-        view = UserModelView(User, endpoint="users")
+        view = UserModelView(MyUser, endpoint="users")
         admin.add_view(view)
 
         # Create
         rv = client.post("/admin/users/new/", data=dict(name="no-email"))
         assert rv.status_code == 200
-        assert User.query.count() == 0
+        assert MyUser.query.count() == 0
 
         data = {
             "name": "hasEmail",
@@ -109,7 +109,7 @@ def test_inline_form_required(app, client, admin):
         }
         rv = client.post("/admin/users/new/", data=data)
         assert rv.status_code == 302
-        assert User.query.count() == 1
+        assert MyUser.query.count() == 1
         assert UserEmail.query.count() == 1
 
         # Attempted delete, prevented by ItemsRequired
@@ -120,7 +120,7 @@ def test_inline_form_required(app, client, admin):
         }
         rv = client.post("/admin/users/edit/?id=1", data=data)
         assert rv.status_code == 200
-        assert User.query.count() == 1
+        assert MyUser.query.count() == 1
         assert UserEmail.query.count() == 1
 
 
@@ -133,7 +133,7 @@ def test_inline_form_ajax_fk(app, admin):
 
             inline_models = [(UserInfo, opts)]
 
-        view = UserModelView(User, endpoint="users")
+        view = UserModelView(MyUser, endpoint="users")
         admin.add_view(view)
 
         form = view.create_form()
@@ -182,7 +182,7 @@ def test_inline_form_base_class(app, client, admin):
             inline_models = ((UserEmail, {"form_base_class": StubBaseForm}),)
             form_args = {"emails": {"validators": [ItemsRequired()]}}
 
-        view = UserModelView(User, endpoint="users")
+        view = UserModelView(MyUser, endpoint="users")
         admin.add_view(view)
 
         # Create
@@ -192,5 +192,5 @@ def test_inline_form_base_class(app, client, admin):
         }
         rv = client.post("/admin/users/new/", data=data)
         assert rv.status_code == 200
-        assert User.query.count() == 0
+        assert MyUser.query.count() == 0
         assert b"success!" in rv.data

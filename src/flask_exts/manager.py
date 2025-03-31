@@ -1,3 +1,9 @@
+from .datastore.sqla import sqldb_init_app
+from .babel import babel_init_app
+from .template import template_init_app
+from .security import security_init_app
+
+
 class Manager:
     """This is used to manager babel,template,admin, and so on..."""
 
@@ -11,35 +17,24 @@ class Manager:
         if not hasattr(app, "extensions"):
             app.extensions = {}
 
-        if app.config.get("DB_ENABLED", True):
-            from .datastore import init_db
+        # config extends
+        if app.config.get("SQLALCHEMY_DATABASE_URI", None) is None:
+            app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+        else:
+            app.config["SQLALCHEMY_USERCENTER"] = True
 
-            if not app.config.get("SQLALCHEMY_DATABASE_URI", None):
-                app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-            init_db(app)
+        # init db
+        if "sqlalchemy" not in app.extensions:
+            sqldb_init_app(app)
 
-        if app.config.get("BABEL_ENABLED", True) and "babel" not in app.extensions:
-            from .babel import babel_init_app
-
+        if "babel" not in app.extensions:
             babel_init_app(app)
 
-        if (
-            app.config.get("TEMPLATE_ENABLED", True)
-            and "template" not in app.extensions
-        ):
-            from .template import template_init_app
-
+        if "template" not in app.extensions:
             template_init_app(app)
 
-        if app.config.get("SECURITY_ENABLED", True) and "security" not in app.extensions:
-            from .security import security_init_app
-
+        if "security" not in app.extensions:
             security_init_app(app)
-
-        if app.config.get("USER_ENABLED", True) and "user" not in app.extensions:
-            from .users import user_init_app
-
-            user_init_app(app)
 
         if app.config.get("ADMIN_ENABLED", True):
             from .admin import Admin

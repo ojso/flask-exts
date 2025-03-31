@@ -12,7 +12,7 @@ from sqlalchemy import Boolean, Table, func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.expression import cast
 from sqlalchemy import Unicode
-from ...datastore import db
+from ...datastore.sqla import db
 from ...utils.sqla import is_relationship
 from ...utils.sqla import get_primary_key
 from ...utils.sqla import get_field_with_path

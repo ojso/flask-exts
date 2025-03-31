@@ -1,4 +1,4 @@
-from ...forms.form import FlaskForm
+from ...forms import FlaskForm
 from .mixins import LoginForm as MixLoginForm
 
 

@@ -8,4 +8,6 @@ if t.TYPE_CHECKING:
 
 _security: "Security" = LocalProxy(lambda: current_app.extensions["security"])
 
-_casbin = LocalProxy(lambda: current_app.extensions["security"].casbin)
+current_usercenter = LocalProxy(lambda: _security.usercenter)
+
+current_casbinenforcer = LocalProxy(lambda: _security.casbin.get_enforcer())

@@ -1,5 +1,5 @@
 from flask_exts.admin.sqla import ModelView
-from ..models.user import User
+from ..models.user import MyUser
 
 
 class UserView(ModelView):
@@ -10,4 +10,4 @@ class UserView(ModelView):
     can_view_details = True
 
 
-userview = UserView(User, name="Users", endpoint="users")
+userview = UserView(MyUser, name="Users", endpoint="users")

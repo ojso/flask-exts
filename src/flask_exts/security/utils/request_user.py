@@ -1,7 +1,9 @@
 from base64 import b64decode
-import jwt
 from flask import current_app
+from .jwtcode import jwt_decode
+from ..proxies import current_usercenter
 
+AUTH_HEADER_NAME = "Authorization"
 
 class UnSupportedAuthType(Exception):
     status_code = 501
@@ -36,13 +38,35 @@ def authorization_decoder(auth_str: str):
     if type == "Basic":
         """Basic format <user>:<password> return only the user"""
         return b64decode(token).decode().split(":")[0]
-    elif type == "Bearer":
-        """return only the identity， depends on JWT"""
-        decoded_jwt = jwt.decode(
+    elif type == "Bearer" and len(token.split(".")) == 3:
+        """return identity, depends on JWT"""
+        payload = jwt_decode(
             token,
             current_app.config.get("JWT_SECRET_KEY"),
-            algorithms=current_app.config.get("JWT_HASH"),
+            algorithm=current_app.config.get("JWT_HASH"),
         )
-        return decoded_jwt.get("identity", "")
+        return payload
     else:
         raise UnSupportedAuthType("%s Authorization is not supported" % type)
+
+def load_user_from_request(request):
+    if AUTH_HEADER_NAME in request.headers:
+        auth_str = request.headers.get(AUTH_HEADER_NAME)
+        payload = authorization_decoder(auth_str)
+        if isinstance(payload,dict):
+            if "identity" in payload:
+                return payload["identity"]
+            elif "id" in payload and payload["id"] is not None:
+                user = current_usercenter.get_user_by_id(int(payload["id"]))
+                return user
+            elif "uniquifier" in payload and payload["uniquifier"] is not None:
+                user = current_usercenter.get_user_by_uniquifier(payload["uniquifier"])            
+                return user
+            else:
+                return payload
+        else:
+            return payload 
+
+    # TODO: add other methods to get user
+    # return None if no other methods to get user
+    return None

@@ -1,7 +1,6 @@
 import os.path as op
 from flask import Flask
 from flask_exts import Manager
-from .user_center import UserCenter
 
 
 def get_sqlite_path():
@@ -11,8 +10,8 @@ def get_sqlite_path():
 
 
 def register_users(app):
-    user_center = app.config["USER_CENTER"]
-    user_center.register_user("admin", "admin", "admin@example.com")
+    from flask_exts.security.proxies import current_usercenter
+    current_usercenter.register_user("admin", "admin", "admin@example.com")
 
 
 def create_app():
@@ -24,9 +23,9 @@ def create_app():
     # app.config["SQLALCHEMY_ECHO"] = True
     app.config["DATABASE_FILE"] = get_sqlite_path()
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + app.config["DATABASE_FILE"]
-
-    app.config["USER_CENTER"] = UserCenter()
-
+    # JWT
+    app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
+    app.config["JWT_HASH"] = "HS256"
     init_app(app)
 
     return app

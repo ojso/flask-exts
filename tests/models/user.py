@@ -1,8 +1,8 @@
 from . import db
 
 
-class User(db.Model):
-    __tablename__ = "user"
+class MyUser(db.Model):
+    __tablename__ = "myuser"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True)
 
@@ -20,9 +20,9 @@ class UserInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String, nullable=False)
     val = db.Column(db.String)
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    user_id = db.Column(db.Integer, db.ForeignKey(MyUser.id))
     user = db.relationship(
-        User,
+        MyUser,
         backref=db.backref("info", cascade="all, delete-orphan", single_parent=True),
     )
 
@@ -34,8 +34,8 @@ class UserEmail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String, nullable=False, unique=True)
     verified_at = db.Column(db.DateTime)
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    user_id = db.Column(db.Integer, db.ForeignKey(MyUser.id))
     user = db.relationship(
-        User,
+        MyUser,
         backref=db.backref("emails", cascade="all, delete-orphan", single_parent=True),
     )

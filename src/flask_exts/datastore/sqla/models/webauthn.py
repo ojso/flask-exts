@@ -1,12 +1,12 @@
 from datetime import datetime
-from . import db
-from . import Mapped
-from . import mapped_column
-from . import LargeBinary
-from . import ForeignKey
-from . import relationship
-from . import JSON
-from ..mixins.webauthn_mixin import WebAuthnMixin
+from .. import db
+from ..orm import Mapped
+from ..orm import mapped_column
+from ..orm import LargeBinary
+from ..orm import ForeignKey
+from ..orm import relationship
+from ..orm import JSON
+from ....security.mixins.webauthn_mixin import WebAuthnMixin
 
 
 class WebAuthnMixin(db.Model, WebAuthnMixin):

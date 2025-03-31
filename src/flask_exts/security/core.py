@@ -1,4 +1,8 @@
+from flask_login import LoginManager
+from .usercenter import SqlaUserCenter
+from .usercenter import MemoryUserCenter
 from .authorize import CasbinEnforcer
+from .utils.request_user import load_user_from_request
 
 
 class Security:
@@ -15,5 +19,24 @@ class Security:
         app,
     ):
         self.app = app
-        app.extensions["security"] = self
+
+        # usercenter
+        if 'SQLALCHEMY_USERCENTER' in app.config:
+            self.usercenter = SqlaUserCenter()
+        else:
+            self.usercenter = MemoryUserCenter()
+
+        # login
+        if not hasattr(app, "login_manager"):
+            login_manager = LoginManager()
+            login_manager.init_app(app)
+            login_manager.login_view = self.usercenter.login_view
+            # login_manager.login_message = "Please login in"
+            login_manager.user_loader(self.usercenter.user_loader)
+            login_manager.request_loader(load_user_from_request)
+
+        # casbin
         self.casbin = CasbinEnforcer(app)
+
+        # set extension
+        app.extensions["security"] = self

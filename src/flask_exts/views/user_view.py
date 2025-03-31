@@ -10,7 +10,7 @@ from flask_login import logout_user
 from flask_login import login_required
 from ..admin import BaseView
 from ..admin import expose
-
+from ..security.proxies import current_usercenter
 
 class UserView(BaseView):
     """
@@ -51,22 +51,22 @@ class UserView(BaseView):
         return current_app.extensions["user"]
 
     def get_login_form_class(self):
-        return self.usercenter.login_form_class
+        return current_usercenter.login_form_class
 
     def get_register_form_class(self):
-        return self.usercenter.register_form_class
+        return current_usercenter.register_form_class
 
     def get_users(self):
-        return self.usercenter.get_users()
+        return current_usercenter.get_users()
 
     def validate_login_and_get_user(self, form):
-        (user, error) = self.usercenter.login_user_by_username_password(
+        (user, error) = current_usercenter.login_user_by_username_password(
             form.username.data, form.password.data
         )
         return (user, error)
 
     def validate_register_and_create_user(self, form):
-        (user, error) = self.usercenter.register_user(
+        (user, error) = current_usercenter.register_user(
             form.username.data, form.password.data, form.email.data
         )
         return (user, error)

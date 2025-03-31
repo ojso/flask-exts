@@ -3,7 +3,7 @@ import os
 from flask import request, jsonify
 from casbin.persist.adapters import FileAdapter
 from flask_exts.security.authorize.sqlalchemy_adapter import CasbinRule
-from flask_exts.datastore import db
+from flask_exts.datastore.sqla import db
 
 @pytest.fixture
 def enforcer_file_adapter(app):
@@ -74,7 +74,7 @@ def test_enforcer(app, client, enforcer, header, user, method, status):
         return jsonify({"message": "passed"}), 200
 
     @app.route("/item", methods=["GET", "POST", "DELETE"])
-    @enforcer.enforcer_header
+    @enforcer.enforcer
     def item():
         if request.method == "GET":
             return jsonify({"message": "passed"}), 200
@@ -112,7 +112,7 @@ def test_enforcer_with_watcher(
         return jsonify({"message": "passed"}), 200
 
     @app.route("/item", methods=["GET", "POST", "DELETE"])
-    @enforcer.enforcer_header
+    @enforcer.enforcer
     def item():
         if request.method == "GET":
             return jsonify({"message": "passed"}), 200
