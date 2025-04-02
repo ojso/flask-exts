@@ -17,6 +17,12 @@ class BaseUserCenter(ABC):
     @abstractmethod
     def user_loader(self, id): ...
 
+    @abstractmethod
+    def get_user_by_id(self, id): ...
+
+    @abstractmethod
+    def get_user_by_uniquifier(self,uniquifier): ...
+
 
 class SqlaUserCenter(BaseUserCenter):
     user_class = User
@@ -100,6 +106,9 @@ class MemoryUserCenter(BaseUserCenter):
     def get_user_by_id(self, id):
         u = filter(lambda u: u.id == id, self.users)
         return next(u, None)
+    
+    def get_user_by_uniquifier(self, uniquifier):
+        return super().get_user_by_uniquifier(uniquifier)
 
     def login_user_by_username_password(self, username, password):
         filter_username = filter(lambda u: u.username == username, self.users)

@@ -1,72 +1,64 @@
-from base64 import b64decode
-from flask import current_app
-from .jwtcode import jwt_decode
+from ...utils.jwt import jwt_decode
+from ...utils.jwt import UnSupportedAuthType
 from ..proxies import current_usercenter
-
-AUTH_HEADER_NAME = "Authorization"
-
-class UnSupportedAuthType(Exception):
-    status_code = 501
-
-    def __init__(self, message, status_code=None, payload=None, errors=None):
-        Exception.__init__(self)
-        self.message = message
-        if status_code is not None:
-            self.status_code = status_code
-        self.payload = payload
-        self.errors = errors
-
-    def to_dict(self):
-        rv = dict(self.payload or ())
-        rv["message"] = self.message
-        if self.errors is not None:
-            rv["errors"] = self.errors
-        return rv
 
 
 def authorization_decoder(auth_str: str):
     """
-    Authorization token decoder based on type. This will decode the token and
-    only return the owner
+    Authorization token decoder based on type. Current only support jwt.
     Args:
         auth_str: Authorization string should be in "<type> <token>" format
     Returns:
         decoded owner from token
     """
     type, token = auth_str.split()
-
-    if type == "Basic":
-        """Basic format <user>:<password> return only the user"""
-        return b64decode(token).decode().split(":")[0]
-    elif type == "Bearer" and len(token.split(".")) == 3:
-        """return identity, depends on JWT"""
-        payload = jwt_decode(
-            token,
-            current_app.config.get("JWT_SECRET_KEY"),
-            algorithm=current_app.config.get("JWT_HASH"),
-        )
+    if type == "Bearer" and len(token.split(".")) == 3:
+        payload = jwt_decode(token)
         return payload
     else:
-        raise UnSupportedAuthType("%s Authorization is not supported" % type)
+        raise UnSupportedAuthType(
+            "Authorization %s is not supported" % type,
+            payload=auth_str,
+        )
+
 
 def load_user_from_request(request):
-    if AUTH_HEADER_NAME in request.headers:
-        auth_str = request.headers.get(AUTH_HEADER_NAME)
+    # first, try to login using the api_key url arg
+    # api_key = request.args.get('api_key')
+    # if api_key:
+    #     user = User.query.filter_by(api_key=api_key).first()
+    #     if user:
+    #         return user
+
+    # next, try to login using Basic Auth
+    # Basic is vulnerable, and not to use.
+    # api_key = request.headers.get('Authorization')
+    # if api_key:
+    #     api_key = api_key.replace('Basic ', '', 1)
+    #     try:
+    #         api_key = base64.b64decode(api_key)
+    #     except TypeError:
+    #         pass
+    #     user = User.query.filter_by(api_key=api_key).first()
+    #     if user:
+    #         return user
+
+    # next, try to login using Bearer Jwt and load user
+
+    if "Authorization" in request.headers:
+        auth_str = request.headers.get("Authorization")
         payload = authorization_decoder(auth_str)
-        if isinstance(payload,dict):
-            if "identity" in payload:
-                return payload["identity"]
-            elif "id" in payload and payload["id"] is not None:
+        if isinstance(payload, dict):
+            if "id" in payload and payload["id"] is not None:
                 user = current_usercenter.get_user_by_id(int(payload["id"]))
-                return user
-            elif "uniquifier" in payload and payload["uniquifier"] is not None:
-                user = current_usercenter.get_user_by_uniquifier(payload["uniquifier"])            
-                return user
-            else:
-                return payload
-        else:
-            return payload 
+                if user:
+                    return user
+            if "uniquifier" in payload and payload["uniquifier"] is not None:
+                user = current_usercenter.get_user_by_uniquifier(payload["uniquifier"])
+                if user:
+                    return user
 
     # TODO: add other methods to get user
-    # return None if no other methods to get user
+    
+    # finally, return None if both methods did not login the user
     return None

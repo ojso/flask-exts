@@ -1,7 +1,7 @@
 from flask_login import LoginManager
 from .usercenter import SqlaUserCenter
 from .usercenter import MemoryUserCenter
-from .authorize import CasbinEnforcer
+from .authorize import CasbinAuthorizer
 from .utils.request_user import load_user_from_request
 
 
@@ -35,8 +35,8 @@ class Security:
             login_manager.user_loader(self.usercenter.user_loader)
             login_manager.request_loader(load_user_from_request)
 
-        # casbin
-        self.casbin = CasbinEnforcer(app)
+        # authorizer
+        self.authorizer = CasbinAuthorizer(app)
 
         # set extension
         app.extensions["security"] = self

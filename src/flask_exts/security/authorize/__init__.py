@@ -1,1 +1,1 @@
-from .casbin_enforcer import CasbinEnforcer
+from .casbin_authorizer import CasbinAuthorizer
