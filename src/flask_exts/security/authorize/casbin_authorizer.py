@@ -6,7 +6,7 @@ from casbin import Enforcer
 
 from .base import BaseAuthorizer
 from .casbin_sqlalchemy_adapter import Adapter as SqlalchemyAdapter
-from ..proxies import current_authorizer
+from ...proxies import current_authorizer
 
 CASBIN_RBAC_MODEL = """
 [request_definition]
@@ -28,6 +28,14 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 
 def _authorizer_context_processor():
     return dict(current_authorizer=current_authorizer)
+
+
+def casbin_prefix_userid(user_id):
+    return f"user:{user_id}"
+
+
+def casbin_prefix_roleid(role_id):
+    return f"role:{role_id}"
 
 
 class CasbinAuthorizer(BaseAuthorizer):
@@ -64,9 +72,19 @@ class CasbinAuthorizer(BaseAuthorizer):
         if add_context_processor:
             app.context_processor(_authorizer_context_processor)
 
-    def allow(self, user, *source):
+    def allow(self, user, obj, act):
         e = self.get_casbin_enforcer()
-        return e.enforce(user.name, *source)
+        sub = casbin_prefix_userid(user.id)
+        access = e.enforce(sub, obj, act)
+        if access:
+            return access
+        if hasattr(user, "roles"):
+            for r in user.roles:
+                sub = casbin_prefix_roleid(r.id)
+                access = e.enforce(sub, obj, act)
+                if access:
+                    return access
+        return False
 
     def get_casbin_enforcer(self):
         if self.e is None:

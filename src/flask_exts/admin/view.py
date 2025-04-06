@@ -5,6 +5,7 @@ from flask import abort
 
 from ..utils import prettify_class_name
 
+
 def expose(url="/", methods=("GET",)):
     """
     Use this decorator to expose views in your view classes.
@@ -25,16 +26,15 @@ def expose(url="/", methods=("GET",)):
 
 
 def _wrap_view(f):
-    """ wrapping f with self._handle_view and self._run_view
-    """
+    """wrapping f with self._handle_view and self._run_view"""
     # Avoid wrapping view method twice
-    if hasattr(f, '_wrapped'):
+    if hasattr(f, "_wrapped"):
         return f
 
     @wraps(f)
     def inner(self, *args, **kwargs):
         # Check if piece is accessible
-        abort = self._handle_view(f.__name__, **kwargs)
+        abort = self._handle_view(f, **kwargs)
         if abort is not None:
             return abort
         # run view
@@ -193,7 +193,7 @@ class BaseView(metaclass=ViewMeta):
             Arguments for `url_for`
         """
         return url_for(endpoint, **kwargs)
-    
+
     def render(self, template, **kwargs):
         """
         Render template
@@ -236,21 +236,23 @@ class BaseView(metaclass=ViewMeta):
 
         By default, it will allow access for everyone.
         """
+        if not self.admin.access(view=self):
+            return False
         return True
 
-    def _handle_view(self, name, **kwargs):
+    def _handle_view(self, fn, **kwargs):
         """
         This method will be executed before calling any view method.
 
         It will execute the ``inaccessible_callback`` if the view is not accessible.
 
-        :param name:
-            View function name
+        :param fn:
+            View function
         :param kwargs:
             View function arguments
         """
-        if not self.is_accessible():
-            return self.inaccessible_callback(name, **kwargs)
+        if not self.admin.access(view=self, fn=fn):
+            return self.inaccessible_callback(fn, **kwargs)
 
     def _run_view(self, fn, *args, **kwargs):
         """
@@ -265,7 +267,7 @@ class BaseView(metaclass=ViewMeta):
         """
         return fn(self, *args, **kwargs)
 
-    def inaccessible_callback(self, name, **kwargs):
+    def inaccessible_callback(self, fn, **kwargs):
         """
         Handle the response to inaccessible views.
 

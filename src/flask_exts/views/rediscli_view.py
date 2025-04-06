@@ -68,6 +68,12 @@ class RedisCli(BaseView):
         self._inspect_commands()
         self._contribute_commands()
 
+    def is_accessible(self):
+        return True
+    
+    def _handle_view(self, fn, **kwargs):
+        return
+
     def _inspect_commands(self):
         """
         Inspect connection object and extract command names.

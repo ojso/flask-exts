@@ -2,7 +2,7 @@ from functools import wraps
 from flask import request, jsonify
 from flask_login import current_user
 from ..utils.request_user import UnSupportedAuthType
-from ..proxies import current_authorizer
+from ..utils.authorize import authorize_allow
 
 
 def auth_required(func):
@@ -11,11 +11,10 @@ def auth_required(func):
         uri = str(request.path)
         try:
             if current_user.is_authenticated:
-                if current_authorizer.allow(current_user, uri, request.method):
+                if authorize_allow(resource=uri, method=request.method):
                     return func(*args, **kwargs)
                 return (jsonify({"message": "Forbidden"}), 403)
             else:
-                # return current_app
                 return (jsonify({"message": "Unauthorized"}), 401)
 
         except UnSupportedAuthType:

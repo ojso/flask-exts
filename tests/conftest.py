@@ -13,6 +13,7 @@ def app():
     # app.config["SQLALCHEMY_ECHO"] = True
     app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
     app.config["JWT_HASH"] = "HS256"
+    app.config["ADMIN_ACCESS_ENABLED"] = False    
     manager = Manager()
     manager.init_app(app)
     yield app

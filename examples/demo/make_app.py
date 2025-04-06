@@ -9,11 +9,6 @@ def get_sqlite_path():
     return database_path
 
 
-def register_users(app):
-    from flask_exts.security.proxies import current_usercenter
-    current_usercenter.register_user("admin", "admin", "admin@example.com")
-
-
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "dev"
@@ -26,6 +21,7 @@ def create_app():
     # JWT
     app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
     app.config["JWT_HASH"] = "HS256"
+    # app.config["ADMIN_ACCESS_ENABLED"] = False
     init_app(app)
 
     return app
@@ -37,7 +33,7 @@ def init_app(app: Flask):
     manager.init_app(app)
 
     from .models import init_models
-    
+
     init_models()
 
     from .admin_views import add_views
@@ -49,4 +45,3 @@ def init_app(app: Flask):
             from .build_sample import build_sample_db
 
             build_sample_db()
-            register_users(app)

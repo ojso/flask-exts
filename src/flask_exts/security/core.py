@@ -1,8 +1,8 @@
 from flask_login import LoginManager
-from .usercenter import SqlaUserCenter
-from .usercenter import MemoryUserCenter
+from .usercenter.sqla_usercenter import SqlaUserCenter
+from .usercenter.memory_usercenter import MemoryUserCenter
 from .authorize import CasbinAuthorizer
-from .utils.request_user import load_user_from_request
+from ..utils.request_user import load_user_from_request
 
 
 class Security:
@@ -21,7 +21,7 @@ class Security:
         self.app = app
 
         # usercenter
-        if 'SQLALCHEMY_USERCENTER' in app.config:
+        if "SQLALCHEMY_USERCENTER" in app.config:
             self.usercenter = SqlaUserCenter()
         else:
             self.usercenter = MemoryUserCenter()
@@ -40,3 +40,4 @@ class Security:
 
         # set extension
         app.extensions["security"] = self
+

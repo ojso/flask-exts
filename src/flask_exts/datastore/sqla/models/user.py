@@ -33,3 +33,4 @@ class User(db.Model, UserMixin):
     )
 
     roles: Mapped[List["Role"]] = relationship(secondary=user_role_table)
+

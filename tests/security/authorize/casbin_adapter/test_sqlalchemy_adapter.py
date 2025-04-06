@@ -2,12 +2,13 @@ import re
 from flask_exts.datastore.sqla import db
 from flask_exts.security.authorize.casbin_sqlalchemy_adapter import CasbinRule
 from flask_exts.security.authorize.casbin_sqlalchemy_adapter import Filter
-from flask_exts.security.proxies import current_authorizer
+from flask_exts.proxies import current_authorizer
+
 
 def reset_models():
     db.drop_all()
     db.create_all()
-    fill_db()
+
 
 def fill_db():
     db.session.add(CasbinRule(ptype="p", v0="alice", v1="data1", v2="read"))
@@ -17,6 +18,7 @@ def fill_db():
     db.session.add(CasbinRule(ptype="g", v0="alice", v1="data2_admin"))
     db.session.commit()
 
+
 def get_enforcer():
     reset_models()
     fill_db()
@@ -24,8 +26,10 @@ def get_enforcer():
     e = current_authorizer.e
     return e
 
+
 # from unittest import TestCase
 # class TestConfig(TestCase):
+
 
 class TestConfig:
     def assertFalse(self, expr):
@@ -35,10 +39,10 @@ class TestConfig:
     def assertTrue(self, expr):
         """Check that the expression is true."""
         assert expr is True
-        
+
     def assertEqual(self, first, second):
         """Fail if the two objects are unequal as determined by the '=='
-           operator.
+        operator.
         """
         assert first == second
 
@@ -49,12 +53,14 @@ class TestConfig:
             expected_regex = re.compile(expected_regex)
         if not expected_regex.search(text):
             standardMsg = "Regex didn't match: %r not found in %r" % (
-                expected_regex.pattern, text)
+                expected_regex.pattern,
+                text,
+            )
             # _formatMessage ensures the longMessage option is respected
             msg = self._formatMessage(msg, standardMsg)
             raise self.failureException(msg)
-        
-    def test_enforcer_basic(self,app):
+
+    def test_enforcer_basic(self, app):
         with app.app_context():
             e = get_enforcer()
 
@@ -67,7 +73,7 @@ class TestConfig:
             self.assertTrue(e.enforce("alice", "data2", "read"))
             self.assertTrue(e.enforce("alice", "data2", "write"))
 
-    def test_add_policy(self,app):
+    def test_add_policy(self, app):
         with app.app_context():
             e = get_enforcer()
 
@@ -77,7 +83,7 @@ class TestConfig:
             self.assertTrue(e.enforce("eve", "data3", "read"))
             self.assertTrue(e.enforce("eve", "data4", "read"))
 
-    def test_add_policies(self,app):
+    def test_add_policies(self, app):
         with app.app_context():
             e = get_enforcer()
 
@@ -86,7 +92,7 @@ class TestConfig:
             self.assertTrue(res)
             self.assertTrue(e.enforce("eve", "data3", "read"))
 
-    def test_save_policy(self,app):
+    def test_save_policy(self, app):
         with app.app_context():
             e = get_enforcer()
             self.assertFalse(e.enforce("alice", "data4", "read"))
@@ -100,7 +106,7 @@ class TestConfig:
             adapter.save_policy(model)
             self.assertTrue(e.enforce("alice", "data4", "read"))
 
-    def test_remove_policy(self,app):
+    def test_remove_policy(self, app):
         with app.app_context():
             e = get_enforcer()
 
@@ -110,7 +116,7 @@ class TestConfig:
             e.delete_permission_for_user("alice", "data5", "read")
             self.assertFalse(e.enforce("alice", "data5", "read"))
 
-    def test_remove_policies(self,app):
+    def test_remove_policies(self, app):
         with app.app_context():
             e = get_enforcer()
 
@@ -123,7 +129,7 @@ class TestConfig:
             self.assertFalse(e.enforce("alice", "data5", "read"))
             self.assertFalse(e.enforce("alice", "data6", "read"))
 
-    def test_remove_filtered_policy(self,app):
+    def test_remove_filtered_policy(self, app):
         with app.app_context():
             e = get_enforcer()
 
@@ -171,7 +177,7 @@ class TestConfig:
         rule = CasbinRule(ptype="g", v0="alice", v1="data2_admin")
         self.assertEqual(str(rule), "g, alice, data2_admin")
 
-    def test_repr(self,app):
+    def test_repr(self, app):
         with app.app_context():
             e = get_enforcer()
             rule = CasbinRule(ptype="p", v0="alice", v1="data1", v2="read")
@@ -180,7 +186,7 @@ class TestConfig:
             db.session.commit()
             self.assertRegex(repr(rule), r'<CasbinRule \d+: "p, alice, data1, read">')
 
-    def test_filtered_policy(self,app):
+    def test_filtered_policy(self, app):
         with app.app_context():
             e = get_enforcer()
             filter = Filter()
@@ -303,7 +309,7 @@ class TestConfig:
             self.assertFalse(e.enforce("data2_admin", "data2", "read"))
             self.assertTrue(e.enforce("data2_admin", "data2", "write"))
 
-    def test_update_policy(self,app):
+    def test_update_policy(self, app):
         with app.app_context():
             e = get_enforcer()
             example_p = ["mike", "cookie", "eat"]
@@ -333,7 +339,7 @@ class TestConfig:
             e.update_policy(["carl", "data2", "write"], ["carl", "data2", "no_write"])
             self.assertFalse(e.enforce("bob", "data2", "write"))
 
-    def test_update_policies(self,app):
+    def test_update_policies(self, app):
         with app.app_context():
             e = get_enforcer()
 
@@ -364,7 +370,7 @@ class TestConfig:
             self.assertFalse(e.enforce("data2_admin", "data2", "write"))
             self.assertTrue(e.enforce("data2_admin", "data_test", "write"))
 
-    def test_update_filtered_policies(self,app):
+    def test_update_filtered_policies(self, app):
         with app.app_context():
             e = get_enforcer()
 

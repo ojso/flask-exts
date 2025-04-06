@@ -1,5 +1,5 @@
-from ...utils.jwt import jwt_decode
-from ...utils.jwt import UnSupportedAuthType
+from .jwt import jwt_decode
+from .jwt import UnSupportedAuthType
 from ..proxies import current_usercenter
 
 

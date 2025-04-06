@@ -2,39 +2,21 @@ from abc import ABC, abstractmethod
 
 
 class BaseAuthorizer(ABC):
-    @abstractmethod
-    def allow(self, user, *source): ...
-
-
-class Watcher(ABC):
-    """
-    Watcher interface as it should be implemented for flask-casbin
-    """
+    root_rolename = "admin"
+    root_roleid = None
 
     @abstractmethod
-    def update(self):
-        """
-        Watcher interface as it should be implemented for flask-casbin
-        Returns:
-            None
-        """
-        pass
+    def allow(self, user, resource, method): ...
 
-    @abstractmethod
-    def set_update_callback(self):
-        """
-        Set the update callback to be used when an update is detected
-        Returns:
-            None
-        """
-        pass
+    def set_root_roleid(self, id):
+        self.root_roleid = id
 
-    @abstractmethod
-    def should_reload(self):
-        """
-        Method which checks if there is an update necessary for the casbin
-        roles. This is called with each flask request.
-        Returns:
-            Bool
-        """
-        pass
+    def set_root_rolename(self, name):
+        self.root_rolename = name
+
+    def is_root_user(self, user=None):
+        if hasattr(user, "roles"):
+            for r in user.roles:
+                if r.name == self.root_rolename:
+                    return True
+        return False

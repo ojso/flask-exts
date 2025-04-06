@@ -3,14 +3,14 @@ from flask import request
 from flask import redirect
 from flask import flash
 from flask import abort
-from flask import current_app
 from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
 from ..admin import BaseView
 from ..admin import expose
-from ..security.proxies import current_usercenter
+from ..proxies import current_usercenter
+
 
 class UserView(BaseView):
     """
@@ -46,9 +46,11 @@ class UserView(BaseView):
             menu_icon_value=menu_icon_value,
         )
 
-    @property
-    def usercenter(self):
-        return current_app.extensions["user"]
+    def is_accessible(self):
+        return True
+    
+    def _handle_view(self, fn, **kwargs):
+        return
 
     def get_login_form_class(self):
         return current_usercenter.login_form_class
@@ -67,7 +69,9 @@ class UserView(BaseView):
 
     def validate_register_and_create_user(self, form):
         (user, error) = current_usercenter.register_user(
-            form.username.data, form.password.data, form.email.data
+            username=form.username.data,
+            password=form.password.data,
+            email=form.email.data,
         )
         return (user, error)
 
@@ -75,15 +79,6 @@ class UserView(BaseView):
     @expose("/")
     def index(self):
         return self.render(self.index_template)
-
-    @login_required
-    @expose("/list/")
-    def list(self):
-        if "admin" in current_user.get_roles():
-            users = self.get_users()
-            return self.render(self.list_template, users=users)
-        else:
-            abort(405)
 
     @expose("/login/", methods=("GET", "POST"))
     def login(self):

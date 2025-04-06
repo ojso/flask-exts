@@ -2,6 +2,8 @@ from .datastore.sqla import sqldb_init_app
 from .babel import babel_init_app
 from .template import template_init_app
 from .security import security_init_app
+from .utils.authorize import authorize_allow
+from .admin import Admin
 
 
 class Manager:
@@ -36,26 +38,26 @@ class Manager:
         if "security" not in app.extensions:
             security_init_app(app)
 
-        if app.config.get("ADMIN_ENABLED", True):
-            from .admin import Admin
+        admin = Admin()
+        admin.init_app(app)
 
-            admin = Admin()
-            admin.init_app(app)
+        if app.config.get("ADMIN_ACCESS_ENABLED", True):
+            admin.set_access_callback(authorize_allow)
 
-            if "ADMIN_INDEX_VIEW" in app.config:
-                admin_index_view = app.config.get("ADMIN_INDEX_VIEW")
-            else:
-                from .views.index_view import IndexView
+        if "ADMIN_INDEX_VIEW" in app.config:
+            admin_index_view = app.config.get("ADMIN_INDEX_VIEW")
+        else:
+            from .views.index_view import IndexView
 
-                admin_index_view = IndexView()
-            if admin_index_view:
-                admin.add_view(admin_index_view, is_menu=False)
+            admin_index_view = IndexView()
+        if admin_index_view:
+            admin.add_view(admin_index_view, is_menu=False)
 
-            if "ADMIN_USER_VIEW" in app.config:
-                admin_user_view = app.config.get("ADMIN_USER_VIEW")
-            else:
-                from .views.user_view import UserView
+        if "ADMIN_USER_VIEW" in app.config:
+            admin_user_view = app.config.get("ADMIN_USER_VIEW")
+        else:
+            from .views.user_view import UserView
 
-                admin_user_view = UserView()
-            if admin_user_view:
-                admin.add_view(admin_user_view, is_menu=False)
+            admin_user_view = UserView()
+        if admin_user_view:
+            admin.add_view(admin_user_view, is_menu=False)

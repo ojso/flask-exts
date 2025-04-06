@@ -502,7 +502,7 @@ def test_column_editable_list(app, client, admin):
         # confirm the value has changed
         rv = client.get("/admin/model2/")
         data = rv.get_data(as_text=True)
-        print(data)
+        # print(data)
         assert "test1_val_3" in data
 
 

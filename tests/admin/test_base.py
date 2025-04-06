@@ -26,6 +26,10 @@ class MockView(BaseView):
         if self.allow_access:
             return super().is_accessible()
         return False
+    
+    def _handle_view(self, fn, **kwargs):
+        if not self.allow_access:
+            return self.inaccessible_callback(fn, **kwargs)
 
     def is_visible(self):
         if self.visible:

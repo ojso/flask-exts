@@ -34,6 +34,12 @@ class IndexView(BaseView):
             menu_icon_value=menu_icon_value,
         )
 
+    def is_accessible(self):
+        return True
+    
+    def _handle_view(self, fn, **kwargs):
+        return
+
     @expose("/")
     def index(self):
         return self.render(self.index_template)

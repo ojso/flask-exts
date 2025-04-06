@@ -1,5 +1,6 @@
 import random
 import datetime
+from flask_exts.proxies import current_usercenter
 from .models import db
 from .models.author import Author
 from .models.author import AVAILABLE_USER_TYPES
@@ -8,6 +9,14 @@ from .models.post import Post
 from .models.tree import Tree
 from .models.keyword import Keyword
 from .models.user import MyUser
+
+
+def build_user_admin():
+    u, _ = current_usercenter.register_user(
+        username="admin", password="admin", email="admin@example.com"
+    )
+    r, _ = current_usercenter.create_role(name="admin")
+    current_usercenter.user_add_role(u, r)
 
 
 def build_sample_userkeyword():
@@ -215,5 +224,6 @@ def build_sample_db():
     build_sample_userkeyword()
     build_sample_tree()
     build_sample_post()
+    build_user_admin()
 
     return

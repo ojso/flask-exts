@@ -4,7 +4,11 @@ from flask import request, jsonify
 from casbin.persist.adapters import FileAdapter
 from flask_exts.security.authorize.casbin_sqlalchemy_adapter import CasbinRule
 from flask_exts.datastore.sqla import db
-from flask_exts.security.decorators import auth_required
+from flask_exts.decorators import auth_required
+from flask_exts.utils.jwt import jwt_encode
+from flask_exts.proxies import current_usercenter
+from flask_exts.security.authorize.casbin_authorizer import casbin_prefix_userid
+
 
 @pytest.fixture
 def enforcer_file_adapter(app):
@@ -16,25 +20,26 @@ def enforcer_file_adapter(app):
     yield c
 
 
-def init_adapter(app):
+def init_data(app):
     with app.app_context():
         db.drop_all()
         db.create_all()
         s = db.session
-        s.add(CasbinRule(ptype="p", v0="alice", v1="/item", v2="GET"))
-        s.add(CasbinRule(ptype="p", v0="bob", v1="/item", v2="GET"))
+
+        u_alice,msg_alice = current_usercenter.register_user(username="alice")
+        u_bob,msg_bob = current_usercenter.register_user(username="bob")
+        u_cathy,msg_bob = current_usercenter.register_user(username="cathy")
+
+        s.add(CasbinRule(ptype="p", v0=casbin_prefix_userid(u_alice.id), v1="/item", v2="GET"))
+        s.add(CasbinRule(ptype="p", v0=casbin_prefix_userid(u_bob.id), v1="/item", v2="GET"))
         s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="POST"))
         s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="DELETE"))
         s.add(CasbinRule(ptype="p", v0="data2_admin", v1="/item", v2="GET"))
         s.add(CasbinRule(ptype="g", v0="alice", v1="data2_admin"))
         s.add(CasbinRule(ptype="g", v0="users", v1="data2_admin"))
         s.add(CasbinRule(ptype="g", v0="group with space", v1="data2_admin"))
-        db.session.commit()
+        s.commit()
 
-@pytest.fixture
-def enforcer(app):
-    c = app.extensions["security"].casbin
-    yield c
 
 @pytest.fixture
 def watcher():
@@ -49,28 +54,30 @@ def watcher():
 
 
 @pytest.mark.parametrize(
-    "header, user, method, status",
+    "header, username, method, status",
     [
         (
             "Authorization",
-            "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZGVudGl0eSI6ImJvYiJ9."
-            "LM-CqxAM2MtT2uT3AO69rZ3WJ81nnyMQicizh4oqBwk",
+            "alice",
             "GET",
             200,
         ),
-        # (
-        #     "Authorization",
-        #     "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9."
-        #     "eyJleHAiOjE2MTUxMDg0OTIuNTY5MjksImlkZW50aXR5IjoiQm9iIn0."
-        #     "CAeMpG-gKbucHU7-KMiqM7H_gTkHSRvXSjNtlvh5DlE",
-        #     "GET",
-        #     401,
-        # ),
-        ("Authorization", "Unsupported Ym9iOnBhc3N3b3Jk", "GET", 401),
+        (
+            "Authorization",
+            "bob",
+            "GET",
+            200,
+        ),
+        (
+            "Authorization",
+            "cathy",
+            "GET",
+            403,
+        ),
     ],
 )
-def test_enforcer(app, client, enforcer, header, user, method, status):
-    init_adapter(app)
+def test_enforcer(app, client, header, username, method, status):
+    init_data(app)
 
     @app.route("/a")
     @auth_required
@@ -87,14 +94,15 @@ def test_enforcer(app, client, enforcer, header, user, method, status):
         elif request.method == "DELETE":
             return jsonify({"message": "passed"}), 200
 
-    headers = {header: user}
-    # client.post('/add', data=dict(title='2nd Item', text='The text'))
+    with app.app_context():
+        u = current_usercenter.get_user_by_username(username)
+        token = jwt_encode({"id": u.id})
+    headers = {header: "Bearer " + token}
     rv = client.get("/a")
     # print(rv.get_data(as_text=True))
     # print(rv.status_code)
     assert rv.status_code == 401
     caller = getattr(client, method.lower())
     rv = caller("/item", headers=headers)
-    print(rv.text)
+    # print(rv.text)
     assert rv.status_code == status
-

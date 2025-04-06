@@ -1,8 +1,11 @@
 import pytest
 from jwt import ExpiredSignatureError
+from flask_login import current_user
+from flask_exts.datastore.sqla import db
 from flask_exts.utils.jwt import jwt_encode
-from flask_exts.security.utils.request_user import authorization_decoder
-from flask_exts.security.utils.request_user import UnSupportedAuthType
+from flask_exts.utils.request_user import authorization_decoder
+from flask_exts.utils.request_user import UnSupportedAuthType
+from flask_exts.proxies import current_usercenter
 
 
 @pytest.mark.parametrize(
@@ -32,7 +35,7 @@ def test_auth_docode_exceptions_unsupportauthtype(app, auth_str, result):
         #     print(e)
         #     print(e.payload)
         with pytest.raises(UnSupportedAuthType):
-            assert authorization_decoder(auth_str)
+            authorization_decoder(auth_str)
 
 
 @pytest.mark.parametrize(
@@ -50,3 +53,28 @@ def test_jwt_decode_exceptions_expired(app, payload, delta):
         bearer_str = "Bearer " + auth_str
         with pytest.raises(ExpiredSignatureError):
             authorization_decoder(bearer_str)
+
+
+@pytest.mark.parametrize(
+    "username,password,email",
+    [
+        ("test", "test", "test@example.com"),
+    ],
+)
+def test_request_user(app, username, password, email):
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        user, msg = current_usercenter.register_user(
+            username=username,
+            password=password,
+            email=email,
+        )
+        assert user is not None
+        assert user.id > 0
+        token = jwt_encode({"id": user.id})
+        headers = {"Authorization": "Bearer " + token}
+
+    with app.test_request_context(headers=headers):
+        assert current_user.id == user.id
+        assert current_user.username == user.username

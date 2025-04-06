@@ -31,6 +31,7 @@ class Admin:
             a single Flask application, you have to set a unique endpoint name for each instance.
 
         """
+        self._access_callback = None
         self.app = app
         self.name = name
         self.endpoint = endpoint
@@ -122,3 +123,13 @@ class Admin:
 
         admins.append(self)
         self.app.extensions["admin"] = admins
+
+    def access(self, *args, **kwargs):
+        if self._access_callback:
+            return self._access_callback(*args, **kwargs)
+        else:
+            return True
+
+    def set_access_callback(self, callback):
+        self._access_callback = callback
+        return
