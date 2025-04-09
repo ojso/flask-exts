@@ -15,8 +15,7 @@ class BaseAuthorizer(ABC):
         self.root_rolename = name
 
     def is_root_user(self, user=None):
-        if hasattr(user, "roles"):
-            for r in user.roles:
-                if r.name == self.root_rolename:
-                    return True
+        if hasattr(user, "get_roles"):
+            if self.root_rolename in user.get_roles():
+                 return True
         return False

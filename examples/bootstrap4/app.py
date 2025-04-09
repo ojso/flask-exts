@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 from enum import Enum
 from flask import Flask, render_template, request, flash, redirect, url_for
 from markupsafe import Markup
 from wtforms.validators import DataRequired, Length, Regexp
 from wtforms.fields import *
-from flask_sqlalchemy import SQLAlchemy
 from flask_exts.forms.form import FlaskForm
 from flask_exts.forms.fields import SwitchField
 from flask_exts import Manager
+from flask_exts.datastore.sqla import db
 
 manager = Manager()
 
@@ -16,7 +15,6 @@ app.secret_key = 'dev'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 app.config['ADMIN_ENABLED'] = False
 manager.init_app(app)
-db = SQLAlchemy(app)
 
 class ExampleForm(FlaskForm):
     """An example form that contains all the supported bootstrap style form fields."""

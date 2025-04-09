@@ -33,6 +33,7 @@ class UserView(BaseView):
         menu_class_name=None,
         menu_icon_type=None,
         menu_icon_value=None,
+        skip_check_auth=True,
     ):
         super().__init__(
             name=name,
@@ -44,13 +45,8 @@ class UserView(BaseView):
             menu_class_name=menu_class_name,
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
+            skip_check_auth=skip_check_auth,
         )
-
-    def is_accessible(self):
-        return True
-    
-    def _handle_view(self, fn, **kwargs):
-        return
 
     def get_login_form_class(self):
         return current_usercenter.login_form_class
@@ -62,18 +58,18 @@ class UserView(BaseView):
         return current_usercenter.get_users()
 
     def validate_login_and_get_user(self, form):
-        (user, error) = current_usercenter.login_user_by_username_password(
+        user, error = current_usercenter.login_user_by_username_password(
             form.username.data, form.password.data
         )
-        return (user, error)
+        return user, error
 
     def validate_register_and_create_user(self, form):
-        (user, error) = current_usercenter.register_user(
+        user, error = current_usercenter.create_user(
             username=form.username.data,
             password=form.password.data,
             email=form.email.data,
         )
-        return (user, error)
+        return user, error
 
     @login_required
     @expose("/")
@@ -86,7 +82,7 @@ class UserView(BaseView):
             return redirect(url_for(".index"))
         form = self.get_login_form_class()()
         if form.validate_on_submit():
-            (user, error) = self.validate_login_and_get_user(form)
+            user, error = self.validate_login_and_get_user(form)
             if user is None:
                 flash(error, "error")
                 # form.username.errors.append(error)
@@ -107,7 +103,7 @@ class UserView(BaseView):
             return redirect(url_for(".index"))
         form = self.get_register_form_class()()
         if form.validate_on_submit():
-            (user, error) = self.validate_register_and_create_user(form)
+            user, error = self.validate_register_and_create_user(form)
             if user is None:
                 flash(error)
             else:

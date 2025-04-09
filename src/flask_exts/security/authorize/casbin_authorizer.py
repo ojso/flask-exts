@@ -30,12 +30,12 @@ def _authorizer_context_processor():
     return dict(current_authorizer=current_authorizer)
 
 
-def casbin_prefix_userid(user_id):
+def casbin_prefix_user(user_id):
     return f"user:{user_id}"
 
 
-def casbin_prefix_roleid(role_id):
-    return f"role:{role_id}"
+def casbin_prefix_role(role_name):
+    return f"role:{role_name}"
 
 
 class CasbinAuthorizer(BaseAuthorizer):
@@ -74,16 +74,28 @@ class CasbinAuthorizer(BaseAuthorizer):
 
     def allow(self, user, obj, act):
         e = self.get_casbin_enforcer()
-        sub = casbin_prefix_userid(user.id)
+        sub = casbin_prefix_user(user.id)
         access = e.enforce(sub, obj, act)
         if access:
             return access
-        if hasattr(user, "roles"):
-            for r in user.roles:
-                sub = casbin_prefix_roleid(r.id)
-                access = e.enforce(sub, obj, act)
-                if access:
-                    return access
+        if hasattr(user, "get_roles"):
+            for r in user.get_roles():
+                sub = casbin_prefix_role(r)
+                if e.enforce(sub, obj, act):
+                    return True
+        return False
+    
+    def has_role(self,user,role):
+        e = self.get_casbin_enforcer()
+        if hasattr(user, "get_roles"):
+            user_roles = user.get_roles()
+            if role in user_roles:
+                return True
+            rm = e.get_role_manager()
+            for r in user_roles:
+                sub = casbin_prefix_role(r)                
+                if rm.has_link(sub,casbin_prefix_role(role)):
+                    return True
         return False
 
     def get_casbin_enforcer(self):

@@ -34,3 +34,5 @@ class User(db.Model, UserMixin):
 
     roles: Mapped[List["Role"]] = relationship(secondary=user_role_table)
 
+    def get_roles(self):
+        return [r.name for r in self.roles]

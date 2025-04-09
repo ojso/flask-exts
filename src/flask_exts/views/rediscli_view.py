@@ -44,7 +44,7 @@ class RedisCli(BaseView):
         List of excluded commands.
     """
 
-    def __init__(self, redis, name=None, endpoint=None, url=None):
+    def __init__(self, redis, name=None, endpoint=None, url=None, **kwargs):
         """
         Constructor.
 
@@ -59,7 +59,7 @@ class RedisCli(BaseView):
         :param url:
             Base URL. If not provided, will use endpoint as a URL.
         """
-        super().__init__(name, endpoint, url)
+        super().__init__(name, endpoint, url, **kwargs)
 
         self.redis = redis
 
@@ -67,12 +67,6 @@ class RedisCli(BaseView):
 
         self._inspect_commands()
         self._contribute_commands()
-
-    def is_accessible(self):
-        return True
-    
-    def _handle_view(self, fn, **kwargs):
-        return
 
     def _inspect_commands(self):
         """

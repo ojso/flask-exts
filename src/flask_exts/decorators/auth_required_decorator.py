@@ -23,3 +23,25 @@ def auth_required(func):
             return (jsonify({"message": str(e)}), 401)
 
     return wrapper
+
+
+def needs_required(**needs):
+    def auth_required(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                if current_user.is_authenticated:
+                    if authorize_allow(**needs):
+                        return func(*args, **kwargs)
+                    return (jsonify({"message": "Forbidden"}), 403)
+                else:
+                    return (jsonify({"message": "Unauthorized"}), 401)
+
+            except UnSupportedAuthType:
+                return (jsonify({"message": "UnSupportedAuthType"}), 401)
+            except Exception as e:
+                return (jsonify({"message": str(e)}), 401)
+
+        return wrapper
+
+    return auth_required

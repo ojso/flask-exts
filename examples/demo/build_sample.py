@@ -12,7 +12,7 @@ from .models.user import MyUser
 
 
 def build_user_admin():
-    u, _ = current_usercenter.register_user(
+    u, _ = current_usercenter.create_user(
         username="admin", password="admin", email="admin@example.com"
     )
     r, _ = current_usercenter.create_role(name="admin")

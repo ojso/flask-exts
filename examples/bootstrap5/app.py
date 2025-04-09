@@ -1,19 +1,17 @@
 from enum import Enum
 from flask import Flask, render_template, request, flash, redirect, url_for
-from flask import current_app
 from markupsafe import Markup
 from wtforms.validators import DataRequired, Length, Regexp
 from wtforms.fields import *
-from flask_sqlalchemy import SQLAlchemy
 
 from flask_exts.forms.form import FlaskForm
 from flask_exts.forms.fields import SwitchField
 from flask_exts import Manager
 from flask_exts.template.theme import BootstrapTheme
+from flask_exts.datastore.sqla import db
 
 theme = BootstrapTheme(version=5)
 
-manager = Manager()
 app = Flask(__name__)
 app.secret_key = "dev"
 
@@ -22,8 +20,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 # set bootstrap5
 app.config["TEMPLATE_THEME"] = theme
 app.config['ADMIN_ENABLED'] = False
+
+manager = Manager()
 manager.init_app(app)
-db = SQLAlchemy(app)
 
 
 class ExampleForm(FlaskForm):

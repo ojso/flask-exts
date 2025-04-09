@@ -85,6 +85,7 @@ class BaseView(metaclass=ViewMeta):
         menu_class_name=None,
         menu_icon_type=None,
         menu_icon_value=None,
+        skip_check_auth = False,
     ):
         """
         Constructor.
@@ -122,6 +123,7 @@ class BaseView(metaclass=ViewMeta):
         self.menu_class_name = menu_class_name
         self.menu_icon_type = menu_icon_type
         self.menu_icon_value = menu_icon_value
+        self.skip_check_auth = skip_check_auth
 
         # Initialized from create_blueprint
         self.admin = None
@@ -217,16 +219,6 @@ class BaseView(metaclass=ViewMeta):
         """
         return prettify_class_name(name)
 
-    def is_visible(self):
-        """
-        Override this method if you want dynamically hide or show administrative views from menu structure
-
-        By default, item is visible in menu.
-
-        Please note that item should be both visible and accessible to be displayed in menu.
-        """
-        return True
-
     def is_accessible(self):
         """
         Override this method to add permission checks.
@@ -236,9 +228,9 @@ class BaseView(metaclass=ViewMeta):
 
         By default, it will allow access for everyone.
         """
-        if not self.admin.access(view=self):
-            return False
-        return True
+        if self.skip_check_auth:
+            return True
+        return self.admin.access(view=self)
 
     def _handle_view(self, fn, **kwargs):
         """
@@ -251,6 +243,8 @@ class BaseView(metaclass=ViewMeta):
         :param kwargs:
             View function arguments
         """
+        if self.skip_check_auth:
+            return
         if not self.admin.access(view=self, fn=fn):
             return self.inaccessible_callback(fn, **kwargs)
 

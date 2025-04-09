@@ -42,9 +42,7 @@ class Admin:
         self.static_folder = static_folder or "../static"
         self._views = []
         self.menu = Menu(self)
-        # Register with application
-        if app is not None:
-            self._init_extension()
+
 
     def add_view(self, view, is_menu=True, category=None):
         """
@@ -103,26 +101,10 @@ class Admin:
             Flask application instance
         """
         self.app = app
-        self._init_extension()
 
         # Register views
         for view in self._views:
             app.register_blueprint(view.create_blueprint())
-
-    def _init_extension(self):
-        admins = self.app.extensions.get("admin", [])
-
-        for p in admins:
-            if p.endpoint == self.endpoint:
-                raise Exception(
-                    "Cannot have two Admin() instances with same endpoint name."
-                )
-
-            if p.url == self.url:
-                raise Exception("Cannot assign two Admin() instances with same URL.")
-
-        admins.append(self)
-        self.app.extensions["admin"] = admins
 
     def access(self, *args, **kwargs):
         if self._access_callback:

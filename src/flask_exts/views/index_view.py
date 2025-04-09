@@ -21,6 +21,7 @@ class IndexView(BaseView):
         menu_class_name=None,
         menu_icon_type=None,
         menu_icon_value=None,
+        skip_check_auth=True,
     ):
         super().__init__(
             name=name,
@@ -32,18 +33,13 @@ class IndexView(BaseView):
             menu_class_name=menu_class_name,
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
+            skip_check_auth=skip_check_auth,
         )
-
-    def is_accessible(self):
-        return True
-    
-    def _handle_view(self, fn, **kwargs):
-        return
 
     @expose("/")
     def index(self):
         return self.render(self.index_template)
-    
+
     @expose("/admin/")
     def admin_index(self):
         return self.render(self.admin_index_template)

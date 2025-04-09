@@ -48,3 +48,7 @@ Issues = "https://github.com/ojso/flask-exts/issues"
 
 [tool.hatch.version]
 path = "src/flask_exts/__about__.py"
+
+[project.entry-points."flask.commands"]
+security = "flask_exts.commands:security_cli"
+datastore = "flask_exts.commands:datastore_cli"

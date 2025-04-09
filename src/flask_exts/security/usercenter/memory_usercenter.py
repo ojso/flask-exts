@@ -40,7 +40,7 @@ class MemoryUserCenter(BaseUserCenter):
         else:
             return (user, None)
 
-    def register_user(self, **kwargs):
+    def create_user(self, **kwargs):
         username = kwargs.get("username")
         password = kwargs.get("password")
         email = kwargs.get("email")

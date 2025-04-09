@@ -50,7 +50,7 @@
       </li>
       {% endif %}
     {%- else %}
-      {%- if item.is_accessible() and item.is_visible() -%}
+      {%- if item.is_accessible() -%}
         {% set class_name = item.get_class_name() %}
         {%- if item.is_active(current_view) %}
           <li class="active{% if class_name %} {{ class_name }}{% endif %}">
@@ -68,7 +68,7 @@
 {% macro menu_links(links) %}
   {% for item in links %}
     {% set class_name = item.get_class_name() %}
-    {% if item.is_accessible() and item.is_visible() %}
+    {% if item.is_accessible() %}
       <li{% if class_name %} class="{{ class_name }}"{% endif %}>
         <a class="nav-link" href="{{ item.get_url() }}"{% if item.target %} target="{{ item.target }}"{% endif %}>
           {{ menu_icon(item) }}{{ item.name }}</a>

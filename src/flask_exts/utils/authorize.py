@@ -11,7 +11,10 @@ def authorize_allow(*args, **kwargs):
     if current_authorizer.is_root_user(user):
         return True
     
-    if "resource" in kwargs and "method" in kwargs:
+    if "role_need" in kwargs:
+        if current_authorizer.has_role(user, kwargs["role_need"]):
+            return True
+    elif "resource" in kwargs and "method" in kwargs:
         if current_authorizer.allow(user, kwargs["resource"], kwargs["method"]):
             return True
         

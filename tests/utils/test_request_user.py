@@ -65,7 +65,7 @@ def test_request_user(app, username, password, email):
     with app.app_context():
         db.drop_all()
         db.create_all()
-        user, msg = current_usercenter.register_user(
+        user, msg = current_usercenter.create_user(
             username=username,
             password=password,
             email=email,

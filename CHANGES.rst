@@ -1,13 +1,15 @@
 v0.2.2
 ------
 
-UnReleased
+Released 2025-04-09
 
 - fix datetimepicker
 - set session = db.session as default if ModelView of sqla init session is None
 - set session = db.session as default if QueryAjaxModelLoader init session is None
 - fix select.ajax for select2@4.1.0 
 - fix select in modal
+- add casbin
+- add module: security 
 
 v0.2.1
 ------

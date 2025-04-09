@@ -45,14 +45,11 @@ class BaseMenu:
                 return True
         return False
 
-    def is_visible(self):
-        return True
-
     def is_accessible(self):
         return True
 
     def get_children(self):
-        return [c for c in self._children if c.is_accessible() and c.is_visible()]
+        return [c for c in self._children if c.is_accessible()]
 
 
 class MenuCategory(BaseMenu):
@@ -65,13 +62,6 @@ class MenuCategory(BaseMenu):
 
     def is_category(self):
         return True
-
-    def is_visible(self):
-        for c in self._children:
-            if c.is_visible():
-                return True
-
-        return False
 
     def is_accessible(self):
         for c in self._children:
@@ -120,12 +110,6 @@ class MenuView(BaseMenu):
             return True
 
         return super().is_active(view)
-
-    def is_visible(self):
-        if self._view is None:
-            return False
-
-        return self._view.is_visible()
 
     def is_accessible(self):
         if self._view is None:
