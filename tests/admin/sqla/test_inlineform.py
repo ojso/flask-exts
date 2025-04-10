@@ -1,8 +1,8 @@
 from wtforms import fields
-from flask_exts.forms.form import BaseForm
+from flask_exts.exforms.form import BaseForm
 from flask_exts.admin.sqla import ModelView
-from flask_exts.forms.fields.sqla import InlineModelFormList
-from flask_exts.forms.validators.sqla import ItemsRequired
+from flask_exts.exforms.fields.sqla import InlineModelFormList
+from flask_exts.exforms.validators.sqla import ItemsRequired
 from ...models import db, reset_models
 from ...models.user import MyUser, UserInfo, UserEmail, Tag
 from ...models.tree import Tree

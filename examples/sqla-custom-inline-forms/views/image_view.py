@@ -3,11 +3,11 @@ from flask import request
 from flask import current_app
 from wtforms.fields import FileField
 from flask_exts.admin.sqla.ajax import QueryAjaxModelLoader
-from flask_exts.forms.widgets.render_template import RenderTemplateWidget
+from flask_exts.exforms.widgets.render_template import RenderTemplateWidget
 from flask_exts.admin.model.form import InlineFormAdmin
 from flask_exts.admin.sqla import ModelView
 from flask_exts.admin.sqla.form import InlineModelConverter
-from flask_exts.forms.fields.sqla import InlineModelFormList
+from flask_exts.exforms.fields.sqla import InlineModelFormList
 from ..models.model import ImageType, Location, LocationImage
 
 

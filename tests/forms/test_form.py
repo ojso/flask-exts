@@ -2,7 +2,7 @@ import pytest
 from flask import g
 from wtforms import StringField
 from wtforms.validators import DataRequired
-from flask_exts.forms import FlaskForm
+from flask_exts.exforms import FlaskForm
 
 
 class F(FlaskForm):

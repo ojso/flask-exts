@@ -2,7 +2,7 @@ from flask import g
 from flask import current_app
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, InputRequired
-from ..forms.form import FlaskForm
+from ..exforms.form import FlaskForm
 
 
 def type_name(item):

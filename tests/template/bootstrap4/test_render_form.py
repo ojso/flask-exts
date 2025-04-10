@@ -11,8 +11,8 @@ from wtforms import (
     DecimalRangeField,
 )
 from wtforms.validators import DataRequired
-from flask_exts.forms.form import FlaskForm
-from flask_exts.forms.fields import SwitchField
+from flask_exts.exforms.form import FlaskForm
+from flask_exts.exforms.fields import SwitchField
 
 
 def test_render_form(app, client, hello_form):

@@ -1,5 +1,5 @@
 from flask import render_template_string
-from flask_exts.forms.form import FlaskForm
+from flask_exts.exforms.form import FlaskForm
 from wtforms import HiddenField, SubmitField
 from wtforms.validators import DataRequired
 

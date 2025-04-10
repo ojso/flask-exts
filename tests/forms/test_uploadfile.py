@@ -3,9 +3,9 @@ import os
 import os.path as op
 from io import BytesIO
 from wtforms import Form
-from flask_exts.forms import FlaskForm
-from flask_exts.forms.fields import FileField, ImageField
-from flask_exts.forms.validators import FileRequired
+from flask_exts.exforms import FlaskForm
+from flask_exts.exforms.fields import FileField, ImageField
+from flask_exts.exforms.validators import FileRequired
 
 
 def _create_temp(root_path):

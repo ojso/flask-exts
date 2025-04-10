@@ -9,6 +9,8 @@ from flask_login import logout_user
 from flask_login import login_required
 from ..admin import BaseView
 from ..admin import expose
+from ..forms.login import LoginForm
+from ..forms.register import RegisterForm
 from ..proxies import current_usercenter
 
 
@@ -49,10 +51,10 @@ class UserView(BaseView):
         )
 
     def get_login_form_class(self):
-        return current_usercenter.login_form_class
+        return LoginForm
 
     def get_register_form_class(self):
-        return current_usercenter.register_form_class
+        return RegisterForm
 
     def get_users(self):
         return current_usercenter.get_users()

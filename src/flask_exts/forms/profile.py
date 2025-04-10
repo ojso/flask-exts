@@ -1,6 +1,6 @@
 from wtforms import StringField
 from wtforms import SubmitField
-from ...forms import FlaskForm
+from ..exforms import FlaskForm
 
 
 class ProfileForm(FlaskForm):

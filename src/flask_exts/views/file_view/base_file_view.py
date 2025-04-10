@@ -7,7 +7,7 @@ from flask_babel import gettext, lazy_gettext
 from flask import flash, redirect, abort, request
 from wtforms import fields, validators
 from werkzeug.utils import secure_filename
-from ...forms.form import BaseForm
+from ...exforms.form import BaseForm
 from ...utils import flash_errors
 from ...admin import BaseView
 from ...admin import expose

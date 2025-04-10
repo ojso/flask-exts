@@ -32,11 +32,11 @@ from ..view import BaseView
 from ..actions import ActionsMixin
 from .. import row_action
 from ..view import expose
-from ...forms.form import BaseForm
-from ...forms import FormOpts
-from ...forms.rules import RuleSet
-from ...forms.utils import get_form_data
-from ...forms.utils import validate_form_on_submit
+from ...exforms.form import BaseForm
+from ...exforms import FormOpts
+from ...exforms.rules import RuleSet
+from ...exforms.utils import get_form_data
+from ...exforms.utils import validate_form_on_submit
 from ...utils import flash_errors
 from ...utils import get_redirect_target
 from ...utils import rec_getattr

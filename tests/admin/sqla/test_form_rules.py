@@ -1,5 +1,5 @@
 import pytest
-from flask_exts.forms import rules
+from flask_exts.exforms import rules
 from ...models import reset_models
 from ...models.model1 import Model1, Model2
 from .test_basic import CustomModelView

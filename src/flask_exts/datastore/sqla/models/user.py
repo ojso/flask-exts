@@ -27,6 +27,7 @@ class User(db.Model, UserMixin):
     avatar: Mapped[Optional[str]]
     locale: Mapped[Optional[str]]
     timezone: Mapped[Optional[str]]
+    confirmed_at: Mapped[Optional[datetime]]
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(
         default=datetime.now, onupdate=datetime.now

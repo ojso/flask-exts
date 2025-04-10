@@ -1,5 +1,5 @@
 from wtforms.fields import StringField
-from flask_exts.forms.form import BaseForm, FlaskForm
+from flask_exts.exforms.form import BaseForm, FlaskForm
 from flask_exts.admin.model.view import BaseModelView
 from flask_exts.admin.model.filters import BaseFilter
 

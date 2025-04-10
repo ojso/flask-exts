@@ -3,8 +3,8 @@ from flask import Flask, render_template, request, flash, redirect, url_for
 from markupsafe import Markup
 from wtforms.validators import DataRequired, Length, Regexp
 from wtforms.fields import *
-from flask_exts.forms.form import FlaskForm
-from flask_exts.forms.fields import SwitchField
+from flask_exts.exforms.form import FlaskForm
+from flask_exts.exforms.fields import SwitchField
 from flask_exts import Manager
 from flask_exts.datastore.sqla import db
 

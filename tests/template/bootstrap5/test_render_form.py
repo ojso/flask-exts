@@ -1,7 +1,7 @@
 from flask import render_template_string
 from wtforms import IntegerRangeField, DecimalRangeField
-from flask_exts.forms import FlaskForm
-from flask_exts.forms.fields import SwitchField
+from flask_exts.exforms import FlaskForm
+from flask_exts.exforms.fields import SwitchField
 
 
 def test_switch_field(app, client):
