@@ -28,7 +28,6 @@ def create_app():
 
 
 def init_app(app: Flask):
-
     manager = Manager()
     manager.init_app(app)
 
@@ -39,6 +38,15 @@ def init_app(app: Flask):
     from .admin_views import add_views
 
     add_views(app)
+
+    @app.route("/locationlist")
+    def location_list():
+        from .models.location_image import Location
+        from flask import render_template
+        from .models import db
+
+        locations = db.session.query(Location).all()
+        return render_template("locations.html", locations=locations)
 
     if not op.exists(app.config["DATABASE_FILE"]):
         with app.app_context():

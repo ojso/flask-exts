@@ -1,2 +1,0 @@
-from .auth_required_decorator import auth_required
-from .auth_required_decorator import needs_required

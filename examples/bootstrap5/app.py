@@ -10,7 +10,6 @@ from flask_exts import Manager
 from flask_exts.template.theme import BootstrapTheme
 from flask_exts.datastore.sqla import db
 
-theme = BootstrapTheme(version=5)
 
 app = Flask(__name__)
 app.secret_key = "dev"
@@ -18,10 +17,13 @@ app.secret_key = "dev"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 # set bootstrap5
-app.config["TEMPLATE_THEME"] = theme
 app.config['ADMIN_ENABLED'] = False
 
-manager = Manager()
+class MyManager(Manager):
+    def get_theme(self):
+        return BootstrapTheme(5)
+
+manager = MyManager()
 manager.init_app(app)
 
 

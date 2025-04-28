@@ -4,7 +4,7 @@ from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import delete
 
-from ....datastore.sqla import db
+from ...datastore.sqla import db
 
 
 class CasbinRule(db.Model):

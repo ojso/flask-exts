@@ -8,7 +8,8 @@ from flask_exts.admin.model.form import InlineFormAdmin
 from flask_exts.admin.sqla import ModelView
 from flask_exts.admin.sqla.form import InlineModelConverter
 from flask_exts.exforms.fields.sqla import InlineModelFormList
-from ..models.model import ImageType, Location, LocationImage
+from ..models.location_image import ImageType, Location, LocationImage
+from ..file_op import save_image
 
 
 # This widget uses custom template for inline field list
@@ -60,7 +61,7 @@ class LocationImageInlineModelForm(InlineFormAdmin):
 
         if file_data:
             model.path = secure_filename(file_data.filename)
-            current_app.save_image(file_data, model.path)
+            save_image(file_data, model.path)
 
 
 # Administrative class

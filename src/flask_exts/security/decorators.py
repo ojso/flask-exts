@@ -1,8 +1,8 @@
 from functools import wraps
 from flask import request, jsonify
 from flask_login import current_user
-from ..utils.request_user import UnSupportedAuthType
-from ..utils.authorize import authorize_allow
+from .request_user import UnSupportedAuthType
+from .authorize import authorize_allow
 
 
 def auth_required(func):

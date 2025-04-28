@@ -1,14 +1,19 @@
 from . import db
 from typing import Optional
+from typing import List
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-
+from sqlalchemy import event
+from ..file_op import remove_image
 
 class Location(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
+    images: Mapped[List["LocationImage"]] = relationship(
+        "LocationImage", back_populates="location", cascade="all, delete-orphan"
+    )
 
 
 class ImageType(db.Model):
@@ -33,10 +38,21 @@ class LocationImage(db.Model):
     alt: Mapped[str]
     path: Mapped[str]
 
-    location_id: Mapped[int] = mapped_column(ForeignKey("location.id"))
-    location: Mapped["Location"] = relationship(backref='images')
+    location_id = mapped_column(ForeignKey("location.id"))
+    location: Mapped["Location"] = relationship(back_populates="images")
 
-    image_type_id: Mapped[int] = mapped_column(ForeignKey("image_type.id"))
-    image_type: Mapped["ImageType"] = relationship(backref='images')
+    image_type_id = mapped_column(ForeignKey("image_type.id"))
+    image_type: Mapped["ImageType"] = relationship()
 
 
+
+
+# Register after_delete handler which will delete image file after model gets deleted
+@event.listens_for(Location, "after_delete")
+def _handle_image_delete(mapper, conn, target):
+    for location_image in target.images:
+        try:
+            if location_image.path:
+                remove_image(location_image.path)
+        except:
+            pass

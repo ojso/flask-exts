@@ -9,6 +9,7 @@ from .models.post import Post
 from .models.tree import Tree
 from .models.keyword import Keyword
 from .models.user import MyUser
+from .models.location_image import ImageType
 
 
 def build_user_admin():
@@ -17,6 +18,16 @@ def build_user_admin():
     )
     r, _ = current_usercenter.create_role(name="admin")
     current_usercenter.user_add_role(u, r)
+
+
+def build_sample_image_type():
+
+    # Add some image types for the form_ajax_refs inside the inline_model
+    image_types = ("JPEG", "PNG", "GIF")
+    for image_type in image_types:
+        itype = ImageType(name=image_type)
+        db.session.add(itype)
+    db.session.commit()
 
 
 def build_sample_userkeyword():
@@ -225,5 +236,6 @@ def build_sample_db():
     build_sample_tree()
     build_sample_post()
     build_user_admin()
+    build_sample_image_type()
 
     return

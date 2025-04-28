@@ -2,13 +2,13 @@ import pytest
 import os
 from flask import request, jsonify
 from casbin.persist.adapters import FileAdapter
-from flask_exts.security.authorize.casbin_sqlalchemy_adapter import CasbinRule
+from flask_exts.authorize.casbin_sqlalchemy_adapter import CasbinRule
 from flask_exts.datastore.sqla import db
-from flask_exts.decorators import auth_required
-from flask_exts.decorators import needs_required
+from flask_exts.security.decorators import auth_required
+from flask_exts.security.decorators import needs_required
 from flask_exts.utils.jwt import jwt_encode
 from flask_exts.proxies import current_usercenter
-from flask_exts.security.authorize.casbin_authorizer import casbin_prefix_user
+from flask_exts.authorize.casbin_authorizer import casbin_prefix_user
 
 
 def file_adapter():

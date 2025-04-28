@@ -1,8 +1,12 @@
 from .datastore.sqla import sqldb_init_app
 from .babel import babel_init_app
+from .template.theme import BootstrapTheme
 from .template import template_init_app
-from .security import security_init_app
-from .utils.authorize import authorize_allow
+from .usercenter.sqla_usercenter import SqlaUserCenter
+from .usercenter.memory_usercenter import MemoryUserCenter
+from .authorize import CasbinAuthorizer
+from .security.core import Security
+from .security.authorize import authorize_allow
 from .admin import Admin
 from .views.index_view import IndexView
 from .views.user_view import UserView
@@ -15,6 +19,9 @@ class Manager:
         self.admins = []
         if app is not None:
             self.init_app(app)
+
+    def get_theme(self):
+        return BootstrapTheme()
 
     def init_app(self, app):
         self.app = app
@@ -40,11 +47,23 @@ class Manager:
         if "babel" not in app.extensions:
             babel_init_app(app)
 
-        if "template" not in app.extensions:
-            template_init_app(app)
+        # init template
+        self.theme = self.get_theme()
+        template_init_app(app)
 
-        if "security" not in app.extensions:
-            security_init_app(app)
+        # init usercenter
+        if "SQLALCHEMY_USERCENTER" in app.config:
+            self.usercenter = SqlaUserCenter()
+        else:
+            self.usercenter = MemoryUserCenter()
+
+        # init authorizer
+        self.authorizer = CasbinAuthorizer()
+        self.authorizer.init_app(app)
+
+        # init security
+        self.security = Security()
+        self.security.init_app(app)
 
         # init admins
         self.init_admins(app)

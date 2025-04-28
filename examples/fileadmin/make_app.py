@@ -22,11 +22,5 @@ def init_app(app: Flask):
         # db.drop_all()
         db.create_all()
 
-    # Flask views
-    @app.route("/")
-    def index():
-
-        return '<a href="/admin/">Click me to get to Admin!</a>'
-
-    admin = app.extensions["manager"].admins[0]
+    admin = manager.admins[0]
     admin.add_view(file_view)

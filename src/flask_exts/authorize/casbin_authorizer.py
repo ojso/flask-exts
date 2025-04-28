@@ -1,12 +1,9 @@
-from abc import ABC
-from abc import abstractmethod
 import os.path
 from casbin.model import Model
 from casbin import Enforcer
 
 from .base import BaseAuthorizer
 from .casbin_sqlalchemy_adapter import Adapter as SqlalchemyAdapter
-from ...proxies import current_authorizer
 
 CASBIN_RBAC_MODEL = """
 [request_definition]
@@ -24,10 +21,6 @@ e = some(where (p.eft == allow))
 [matchers]
 m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 """
-
-
-def _authorizer_context_processor():
-    return dict(current_authorizer=current_authorizer)
 
 
 def casbin_prefix_user(user_id):
@@ -59,7 +52,7 @@ class CasbinAuthorizer(BaseAuthorizer):
         if self.app is not None:
             self.init_app(self.app)
 
-    def init_app(self, app, add_context_processor=False):
+    def init_app(self, app, authorizer_context_processor=None):
         self.app = app
         m = Model()
         if app.config.get("CASBIN_MODEL", None) is not None:
@@ -69,8 +62,8 @@ class CasbinAuthorizer(BaseAuthorizer):
             m.load_model_from_text(CASBIN_RBAC_MODEL)
         self.m = m
 
-        if add_context_processor:
-            app.context_processor(_authorizer_context_processor)
+        if authorizer_context_processor:
+            app.context_processor(authorizer_context_processor)
 
     def allow(self, user, obj, act):
         e = self.get_casbin_enforcer()
@@ -84,8 +77,8 @@ class CasbinAuthorizer(BaseAuthorizer):
                 if e.enforce(sub, obj, act):
                     return True
         return False
-    
-    def has_role(self,user,role):
+
+    def has_role(self, user, role):
         e = self.get_casbin_enforcer()
         if hasattr(user, "get_roles"):
             user_roles = user.get_roles()
@@ -93,8 +86,8 @@ class CasbinAuthorizer(BaseAuthorizer):
                 return True
             rm = e.get_role_manager()
             for r in user_roles:
-                sub = casbin_prefix_role(r)                
-                if rm.has_link(sub,casbin_prefix_role(role)):
+                sub = casbin_prefix_role(r)
+                if rm.has_link(sub, casbin_prefix_role(role)):
                     return True
         return False
 

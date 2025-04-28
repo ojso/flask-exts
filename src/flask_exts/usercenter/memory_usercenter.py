@@ -19,27 +19,7 @@ class MemoryUserCenter(BaseUserCenter):
 
     def user_loader(self, user_id):
         return self.get_user_by_id(int(user_id))
-
-    def get_users(self):
-        return self.users
-
-    def get_user_by_id(self, id):
-        u = filter(lambda u: u.id == id, self.users)
-        return next(u, None)
-
-    def get_user_by_uniquifier(self, uniquifier):
-        return super().get_user_by_uniquifier(uniquifier)
-
-    def login_user_by_username_password(self, username, password):
-        filter_username = filter(lambda u: u.username == username, self.users)
-        user = next(filter_username, None)
-        if user is None:
-            return (None, "invalid username")
-        elif not check_password_hash(user.password, password):
-            return (None, "invalid password")
-        else:
-            return (user, None)
-
+    
     def create_user(self, **kwargs):
         username = kwargs.get("username")
         password = kwargs.get("password")
@@ -54,6 +34,28 @@ class MemoryUserCenter(BaseUserCenter):
         u = self.user_class(new_id, username, generate_password_hash(password), email)
         self.users.append(u)
         return (u, None)
+
+    def get_users(self, **kwargs):
+        return self.users
+
+    def get_user_by_id(self, id):
+        u = filter(lambda u: u.id == id, self.users)
+        return next(u, None)
+
+    def get_user_by_uuid(self, uuid):
+        return super().get_user_by_uuid(uuid)
+
+    def login_user_by_username_password(self, username, password):
+        filter_username = filter(lambda u: u.username == username, self.users)
+        user = next(filter_username, None)
+        if user is None:
+            return (None, "invalid username")
+        elif not check_password_hash(user.password, password):
+            return (None, "invalid password")
+        else:
+            return (user, None)
+
+    
 
     def remove_user(self, user_id):
         return NotImplemented

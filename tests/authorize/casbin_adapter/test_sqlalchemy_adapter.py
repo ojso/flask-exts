@@ -1,7 +1,7 @@
 import re
 from flask_exts.datastore.sqla import db
-from flask_exts.security.authorize.casbin_sqlalchemy_adapter import CasbinRule
-from flask_exts.security.authorize.casbin_sqlalchemy_adapter import Filter
+from flask_exts.authorize.casbin_sqlalchemy_adapter import CasbinRule
+from flask_exts.authorize.casbin_sqlalchemy_adapter import Filter
 from flask_exts.proxies import current_authorizer
 
 
