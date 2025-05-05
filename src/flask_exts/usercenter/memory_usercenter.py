@@ -19,7 +19,7 @@ class MemoryUserCenter(BaseUserCenter):
 
     def user_loader(self, user_id):
         return self.get_user_by_id(int(user_id))
-    
+
     def create_user(self, **kwargs):
         username = kwargs.get("username")
         password = kwargs.get("password")
@@ -42,6 +42,12 @@ class MemoryUserCenter(BaseUserCenter):
         u = filter(lambda u: u.id == id, self.users)
         return next(u, None)
 
+    def get_user_by_identity(self, identity_id, identity_name=None):
+        if identity_name is None:
+            identity_name = self.identity_id
+        u = filter(lambda u: getattr(u, identity_name) == identity_id, self.users)
+        return next(u, None)
+
     def get_user_by_uuid(self, uuid):
         return super().get_user_by_uuid(uuid)
 
@@ -54,8 +60,6 @@ class MemoryUserCenter(BaseUserCenter):
             return (None, "invalid password")
         else:
             return (user, None)
-
-    
 
     def remove_user(self, user_id):
         return NotImplemented

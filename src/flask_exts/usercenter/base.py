@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class BaseUserCenter(ABC):
+    identity_id = "id"
     login_view = "user.login"
 
     @abstractmethod
@@ -17,4 +18,4 @@ class BaseUserCenter(ABC):
     def get_user_by_id(self, id): ...
 
     @abstractmethod
-    def get_user_by_uuid(self, uuid): ...
+    def get_user_by_identity(self, identity_id, identity_name=None): ...

@@ -54,6 +54,13 @@ class SqlaUserCenter(BaseUserCenter):
         user = db.session.get(self.user_class, id)
         return user
 
+    def get_user_by_identity(self, identity_id, identity_name=None):
+        if identity_name is None:
+            identity_name = self.identity_id
+        stmt = select(self.user_class).filter_by(**{identity_name: identity_id})
+        user = db.session.execute(stmt).scalar()
+        return user
+
     def get_user_by_uuid(self, uuid):
         stmt = select(self.user_class).filter_by(uuid=uuid)
         user = db.session.execute(stmt).scalar()
