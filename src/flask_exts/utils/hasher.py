@@ -2,9 +2,9 @@ from hashlib import blake2b
 from hmac import compare_digest
 
 
-class HashContext:
+class Blake2bHasher:
     """
-    Hash context for password hashing and verification.
+    Hash context for string hashing and verification.
     """
 
     digest_size = 16

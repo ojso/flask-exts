@@ -23,6 +23,7 @@ class UserView(BaseView):
     list_template = "views/user/list.html"
     login_template = "views/user/login.html"
     register_template = "views/user/register.html"
+    email_verify_template = "views/user/email_verify.html"
 
     def __init__(
         self,
@@ -90,9 +91,9 @@ class UserView(BaseView):
                 # form.username.errors.append(error)
             else:
                 if hasattr(form, "remember_me"):
-                    login_user(user, remember=form.remember_me.data)
+                    login_user(user, force=True, remember=form.remember_me.data)
                 else:
-                    login_user(user)
+                    login_user(user, force=True)
                 next_page = request.args.get("next")
                 if not next_page:
                     next_page = url_for(".index")
@@ -109,7 +110,7 @@ class UserView(BaseView):
             if user is None:
                 flash(error)
             else:
-                login_user(user)
+                login_user(user, force=True)
                 return redirect(url_for(".index"))
 
         return self.render(self.register_template, form=form)
@@ -118,3 +119,7 @@ class UserView(BaseView):
     def logout(self):
         logout_user()
         return redirect(url_for("index.index"))
+
+    @expose("/email_verify/")
+    def email_verify(self):
+        return self.render(self.email_verify_template)

@@ -4,8 +4,8 @@ from flask import request, jsonify
 from casbin.persist.adapters import FileAdapter
 from flask_exts.authorize.casbin_sqlalchemy_adapter import CasbinRule
 from flask_exts.datastore.sqla import db
-from flask_exts.security.decorators import auth_required
-from flask_exts.security.decorators import needs_required
+from flask_exts.utils.decorators import auth_required
+from flask_exts.utils.decorators import needs_required
 from flask_exts.utils.jwt import jwt_encode
 from flask_exts.proxies import current_usercenter
 from flask_exts.authorize.casbin_authorizer import casbin_prefix_user
@@ -125,6 +125,7 @@ def test_enforcer(app, client, username, method, status, status_read, status_wri
     with app.app_context():
         u = current_usercenter.get_user_by_username(username)
         token = jwt_encode({"id": u.id})
+        print(token)
     headers = {"Authorization": "Bearer " + token}
     rv = client.get("/a")
     # print(rv.get_data(as_text=True))

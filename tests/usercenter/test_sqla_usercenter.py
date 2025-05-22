@@ -28,7 +28,7 @@ class TestSqlaUserCenter:
             assert u3.id == 1
             assert u3.username == "u1"
 
-            uc.identity_id = "username"
+            uc.identity_name = "username"
             u4 = uc.get_user_by_identity("u1")
             assert u4.id == 1
             assert u4.username == "u1"

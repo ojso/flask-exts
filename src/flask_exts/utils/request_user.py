@@ -1,5 +1,5 @@
-from ..utils.jwt import jwt_decode
-from ..utils.jwt import UnSupportedAuthType
+from .jwt import jwt_decode
+from .jwt import UnSupportedAuthType
 from ..proxies import current_usercenter
 
 
@@ -53,11 +53,11 @@ def load_user_from_request(request):
                 user = current_usercenter.get_user_by_id(int(payload["id"]))
                 if user:
                     return user
-            if "uuid" in payload and payload["uuid"] is not None:
-                user = current_usercenter.get_user_by_uuid(payload["uuid"])
+            identity = payload.get(current_usercenter.identity_name)
+            if identity is not None:
+                user = current_usercenter.get_user_by_identity(identity)
                 if user:
                     return user
-
     # add other methods to get user
 
     # finally, return None if both methods did not login the user

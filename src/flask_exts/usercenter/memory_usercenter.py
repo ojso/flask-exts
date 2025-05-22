@@ -44,7 +44,7 @@ class MemoryUserCenter(BaseUserCenter):
 
     def get_user_by_identity(self, identity_id, identity_name=None):
         if identity_name is None:
-            identity_name = self.identity_id
+            identity_name = self.identity_name
         u = filter(lambda u: getattr(u, identity_name) == identity_id, self.users)
         return next(u, None)
 

@@ -56,7 +56,7 @@ class SqlaUserCenter(BaseUserCenter):
 
     def get_user_by_identity(self, identity_id, identity_name=None):
         if identity_name is None:
-            identity_name = self.identity_id
+            identity_name = self.identity_name
         stmt = select(self.user_class).filter_by(**{identity_name: identity_id})
         user = db.session.execute(stmt).scalar()
         return user
@@ -93,3 +93,6 @@ class SqlaUserCenter(BaseUserCenter):
 
     def remove_user(self, user_id):
         return NotImplemented
+
+    def get_user_identity(self, user):
+        return getattr(user, self.identity_name)

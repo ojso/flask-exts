@@ -1,12 +1,13 @@
+from flask_login import LoginManager
 from .datastore.sqla import sqldb_init_app
 from .babel import babel_init_app
 from .template.theme import BootstrapTheme
 from .template import template_init_app
 from .usercenter.sqla_usercenter import SqlaUserCenter
-from .usercenter.memory_usercenter import MemoryUserCenter
 from .authorize import CasbinAuthorizer
+from .utils.request_user import load_user_from_request
 from .security.core import Security
-from .security.authorize import authorize_allow
+from .utils.authorize import authorize_allow
 from .admin import Admin
 from .views.index_view import IndexView
 from .views.user_view import UserView
@@ -37,8 +38,6 @@ class Manager:
         # config extends
         if app.config.get("SQLALCHEMY_DATABASE_URI", None) is None:
             app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-        else:
-            app.config["SQLALCHEMY_USERCENTER"] = True
 
         # init db
         if "sqlalchemy" not in app.extensions:
@@ -52,10 +51,16 @@ class Manager:
         template_init_app(app)
 
         # init usercenter
-        if "SQLALCHEMY_USERCENTER" in app.config:
-            self.usercenter = SqlaUserCenter()
-        else:
-            self.usercenter = MemoryUserCenter()
+        self.usercenter = SqlaUserCenter()
+
+        # login
+        if not hasattr(app, "login_manager"):
+            login_manager = LoginManager()
+            login_manager.init_app(app)
+            login_manager.login_view = self.usercenter.login_view
+            # login_manager.login_message = "Please login in"
+            login_manager.user_loader(self.usercenter.user_loader)
+            login_manager.request_loader(load_user_from_request)
 
         # init authorizer
         self.authorizer = CasbinAuthorizer()

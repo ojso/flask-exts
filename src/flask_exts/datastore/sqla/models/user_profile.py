@@ -14,8 +14,6 @@ class UserProfile(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), unique=True)
     name: Mapped[Optional[str]]
     identity: Mapped[Optional[str]] = mapped_column(unique=True)
-    nickname: Mapped[Optional[str]]
-    avatar: Mapped[Optional[str]]
     locale: Mapped[Optional[str]]
     timezone: Mapped[Optional[str]]
     # 2FA
@@ -28,4 +26,4 @@ class UserProfile(db.Model):
         default=datetime.now, onupdate=datetime.now
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="profile")
+    user: Mapped["User"] = relationship("User", back_populates="profile") # type: ignore

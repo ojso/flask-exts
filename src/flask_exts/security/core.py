@@ -2,9 +2,7 @@ import typing as t
 from datetime import timedelta
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous import BadSignature, SignatureExpired
-from flask_login import LoginManager
-from .request_user import load_user_from_request
-from .hash_context import HashContext
+from ..utils.hasher import Blake2bHasher
 
 class Security:
     def __init__(
@@ -25,23 +23,8 @@ class Security:
     ):
         self.app = app
 
-        # usercenter
-        self.usercenter = app.extensions["manager"].usercenter
-
-        # authorizer
-        self.authorizer = app.extensions["manager"].authorizer
-
-        # login
-        if not hasattr(app, "login_manager"):
-            login_manager = LoginManager()
-            login_manager.init_app(app)
-            login_manager.login_view = self.usercenter.login_view
-            # login_manager.login_message = "Please login in"
-            login_manager.user_loader(self.usercenter.user_loader)
-            login_manager.request_loader(load_user_from_request)
-
-        # hash context
-        self.hash_context = HashContext(app.config.get("SECRET_KEY"))
+        # hasher
+        self.hasher = Blake2bHasher(app.config.get("SECRET_KEY"))
         
         # serializer
         self.remember_token_serializer = self.get_serializer("remember")
@@ -78,3 +61,5 @@ class Security:
             invalid = True
 
         return expired, invalid, data
+
+

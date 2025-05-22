@@ -14,7 +14,6 @@ def test_extensions(app):
     assert manager.usercenter is not None
     assert manager.security is not None
 
-def _test_prints(app):
-    # print_blueprints(app)
-    # print_routes(app)
-    pass
+def test_prints(app):
+    print_blueprints(app)
+    print_routes(app)
