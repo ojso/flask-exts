@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseUserCenter(ABC):
+class UserCenter(ABC):
     identity_name = "id"
     login_view = "user.login"
 
@@ -22,3 +22,6 @@ class BaseUserCenter(ABC):
 
     @abstractmethod
     def get_user_identity(self, user): ...
+
+    @abstractmethod
+    def save_user(self, user): ...

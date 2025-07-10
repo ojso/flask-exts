@@ -5,19 +5,19 @@ from werkzeug.local import LocalProxy
 
 if t.TYPE_CHECKING:
     from .manager import Manager
-    from .usercenter.base import BaseUserCenter
+    from .usercenter.base import UserCenter
     from .security.core import Security
-    from .authorize.base import BaseAuthorizer
+    from .security.authorizer.base import Authorizer
 
 
 _manager: "Manager" = LocalProxy(lambda: current_app.extensions["manager"])
 
-current_theme = LocalProxy(lambda: _manager.theme)
+_theme = LocalProxy(lambda: _manager.theme)
 
-current_usercenter: "BaseUserCenter" = LocalProxy(lambda: _manager.usercenter)
-
-current_authorizer: "BaseAuthorizer" = LocalProxy(lambda: _manager.authorizer)
+_usercenter: "UserCenter" = LocalProxy(lambda: _manager.usercenter)
 
 _security: "Security" = LocalProxy(lambda: _manager.security)
 
-current_admin = LocalProxy(lambda: _manager.admins[0])
+_authorizer: "Authorizer" = LocalProxy(lambda: _manager.security.authorizer)
+
+_admin = LocalProxy(lambda: _manager.admins[0])

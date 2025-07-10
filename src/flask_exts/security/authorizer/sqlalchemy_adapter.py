@@ -41,7 +41,7 @@ class Filter:
     v5 = []
 
 
-class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
+class SqlalchemyAdapter(persist.Adapter, persist.adapters.UpdateAdapter):
     """the interface for Casbin adapters."""
 
     def __init__(self, filtered=False):

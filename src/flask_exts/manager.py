@@ -1,10 +1,9 @@
 from flask_login import LoginManager
-from .datastore.sqla import sqldb_init_app
+from .datastore.sqla import db
 from .babel import babel_init_app
 from .template.theme import BootstrapTheme
 from .template import template_init_app
 from .usercenter.sqla_usercenter import SqlaUserCenter
-from .authorize import CasbinAuthorizer
 from .utils.request_user import load_user_from_request
 from .security.core import Security
 from .utils.authorize import authorize_allow
@@ -35,14 +34,14 @@ class Manager:
 
         app.extensions["manager"] = self
 
-        # config extends
+        # init sqlalchemy db
         if app.config.get("SQLALCHEMY_DATABASE_URI", None) is None:
             app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 
-        # init db
         if "sqlalchemy" not in app.extensions:
-            sqldb_init_app(app)
+            db.init_app(app)
 
+        # init babel
         if "babel" not in app.extensions:
             babel_init_app(app)
 
@@ -61,10 +60,6 @@ class Manager:
             # login_manager.login_message = "Please login in"
             login_manager.user_loader(self.usercenter.user_loader)
             login_manager.request_loader(load_user_from_request)
-
-        # init authorizer
-        self.authorizer = CasbinAuthorizer()
-        self.authorizer.init_app(app)
 
         # init security
         self.security = Security()

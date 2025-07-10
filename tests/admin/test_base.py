@@ -6,8 +6,8 @@ from flask_exts.admin import BaseView
 from flask_exts.admin import Admin
 from flask_exts.admin.menu import MenuLink
 
-from ..funcs import print_app_endpoint_rule
-from ..funcs import get_app_endpoint_rule
+from ..utils import print_app_endpoint_rule
+from ..utils import get_app_endpoint_rule
 
 
 class MockView(BaseView):

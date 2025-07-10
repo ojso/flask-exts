@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseAuthorizer(ABC):
+class Authorizer(ABC):
     root_rolename = "admin"
     root_roleid = None
 

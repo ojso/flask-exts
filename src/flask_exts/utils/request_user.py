@@ -1,6 +1,6 @@
 from .jwt import jwt_decode
 from .jwt import UnSupportedAuthType
-from ..proxies import current_usercenter
+from ..proxies import _usercenter
 
 
 def authorization_decoder(auth_str: str):
@@ -50,12 +50,12 @@ def load_user_from_request(request):
         payload = authorization_decoder(auth_str)
         if isinstance(payload, dict):
             if "id" in payload and payload["id"] is not None:
-                user = current_usercenter.get_user_by_id(int(payload["id"]))
+                user = _usercenter.get_user_by_id(int(payload["id"]))
                 if user:
                     return user
-            identity = payload.get(current_usercenter.identity_name)
+            identity = payload.get(_usercenter.identity_name)
             if identity is not None:
-                user = current_usercenter.get_user_by_identity(identity)
+                user = _usercenter.get_user_by_identity(identity)
                 if user:
                     return user
     # add other methods to get user

@@ -2,8 +2,8 @@ import os.path
 from casbin.model import Model
 from casbin import Enforcer
 
-from .base import BaseAuthorizer
-from .casbin_sqlalchemy_adapter import Adapter as SqlalchemyAdapter
+from .base import Authorizer
+from .sqlalchemy_adapter import SqlalchemyAdapter
 
 CASBIN_RBAC_MODEL = """
 [request_definition]
@@ -31,7 +31,7 @@ def casbin_prefix_role(role_name):
     return f"role:{role_name}"
 
 
-class CasbinAuthorizer(BaseAuthorizer):
+class CasbinAuthorizer(Authorizer):
     """
     Casbin Enforce decorator
     """

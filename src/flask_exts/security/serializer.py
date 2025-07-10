@@ -1,5 +1,4 @@
 import typing as t
-from datetime import timedelta
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous import BadSignature, SignatureExpired
 
@@ -43,7 +42,7 @@ class TimedUrlSerializer:
         try:
             data = s.loads(token, max_age=max_age)
         except SignatureExpired:
-            d, data = s.loads_unsafe(token)
+            _, data = s.loads_unsafe(token)
             expired = True
         except (BadSignature, TypeError, ValueError):
             invalid = True

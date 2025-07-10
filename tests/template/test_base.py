@@ -1,10 +1,10 @@
-from flask_exts.proxies import current_theme
+from flask_exts.proxies import _theme
 
 
 class TestBase:
     def test_default(self, app):
         with app.test_request_context():
-            theme = current_theme
+            theme = _theme
             # print(theme)
             assert theme.bootstrap.version == 4
             css = theme.load_css()

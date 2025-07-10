@@ -1,6 +1,6 @@
 import random
 import datetime
-from flask_exts.proxies import current_usercenter
+from flask_exts.proxies import _usercenter
 from .models import db
 from .models.author import Author
 from .models.author import AVAILABLE_USER_TYPES
@@ -13,11 +13,11 @@ from .models.location_image import ImageType
 
 
 def build_user_admin():
-    u, _ = current_usercenter.create_user(
+    u, _ = _usercenter.create_user(
         username="admin", password="admin", email="admin@example.com"
     )
-    r, _ = current_usercenter.create_role(name="admin")
-    current_usercenter.user_add_role(u, r)
+    r, _ = _usercenter.create_role(name="admin")
+    _usercenter.user_add_role(u, r)
 
 
 def build_sample_image_type():

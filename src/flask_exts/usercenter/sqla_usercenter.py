@@ -1,12 +1,12 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import select
-from .base import BaseUserCenter
+from .base import UserCenter
 from ..datastore.sqla import db
 from ..datastore.sqla.models.user import User
 from ..datastore.sqla.models.user import Role
 
 
-class SqlaUserCenter(BaseUserCenter):
+class SqlaUserCenter(UserCenter):
     user_class = User
     role_class = Role
 
@@ -96,3 +96,8 @@ class SqlaUserCenter(BaseUserCenter):
 
     def get_user_identity(self, user):
         return getattr(user, self.identity_name)
+
+    def save_user(self, user):
+        if user.id is not None:
+            db.session.add(user)
+        db.session.commit()

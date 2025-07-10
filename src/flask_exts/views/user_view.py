@@ -11,7 +11,8 @@ from ..admin import BaseView
 from ..admin import expose
 from ..forms.login import LoginForm
 from ..forms.register import RegisterForm
-from ..proxies import current_usercenter
+from ..proxies import _usercenter
+from ..proxies import _security
 
 
 class UserView(BaseView):
@@ -58,16 +59,16 @@ class UserView(BaseView):
         return RegisterForm
 
     def get_users(self):
-        return current_usercenter.get_users()
+        return _usercenter.get_users()
 
     def validate_login_and_get_user(self, form):
-        user, error = current_usercenter.login_user_by_username_password(
+        user, error = _usercenter.login_user_by_username_password(
             form.username.data, form.password.data
         )
         return user, error
 
     def validate_register_and_create_user(self, form):
-        user, error = current_usercenter.create_user(
+        user, error = _usercenter.create_user(
             username=form.username.data,
             password=form.password.data,
             email=form.email.data,
@@ -119,6 +120,14 @@ class UserView(BaseView):
     def logout(self):
         logout_user()
         return redirect(url_for("index.index"))
+
+    @expose("/confirm_email/")
+    def confirm_email(self):
+        return self.render(self.email_verify_template)
+    
+    @expose("/confirm_error/")
+    def confirm_error(self):
+        return self.render(self.email_verify_template)
 
     @expose("/email_verify/")
     def email_verify(self):

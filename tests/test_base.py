@@ -1,5 +1,5 @@
-from .funcs import print_blueprints
-from .funcs import print_routes
+from .utils import print_blueprints
+from .utils import print_routes
 
 
 def test_extensions(app):

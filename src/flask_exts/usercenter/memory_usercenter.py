@@ -1,6 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from .base import BaseUserCenter
+from .base import UserCenter
 
 
 class User(UserMixin):
@@ -11,7 +11,7 @@ class User(UserMixin):
         self.email = email
 
 
-class MemoryUserCenter(BaseUserCenter):
+class MemoryUserCenter(UserCenter):
     user_class = User
 
     def __init__(self):
@@ -63,3 +63,6 @@ class MemoryUserCenter(BaseUserCenter):
 
     def remove_user(self, user_id):
         return NotImplemented
+
+    def save_user(self, user):
+        return super().save_user(user)

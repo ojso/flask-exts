@@ -5,7 +5,7 @@ from flask_exts.datastore.sqla import db
 from flask_exts.utils.jwt import jwt_encode
 from flask_exts.utils.request_user import authorization_decoder
 from flask_exts.utils.request_user import UnSupportedAuthType
-from flask_exts.proxies import current_usercenter
+from flask_exts.proxies import _usercenter
 
 
 @pytest.mark.parametrize(
@@ -65,7 +65,7 @@ def test_request_user(app, username, password, email):
     with app.app_context():
         db.drop_all()
         db.create_all()
-        user, msg = current_usercenter.create_user(
+        user, msg = _usercenter.create_user(
             username=username,
             password=password,
             email=email,
