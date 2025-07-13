@@ -1,7 +1,7 @@
 import pytest
 from wtforms import BooleanField, PasswordField, StringField, SubmitField, HiddenField
 from wtforms.validators import DataRequired, Length
-from flask_exts.exforms.form import FlaskForm
+from flask_exts.template.form.flask_form import FlaskForm
 
 
 class HelloForm(FlaskForm):

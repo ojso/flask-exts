@@ -1,8 +1,8 @@
 from wtforms.form import Form
 from wtforms.fields import StringField
 from wtforms.fields import FieldList
-from flask_exts.exforms.fields import JSONField
-from flask_exts.exforms.fields import DateTimePickerField
+from flask_exts.template.fields import JSONField
+from flask_exts.template.fields import DateTimePickerField
 
 
 class DummyPostData(dict):

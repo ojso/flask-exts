@@ -5,6 +5,7 @@ from werkzeug.local import LocalProxy
 
 if t.TYPE_CHECKING:
     from .manager import Manager
+    from .template.base import Template
     from .usercenter.base import UserCenter
     from .security.core import Security
     from .security.authorizer.base import Authorizer
@@ -12,7 +13,7 @@ if t.TYPE_CHECKING:
 
 _manager: "Manager" = LocalProxy(lambda: current_app.extensions["manager"])
 
-_theme = LocalProxy(lambda: _manager.theme)
+_template: "Template" = LocalProxy(lambda: _manager.template)
 
 _usercenter: "UserCenter" = LocalProxy(lambda: _manager.usercenter)
 

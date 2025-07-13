@@ -3,7 +3,7 @@ from wtforms import PasswordField
 from wtforms import BooleanField
 from wtforms import SubmitField
 from wtforms.validators import DataRequired
-from ..exforms import FlaskForm
+from ..template.form.flask_form import FlaskForm
 
 
 class LoginForm(FlaskForm):

@@ -1,8 +1,7 @@
 from flask_login import LoginManager
 from .datastore.sqla import db
 from .babel import babel_init_app
-from .template.theme import BootstrapTheme
-from .template import template_init_app
+from .template.base import Template
 from .usercenter.sqla_usercenter import SqlaUserCenter
 from .utils.request_user import load_user_from_request
 from .security.core import Security
@@ -20,8 +19,8 @@ class Manager:
         if app is not None:
             self.init_app(app)
 
-    def get_theme(self):
-        return BootstrapTheme()
+    def get_template(self):
+        return Template()
 
     def init_app(self, app):
         self.app = app
@@ -46,8 +45,8 @@ class Manager:
             babel_init_app(app)
 
         # init template
-        self.theme = self.get_theme()
-        template_init_app(app)
+        self.template = self.get_template()
+        self.template.init_app(app)
 
         # init usercenter
         self.usercenter = SqlaUserCenter()

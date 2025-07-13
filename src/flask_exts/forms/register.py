@@ -4,7 +4,7 @@ from wtforms import SubmitField
 from wtforms.validators import DataRequired
 from wtforms.validators import EqualTo
 from wtforms.validators import Length
-from ..exforms import FlaskForm
+from ..template.form.flask_form import FlaskForm
 
 
 class RegisterForm(FlaskForm):

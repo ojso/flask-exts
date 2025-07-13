@@ -9,8 +9,7 @@ from flask_babel import get_locale
 
 # from .session_csrf import SessionCSRF
 from .csrf import FlaskFormCSRF
-from ..utils import is_form_submitted
-from ..utils import get_form_data
+from .utils import get_form_data
 
 
 CSRF_ENABLED = True
@@ -38,9 +37,6 @@ class FlaskMeta(DefaultMeta):
     @cached_property
     def csrf_time_limit(self):
         return current_app.config.get("CSRF_TIME_LIMIT", CSRF_TIME_LIMIT)
-
-    def is_form_submitted(self):
-        return is_form_submitted()
 
     def wrap_formdata(self, form, formdata):
         if formdata is None:

@@ -1,9 +1,5 @@
-from flask import g
-from flask import current_app
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, InputRequired
-from ..exforms.form import FlaskForm
-
 
 def type_name(item):
     return type(item).__name__
@@ -37,15 +33,3 @@ def get_table_titles(data, primary_key, primary_key_title):
     titles[0] = (primary_key, primary_key_title)
     return titles
 
-
-def generate_csrf():
-    csrf_field_name = current_app.config.get("CSRF_FIELD_NAME", "csrf_token")
-    if csrf_field_name not in g:
-
-        class F(FlaskForm):
-            pass
-
-        # F() will auto generate g.csrf_token
-        F()
-
-    return g.get(csrf_field_name)

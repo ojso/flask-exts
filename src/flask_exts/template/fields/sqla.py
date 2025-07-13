@@ -6,8 +6,8 @@ from wtforms.utils import unset_value
 from wtforms.validators import ValidationError
 from ...utils.sqla import get_primary_key
 from .inline import InlineFieldList, InlineModelFormField
-from ..form import BaseForm
-from .. import FormOpts
+from ..form.base_form import BaseForm
+from ..form.form_opts import FormOpts
 from ..widgets.select import Select2Widget
 from ..widgets.checkbox import CheckboxListInput
 

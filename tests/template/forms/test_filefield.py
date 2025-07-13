@@ -3,7 +3,7 @@ from wtforms.fields import FileField
 from wtforms.fields import MultipleFileField
 from wtforms.form import Form
 from werkzeug.datastructures import FileStorage
-from flask_exts.exforms.form import FlaskForm
+from flask_exts.template.form.flask_form import FlaskForm
 
 
 class F(Form):

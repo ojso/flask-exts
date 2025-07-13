@@ -1,5 +1,5 @@
 from wtforms import Form
-from ..utils import is_form_submitted
+from .utils import is_form_submitted
 
 class BaseForm(Form):
     """Flask-specific subclass of WTForms :class:`~wtforms.form.Form`.
