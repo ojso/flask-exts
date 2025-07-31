@@ -172,7 +172,6 @@ class BaseFileView(BaseView, ActionsMixin):
         menu_icon_type=None,
         menu_icon_value=None,
         storage=None,
-        skip_check_auth=True,
     ):
         """
         Constructor.
@@ -207,8 +206,10 @@ class BaseFileView(BaseView, ActionsMixin):
             menu_class_name=menu_class_name,
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
-            skip_check_auth=skip_check_auth,
         )
+
+    def allow(self, *args, **kwargs):
+        return True
 
     def is_accessible_path(self, path):
         """

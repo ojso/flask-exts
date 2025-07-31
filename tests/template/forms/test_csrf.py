@@ -9,7 +9,7 @@ class F(FlaskForm):
     name = StringField(validators=[DataRequired()])
 
 
-def test_flask_form(app):
+def test_csrf_form(app):
     with app.test_request_context():
         assert g.get("csrf_token") is None
         form = F()
@@ -25,12 +25,13 @@ def test_flask_form(app):
         assert form.validate()
 
 
-def test_flask_form_nocsrf(app):
+def test_nocsrf_form(app):
     app.config.update(CSRF_ENABLED=False)
     with app.test_request_context():
         form = F()
         assert "name" in form
         assert "csrf_token" not in form
+        assert g.get("csrf_token") is None
         data = {"name": "test"}
         form.process(data=data)
         assert form.name.data == "test"

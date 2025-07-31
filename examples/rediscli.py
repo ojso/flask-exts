@@ -5,7 +5,7 @@ from flask_exts.views.rediscli_view import RedisCli
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev"
-app.config["ADMIN_ACCESS_ENABLED"] =False
+
 # Manager init
 manager = Manager()
 manager.init_app(app)

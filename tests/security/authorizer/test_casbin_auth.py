@@ -129,7 +129,7 @@ def test_enforcer(app, client, username, method, status, status_read, status_wri
     headers = {"Authorization": "Bearer " + token}
     rv = client.get("/a")
     
-    # print(rv.get_data(as_text=True))
+    # print(rv.text)
     # print(rv.status_code)
     assert rv.status_code == 401
     caller = getattr(client, method.lower())

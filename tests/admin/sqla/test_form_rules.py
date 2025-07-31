@@ -15,12 +15,10 @@ def test_form_rules(app, client, admin):
         rv = client.get("/admin/model1/new/")
         assert rv.status_code == 200
 
-        # data = rv.data.decode('utf-8')
-        data = rv.text
-        pos1 = data.find("Test1")
-        pos2 = data.find("Test2")
-        pos3 = data.find("Test3")
-        pos4 = data.find("Test4")
+        pos1 = rv.text.find("Test1")
+        pos2 = rv.text.find("Test2")
+        pos3 = rv.text.find("Test3")
+        pos4 = rv.text.find("Test4")
         assert pos1 > pos2
         assert pos4 > pos1
         assert pos3 == -1
@@ -35,9 +33,7 @@ def test_rule_header(app, client, admin):
 
         rv = client.get("/admin/model1/new/")
         assert rv.status_code == 200
-
-        data = rv.data.decode("utf-8")
-        assert "<h3>hello</h3>" in data
+        assert "<h3>hello</h3>" in rv.text
 
 
 def test_rule_field_set(app, client, admin):
@@ -52,12 +48,11 @@ def test_rule_field_set(app, client, admin):
         rv = client.get("/admin/model1/new/")
         assert rv.status_code == 200
 
-        data = rv.data.decode("utf-8")
-        assert "<h3>header</h3>" in data
-        pos1 = data.find("Test1")
-        pos2 = data.find("Test2")
-        pos3 = data.find("Test3")
-        pos4 = data.find("Test4")
+        assert "<h3>header</h3>" in rv.text
+        pos1 = rv.text.find("Test1")
+        pos2 = rv.text.find("Test2")
+        pos3 = rv.text.find("Test3")
+        pos4 = rv.text.find("Test4")
         assert pos1 > pos2
         assert pos4 > pos1
         assert pos3 == -1
@@ -88,6 +83,4 @@ def test_inline_model_rules(app, client, admin):
 
         rv = client.get("/admin/model1/new/")
         assert rv.status_code == 200
-
-        data = rv.data.decode("utf-8")
-        assert "int_field" not in data
+        assert "int_field" not in rv.text

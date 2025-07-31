@@ -5,7 +5,7 @@ from .utils import type_name
 from .utils import is_hidden_field
 from .utils import is_required_form_field
 from .utils import get_table_titles
-from .form.utils import generate_csrf
+from .form.csrf import get_or_generate_csrf_token as csrf_token
 
 
 class Template:
@@ -27,7 +27,7 @@ class Template:
         app.jinja_env.globals["is_hidden_field"] = is_hidden_field
         app.jinja_env.globals["is_required_form_field"] = is_required_form_field
         app.jinja_env.globals["get_table_titles"] = get_table_titles
-        app.jinja_env.globals["csrf_token"] = generate_csrf
+        app.jinja_env.globals["csrf_token"] = csrf_token
 
     def get_theme(self):
         return BootstrapTheme()

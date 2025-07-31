@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from typing import List
 import uuid
-from flask_login import UserMixin
+from ....usercenter.base_user import BaseUser
 from .. import db
 from ..orm import Mapped
 from ..orm import mapped_column
@@ -21,7 +21,7 @@ user_role_table = Table(
 )
 
 
-class User(db.Model, UserMixin):
+class User(db.Model, BaseUser):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -9,7 +9,7 @@ def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "dev"
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    app.config["ADMIN_ACCESS_ENABLED"] = False
+
     init_app(app)
     return app
 

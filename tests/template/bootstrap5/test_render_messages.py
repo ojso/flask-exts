@@ -12,6 +12,5 @@ def test_render_messages(app, client):
             """
         )
 
-    response = client.get("/messages")
-    data = response.get_data(as_text=True)
-    assert 'class="btn-close" data-bs-dismiss="alert" aria-label="Close">' in data
+    rv = client.get("/messages")
+    assert 'class="btn-close" data-bs-dismiss="alert" aria-label="Close">' in rv.text

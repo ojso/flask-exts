@@ -2,6 +2,11 @@ import os.path as op
 from flask import Flask
 from flask_exts import Manager
 
+class MyManager(Manager):
+    def get_admin_class(self):
+        from flask_exts.admin.admin import Admin
+        return Admin
+
 
 def get_sqlite_path():
     app_dir = op.realpath(op.dirname(__file__))
@@ -21,14 +26,14 @@ def create_app():
     # JWT
     app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
     app.config["JWT_HASH"] = "HS256"
-    # app.config["ADMIN_ACCESS_ENABLED"] = False
+
     init_app(app)
 
     return app
 
 
 def init_app(app: Flask):
-    manager = Manager()
+    manager = MyManager()
     manager.init_app(app)
 
     from .models import init_models

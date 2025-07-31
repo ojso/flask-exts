@@ -20,13 +20,12 @@ def test_switch_field(app, client):
             form=form,
         )
 
-    response = client.get("/switch")
-    data = response.get_data(as_text=True)
-    assert "Remember me" in data
-    assert "form-check form-switch" in data
-    assert 'role="switch"' in data
+    rv = client.get("/switch")
+    assert "Remember me" in rv.text
+    assert "form-check form-switch" in rv.text
+    assert 'role="switch"' in rv.text
     assert (
-        '<small class="form-text text-body-secondary">Just check this</small>' in data
+        '<small class="form-text text-body-secondary">Just check this</small>' in rv.text
     )
 
 
@@ -48,11 +47,10 @@ def test_range_fields(app, client):
             form=form,
         )
 
-    response = client.get("/range")
-    data = response.get_data(as_text=True)
-    assert "Decimal Slider" in data
-    assert "Integer Slider" in data
-    assert "form-range" in data
+    rv = client.get("/range")
+    assert "Decimal Slider" in rv.text
+    assert "Integer Slider" in rv.text
+    assert "form-range" in rv.text
 
 
 def test_form_group_class(app, client, hello_form):
@@ -78,13 +76,12 @@ def test_form_group_class(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/default")
-    data = response.get_data(as_text=True)
-    assert '<div class="mb-3' in data
-    response = client.get("/custom")
-    data = response.get_data(as_text=True)
-    assert '<div class="mb-3' not in data
-    assert '<div class="mb-2' in data
+    rv = client.get("/default")
+    assert '<div class="mb-3' in rv.text
+
+    rv = client.get("/custom")
+    assert '<div class="mb-3' not in rv.text
+    assert '<div class="mb-2' in rv.text
 
 
 def test_form_group_class_config(app, client, hello_form):
@@ -99,9 +96,8 @@ def test_form_group_class_config(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/config")
-    data = response.get_data(as_text=True)
-    assert '<div class="mb-3' in data
+    rv = client.get("/config")
+    assert '<div class="mb-3' in rv.text
 
 
 
@@ -128,17 +124,16 @@ def test_form_inline_classes(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/default")
-    data = response.get_data(as_text=True)
-    assert '<div class="mb-3' not in data
-    assert '<div class="col-12' in data
-    assert "row row-cols-lg-auto g-3 align-items-center" in data
-    assert '<label class="sr-only' not in data
-    assert '<label class="visually-hidden' in data
-    response = client.get("/custom")
-    data = response.get_data(as_text=True)
-    assert "row row-cols-lg-auto g-3 align-items-center" not in data
-    assert "custom-inline-classes" in data
+    rv = client.get("/default")
+    assert '<div class="mb-3' not in rv.text
+    assert '<div class="col-12' in rv.text
+    assert "row row-cols-lg-auto g-3 align-items-center" in rv.text
+    assert '<label class="sr-only' not in rv.text
+    assert '<label class="visually-hidden' in rv.text
+
+    rv = client.get("/custom")
+    assert "row row-cols-lg-auto g-3 align-items-center" not in rv.text
+    assert "custom-inline-classes" in rv.text
 
 
 def test_form_inline_classes_config(app, client, hello_form):
@@ -153,6 +148,5 @@ def test_form_inline_classes_config(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/config")
-    data = response.get_data(as_text=True)
-    assert "row row-cols-lg-auto g-3 align-items-center" in data
+    rv = client.get("/config")
+    assert "row row-cols-lg-auto g-3 align-items-center" in rv.text

@@ -24,14 +24,12 @@ def test_render_simple_table(app, client):
             messages=messages,
         )
 
-    response = client.get("/table")
-    data = response.get_data(as_text=True)
-    # print(data)
-    assert '<table class="table">' in data
-    assert '<th scope="col">#</th>' in data
-    assert '<th scope="col">Message</th>' in data
-    assert '<th scope="row">1</th>' in data
-    assert "<td>Test message 1</td>" in data
+    rv = client.get("/table")
+    assert '<table class="table">' in rv.text
+    assert '<th scope="col">#</th>' in rv.text
+    assert '<th scope="col">Message</th>' in rv.text
+    assert '<th scope="row">1</th>' in rv.text
+    assert "<td>Test message 1</td>" in rv.text
 
 
 def test_render_safe_table(app, client):
@@ -56,13 +54,12 @@ def test_render_safe_table(app, client):
             messages=messages,
         )
 
-    response = client.get("/table")
-    data = response.get_data(as_text=True)
-    assert '<table class="table">' in data
-    assert '<th scope="col">#</th>' in data
-    assert '<th scope="col">Message</th>' in data
-    assert '<th scope="row">1</th>' in data
-    assert "<td>Test <em>message</em> 1</td>" in data
+    rv = client.get("/table")
+    assert '<table class="table">' in rv.text
+    assert '<th scope="col">#</th>' in rv.text
+    assert '<th scope="col">Message</th>' in rv.text
+    assert '<th scope="row">1</th>' in rv.text
+    assert "<td>Test <em>message</em> 1</td>" in rv.text
 
 
 def test_render_urlize_table(app, client):
@@ -87,14 +84,13 @@ def test_render_urlize_table(app, client):
             messages=messages,
         )
 
-    response = client.get("/table")
-    data = response.get_data(as_text=True)
-    assert '<table class="table">' in data
-    assert '<th scope="col">#</th>' in data
-    assert '<th scope="col">Message</th>' in data
-    assert '<th scope="row">1</th>' in data
+    rv = client.get("/table")
+    assert '<table class="table">' in rv.text
+    assert '<th scope="col">#</th>' in rv.text
+    assert '<th scope="col">Message</th>' in rv.text
+    assert '<th scope="row">1</th>' in rv.text
     assert (
-        '<td>Test <a href="https://t.me" rel="noopener">https://t.me</a> 1</td>' in data
+        '<td>Test <a href="https://t.me" rel="noopener">https://t.me</a> 1</td>' in rv.text
     )
 
 
@@ -122,12 +118,12 @@ def test_render_customized_table(app, client):
             messages=messages,
         )
 
-    response = client.get("/table")
-    data = response.get_data(as_text=True)
-    assert '<table class="table table-striped">' in data
-    assert '<thead class="thead-dark">' in data
-    assert '<tbody class="table-group-divider">' in data
-    assert "<caption>Messages</caption>" in data
+    rv = client.get("/table")
+    assert '<table class="table table-striped">' in rv.text
+    assert '<thead class="thead-dark">' in rv.text
+    assert '<tbody class="table-group-divider">' in rv.text
+    assert "<caption>Messages</caption>" in rv.text
+
 
 
 def test_render_responsive_table(app, client):
@@ -153,9 +149,9 @@ def test_render_responsive_table(app, client):
             messages=messages,
         )
 
-    response = client.get("/table")
-    data = response.get_data(as_text=True)
-    assert '<div class="table-responsive-sm">' in data
+    rv = client.get("/table")
+    assert '<div class="table-responsive-sm">' in rv.text
+
 
 
 def test_build_table_titles(app, client):
@@ -178,13 +174,12 @@ def test_build_table_titles(app, client):
             messages=messages,
         )
 
-    response = client.get("/table")
-    data = response.get_data(as_text=True)
-    assert '<table class="table">' in data
-    assert '<th scope="col">#</th>' in data
-    assert '<th scope="col">Text</th>' in data
-    assert '<th scope="row">1</th>' in data
-    assert "<td>Test message 1</td>" in data
+    rv = client.get("/table")
+    assert '<table class="table">' in rv.text
+    assert '<th scope="col">#</th>' in rv.text
+    assert '<th scope="col">Text</th>' in rv.text
+    assert '<th scope="row">1</th>' in rv.text
+    assert "<td>Test message 1</td>" in rv.text
 
 
 def test_build_table_titles_with_empty_data(app, client):
@@ -199,8 +194,8 @@ def test_build_table_titles_with_empty_data(app, client):
             messages=messages,
         )
 
-    response = client.get("/table")
-    assert response.status_code == 200
+    rv = client.get("/table")
+    assert rv.status_code == 200
 
 
 def todo_test_render_table_with_actions(app, client):
@@ -296,14 +291,13 @@ def todo_test_render_table_with_actions(app, client):
         )
 
     for url in ["/table", "/table-with-dict-data"]:
-        response = client.get(url)
-        data = response.get_data(as_text=True)
-        assert "bootstrap-icons.svg#bootstrap-reboot" in data
-        assert 'href="/table/john_doe/1/resend"' in data
-        assert 'title="Resend">' in data
-        assert 'href="/table/me/1/view"' in data
-        assert 'action="/table/me/1/delete"' in data
-        assert 'href="/table/me/1/edit"' in data
+        rv = client.get(url)
+        assert "bootstrap-icons.svg#bootstrap-reboot" in rv.text
+        assert 'href="/table/john_doe/1/resend"' in rv.text
+        assert 'title="Resend">' in rv.text
+        assert 'href="/table/me/1/view"' in rv.text
+        assert 'action="/table/me/1/delete"' in rv.text
+        assert 'href="/table/me/1/edit"' in rv.text
         assert 'href="/table/new-message"' in data
 
 
@@ -332,10 +326,9 @@ def test_customize_icon_title_of_table_actions(app, client):
             messages=messages,
         )
 
-    response = client.get("/table")
-    data = response.get_data(as_text=True)
-    assert 'title="View">' in data
-    assert 'title="Edit">' in data
-    assert 'title="Remove">' in data
-    assert 'title="Create">' in data
-    assert "Category A" in data
+    rv = client.get("/table")
+    assert 'title="View">' in rv.text
+    assert 'title="Edit">' in rv.text
+    assert 'title="Remove">' in rv.text
+    assert 'title="Create">' in rv.text
+    assert "Category A" in rv.text

@@ -13,10 +13,9 @@ def test_render_form_row(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/form")
-    data = response.get_data(as_text=True)
-    assert '<div class="form-row">' in data
-    assert '<div class="col">' in data
+    rv = client.get("/form")
+    assert '<div class="form-row">' in rv.text
+    assert '<div class="col">' in rv.text
 
 
 def test_render_form_row_row_class(app, client, hello_form):
@@ -31,9 +30,8 @@ def test_render_form_row_row_class(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/form")
-    data = response.get_data(as_text=True)
-    assert '<div class="row">' in data
+    rv = client.get("/form")
+    assert '<div class="row">' in rv.text
 
 
 def test_render_form_row_col_class_default(app, client, hello_form):
@@ -48,9 +46,8 @@ def test_render_form_row_col_class_default(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/form")
-    data = response.get_data(as_text=True)
-    assert '<div class="col-md-6">' in data
+    rv = client.get("/form")
+    assert '<div class="col-md-6">' in rv.text
 
 
 def test_render_form_row_col_map(app, client, hello_form):
@@ -65,7 +62,6 @@ def test_render_form_row_col_map(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/form")
-    data = response.get_data(as_text=True)
-    assert '<div class="col">' in data
-    assert '<div class="col-md-6">' in data
+    rv = client.get("/form")
+    assert '<div class="col">' in rv.text
+    assert '<div class="col-md-6">' in rv.text

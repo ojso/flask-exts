@@ -1,3 +1,4 @@
+import pytest
 from datetime import datetime
 from flask import session
 from flask_babel import get_locale
@@ -80,8 +81,8 @@ def test_translation_form(app):
         assert text_required_zh in f.name.errors
         assert text_invalid_json_zh in f.json.errors
 
-
-def _test_babel_get_translations(app):
+@pytest.mark.skip(reason="skip.")
+def test_babel_get_translations(app):
     with app.test_request_context():
         session["lang"] = "zh"
         t = get_translations()
@@ -89,8 +90,8 @@ def _test_babel_get_translations(app):
         for k, v in t._catalog.items():
             print(f"{k} -> {v}")
 
-
-def _test_GNUTranslations(app):
+@pytest.mark.skip(reason="skip.")
+def test_GNUTranslations(app):
     from gettext import GNUTranslations
     import os.path
 

@@ -23,12 +23,11 @@ def test_render_pagination(app, client):
             messages=messages,
         )
 
-    response = client.get("/pagination")
-    data = response.get_data(as_text=True)
-    assert '<nav aria-label="Page navigation">' in data
+    rv = client.get("/pagination")
+    assert '<nav aria-label="Page navigation">' in rv.text
     assert (
         '<a class="page-link" href="#">1 <span class="sr-only">(current)</span></a>'
-        not in data
+        not in rv.text
     )
-    assert '<li class="page-item active" aria-current="page">' in data
-    assert '<a class="page-link" href="#">1</a>' in data
+    assert '<li class="page-item active" aria-current="page">' in rv.text
+    assert '<a class="page-link" href="#">1</a>' in rv.text

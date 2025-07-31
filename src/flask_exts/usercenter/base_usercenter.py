@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 
 
-class UserCenter(ABC):
+class BaseUserCenter(ABC):
     identity_name = "id"
-    login_view = "user.login"
 
     @abstractmethod
     def user_loader(self, id): ...

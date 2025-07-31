@@ -3,15 +3,17 @@ from flask import Flask
 from flask_exts import Manager
 
 
+class MyManager(Manager):
+    def get_admin_class(self):
+        from flask_exts.admin.admin import Admin
+        return Admin
+
+
+
 @pytest.fixture
 def app():
     app = Flask(__name__)
-    # app.secret_key = "test_key"
-    # app.debug = True
-    app.config.update(
-        TESTING=True,
-        SECRET_KEY="test_key",
-    )
+    app.secret_key = "1"
     app.config["BABEL_ACCEPT_LANGUAGES"] = "en;zh;fr;de;ru"
     app.config["BABEL_DEFAULT_TIMEZONE"] = "Asia/Shanghai"
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
@@ -19,9 +21,9 @@ def app():
     app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
     app.config["JWT_HASH"] = "HS256"
 
-    manager = Manager()
+    manager = MyManager()
     manager.init_app(app)
-    return app
+    yield app
 
 
 @pytest.fixture
@@ -40,7 +42,3 @@ def manager(app):
 @pytest.fixture
 def admin(manager):
     return manager.admin
-
-@pytest.fixture
-def email(manager):
-    return manager.email

@@ -37,7 +37,6 @@ class UserView(BaseView):
         menu_class_name=None,
         menu_icon_type=None,
         menu_icon_value=None,
-        skip_check_auth=True,
     ):
         super().__init__(
             name=name,
@@ -49,8 +48,10 @@ class UserView(BaseView):
             menu_class_name=menu_class_name,
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
-            skip_check_auth=skip_check_auth,
         )
+
+    def allow(self, *args, **kwargs):
+        return True
 
     def get_login_form_class(self):
         return LoginForm
@@ -119,12 +120,12 @@ class UserView(BaseView):
     @expose("/logout/")
     def logout(self):
         logout_user()
-        return redirect(url_for("index.index"))
+        return redirect(url_for(".index"))
 
     @expose("/confirm_email/")
     def confirm_email(self):
         return self.render(self.email_verify_template)
-    
+
     @expose("/confirm_error/")
     def confirm_error(self):
         return self.render(self.email_verify_template)

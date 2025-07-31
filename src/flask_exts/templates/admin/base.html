@@ -31,7 +31,9 @@
                     {{ menu.menu_links(admin.menu.menu_links()) }}
                 </ul>
                 {%- endblock %}
+                {%- if "user" in admin._views %}
                 {% block access_control %} {{ menu.menu_user(current_user) }}{% endblock %}
+                {%- endif %}
             </div>
         </div>
     </nav>

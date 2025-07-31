@@ -21,7 +21,6 @@ class IndexView(BaseView):
         menu_class_name=None,
         menu_icon_type=None,
         menu_icon_value=None,
-        skip_check_auth=True,
     ):
         super().__init__(
             name=name,
@@ -33,8 +32,10 @@ class IndexView(BaseView):
             menu_class_name=menu_class_name,
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
-            skip_check_auth=skip_check_auth,
         )
+
+    def allow(self, *args, **kwargs):
+        return True
 
     @expose("/")
     def index(self):

@@ -16,10 +16,8 @@ def test_render_breadcrumb_item_active(app, client):
                 {{ render_breadcrumb_item('bar', 'Bar') }}
                 ''')
 
-    response = client.get('/not_active_item')
-    data = response.get_data(as_text=True)
-    assert '<li class="breadcrumb-item">' in data
+    rv = client.get('/not_active_item')
+    assert '<li class="breadcrumb-item">' in rv.text
 
-    response = client.get('/active_item')
-    data = response.get_data(as_text=True)
-    assert '<li class="breadcrumb-item active" aria-current="page">' in data
+    rv = client.get('/active_item')
+    assert '<li class="breadcrumb-item active" aria-current="page">' in rv.text

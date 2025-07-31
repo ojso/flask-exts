@@ -22,16 +22,14 @@ def test_render_pager(app, client):
             messages=messages,
         )
 
-    response = client.get("/pager")
-    data = response.get_data(as_text=True)
-    assert '<nav aria-label="Page navigation">' in data
-    assert "Previous" in data
-    assert "Next" in data
-    assert '<li class="page-item disabled">' in data
+    rv = client.get("/pager")
+    assert '<nav aria-label="Page navigation">' in rv.text
+    assert "Previous" in rv.text
+    assert "Next" in rv.text
+    assert '<li class="page-item disabled">' in rv.text
 
-    response = client.get("/pager?page=2")
-    data = response.get_data(as_text=True)
-    assert '<nav aria-label="Page navigation">' in data
-    assert "Previous" in data
-    assert "Next" in data
-    assert '<li class="page-item disabled">' not in data
+    rv = client.get("/pager?page=2")
+    assert '<nav aria-label="Page navigation">' in rv.text
+    assert "Previous" in rv.text
+    assert "Next" in rv.text
+    assert '<li class="page-item disabled">' not in rv.text

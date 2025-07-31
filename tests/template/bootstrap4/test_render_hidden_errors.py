@@ -26,6 +26,5 @@ def test_render_hidden_errors(app, client):
             form=form,
         )
 
-    response = client.post("/error", follow_redirects=True)
-    data = response.get_data(as_text=True)
-    assert "Hide field is empty." in data
+    rv = client.post("/error", follow_redirects=True)
+    assert "Hide field is empty." in rv.text

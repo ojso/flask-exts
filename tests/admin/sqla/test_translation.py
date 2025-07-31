@@ -23,7 +23,7 @@ def test_column_label_translation(app, client, admin):
 
         rv = client.get("/admin/model1/?flt1_0=test")
         assert rv.status_code == 200
-        # assert '{"Nombre":' in rv.data.decode("utf-8")
+        # assert '{"Nombre":' in rv.text
         assert "名称" in rv.text
 
 

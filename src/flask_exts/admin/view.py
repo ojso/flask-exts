@@ -26,19 +26,18 @@ def expose(url="/", methods=("GET",)):
 
 
 def _wrap_view(f):
-    """wrapping f with self._handle_view and self._run_view"""
+    """wrapping f with self._allow_view_fn"""
     # Avoid wrapping view method twice
     if hasattr(f, "_wrapped"):
         return f
 
     @wraps(f)
     def inner(self, *args, **kwargs):
-        # Check if piece is accessible
-        abort = self._handle_view(f, **kwargs)
-        if abort is not None:
-            return abort
+        # check for access
+        if not self._allow_view_fn(f, *args, **kwargs):
+            return self.inaccessible_callback(f, **kwargs)
         # run view
-        return self._run_view(f, *args, **kwargs)
+        return f(self, *args, **kwargs)
 
     inner._wrapped = True
 
@@ -85,7 +84,6 @@ class BaseView(metaclass=ViewMeta):
         menu_class_name=None,
         menu_icon_type=None,
         menu_icon_value=None,
-        skip_check_auth = False,
     ):
         """
         Constructor.
@@ -123,7 +121,6 @@ class BaseView(metaclass=ViewMeta):
         self.menu_class_name = menu_class_name
         self.menu_icon_type = menu_icon_type
         self.menu_icon_value = menu_icon_value
-        self.skip_check_auth = skip_check_auth
 
         # Initialized from create_blueprint
         self.admin = None
@@ -219,6 +216,20 @@ class BaseView(metaclass=ViewMeta):
         """
         return prettify_class_name(name)
 
+    def allow(self, *args, **kwargs):
+        """
+        Override this method to add permission checks.
+
+        It does not make any assumptions about the authentication system used in your application, so it is
+        up to you to implement it.
+
+        By default, it will allow access for everyone.
+        """
+        if self.admin is not None:
+            return self.admin.allow(*args, **kwargs)
+        else:
+            return True
+
     def is_accessible(self):
         """
         Override this method to add permission checks.
@@ -228,38 +239,18 @@ class BaseView(metaclass=ViewMeta):
 
         By default, it will allow access for everyone.
         """
-        if self.skip_check_auth:
-            return True
-        return self.admin.access(view=self)
+        return self.allow(view=self)
 
-    def _handle_view(self, fn, **kwargs):
+    def _allow_view_fn(self, fn, *args, **kwargs):
         """
         This method will be executed before calling any view method.
-
-        It will execute the ``inaccessible_callback`` if the view is not accessible.
 
         :param fn:
             View function
         :param kwargs:
             View function arguments
         """
-        if self.skip_check_auth:
-            return
-        if not self.admin.access(view=self, fn=fn):
-            return self.inaccessible_callback(fn, **kwargs)
-
-    def _run_view(self, fn, *args, **kwargs):
-        """
-        This method will run actual view function.
-
-        While it is similar to _handle_view, can be used to change arguments that are passed to the view.
-
-        :param fn:
-            View function
-        :param kwargs:
-            Arguments
-        """
-        return fn(self, *args, **kwargs)
+        return self.allow(view=self, fn=fn)
 
     def inaccessible_callback(self, fn, **kwargs):
         """

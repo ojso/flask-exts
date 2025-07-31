@@ -15,10 +15,8 @@ def test_render_nav_item_active(app, client):
                 {{ render_nav_item('foo', 'Foo') }}
                 ''')
 
-    response = client.get('/active')
-    data = response.get_data(as_text=True)
-    assert '<a class="nav-item nav-link active"' in data
+    rv = client.get('/active')
+    assert '<a class="nav-item nav-link active"' in rv.text
 
-    response = client.get('/not_active')
-    data = response.get_data(as_text=True)
-    assert '<a class="nav-item nav-link"' in data
+    rv = client.get('/not_active')
+    assert '<a class="nav-item nav-link"' in rv.text

@@ -23,15 +23,13 @@ def test_render_pagination(app, client):
             messages=messages,
         )
 
-    response = client.get("/pagination")
-    data = response.get_data(as_text=True)
-    assert '<nav aria-label="Page navigation">' in data
-    assert '<a class="page-link" href="#">1</a>' in data
-    assert "10</a>" in data
+    rv = client.get("/pagination")
+    assert '<nav aria-label="Page navigation">' in rv.text
+    assert '<a class="page-link" href="#">1</a>' in rv.text
+    assert "10</a>" in rv.text
 
-    response = client.get("/pagination?page=2")
-    data = response.get_data(as_text=True)
-    assert '<nav aria-label="Page navigation">' in data
-    assert "1</a>" in data
-    assert '<a class="page-link" href="#">2</a>' in data
-    assert "10</a>" in data
+    rv = client.get("/pagination?page=2")
+    assert '<nav aria-label="Page navigation">' in rv.text
+    assert "1</a>" in rv.text
+    assert '<a class="page-link" href="#">2</a>' in rv.text
+    assert "10</a>" in rv.text

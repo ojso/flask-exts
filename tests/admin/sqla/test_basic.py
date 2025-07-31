@@ -27,9 +27,7 @@ class CustomModelView(ModelView):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-        super().__init__(
-            model, name=name, endpoint=endpoint, url=url
-        )
+        super().__init__(model, name=name, endpoint=endpoint, url=url)
 
     form_choices = {"choice_field": [("choice-1", "One"), ("choice-2", "Two")]}
 
@@ -156,7 +154,7 @@ def test_model(app, client, admin):
         # check that the new record shows up on the list view
         rv = client.get("/admin/model1/")
         assert rv.status_code == 200
-        assert "test1large" in rv.data.decode("utf-8")
+        assert "test1large" in rv.text
 
         # check that we can retrieve an edit view
         url = "/admin/model1/edit/?id=%s" % model.id
@@ -164,7 +162,7 @@ def test_model(app, client, admin):
         assert rv.status_code == 200
 
         # verify that midnight does not show as blank
-        assert "00:00:00" in rv.data.decode("utf-8")
+        assert "00:00:00" in rv.text
 
         # edit the record
         rv = client.post(
@@ -208,37 +206,37 @@ def test_list_columns(app, client, admin):
         reset_models()
 
         # test column_list with a list of strings
-        view = CustomModelView(
+        view1 = CustomModelView(
             Model1,
+            name="view1",
             column_list=["test1", "test3"],
             column_labels=dict(test1="Column1"),
         )
-        admin.add_view(view)
+        admin.add_view(view1)
 
         # test column_list with a list of SQLAlchemy columns
         view2 = CustomModelView(
             Model1,
+            name="view2",
             endpoint="model1_2",
             column_list=[Model1.test1, Model1.test3],
             column_labels=dict(test1="Column1"),
         )
         admin.add_view(view2)
 
-        assert len(view._list_columns) == 2
-        assert view._list_columns == [("test1", "Column1"), ("test3", "Test3")]
+        assert len(view1._list_columns) == 2
+        assert view1._list_columns == [("test1", "Column1"), ("test3", "Test3")]
 
         rv = client.get("/admin/model1/")
-        data = rv.get_data(as_text=True)
-        assert "Column1" in data
-        assert "Test2" not in data
+        assert "Column1" in rv.text
+        assert "Test2" not in rv.text
 
         assert len(view2._list_columns) == 2
         assert view2._list_columns == [("test1", "Column1"), ("test3", "Test3")]
 
         rv = client.get("/admin/model1_2/")
-        data = rv.get_data(as_text=True)
-        assert "Column1" in data
-        assert "Test2" not in data
+        assert "Column1" in rv.text
+        assert "Test2" not in rv.text
 
 
 def test_complex_list_columns(app, client, admin):
@@ -257,8 +255,7 @@ def test_complex_list_columns(app, client, admin):
 
         rv = client.get("/admin/model2/")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "model1_val1" in data
+        assert "model1_val1" in rv.text
 
 
 def test_exclude_columns(app, client, admin):
@@ -287,9 +284,8 @@ def test_exclude_columns(app, client, admin):
         ]
 
         rv = client.get("/admin/model1/")
-        data = rv.get_data(as_text=True)
-        assert "Test1" in data
-        assert "Test2" not in data
+        assert "Test1" in rv.text
+        assert "Test2" not in rv.text
 
 
 def test_column_searchable_list(app, client, admin):
@@ -314,14 +310,12 @@ def test_column_searchable_list(app, client, admin):
         db.session.commit()
 
         rv = client.get("/admin/model2/?search=model1")
-        data = rv.get_data(as_text=True)
-        assert "model1-test" in data
-        assert "model2-test" not in data
+        assert "model1-test" in rv.text
+        assert "model2-test" not in rv.text
 
         rv = client.get("/admin/model2/?search=9000")
-        data = rv.get_data(as_text=True)
-        assert "model1-test" not in data
-        assert "model2-test" in data
+        assert "model1-test" not in rv.text
+        assert "model2-test" in rv.text
 
 
 def test_extra_args_search(app, client, admin):
@@ -345,8 +339,7 @@ def test_extra_args_search(app, client, admin):
 
         # check that extra args in the url are propagated as hidden fields in the search form
         rv = client.get("/admin/model1/?search=model1&foo=bar")
-        data = rv.get_data(as_text=True)
-        assert '<input type="hidden" name="foo" value="bar">' in data
+        assert '<input type="hidden" name="foo" value="bar">' in rv.text
 
 
 def test_extra_args_filter(app, client, admin):
@@ -366,16 +359,16 @@ def test_extra_args_filter(app, client, admin):
 
         # check that extra args in the url are propagated as hidden fields in the  form
         rv = client.get("/admin/model2/?flt1_0=5000&foo=bar")
-        data = rv.get_data(as_text=True)
-        assert '<input type="hidden" name="foo" value="bar">' in data
+        assert '<input type="hidden" name="foo" value="bar">' in rv.text
+
 
 
 def test_complex_searchable_list(app, client, admin):
     with app.app_context():
         reset_models()
 
-        view = CustomModelView(Model2, column_searchable_list=["model1.test1"])
-        admin.add_view(view)
+        view1 = CustomModelView(Model2, column_searchable_list=["model1.test1"])
+        admin.add_view(view1)
         view2 = CustomModelView(Model1, column_searchable_list=[Model2.string_field])
         admin.add_view(view2)
 
@@ -389,15 +382,13 @@ def test_complex_searchable_list(app, client, admin):
 
         # test relation string - 'model1.test1'
         rv = client.get("/admin/model2/?search=model1-test1")
-        data = rv.get_data(as_text=True)
-        assert "model2-test1-val" in data
-        assert "model2-test2-val" not in data
+        assert "model2-test1-val" in rv.text
+        assert "model2-test2-val" not in rv.text
 
         # test relation object - Model2.string_field
         rv = client.get("/admin/model1/?search=model2-test1")
-        data = rv.get_data(as_text=True)
-        assert "model1-test1-val" in data
-        assert "model1-test2-val" not in data
+        assert "model1-test1-val" in rv.text
+        assert "model1-test2-val" not in rv.text
 
 
 def test_complex_searchable_list_missing_children(app, client, admin):
@@ -413,33 +404,32 @@ def test_complex_searchable_list_missing_children(app, client, admin):
         db.session.commit()
 
         rv = client.get("/admin/model1/?search=magic")
-        data = rv.get_data(as_text=True)
-        assert "magic string" in data
+        assert "magic string" in rv.text
+
 
 
 def test_column_editable_list(app, client, admin):
     with app.app_context():
         reset_models()
 
-        view = CustomModelView(Model1, column_editable_list=["test1", "enum_field"])
-        admin.add_view(view)
+        view1 = CustomModelView(Model1, column_editable_list=["test1", "enum_field"])
+        admin.add_view(view1)
 
         # Test in-line editing for relations
-        view = CustomModelView(Model2, column_editable_list=["model1"])
-        admin.add_view(view)
+        view2 = CustomModelView(Model2, column_editable_list=["model1"])
+        admin.add_view(view2)
 
         fill_db()
 
         # Test in-line edit field rendering
         rv = client.get("/admin/model1/")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert 'data-role="x-editable"' in data
+        assert 'data-role="x-editable"' in rv.text
 
         rv = client.get("/admin/model2/")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert 'data-role="x-editable"' in data
+        assert 'data-role="x-editable"' in rv.text
+        assert 'data-role="x-editable"' in rv.text
 
         # Form - Test basic in-line edit functionality
         rv = client.post(
@@ -449,13 +439,11 @@ def test_column_editable_list(app, client, admin):
                 "test1": "change-success-1",
             },
         )
-        data = rv.get_data(as_text=True)
-        assert "Record was successfully saved." == data
+        assert "Record was successfully saved." == rv.text
 
         # ensure the value has changed
         rv = client.get("/admin/model1/")
-        data = rv.get_data(as_text=True)
-        assert "change-success-1" in data
+        assert "change-success-1" in rv.text
 
         # Test validation error
         rv = client.post(
@@ -475,7 +463,6 @@ def test_column_editable_list(app, client, admin):
                 "test1": "problematic-input",
             },
         )
-        data = rv.get_data(as_text=True)
         assert rv.status_code == 500
 
         # Test editing column not in column_editable_list
@@ -486,8 +473,7 @@ def test_column_editable_list(app, client, admin):
                 "test2": "problematic-input",
             },
         )
-        data = rv.get_data(as_text=True)
-        assert "problematic-input" not in data
+        assert "problematic-input" not in rv.text
 
         rv = client.post(
             "/admin/model2/ajax/update/",
@@ -496,30 +482,28 @@ def test_column_editable_list(app, client, admin):
                 "model1": "3",
             },
         )
-        data = rv.get_data(as_text=True)
-        assert "Record was successfully saved." == data
+        assert "Record was successfully saved." == rv.text
 
         # confirm the value has changed
         rv = client.get("/admin/model2/")
-        data = rv.get_data(as_text=True)
-        # print(data)
-        assert "test1_val_3" in data
-
+        assert "test1_val_3" in rv.text
+ 
 
 def test_details_view(app, client, admin):
     with app.app_context():
         reset_models()
 
-        view_no_details = CustomModelView(Model1)
+        view_no_details = CustomModelView(Model1, name="view1")
         admin.add_view(view_no_details)
 
         # fields are scaffolded
-        view_w_details = CustomModelView(Model2, can_view_details=True)
+        view_w_details = CustomModelView(Model2, name="view2", can_view_details=True)
         admin.add_view(view_w_details)
 
         # show only specific fields in details w/ column_details_list
         string_field_view = CustomModelView(
             Model2,
+            name="view3",
             can_view_details=True,
             column_details_list=["string_field"],
             endpoint="sf_view",
@@ -530,13 +514,11 @@ def test_details_view(app, client, admin):
 
         # ensure link to details is hidden when can_view_details is disabled
         rv = client.get("/admin/model1/")
-        data = rv.get_data(as_text=True)
-        assert "/admin/model1/details/" not in data
+        assert "/admin/model1/details/" not in rv.text
 
         # ensure link to details view appears
         rv = client.get("/admin/model2/")
-        data = rv.get_data(as_text=True)
-        assert "/admin/model2/details/" in data
+        assert "/admin/model2/details/" in rv.text
 
         # test redirection when details are disabled
         rv = client.get("/admin/model1/details/?url=%2Fadmin%2Fmodel1%2F&id=1")
@@ -544,17 +526,15 @@ def test_details_view(app, client, admin):
 
         # test if correct data appears in details view when enabled
         rv = client.get("/admin/model2/details/?url=%2Fadmin%2Fmodel2%2F&id=1")
-        data = rv.get_data(as_text=True)
-        assert "String Field" in data
-        assert "test2_val_1" in data
-        assert "test1_val_1" in data
+        assert "String Field" in rv.text
+        assert "test2_val_1" in rv.text
+        assert "test1_val_1" in rv.text
 
         # test column_details_list
         rv = client.get("/admin/sf_view/details/?url=%2Fadmin%2Fsf_view%2F&id=1")
-        data = rv.get_data(as_text=True)
-        assert "String Field" in data
-        assert "test2_val_1" in data
-        assert "test1_val_1" not in data
+        assert "String Field" in rv.text
+        assert "test2_val_1" in rv.text
+        assert "test1_val_1" not in rv.text
 
 
 def test_editable_list_special_pks(app, client, admin):
@@ -576,45 +556,46 @@ def test_editable_list_special_pks(app, client, admin):
                 "val1": "change-success-1",
             },
         )
-        data = rv.get_data(as_text=True)
-        assert "Record was successfully saved." == data
+        assert "Record was successfully saved." == rv.text
 
         # ensure the value has changed
         rv = client.get("/admin/model3/")
-        data = rv.get_data(as_text=True)
-        assert "change-success-1" in data
+        assert "change-success-1" in rv.text
 
 
 def test_column_filters(app, client, admin):
     with app.app_context():
         reset_models()
 
-        view1 = CustomModelView(Model1, column_filters=["test1"])
+        view1 = CustomModelView(Model1, name="view1", column_filters=["test1"])
         admin.add_view(view1)
 
         assert len(view1._filters) == 7
 
         # Generate views
-        view2 = CustomModelView(Model2, column_filters=["model1"])
+        view2 = CustomModelView(Model2, name="view2", column_filters=["model1"])
 
-        view5 = CustomModelView(Model1, column_filters=["test1"], endpoint="_strings")
+        view5 = CustomModelView(
+            Model1, name="view5", column_filters=["test1"], endpoint="_strings"
+        )
         admin.add_view(view5)
 
-        view6 = CustomModelView(Model2, column_filters=["int_field"])
+        view6 = CustomModelView(Model2, name="view6", column_filters=["int_field"])
         admin.add_view(view6)
 
         view7 = CustomModelView(
-            Model1, column_filters=["bool_field"], endpoint="_bools"
+            Model1, name="view7", column_filters=["bool_field"], endpoint="_bools"
         )
         admin.add_view(view7)
 
         view8 = CustomModelView(
-            Model2, column_filters=["float_field"], endpoint="_float"
+            Model2, name="view8", column_filters=["float_field"], endpoint="_float"
         )
         admin.add_view(view8)
 
         view9 = CustomModelView(
             Model2,
+            name="view9",
             endpoint="_model2",
             column_filters=["model1.bool_field"],
             column_list=[
@@ -627,6 +608,7 @@ def test_column_filters(app, client, admin):
 
         view10 = CustomModelView(
             Model1,
+            name="view10",
             column_filters=["test1"],
             endpoint="_model3",
             named_filter_urls=True,
@@ -635,18 +617,20 @@ def test_column_filters(app, client, admin):
 
         view11 = CustomModelView(
             Model1,
+            name="view11",
             column_filters=["date_field", "datetime_field", "time_field"],
             endpoint="_datetime",
         )
         admin.add_view(view11)
 
         view12 = CustomModelView(
-            Model1, column_filters=["enum_field"], endpoint="_enumfield"
+            Model1, name="view12", column_filters=["enum_field"], endpoint="_enumfield"
         )
         admin.add_view(view12)
 
         view13 = CustomModelView(
             Model2,
+            name="view13",
             column_filters=[filters.FilterEqual(Model1.test1, "Test1")],
             endpoint="_relation_test",
         )
@@ -654,6 +638,7 @@ def test_column_filters(app, client, admin):
 
         view14 = CustomModelView(
             Model1,
+            name="view14",
             column_filters=["enum_type_field"],
             endpoint="_enumtypefield",
         )
@@ -817,7 +802,9 @@ def test_column_filters(app, client, admin):
         ]
 
         # Test filter with a dot
-        view3 = CustomModelView(Model2, column_filters=["model1.bool_field"])
+        view3 = CustomModelView(
+            Model2, name="view3", column_filters=["model1.bool_field"]
+        )
 
         assert [
             (f["index"], f["operation"])
@@ -830,6 +817,7 @@ def test_column_filters(app, client, admin):
         # Test column_labels on filters
         view4 = CustomModelView(
             Model2,
+            name="view4",
             column_filters=["model1.bool_field", "string_field"],
             column_labels={
                 "model1.bool_field": "Test Filter #1",
@@ -844,20 +832,16 @@ def test_column_filters(app, client, admin):
         # Test equals
         rv = client.get("/admin/model1/?flt0_0=test1_val_1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
         # the filter value is always in "data"
         # need to check a different column than test1 for the expected row
-
-        assert "test2_val_1" in data
-        assert "test1_val_2" not in data
+        assert "test2_val_1" in rv.text
+        assert "test1_val_2" not in rv.text
 
         # Test NOT IN filter
         rv = client.get("/admin/model1/?flt0_6=test1_val_1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-
-        assert "test1_val_2" in data
-        assert "test2_val_1" not in data
+        assert "test1_val_2" in rv.text
+        assert "test2_val_1" not in rv.text
 
         # Test string filter
         assert [
@@ -875,64 +859,56 @@ def test_column_filters(app, client, admin):
         # string - equals
         rv = client.get("/admin/_strings/?flt0_0=test1_val_1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test1_val_2" not in data
+        assert "test2_val_1" in rv.text
+        assert "test1_val_2" not in rv.text
 
         # string - not equal
         rv = client.get("/admin/_strings/?flt0_1=test1_val_1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test1_val_2" in data
+        assert "test2_val_1" not in rv.text
+        assert "test1_val_2" in rv.text
 
         # string - contains
         rv = client.get("/admin/_strings/?flt0_2=test1_val_1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test1_val_2" not in data
+        assert "test2_val_1" in rv.text
+        assert "test1_val_2" not in rv.text
 
         # string - not contains
         rv = client.get("/admin/_strings/?flt0_3=test1_val_1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test1_val_2" in data
+        assert "test2_val_1" not in rv.text
+        assert "test1_val_2" in rv.text
 
         # string - empty
         rv = client.get("/admin/_strings/?flt0_4=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "empty_obj" in data
-        assert "test1_val_1" not in data
-        assert "test1_val_2" not in data
+        assert "empty_obj" in rv.text
+        assert "test1_val_1" not in rv.text
+        assert "test1_val_2" not in rv.text
 
         # string - not empty
         rv = client.get("/admin/_strings/?flt0_4=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "empty_obj" not in data
-        assert "test1_val_1" in data
-        assert "test1_val_2" in data
+        assert "empty_obj" not in rv.text
+        assert "test1_val_1" in rv.text
+        assert "test1_val_2" in rv.text
 
         # string - in list
         rv = client.get("/admin/_strings/?flt0_5=test1_val_1%2Ctest1_val_2")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test2_val_2" in data
-        assert "test1_val_3" not in data
-        assert "test1_val_4" not in data
+        assert "test2_val_1" in rv.text
+        assert "test2_val_2" in rv.text
+        assert "test1_val_3" not in rv.text
+        assert "test1_val_4" not in rv.text
 
         # string - not in list
         rv = client.get("/admin/_strings/?flt0_6=test1_val_1%2Ctest1_val_2")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test2_val_2" not in data
-        assert "test1_val_3" in data
-        assert "test1_val_4" in data
+        assert "test2_val_1" not in rv.text
+        assert "test2_val_2" not in rv.text
+        assert "test1_val_3" in rv.text
+        assert "test1_val_4" in rv.text
 
         # Test integer filter
         assert [
@@ -950,92 +926,80 @@ def test_column_filters(app, client, admin):
         # integer - equals
         rv = client.get("/admin/model2/?flt0_0=5000")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_3" in data
-        assert "test2_val_4" not in data
+        assert "test2_val_3" in rv.text
+        assert "test2_val_4" not in rv.text
 
         # integer - equals (huge number)
         rv = client.get("/admin/model2/?flt0_0=6169453081680413441")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_5" in data
-        assert "test2_val_4" not in data
+        assert "test2_val_5" in rv.text
+        assert "test2_val_4" not in rv.text
 
         # integer - equals - test validation
         rv = client.get("/admin/model2/?flt0_0=badval")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "Invalid Filter Value" in data
+        assert "Invalid Filter Value" in rv.text
 
         # integer - not equal
         rv = client.get("/admin/model2/?flt0_1=5000")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_3" not in data
-        assert "test2_val_4" in data
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" in rv.text
 
         # integer - greater
         rv = client.get("/admin/model2/?flt0_2=6000")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_3" not in data
-        assert "test2_val_4" in data
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" in rv.text
 
         # integer - smaller
         rv = client.get("/admin/model2/?flt0_3=6000")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_3" in data
-        assert "test2_val_4" not in data
+        assert "test2_val_3" in rv.text
+        assert "test2_val_4" not in rv.text
 
         # integer - empty
         rv = client.get("/admin/model2/?flt0_4=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test2_val_2" in data
-        assert "test2_val_3" not in data
-        assert "test2_val_4" not in data
+        assert "test2_val_1" in rv.text
+        assert "test2_val_2" in rv.text
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" not in rv.text
 
         # integer - not empty
         rv = client.get("/admin/model2/?flt0_4=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test2_val_2" not in data
-        assert "test2_val_3" in data
-        assert "test2_val_4" in data
+        assert "test2_val_1" not in rv.text
+        assert "test2_val_2" not in rv.text
+        assert "test2_val_3" in rv.text
+        assert "test2_val_4" in rv.text
 
         # integer - in list
         rv = client.get("/admin/model2/?flt0_5=5000%2C9000")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test2_val_2" not in data
-        assert "test2_val_3" in data
-        assert "test2_val_4" in data
+        assert "test2_val_1" not in rv.text
+        assert "test2_val_2" not in rv.text
+        assert "test2_val_3" in rv.text
+        assert "test2_val_4" in rv.text
 
         # integer - in list (huge number)
         rv = client.get("/admin/model2/?flt0_5=6169453081680413441")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test2_val_5" in data
+        assert "test2_val_1" not in rv.text
+        assert "test2_val_5" in rv.text
 
         # integer - in list - test validation
         rv = client.get("/admin/model2/?flt0_5=5000%2Cbadval")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "Invalid Filter Value" in data
+        assert "Invalid Filter Value" in rv.text
 
         # integer - not in list
         rv = client.get("/admin/model2/?flt0_6=5000%2C9000")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test2_val_2" in data
-        assert "test2_val_3" not in data
-        assert "test2_val_4" not in data
+        assert "test2_val_1" in rv.text
+        assert "test2_val_2" in rv.text
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" not in rv.text
 
         # Test boolean filter
         assert [
@@ -1048,34 +1012,30 @@ def test_column_filters(app, client, admin):
         # boolean - equals - Yes
         rv = client.get("/admin/_bools/?flt0_0=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test2_val_2" not in data
-        assert "test2_val_3" not in data
+        assert "test2_val_1" in rv.text
+        assert "test2_val_2" not in rv.text
+        assert "test2_val_3" not in rv.text
 
         # boolean - equals - No
         rv = client.get("/admin/_bools/?flt0_0=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test2_val_2" in data
-        assert "test2_val_3" in data
+        assert "test2_val_1" not in rv.text
+        assert "test2_val_2" in rv.text
+        assert "test2_val_3" in rv.text
 
         # boolean - not equals - Yes
         rv = client.get("/admin/_bools/?flt0_1=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test2_val_2" in data
-        assert "test2_val_3" in data
+        assert "test2_val_1" not in rv.text
+        assert "test2_val_2" in rv.text
+        assert "test2_val_3" in rv.text
 
         # boolean - not equals - No
         rv = client.get("/admin/_bools/?flt0_1=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test2_val_2" not in data
-        assert "test2_val_3" not in data
+        assert "test2_val_1" in rv.text
+        assert "test2_val_2" not in rv.text
+        assert "test2_val_3" not in rv.text
 
         # Test float filter
         assert [
@@ -1093,94 +1053,82 @@ def test_column_filters(app, client, admin):
         # float - equals
         rv = client.get("/admin/_float/?flt0_0=25.9")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_3" in data
-        assert "test2_val_4" not in data
+        assert "test2_val_3" in rv.text
+        assert "test2_val_4" not in rv.text
 
         # float - equals - test validation
         rv = client.get("/admin/_float/?flt0_0=badval")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "Invalid Filter Value" in data
+        assert "Invalid Filter Value" in rv.text
 
         # float - not equal
         rv = client.get("/admin/_float/?flt0_1=25.9")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_3" not in data
-        assert "test2_val_4" in data
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" in rv.text
 
         # float - greater
         rv = client.get("/admin/_float/?flt0_2=60.5")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_3" not in data
-        assert "test2_val_4" in data
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" in rv.text
 
         # float - smaller
         rv = client.get("/admin/_float/?flt0_3=60.5")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_3" in data
-        assert "test2_val_4" not in data
+        assert "test2_val_3" in rv.text
+        assert "test2_val_4" not in rv.text
 
         # float - empty
         rv = client.get("/admin/_float/?flt0_4=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test2_val_2" in data
-        assert "test2_val_3" not in data
-        assert "test2_val_4" not in data
+        assert "test2_val_1" in rv.text
+        assert "test2_val_2" in rv.text
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" not in rv.text
 
         # float - not empty
         rv = client.get("/admin/_float/?flt0_4=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test2_val_2" not in data
-        assert "test2_val_3" in data
-        assert "test2_val_4" in data
+        assert "test2_val_1" not in rv.text
+        assert "test2_val_2" not in rv.text
+        assert "test2_val_3" in rv.text
+        assert "test2_val_4" in rv.text
 
         # float - in list
         rv = client.get("/admin/_float/?flt0_5=25.9%2C75.5")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" not in data
-        assert "test2_val_2" not in data
-        assert "test2_val_3" in data
-        assert "test2_val_4" in data
+        assert "test2_val_1" not in rv.text
+        assert "test2_val_2" not in rv.text
+        assert "test2_val_3" in rv.text
+        assert "test2_val_4" in rv.text
 
         # float - in list - test validation
         rv = client.get("/admin/_float/?flt0_5=25.9%2Cbadval")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "Invalid Filter Value" in data
+        assert "Invalid Filter Value" in rv.text
 
         # float - not in list
         rv = client.get("/admin/_float/?flt0_6=25.9%2C75.5")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test2_val_2" in data
-        assert "test2_val_3" not in data
-        assert "test2_val_4" not in data
+        assert "test2_val_1" in rv.text
+        assert "test2_val_2" in rv.text
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" not in rv.text
 
         # Test filters to joined table field
         rv = client.get("/admin/_model2/?flt1_0=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2_val_1" in data
-        assert "test2_val_2" not in data
-        assert "test2_val_3" not in data
-        assert "test2_val_4" not in data
+        assert "test2_val_1" in rv.text
+        assert "test2_val_2" not in rv.text
+        assert "test2_val_3" not in rv.text
+        assert "test2_val_4" not in rv.text
 
         # Test human readable URLs
         rv = client.get("/admin/_model3/?flt1_test1_equals=test1_val_1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" in data
-        assert "test1_val_2" not in data
+        assert "test1_val_1" in rv.text
+        assert "test1_val_2" not in rv.text
 
         # Test date, time, and datetime filters
         assert [
@@ -1223,281 +1171,244 @@ def test_column_filters(app, client, admin):
         # date - equals
         rv = client.get("/admin/_datetime/?flt0_0=2014-11-17")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "date_obj1" in data
-        assert "date_obj2" not in data
+        assert "date_obj1" in rv.text
+        assert "date_obj2" not in rv.text
 
         # date - not equal
         rv = client.get("/admin/_datetime/?flt0_1=2014-11-17")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "date_obj1" not in data
-        assert "date_obj2" in data
+        assert "date_obj1" not in rv.text
+        assert "date_obj2" in rv.text
 
         # date - greater
         rv = client.get("/admin/_datetime/?flt0_2=2014-11-16")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "date_obj1" in data
-        assert "date_obj2" not in data
+        assert "date_obj1" in rv.text
+        assert "date_obj2" not in rv.text
 
         # date - smaller
         rv = client.get("/admin/_datetime/?flt0_3=2014-11-16")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "date_obj1" not in data
-        assert "date_obj2" in data
+        assert "date_obj1" not in rv.text
+        assert "date_obj2" in rv.text
 
         # date - between
         rv = client.get("/admin/_datetime/?flt0_4=2014-11-13+-+2014-11-20")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "date_obj1" in data
-        assert "date_obj2" not in data
+        assert "date_obj1" in rv.text
+        assert "date_obj2" not in rv.text
 
         # date - not between
         rv = client.get("/admin/_datetime/?flt0_5=2014-11-13+-+2014-11-20")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "date_obj1" not in data
-        assert "date_obj2" in data
+        assert "date_obj1" not in rv.text
+        assert "date_obj2" in rv.text
 
         # date - empty
         rv = client.get("/admin/_datetime/?flt0_6=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" in data
-        assert "date_obj1" not in data
-        assert "date_obj2" not in data
+        assert "test1_val_1" in rv.text
+        assert "date_obj1" not in rv.text
+        assert "date_obj2" not in rv.text
 
         # date - empty
         rv = client.get("/admin/_datetime/?flt0_6=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" not in data
-        assert "date_obj1" in data
-        assert "date_obj2" in data
+        assert "test1_val_1" not in rv.text
+        assert "date_obj1" in rv.text
+        assert "date_obj2" in rv.text
 
         # datetime - equals
         rv = client.get("/admin/_datetime/?flt0_7=2014-04-03+01%3A09%3A00")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "datetime_obj1" in data
-        assert "datetime_obj2" not in data
+        assert "datetime_obj1" in rv.text
+        assert "datetime_obj2" not in rv.text
 
         # datetime - not equal
         rv = client.get("/admin/_datetime/?flt0_8=2014-04-03+01%3A09%3A00")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "datetime_obj1" not in data
-        assert "datetime_obj2" in data
+        assert "datetime_obj1" not in rv.text
+        assert "datetime_obj2" in rv.text
 
         # datetime - greater
         rv = client.get("/admin/_datetime/?flt0_9=2014-04-03+01%3A08%3A00")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "datetime_obj1" in data
-        assert "datetime_obj2" not in data
+        assert "datetime_obj1" in rv.text
+        assert "datetime_obj2" not in rv.text
 
         # datetime - smaller
         rv = client.get("/admin/_datetime/?flt0_10=2014-04-03+01%3A08%3A00")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "datetime_obj1" not in data
-        assert "datetime_obj2" in data
+        assert "datetime_obj1" not in rv.text
+        assert "datetime_obj2" in rv.text
 
         # datetime - between
         rv = client.get(
             "/admin/_datetime/?flt0_11=2014-04-02+00%3A00%3A00+-+2014-11-20+23%3A59%3A59"
         )
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "datetime_obj1" in data
-        assert "datetime_obj2" not in data
+        assert "datetime_obj1" in rv.text
+        assert "datetime_obj2" not in rv.text
 
         # datetime - not between
         rv = client.get(
             "/admin/_datetime/?flt0_12=2014-04-02+00%3A00%3A00+-+2014-11-20+23%3A59%3A59"
         )
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "datetime_obj1" not in data
-        assert "datetime_obj2" in data
+        assert "datetime_obj1" not in rv.text
+        assert "datetime_obj2" in rv.text
 
         # datetime - empty
         rv = client.get("/admin/_datetime/?flt0_13=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" in data
-        assert "datetime_obj1" not in data
-        assert "datetime_obj2" not in data
+        assert "test1_val_1" in rv.text
+        assert "datetime_obj1" not in rv.text
+        assert "datetime_obj2" not in rv.text
 
         # datetime - not empty
         rv = client.get("/admin/_datetime/?flt0_13=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" not in data
-        assert "datetime_obj1" in data
-        assert "datetime_obj2" in data
+        assert "test1_val_1" not in rv.text
+        assert "datetime_obj1" in rv.text
+        assert "datetime_obj2" in rv.text
 
         # time - equals
         rv = client.get("/admin/_datetime/?flt0_14=11%3A10%3A09")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "timeonly_obj1" in data
-        assert "timeonly_obj2" not in data
+        assert "timeonly_obj1" in rv.text
+        assert "timeonly_obj2" not in rv.text
 
         # time - not equal
         rv = client.get("/admin/_datetime/?flt0_15=11%3A10%3A09")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "timeonly_obj1" not in data
-        assert "timeonly_obj2" in data
+        assert "timeonly_obj1" not in rv.text
+        assert "timeonly_obj2" in rv.text
 
         # time - greater
         rv = client.get("/admin/_datetime/?flt0_16=11%3A09%3A09")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "timeonly_obj1" in data
-        assert "timeonly_obj2" not in data
+        assert "timeonly_obj1" in rv.text
+        assert "timeonly_obj2" not in rv.text
 
         # time - smaller
         rv = client.get("/admin/_datetime/?flt0_17=11%3A09%3A09")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "timeonly_obj1" not in data
-        assert "timeonly_obj2" in data
+        assert "timeonly_obj1" not in rv.text
+        assert "timeonly_obj2" in rv.text
 
         # time - between
         rv = client.get("/admin/_datetime/?flt0_18=10%3A40%3A00+-+11%3A50%3A59")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "timeonly_obj1" in data
-        assert "timeonly_obj2" not in data
+        assert "timeonly_obj1" in rv.text
+        assert "timeonly_obj2" not in rv.text
 
         # time - not between
         rv = client.get("/admin/_datetime/?flt0_19=10%3A40%3A00+-+11%3A50%3A59")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "timeonly_obj1" not in data
-        assert "timeonly_obj2" in data
+        assert "timeonly_obj1" not in rv.text
+        assert "timeonly_obj2" in rv.text
 
         # time - empty
         rv = client.get("/admin/_datetime/?flt0_20=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" in data
-        assert "timeonly_obj1" not in data
-        assert "timeonly_obj2" not in data
+        assert "test1_val_1" in rv.text
+        assert "timeonly_obj1" not in rv.text
+        assert "timeonly_obj2" not in rv.text
 
         # time - not empty
         rv = client.get("/admin/_datetime/?flt0_20=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" not in data
-        assert "timeonly_obj1" in data
-        assert "timeonly_obj2" in data
+        assert "test1_val_1" not in rv.text
+        assert "timeonly_obj1" in rv.text
+        assert "timeonly_obj2" in rv.text
 
         # Test enum filter
         # enum - equals
         rv = client.get("/admin/_enumfield/?flt0_0=model1_v1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "enum_obj1" in data
-        assert "enum_obj2" not in data
+        assert "enum_obj1" in rv.text
+        assert "enum_obj2" not in rv.text
 
         # enum - not equal
         rv = client.get("/admin/_enumfield/?flt0_1=model1_v1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "enum_obj1" not in data
-        assert "enum_obj2" in data
+        assert "enum_obj1" not in rv.text
+        assert "enum_obj2" in rv.text
 
         # enum - empty
         rv = client.get("/admin/_enumfield/?flt0_2=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" in data
-        assert "enum_obj1" not in data
-        assert "enum_obj2" not in data
+        assert "test1_val_1" in rv.text
+        assert "enum_obj1" not in rv.text
+        assert "enum_obj2" not in rv.text
 
         # enum - not empty
         rv = client.get("/admin/_enumfield/?flt0_2=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" not in data
-        assert "enum_obj1" in data
-        assert "enum_obj2" in data
+        assert "test1_val_1" not in rv.text
+        assert "enum_obj1" in rv.text
+        assert "enum_obj2" in rv.text
 
         # enum - in list
         rv = client.get("/admin/_enumfield/?flt0_3=model1_v1%2Cmodel1_v2")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" not in data
-        assert "enum_obj1" in data
-        assert "enum_obj2" in data
+        assert "test1_val_1" not in rv.text
+        assert "enum_obj1" in rv.text
+        assert "enum_obj2" in rv.text
 
         # enum - not in list
         rv = client.get("/admin/_enumfield/?flt0_4=model1_v1%2Cmodel1_v2")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" in data
-        assert "enum_obj1" not in data
-        assert "enum_obj2" not in data
+        assert "test1_val_1" in rv.text
+        assert "enum_obj1" not in rv.text
+        assert "enum_obj2" not in rv.text
 
         # Test enum type filter
         # enum type - equals
         rv = client.get("/admin/_enumtypefield/?flt0_0=first")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "enum_type_obj1" in data
-        assert "enum_type_obj2" not in data
+        assert "enum_type_obj1" in rv.text
+        assert "enum_type_obj2" not in rv.text
 
         # enum - not equal
         rv = client.get("/admin/_enumtypefield/?flt0_1=first")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "enum_type_obj1" not in data
-        assert "enum_type_obj2" in data
+        assert "enum_type_obj1" not in rv.text
+        assert "enum_type_obj2" in rv.text
 
         # enum - empty
         rv = client.get("/admin/_enumtypefield/?flt0_2=1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" in data
-        assert "enum_type_obj1" not in data
-        assert "enum_type_obj2" not in data
+        assert "test1_val_1" in rv.text
+        assert "enum_type_obj1" not in rv.text
+        assert "enum_type_obj2" not in rv.text
 
         # enum - not empty
         rv = client.get("/admin/_enumtypefield/?flt0_2=0")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" not in data
-        assert "enum_type_obj1" in data
-        assert "enum_type_obj2" in data
+        assert "test1_val_1" not in rv.text
+        assert "enum_type_obj1" in rv.text
+        assert "enum_type_obj2" in rv.text
 
         # enum - in list
         rv = client.get("/admin/_enumtypefield/?flt0_3=first%2Csecond")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" not in data
-        assert "enum_type_obj1" in data
-        assert "enum_type_obj2" in data
+        assert "test1_val_1" not in rv.text
+        assert "enum_type_obj1" in rv.text
+        assert "enum_type_obj2" in rv.text
 
         # enum - not in list
         rv = client.get("/admin/_enumtypefield/?flt0_4=first%2Csecond")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1_val_1" in data
-        assert "enum_type_obj1" not in data
-        assert "enum_type_obj2" not in data
+        assert "test1_val_1" in rv.text
+        assert "enum_type_obj1" not in rv.text
+        assert "enum_type_obj2" not in rv.text
 
         # Test single custom filter on relation
         rv = client.get("/admin/_relation_test/?flt1_0=test1_val_1")
-        data = rv.get_data(as_text=True)
+        assert "test1_val_1" in rv.text
+        assert "test1_val_2" not in rv.text
 
-        assert "test1_val_1" in data
-        assert "test1_val_2" not in data
 
 
 def test_column_filters_sqla_obj(app, admin):
@@ -1539,9 +1450,8 @@ def test_hybrid_property(app, client, admin):
         # filters - hybrid_property integer - greater
         rv = client.get("/admin/modelhybrid/?flt0_0=600")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test_row_1" in data
-        assert "test_row_2" not in data
+        assert "test_row_1" in rv.text
+        assert "test_row_2" not in rv.text
 
         # sorting
         rv = client.get("/admin/modelhybrid/?sort=0")
@@ -1556,9 +1466,9 @@ def test_hybrid_property(app, client, admin):
         # searching
         rv = client.get("/admin/modelhybrid/?search=100")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test_row_2" in data
-        assert "test_row_1" not in data
+        assert "test_row_2" in rv.text
+        assert "test_row_1" not in rv.text
+
 
 
 def test_hybrid_property_nested(app, client, admin):
@@ -1583,9 +1493,8 @@ def test_hybrid_property_nested(app, client, admin):
 
         rv = client.get("/admin/modelhybrid2/")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "John Dow" in data
-        assert "Jim Smith" in data
+        assert "John Dow" in rv.text
+        assert "Jim Smith" in rv.text
 
 
 def test_url_args(app, client, admin):
@@ -1607,42 +1516,35 @@ def test_url_args(app, client, admin):
         db.session.commit()
 
         rv = client.get("/admin/model1/")
-        data = rv.get_data(as_text=True)
-        assert "data1" in data
-        assert "data3" not in data
+        assert "data1" in rv.text
+        assert "data3" not in rv.text
 
         # page
         rv = client.get("/admin/model1/?page=1")
-        data = rv.get_data(as_text=True)
-        assert "data1" not in data
-        assert "data3" in data
+        assert "data1" not in rv.text
+        assert "data3" in rv.text
 
         # sort
         rv = client.get("/admin/model1/?sort=0&desc=1")
-        data = rv.get_data(as_text=True)
-        assert "data1" not in data
-        assert "data3" in data
-        assert "data4" in data
+        assert "data1" not in rv.text
+        assert "data3" in rv.text
+        assert "data4" in rv.text
 
         # search
         rv = client.get("/admin/model1/?search=data1")
-        data = rv.get_data(as_text=True)
-        assert "data1" in data
-        assert "data2" not in data
+        assert "data1" in rv.text
+        assert "data2" not in rv.text
 
         rv = client.get("/admin/model1/?search=^data1")
-        data = rv.get_data(as_text=True)
-        assert "data2" not in data
+        assert "data2" not in rv.text
 
         # like
         rv = client.get("/admin/model1/?flt0=0&flt0v=data1")
-        data = rv.get_data(as_text=True)
-        assert "data1" in data
+        assert "data1" in rv.text
 
         # not like
         rv = client.get("/admin/model1/?flt0=1&flt0v=data1")
-        data = rv.get_data(as_text=True)
-        assert "data2" in data
+        assert "data2" in rv.text
 
 
 def test_non_int_pk(app, client, admin):
@@ -1659,13 +1561,11 @@ def test_non_int_pk(app, client, admin):
 
         rv = client.get("/admin/modelnoint/")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test1" in data
+        assert "test1" in rv.text
 
         rv = client.get("/admin/modelnoint/edit/?id=test1")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "test2" in data
+        assert "test2" in rv.text
 
 
 def test_form_columns(app, admin):
@@ -1739,9 +1639,10 @@ def test_form_args(app, admin):
 def test_form_override(app, admin):
     with app.app_context():
         reset_models()
-        view1 = CustomModelView(Model1, endpoint="view1")
+        view1 = CustomModelView(Model1, name="view1", endpoint="view1")
         view2 = CustomModelView(
             Model1,
+            name="view2",
             endpoint="view2",
             form_overrides=dict(test1=fields.FileField),
         )
@@ -1834,10 +1735,10 @@ def test_default_sort(app, admin):
         db.session.commit()
         assert Model1.query.count() == 3
 
-        view = CustomModelView(Model1, column_default_sort="test1")
-        admin.add_view(view)
+        view1 = CustomModelView(Model1, name="view1", column_default_sort="test1")
+        admin.add_view(view1)
 
-        _, data = view.get_list(0, None, None, None, None)
+        _, data = view1.get_list(0, None, None, None, None)
 
         assert len(data) == 3
         assert data[0].test1 == "a"
@@ -1847,6 +1748,7 @@ def test_default_sort(app, admin):
         # test default sort on renamed columns - with column_list scaffolding
         view2 = CustomModelView(
             Model1,
+            name="view2",
             column_default_sort="test1",
             column_labels={"test1": "blah"},
             endpoint="m1_2",
@@ -1863,6 +1765,7 @@ def test_default_sort(app, admin):
         # test default sort on renamed columns - without column_list scaffolding
         view3 = CustomModelView(
             Model1,
+            name="view3",
             column_default_sort="test1",
             column_labels={"test1": "blah"},
             endpoint="m1_3",
@@ -1909,14 +1812,16 @@ def test_complex_sort(app, client, admin):
         db.session.commit()
 
         # test sorting on relation string - 'model1.test1'
-        view = CustomModelView(
+        view1 = CustomModelView(
             Model2,
+            name="view1",
             column_list=["string_field", "model1.test1"],
             column_sortable_list=["model1.test1"],
         )
-        admin.add_view(view)
+        admin.add_view(view1)
         view2 = CustomModelView(
             Model2,
+            name="view2",
             column_list=["string_field", "model1"],
             column_sortable_list=[("model1", ("model1.test2", "model1.test1"))],
             endpoint="m1_2",
@@ -1926,7 +1831,7 @@ def test_complex_sort(app, client, admin):
         rv = client.get("/admin/model2/?sort=0")
         assert rv.status_code == 200
 
-        _, data = view.get_list(0, "model1.test1", False, None, None)
+        _, data = view1.get_list(0, "model1.test1", False, None, None)
 
         assert data[0].model1.test1 == "a"
         assert data[1].model1.test1 == "b"
@@ -1976,10 +1881,12 @@ def test_default_complex_sort(app, admin):
 
         db.session.commit()
 
-        view = CustomModelView(Model2, column_default_sort="model1.test1")
-        admin.add_view(view)
+        view1 = CustomModelView(
+            Model2, name="view1", column_default_sort="model1.test1"
+        )
+        admin.add_view(view1)
 
-        _, data = view.get_list(0, None, None, None, None)
+        _, data = view1.get_list(0, None, None, None, None)
 
         assert len(data) == 2
         assert data[0].model1.test1 == "a"
@@ -1988,6 +1895,7 @@ def test_default_complex_sort(app, admin):
         # test column_default_sort on a related table's column object
         view2 = CustomModelView(
             Model2,
+            name="view2",
             endpoint="model2_2",
             column_default_sort=(Model1.test1, False),
         )
@@ -2014,10 +1922,9 @@ def test_extra_fields(app, client, admin):
         assert rv.status_code == 200
 
         # Check presence and order
-        data = rv.get_data(as_text=True)
-        assert "Extra Field" in data
-        pos1 = data.find("Extra Field")
-        pos2 = data.find("Test1")
+        assert "Extra Field" in rv.text
+        pos1 = rv.text.find("Extra Field")
+        pos2 = rv.text.find("Test1")
         assert pos2 < pos1
 
 
@@ -2036,9 +1943,8 @@ def test_extra_field_order(app, client, admin):
         assert rv.status_code == 200
 
         # Check presence and order
-        data = rv.get_data(as_text=True)
-        pos1 = data.find("Extra Field")
-        pos2 = data.find("Test1")
+        pos1 = rv.text.find("Extra Field")
+        pos2 = rv.text.find("Test1")
         assert pos2 > pos1
 
 
@@ -2257,22 +2163,27 @@ def test_customising_page_size(app, client, admin):
         db.session.add_all([Model1(str(f"instance-{x+1:03d}")) for x in range(101)])
 
         view1 = CustomModelView(
-            Model1, endpoint="view1", page_size=20, can_set_page_size=False
+            Model1,
+            name="view1",
+            endpoint="view1",
+            page_size=20,
+            can_set_page_size=False,
         )
         admin.add_view(view1)
 
         view2 = CustomModelView(
-            Model1, endpoint="view2", page_size=5, can_set_page_size=False
+            Model1, name="view2", endpoint="view2", page_size=5, can_set_page_size=False
         )
         admin.add_view(view2)
 
         view3 = CustomModelView(
-            Model1, endpoint="view3", page_size=20, can_set_page_size=True
+            Model1, name="view3", endpoint="view3", page_size=20, can_set_page_size=True
         )
         admin.add_view(view3)
 
         view4 = CustomModelView(
             Model1,
+            name="view4",
             endpoint="view4",
             page_size=5,
             page_size_options=(5, 10, 15),
@@ -2470,7 +2381,7 @@ def test_model_default(app, client, admin):
         admin.add_view(view)
 
         rv = client.post("/admin/model2/new/", data=dict())
-        assert b"This field is required" not in rv.data
+        assert "This field is required" not in rv.text
 
 
 def test_export_csv(app, client, admin):
@@ -2482,6 +2393,7 @@ def test_export_csv(app, client, admin):
 
         view1 = CustomModelView(
             Model1,
+            name="view1",
             can_export=True,
             column_list=["test1", "test2"],
             export_max_rows=2,
@@ -2490,6 +2402,7 @@ def test_export_csv(app, client, admin):
         admin.add_view(view1)
         view2 = CustomModelView(
             Model1,
+            name="view2",
             can_export=True,
             column_list=["test1", "test2"],
             endpoint="no_row_limit",
@@ -2498,20 +2411,18 @@ def test_export_csv(app, client, admin):
 
         # test export_max_rows
         rv = client.get("/admin/row_limit_2/export/csv/")
-        data = rv.get_data(as_text=True)
         assert rv.status_code == 200
         assert (
             "Test1,Test2\r\n"
             + "test1_val_1,test2_val_1\r\n"
             + "test1_val_2,test2_val_2\r\n"
-            == data
+            == rv.text
         )
 
         # test row limit without export_max_rows
         rv = client.get("/admin/no_row_limit/export/csv/")
-        data = rv.get_data(as_text=True)
         assert rv.status_code == 200
-        assert len(data.splitlines()) > 21
+        assert len(rv.text.splitlines()) > 21
 
 
 STRING_CONSTANT = "Anyway, here's Wonderwall"
@@ -2564,7 +2475,7 @@ def test_string_null_behavior(app, client, admin):
         }
         rv = client.post("/admin/stringtestmodel/new/", data=invalid_string_field)
         assert rv.status_code == 200
-        assert b"This field is required." in rv.data
+        assert "This field is required." in rv.text
         assert (
             db.session.query(StringTestModel).filter(StringTestModel.test_no == 2).all()
             == []
@@ -2577,7 +2488,7 @@ def test_string_null_behavior(app, client, admin):
         }
         rv = client.post("/admin/stringtestmodel/new/", data=invalid_text_field)
         assert rv.status_code == 200
-        assert b"This field is required." in rv.data
+        assert "This field is required." in rv.text
         assert (
             db.session.query(StringTestModel).filter(StringTestModel.test_no == 3).all()
             == []

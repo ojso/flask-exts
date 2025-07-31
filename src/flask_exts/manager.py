@@ -2,13 +2,10 @@ from flask_login import LoginManager
 from .datastore.sqla import db
 from .babel import babel_init_app
 from .template.base import Template
+from .email.base import Email
 from .usercenter.sqla_usercenter import SqlaUserCenter
 from .utils.request_user import load_user_from_request
 from .security.core import Security
-from .utils.authorize import authorize_allow
-from .admin import Admin
-from .views.index_view import IndexView
-from .views.user_view import UserView
 
 
 class Manager:
@@ -21,6 +18,9 @@ class Manager:
 
     def get_template(self):
         return Template()
+
+    def get_email(self):
+        return Email()
 
     def init_app(self, app):
         self.app = app
@@ -48,6 +48,10 @@ class Manager:
         self.template = self.get_template()
         self.template.init_app(app)
 
+        # init email
+        self.email = self.get_email()
+        self.email.init_app(app)
+
         # init usercenter
         self.usercenter = SqlaUserCenter()
 
@@ -55,7 +59,7 @@ class Manager:
         if not hasattr(app, "login_manager"):
             login_manager = LoginManager()
             login_manager.init_app(app)
-            login_manager.login_view = self.usercenter.login_view
+            login_manager.login_view = "user.login"
             # login_manager.login_message = "Please login in"
             login_manager.user_loader(self.usercenter.user_loader)
             login_manager.request_loader(load_user_from_request)
@@ -64,29 +68,11 @@ class Manager:
         self.security = Security()
         self.security.init_app(app)
 
-        # init admins
-        self.init_admins(app)
+        # init admin
+        self.admin = self.get_admin_class()()
+        self.admin.init_app(app)
 
-    def add_admin(self, admin: Admin):
-        for p in self.admins:
-            if p.endpoint == admin.endpoint:
-                raise Exception(
-                    "Cannot have two Admin() instances with same endpoint name."
-                )
+    def get_admin_class(self):
+        from .admin.base_admin import BaseAdmin
 
-            if p.url == admin.url:
-                raise Exception("Cannot assign two Admin() instances with same URL.")
-        self.admins.append(admin)
-
-    def init_admins(self, app):
-        admin = Admin()
-        admin.init_app(app)
-        if app.config.get("ADMIN_ACCESS_ENABLED", True):
-            admin.set_access_callback(authorize_allow)
-        self.add_admin(admin)
-
-        index_view = IndexView()
-        admin.add_view(index_view, is_menu=False)
-
-        user_view = UserView()
-        admin.add_view(user_view, is_menu=False)
+        return BaseAdmin

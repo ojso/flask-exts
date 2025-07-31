@@ -42,22 +42,18 @@ def test_render_messages(app, client):
             """
         )
 
-    response = client.get("/messages")
-    data = response.get_data(as_text=True)
-    assert '<div class="alert alert-danger"' in data
+    rv = client.get("/messages")
+    assert '<div class="alert alert-danger"' in rv.text
 
-    response = client.get("/container")
-    data = response.get_data(as_text=True)
-    assert '<div class="container flashed-messages">' in data
+    rv = client.get("/container")
+    assert '<div class="container flashed-messages">' in rv.text
 
-    response = client.get("/dismissible")
-    data = response.get_data(as_text=True)
-    assert "alert-dismissible" in data
-    assert '<button type="button" class="close" data-dismiss="alert"' in data
-    assert "fade show" not in data
+    rv = client.get("/dismissible")
+    assert "alert-dismissible" in rv.text
+    assert '<button type="button" class="close" data-dismiss="alert"' in rv.text
+    assert "fade show" not in rv.text
 
-    response = client.get("/dismiss_animate")
-    data = response.get_data(as_text=True)
-    assert "alert-dismissible" in data
-    assert '<button type="button" class="close" data-dismiss="alert"' in data
-    assert "fade show" in data
+    rv = client.get("/dismiss_animate")
+    assert "alert-dismissible" in rv.text
+    assert '<button type="button" class="close" data-dismiss="alert"' in rv.text
+    assert "fade show" in rv.text

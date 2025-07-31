@@ -27,10 +27,9 @@ def test_render_form(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/form")
-    data = response.get_data(as_text=True)
-    assert '<input class="form-control" id="username"' in data
-    assert '<input class="form-control" id="password"' in data
+    rv = client.get("/form")
+    assert '<input class="form-control" id="username"' in rv.text
+    assert '<input class="form-control" id="password"' in rv.text
 
 
 # test WTForm field description for BooleanField
@@ -49,10 +48,10 @@ def test_form_description_for_booleanfield(app, client):
             form=form,
         )
 
-    response = client.get("/description")
-    data = response.get_data(as_text=True)
-    assert "Remember me" in data
-    assert '<small class="form-text text-muted">Just check this</small>' in data
+    rv = client.get("/description")
+    assert "Remember me" in rv.text
+    assert '<small class="form-text text-muted">Just check this</small>' in rv.text
+
 
 
 # test render SwitchField
@@ -71,11 +70,11 @@ def test_switch_field(app, client):
             form=form,
         )
 
-    response = client.get("/switch")
-    data = response.get_data(as_text=True)
-    assert "Remember me" in data
-    assert "custom-switch" in data
-    assert '<small class="form-text text-muted">Just check this</small>' in data
+    rv = client.get("/switch")
+    assert "Remember me" in rv.text
+    assert "custom-switch" in rv.text
+    assert '<small class="form-text text-muted">Just check this</small>' in rv.text
+
 
 
 # test render IntegerRangeField and DecimalRangeField
@@ -95,11 +94,11 @@ def test_range_fields(app, client):
             form=form,
         )
 
-    response = client.get("/range")
-    data = response.get_data(as_text=True)
-    assert "Decimal Slider" in data
-    assert "Integer Slider" in data
-    assert "form-control-range" in data
+    rv = client.get("/range")
+    assert "Decimal Slider" in rv.text
+    assert "Integer Slider" in rv.text
+    assert "form-control-range" in rv.text
+
 
 
 # test WTForm fields for render_form and render_field
@@ -132,13 +131,11 @@ def test_render_form_enctype(app, client):
             form=form,
         )
 
-    response = client.get("/single")
-    data = response.get_data(as_text=True)
-    assert "multipart/form-data" in data
+    rv = client.get("/single")
+    assert "multipart/form-data" in rv.text
 
-    response = client.get("/multi")
-    data = response.get_data(as_text=True)
-    assert "multipart/form-data" in data
+    rv = client.get("/multi")
+    assert "multipart/form-data" in rv.text
 
 
 # test render_kw class for WTForms field
@@ -159,13 +156,12 @@ def test_form_render_kw_class(app, client):
             form=form,
         )
 
-    response = client.get("/render_kw")
-    data = response.get_data(as_text=True)
-    assert 'class="form-control"' in data
-    assert 'class="form-control "' not in data
-    assert 'class="form-control my-password-class"' in data
-    assert "my-awesome-class" in data
-    assert "btn" in data
+    rv = client.get("/render_kw")
+    assert 'class="form-control"' in rv.text
+    assert 'class="form-control "' not in rv.text
+    assert 'class="form-control my-password-class"' in rv.text
+    assert "my-awesome-class" in rv.text
+    assert "btn" in rv.text
 
 
 def test_button(app, client, hello_form):
@@ -202,20 +198,17 @@ def test_button(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/form")
-    data = response.get_data(as_text=True)
-    assert "btn-primary" in data
-    assert "btn-md" in data
+    rv = client.get("/form")
+    assert "btn-primary" in rv.text
+    assert "btn-md" in rv.text
 
-    response = client.get("/form2")
-    data = response.get_data(as_text=True)
-    assert "btn-success" in data
-    assert "btn-sm" in data
+    rv = client.get("/form2")
+    assert "btn-success" in rv.text
+    assert "btn-sm" in rv.text
 
-    response = client.get("/form3")
-    data = response.get_data(as_text=True)
-    assert "btn-warning" in data
-    assert "btn-md" in data
+    rv = client.get("/form3")
+    assert "btn-warning" in rv.text
+    assert "btn-md" in rv.text
 
 
 def test_error_message_for_radiofield_and_booleanfield(app, client):
@@ -244,6 +237,5 @@ def test_error_message_for_radiofield_and_booleanfield(app, client):
             form=form,
         )
 
-    response = client.post("/error", follow_redirects=True)
-    data = response.get_data(as_text=True)
-    assert "This field is required" in data
+    rv = client.post("/error", follow_redirects=True)
+    assert "This field is required" in rv.text

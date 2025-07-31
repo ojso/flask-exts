@@ -18,7 +18,5 @@ Configuration
                            Default is ``csrf_token``.
 ``CSRF_TIME_LIMIT``        Max age in seconds for CSRF tokens. 
                            Default is ``1800``. 
-``TEMPLATE_THEME``         Set to ``theme`` to create custom theme                           
-                           Default is ``template.theme.BootstrapTheme(4)``
 ========================== =====================================================================
 

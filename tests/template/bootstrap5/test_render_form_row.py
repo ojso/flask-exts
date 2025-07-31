@@ -13,8 +13,7 @@ def test_render_form_row(app, client, hello_form):
             form=form,
         )
 
-    response = client.get("/form")
-    data = response.get_data(as_text=True)
-    assert '<div class="form-row">' not in data
-    assert '<div class="row">' in data
-    assert '<div class="col">' in data
+    rv = client.get("/form")
+    assert '<div class="form-row">' not in rv.text
+    assert '<div class="row">' in rv.text
+    assert '<div class="col">' in rv.text

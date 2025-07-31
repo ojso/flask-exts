@@ -30,12 +30,12 @@ class FileViewTests:
         # index
         rv = client.get("/admin/myfileadmin/")
         assert rv.status_code == 200
-        assert "path=dummy.txt" in rv.data.decode("utf-8")
+        assert "path=dummy.txt" in rv.text
 
         # edit
         rv = client.get("/admin/myfileadmin/edit/?path=dummy.txt")
         assert rv.status_code == 200
-        assert "dummy.txt" in rv.data.decode("utf-8")
+        assert "dummy.txt" in rv.text
 
         rv = client.post(
             "/admin/myfileadmin/edit/?path=dummy.txt",
@@ -45,13 +45,13 @@ class FileViewTests:
 
         rv = client.get("/admin/myfileadmin/edit/?path=dummy.txt")
         assert rv.status_code == 200
-        assert "dummy.txt" in rv.data.decode("utf-8")
-        assert "new_string" in rv.data.decode("utf-8")
+        assert "dummy.txt" in rv.text
+        assert "new_string" in rv.text
 
         # rename
         rv = client.get("/admin/myfileadmin/rename/?path=dummy.txt")
         assert rv.status_code == 200
-        assert "dummy.txt" in rv.data.decode("utf-8")
+        assert "dummy.txt" in rv.text
 
         rv = client.post(
             "/admin/myfileadmin/rename/?path=dummy.txt",
@@ -61,8 +61,8 @@ class FileViewTests:
 
         rv = client.get("/admin/myfileadmin/")
         assert rv.status_code == 200
-        assert "path=dummy_renamed.txt" in rv.data.decode("utf-8")
-        assert "path=dummy.txt" not in rv.data.decode("utf-8")
+        assert "path=dummy_renamed.txt" in rv.text
+        assert "path=dummy.txt" not in rv.text
 
         # upload
         rv = client.get("/admin/myfileadmin/upload/")
@@ -76,8 +76,8 @@ class FileViewTests:
 
         rv = client.get("/admin/myfileadmin/")
         assert rv.status_code == 200
-        assert "path=dummy.txt" in rv.data.decode("utf-8")
-        assert "path=dummy_renamed.txt" in rv.data.decode("utf-8")
+        assert "path=dummy.txt" in rv.text
+        assert "path=dummy_renamed.txt" in rv.text
 
         # delete
         rv = client.post(
@@ -87,8 +87,8 @@ class FileViewTests:
 
         rv = client.get("/admin/myfileadmin/")
         assert rv.status_code == 200
-        assert "path=dummy_renamed.txt" not in rv.data.decode("utf-8")
-        assert "path=dummy.txt" in rv.data.decode("utf-8")
+        assert "path=dummy_renamed.txt" not in rv.text
+        assert "path=dummy.txt" in rv.text
 
         # mkdir
         rv = client.get("/admin/myfileadmin/mkdir/")
@@ -99,13 +99,13 @@ class FileViewTests:
 
         rv = client.get("/admin/myfileadmin/")
         assert rv.status_code == 200
-        assert "path=dummy.txt" in rv.data.decode("utf-8")
-        assert "path=dummy_dir" in rv.data.decode("utf-8")
+        assert "path=dummy.txt" in rv.text
+        assert "path=dummy_dir" in rv.text
 
         # rename - directory
         rv = client.get("/admin/myfileadmin/rename/?path=dummy_dir")
         assert rv.status_code == 200
-        assert "dummy_dir" in rv.data.decode("utf-8")
+        assert "dummy_dir" in rv.text
 
         rv = client.post(
             "/admin/myfileadmin/rename/?path=dummy_dir",
@@ -115,8 +115,8 @@ class FileViewTests:
 
         rv = client.get("/admin/myfileadmin/")
         assert rv.status_code == 200
-        assert "path=dummy_renamed_dir" in rv.data.decode("utf-8")
-        assert "path=dummy_dir" not in rv.data.decode("utf-8")
+        assert "path=dummy_renamed_dir" in rv.text
+        assert "path=dummy_dir" not in rv.text
 
         # delete - directory
         rv = client.post(
@@ -126,8 +126,8 @@ class FileViewTests:
 
         rv = client.get("/admin/myfileadmin/")
         assert rv.status_code == 200
-        assert "path=dummy_renamed_dir" not in rv.data.decode("utf-8")
-        assert "path=dummy.txt" in rv.data.decode("utf-8")
+        assert "path=dummy_renamed_dir" not in rv.text
+        assert "path=dummy.txt" in rv.text
 
     def test_modal_edit(self, client, admin):
         fileadmin_class = self.fileadmin_class()
@@ -156,14 +156,12 @@ class FileViewTests:
         # enabled
         rv = client.get("/admin/edit_modal_on/")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "fa_modal_window" in data
+        assert "fa_modal_window" in rv.text
 
         # bootstrap 3 - test modal disabled
         rv = client.get("/admin/edit_modal_off/")
         assert rv.status_code == 200
-        data = rv.get_data(as_text=True)
-        assert "fa_modal_window" not in data
+        assert "fa_modal_window" not in rv.text
 
 
 class TestLocalFileAdmin(FileViewTests):
@@ -192,24 +190,24 @@ class TestLocalFileAdmin(FileViewTests):
 
             rv = client.get("/admin/myfileadmin/")
             assert rv.status_code == 200
-            pos1 = rv.data.decode("utf-8").find("path=dummy.txt")
-            pos2 = rv.data.decode("utf-8").find("path=dummy2.txt")
+            pos1 = rv.text.find("path=dummy.txt")
+            pos2 = rv.text.find("path=dummy2.txt")
             assert pos1 > 0
             assert pos2 > 0
             assert pos1 < pos2
 
             rv = client.get("/admin/myfileadmin/?sort=name")
             assert rv.status_code == 200
-            pos1 = rv.data.decode("utf-8").find("path=dummy.txt")
-            pos2 = rv.data.decode("utf-8").find("path=dummy2.txt")
+            pos1 = rv.text.find("path=dummy.txt")
+            pos2 = rv.text.find("path=dummy2.txt")
             assert pos1 > 0
             assert pos2 > 0
             assert pos1 < pos2
 
             rv = client.get("/admin/myfileadmin/?sort=date&desc=1")
             assert rv.status_code == 200
-            pos1 = rv.data.decode("utf-8").find("path=dummy.txt")
-            pos2 = rv.data.decode("utf-8").find("path=dummy2.txt")
+            pos1 = rv.text.find("path=dummy.txt")
+            pos2 = rv.text.find("path=dummy2.txt")
             assert pos1 > 0
             assert pos2 > 0
             assert pos1 > pos2

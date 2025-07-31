@@ -193,4 +193,4 @@ def test_inline_form_base_class(app, client, admin):
         rv = client.post("/admin/users/new/", data=data)
         assert rv.status_code == 200
         assert MyUser.query.count() == 0
-        assert b"success!" in rv.data
+        assert "success!" in rv.text

@@ -1,18 +1,16 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import select
-from .base import UserCenter
+from .base_usercenter import BaseUserCenter
 from ..datastore.sqla import db
 from ..datastore.sqla.models.user import User
 from ..datastore.sqla.models.user import Role
 
 
-class SqlaUserCenter(UserCenter):
+class SqlaUserCenter(BaseUserCenter):
     user_class = User
     role_class = Role
 
-    def __init__(self, login_view=None, user_class=None):
-        if login_view:
-            self.login_view = login_view
+    def __init__(self, user_class=None):
         if user_class:
             self.user_class = user_class
 
