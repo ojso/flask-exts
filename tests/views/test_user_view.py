@@ -5,6 +5,14 @@ from flask import session
 from flask_exts.datastore.sqla import db
 from flask_exts.views.user_view import UserView
 from flask_exts.template.form.csrf import _get_csrf_token_of_session_and_g
+from flask_exts.email.sender import Sender
+
+mail_data = []
+
+
+class EmailSender(Sender):
+    def send(self, data):
+        mail_data.append(data)
 
 
 class TestUserView:
@@ -13,6 +21,9 @@ class TestUserView:
         with app.app_context():
             admin.add_view(UserView())
             db.create_all()
+
+        email_sender = EmailSender()
+        app.extensions["manager"].email.register_sender("verify_email", email_sender)
 
         with app.test_request_context():
             user_login_url = url_for("user.login")
@@ -39,6 +50,7 @@ class TestUserView:
             follow_redirects=True,
         )
         assert rv.status_code == 200
+        assert "inactive" in rv.text
         with client.session_transaction() as sess:
             assert "_user_id" in sess
 
@@ -47,21 +59,12 @@ class TestUserView:
         with client.session_transaction() as sess:
             assert "_user_id" not in sess
 
-        # login with invalid name
-        test_invalid_name = "invalid_user_name"
-        rv = client.post(
-            user_login_url,
-            data={
-                "username": test_invalid_name,
-                "password": test_password,
-                "csrf_token": csrf_token,
-            },
-            follow_redirects=True,
-        )
+        # verify email
+        verification_link = mail_data[0]["verification_link"]
+        rv = client.get(verification_link, follow_redirects=True)
         assert rv.status_code == 200
-        assert "invalid username" in rv.text
-        
-        # login with valid name
+
+        # relogin after email verified
         rv = client.post(
             user_login_url,
             data={
@@ -75,3 +78,19 @@ class TestUserView:
         with client.session_transaction() as sess:
             assert "_user_id" in sess
         assert test_username in rv.text
+        assert "inactive" not in rv.text
+
+        # login with invalid name
+        client.get(user_logout_url)
+        test_invalid_name = "invalid_user_name"
+        rv = client.post(
+            user_login_url,
+            data={
+                "username": test_invalid_name,
+                "password": test_password,
+                "csrf_token": csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        assert "invalid username" in rv.text

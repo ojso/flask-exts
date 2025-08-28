@@ -9,7 +9,7 @@ class TimedUrlSerializer:
     def __init__(self, key):
         self.key = key
 
-    def dumps(self, serializer_name, data) -> str:
+    def dumps(self, serializer_name: str, data) -> str:
         """Create a token with the given serializer name and data.
         :param serializer_name: The name of the serializer. Can be one of the
                                 following: ``confirm``, ``login``, ``reset``, ``us_setup`
@@ -22,7 +22,7 @@ class TimedUrlSerializer:
         return token
 
     def loads(
-        self, token: str, serializer_name: str, max_age: int | None = None
+        self, serializer_name: str, token: str, max_age: int | None = None
     ) -> tuple[bool, bool, t.Any]:
         """Get the status of a token and return data.
 

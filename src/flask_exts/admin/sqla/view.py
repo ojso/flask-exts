@@ -320,7 +320,7 @@ class ModelView(BaseModelView):
         :param menu_class_name:
             Optional class name for the menu item.
         :param menu_icon_type:
-            Optional icon. 
+            Optional icon.
         :param menu_icon_value:
             Icon name or URL.
         """
@@ -330,7 +330,7 @@ class ModelView(BaseModelView):
         self._search_fields = None
         self._filter_joins = dict()
         self._sortable_joins = dict()
-        
+
         if self.form_choices is None:
             self.form_choices = {}
 
@@ -1152,8 +1152,8 @@ class ModelView(BaseModelView):
     def handle_view_exception(self, exc):
         if isinstance(exc, IntegrityError):
             if current_app.config.get(
-                "FLASK_EXTS_RAISE_ON_INTEGRITY_ERROR",
-                current_app.config.get("FLASK_EXTS_RAISE_ON_VIEW_EXCEPTION"),
+                "RAISE_ON_INTEGRITY_ERROR",
+                current_app.config.get("RAISE_ON_VIEW_EXCEPTION"),
             ):
                 raise
             else:

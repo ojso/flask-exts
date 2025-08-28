@@ -15,20 +15,16 @@ def get_sqlite_path():
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, instance_relative_config=True)
     app.config["SECRET_KEY"] = "dev"
-
+    app.config.from_pyfile('config.py',silent=True)
+    app.config.from_pyfile('config_prod.py',silent=True)
     # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
     # app.config["SQLALCHEMY_ECHO"] = True
     app.config["DATABASE_FILE"] = get_sqlite_path()
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + app.config["DATABASE_FILE"]
-    # JWT
-    app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
-    app.config["JWT_HASH"] = "HS256"
-
     init_app(app)
-
     return app
 
 

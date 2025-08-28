@@ -22,6 +22,9 @@ class Manager:
     def get_email(self):
         return Email()
 
+    def get_usercenter(self):
+        return SqlaUserCenter()
+
     def init_app(self, app):
         self.app = app
 
@@ -51,9 +54,11 @@ class Manager:
         # init email
         self.email = self.get_email()
         self.email.init_app(app)
+        self.email.register_senders()
 
         # init usercenter
-        self.usercenter = SqlaUserCenter()
+        self.usercenter = self.get_usercenter()
+        self.usercenter.init_app(app)
 
         # login
         if not hasattr(app, "login_manager"):

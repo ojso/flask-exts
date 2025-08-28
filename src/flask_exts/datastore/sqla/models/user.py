@@ -33,14 +33,12 @@ class User(db.Model, BaseUser):
     status: Mapped[int] = mapped_column(default=0)
     expired_at: Mapped[Optional[datetime]]
     actived: Mapped[bool] = mapped_column(default=False)
-    actived_at: Mapped[Optional[datetime]]    
     email: Mapped[Optional[str]] = mapped_column(unique=True)
     email_verified: Mapped[bool] = mapped_column(default=False)
     email_verified_at: Mapped[Optional[datetime]]
     phone_number: Mapped[Optional[str]] = mapped_column(unique=True)
     phone_verified: Mapped[bool] = mapped_column(default=False)
     phone_verified_at: Mapped[Optional[datetime]]
-    active: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(
         default=datetime.now, onupdate=datetime.now

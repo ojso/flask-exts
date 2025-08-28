@@ -1,8 +1,9 @@
 import smtplib
 from email.message import EmailMessage
+from .sender import Sender
 
 
-class SmtpSSL:
+class SmtpSSL(Sender):
     def __init__(self, host, port, user, password):
         self.host = host
         self.port = port
@@ -38,4 +39,3 @@ class SmtpSSL:
         except Exception as e:
             # print(f"Error sending email: {e}")
             return str(e)
-        

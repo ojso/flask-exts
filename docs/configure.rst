@@ -18,5 +18,8 @@ Configuration
                            Default is ``csrf_token``.
 ``CSRF_TIME_LIMIT``        Max age in seconds for CSRF tokens. 
                            Default is ``1800``. 
+``VERIFY_EMAIL_SENDER``    Email address used to send verification emails.
+                           It is a dict for smtp with keys: host,port,user,password.
+                           Default is None.
 ========================== =====================================================================
 

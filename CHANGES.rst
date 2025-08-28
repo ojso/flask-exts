@@ -1,3 +1,13 @@
+v0.2.3
+------
+
+Released 2025-08-28
+
+- move form into template
+- add folder email
+- add security.email_verification
+
+
 v0.2.2
 ------
 

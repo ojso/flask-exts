@@ -1,3 +1,4 @@
+from flask import current_app
 from flask import url_for
 from flask import request
 from flask import redirect
@@ -13,6 +14,7 @@ from ..forms.login import LoginForm
 from ..forms.register import RegisterForm
 from ..proxies import _usercenter
 from ..proxies import _security
+from ..signals import user_registered
 
 
 class UserView(BaseView):
@@ -24,7 +26,7 @@ class UserView(BaseView):
     list_template = "views/user/list.html"
     login_template = "views/user/login.html"
     register_template = "views/user/register.html"
-    email_verify_template = "views/user/email_verify.html"
+    verify_email_template = "views/user/verify_email.html"
 
     def __init__(
         self,
@@ -112,6 +114,7 @@ class UserView(BaseView):
             if user is None:
                 flash(error)
             else:
+                user_registered.send(current_app._get_current_object(), user=user)
                 login_user(user, force=True)
                 return redirect(url_for(".index"))
 
@@ -122,14 +125,8 @@ class UserView(BaseView):
         logout_user()
         return redirect(url_for(".index"))
 
-    @expose("/confirm_email/")
-    def confirm_email(self):
-        return self.render(self.email_verify_template)
-
-    @expose("/confirm_error/")
-    def confirm_error(self):
-        return self.render(self.email_verify_template)
-
-    @expose("/email_verify/")
-    def email_verify(self):
-        return self.render(self.email_verify_template)
+    @expose("/verify_email/")
+    def verify_email(self):
+        token = request.args.get("token")
+        r = _security.email_verification.verify_email_token(token)
+        return self.render(self.verify_email_template, result=r[0])

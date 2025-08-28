@@ -32,3 +32,6 @@ docs/_build/
 
 # sqlite db
 *.sqlite
+
+# production config
+**/config_prod.py

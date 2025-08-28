@@ -18,7 +18,7 @@ def app():
     # app.config["SQLALCHEMY_ECHO"] = True
     app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
     app.config["JWT_HASH"] = "HS256"
-
+    app.config.from_pyfile('config_prod.py', silent=True)
     manager = Manager()
     manager.init_app(app)
     return app

@@ -1,7 +1,7 @@
 import click
 from flask.cli import AppGroup
-from flask_exts.proxies import _usercenter
-from flask_exts.datastore.sqla import db
+from .proxies import _usercenter
+from .datastore.sqla import db
 
 
 datastore_cli = AppGroup("datastore", short_help="datastore for the app.")

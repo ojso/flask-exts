@@ -703,7 +703,7 @@ class BaseModelView(BaseView, ActionsMixin):
 
         Here's simple example which illustrates how to use::
 
-            from flask_exts.forms.form import rules
+            from .forms.form import rules
 
             class MyModelView(ModelView):
                 form_rules = [
@@ -799,7 +799,7 @@ class BaseModelView(BaseView, ActionsMixin):
         :param menu_class_name:
             Optional class name for the menu item.
         :param menu_icon_type:
-            Optional icon. 
+            Optional icon.
         :param menu_icon_value:
             Icon name or URL.
         """
@@ -818,7 +818,6 @@ class BaseModelView(BaseView, ActionsMixin):
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
         )
-
 
         # Actions
         self.init_actions()
@@ -1429,7 +1428,6 @@ class BaseModelView(BaseView, ActionsMixin):
 
         return missing_fields
 
-
     def _validate_form_class(self, ruleset, form_class, remove_missing=True):
         form_fields = []
         for name, obj in form_class.__dict__.items():
@@ -1557,7 +1555,7 @@ class BaseModelView(BaseView, ActionsMixin):
             flash(exc, "error")
             return True
 
-        if current_app.config.get("FLASK_EXTS_RAISE_ON_VIEW_EXCEPTION"):
+        if current_app.config.get("RAISE_ON_VIEW_EXCEPTION"):
             raise
 
         return False
