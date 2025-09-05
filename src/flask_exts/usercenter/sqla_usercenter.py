@@ -85,6 +85,11 @@ class SqlaUserCenter(BaseUserCenter):
         db.session.commit()
         return (r, None)
 
+    def user_set(self,user,**kwargs):
+        for key, value in kwargs.items():
+            setattr(user, key, value)
+        db.session.commit()
+
     def user_add_role(self, user, role):
         user.roles.append(role)
         db.session.commit()

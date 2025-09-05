@@ -94,3 +94,48 @@ class TestUserView:
         )
         assert rv.status_code == 200
         assert "invalid username" in rv.text
+
+    def test_tfa(self, app, client, admin):
+        # app.config.update(CSRF_ENABLED=False)
+        with app.app_context():
+            admin.add_view(UserView())
+            db.create_all()
+
+        with app.test_request_context():
+            user_login_url = url_for("user.login")
+            user_register_url = url_for("user.register")
+            user_logout_url = url_for("user.logout")
+            user_enable_tfa_url = url_for("user.enable_tfa")
+            user_setup_tfa_url = url_for("user.setup_tfa")
+            sess_csrf_token, csrf_token = _get_csrf_token_of_session_and_g()
+
+        with client.session_transaction() as sess:
+            sess["csrf_token"] = sess_csrf_token
+
+        # register
+        test_username = "test1234"
+        test_password = "test1234"
+        test_email = "test1234@test.com"
+        rv = client.post(
+            user_register_url,
+            data={
+                "username": test_username,
+                "password": test_password,
+                "password_repeat": test_password,
+                "email": test_email,
+                "csrf_token": csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+
+        rv = client.get(user_enable_tfa_url, query_string={"enable": True})
+        assert rv.status_code == 200
+        assert rv.json["tfa_enabled"] is True
+
+        rv = client.get(user_enable_tfa_url, query_string={"enable": False})
+        assert rv.status_code == 200
+        assert rv.json["tfa_enabled"] is False
+
+        rv = client.get(user_setup_tfa_url)
+        assert rv.status_code == 200

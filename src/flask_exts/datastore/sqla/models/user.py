@@ -28,31 +28,32 @@ class User(db.Model, BaseUser):
     uuid: Mapped[str] = mapped_column(unique=True, default=lambda: str(uuid.uuid4()))
     username: Mapped[Optional[str]] = mapped_column(unique=True)
     password: Mapped[Optional[str]]
-    display_name: Mapped[Optional[str]]
-    avatar: Mapped[Optional[str]]
+    actived: Mapped[bool] = mapped_column(default=False)
     status: Mapped[int] = mapped_column(default=0)
     expired_at: Mapped[Optional[datetime]]
-    actived: Mapped[bool] = mapped_column(default=False)
     email: Mapped[Optional[str]] = mapped_column(unique=True)
     email_verified: Mapped[bool] = mapped_column(default=False)
     email_verified_at: Mapped[Optional[datetime]]
     phone_number: Mapped[Optional[str]] = mapped_column(unique=True)
     phone_verified: Mapped[bool] = mapped_column(default=False)
     phone_verified_at: Mapped[Optional[datetime]]
+    tfa_enabled: Mapped[bool] = mapped_column(default=False)
+    tfa_method: Mapped[Optional[str]]
+    totp_secret: Mapped[Optional[str]]
+    recovery_codes: Mapped[Optional[str]]
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(
         default=datetime.now, onupdate=datetime.now
     )
 
     roles: Mapped[List["Role"]] = relationship(secondary=user_role_table)
-
     profile: Mapped["UserProfile"] = relationship(
         "UserProfile", back_populates="user", uselist=False
     )
 
     def get_roles(self):
         return [r.name for r in self.roles]
-    
+
     @property
     def is_active(self):
         return self.actived

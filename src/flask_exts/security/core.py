@@ -2,7 +2,7 @@ from .hasher import Blake2bHasher
 from .serializer import TimedUrlSerializer
 from .authorizer.casbin_authorizer import CasbinAuthorizer
 from .email_verification import EmailVerification
-
+from .two_factor_authentication import TwoFactorAuthentication
 
 class Security:
     def __init__(self, app=None):
@@ -21,6 +21,8 @@ class Security:
         self.email_verification = EmailVerification(app)
         # authorizer
         self.authorizer = CasbinAuthorizer(app)
+        # 2FA
+        self.tfa = TwoFactorAuthentication(app)
 
     def get_within(self, serializer_name):
         """Get the max age for a serializer."""

@@ -1,9 +1,10 @@
-from flask import current_app
+from flask import current_app, render_template_string
 from flask import url_for
 from flask import request
 from flask import redirect
 from flask import flash
 from flask import abort
+from flask import jsonify
 from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
@@ -15,6 +16,7 @@ from ..forms.register import RegisterForm
 from ..proxies import _usercenter
 from ..proxies import _security
 from ..signals import user_registered
+from ..utils.image import generate_qr_code
 
 
 class UserView(BaseView):
@@ -130,3 +132,31 @@ class UserView(BaseView):
         token = request.args.get("token")
         r = _security.email_verification.verify_email_token(token)
         return self.render(self.verify_email_template, result=r[0])
+
+    @login_required
+    @expose("/enable_tfa")
+    def enable_tfa(self):
+        enable = request.args.get("enable")
+        if enable is not None:
+            enable = False if str(enable).lower() in ["0", "false"] else True
+            if enable != current_user.tfa_enabled:
+                _usercenter.user_set(current_user, tfa_enabled=enable)
+            return jsonify({"tfa_enabled": enable})
+
+    @login_required
+    @expose("/setup_tfa")
+    def setup_tfa(self):
+        if not current_user.totp_secret:
+            _usercenter.user_set(
+                current_user, totp_secret=_security.tfa.generate_totp_secret()
+            )
+
+        uri = _security.tfa.get_totp_uri(
+            current_user.totp_secret, current_user.username
+        )
+        qr_code_data_url = generate_qr_code(uri)
+        return self.render(
+            "views/user/setup_tfa.html",
+            totp_secret=current_user.totp_secret,
+            qr_code_data_url=qr_code_data_url,
+        )

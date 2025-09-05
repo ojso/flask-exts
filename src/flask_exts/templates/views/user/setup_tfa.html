@@ -1,0 +1,15 @@
+{% extends 'admin/master.html' %}
+
+{% block title %}setup 2fa{% endblock %}
+
+{% block main %}
+
+<div>
+    <p>Scan this QR code with your authenticator app:</p>
+    <img src="{{ qr_code_data_url }}">
+    <p>Or enter this secret manually: <b>{{ totp_secret }}</b></p>
+    <p><b>Recovery Codes (save these!):</b><br>{{ recovery_codes|join('<br>') }}</p>
+</div>
+
+
+{% endblock %}

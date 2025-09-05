@@ -25,6 +25,9 @@ class BaseUserCenter(ABC):
     def get_user_identity(self, user): ...
 
     @abstractmethod
+    def user_set(self, user, **kwargs): ...
+
+    @abstractmethod
     def save_user(self, user): ...
 
     def init_app(self, app):
