@@ -1,15 +1,65 @@
 {% extends 'admin/master.html' %}
+{% import 'macro/actions.html' as actionlib with context %}
+{% from 'macro/vendor.html' import qrcode_js %}
 
 {% block title %}setup 2fa{% endblock %}
 
 {% block main %}
 
+{% if current_user.tfa_enabled %}
+{{ actionlib.add_modal_button(url=get_url('.verify_tfa_modal',action=url_for('.enable_tfa',enable=False)), btn_class='nav-link', title=gettext('Disable 2FA'),
+content=gettext('Disable')) }}
+{% else %}
 <div>
-    <p>Scan this QR code with your authenticator app:</p>
-    <img src="{{ qr_code_data_url }}">
-    <p>Or enter this secret manually: <b>{{ totp_secret }}</b></p>
-    <p><b>Recovery Codes (save these!):</b><br>{{ recovery_codes|join('<br>') }}</p>
+  <div>Scan this QR code with your authenticator app:</div>
+  <div id="qrimg" data-uri="{{ totp_uri }}"></div>
+  <div>Or enter this secret manually: <b>{{ totp_secret }}</b></div>
+  <div><b>Recovery Codes (save these!):</b><br>{{ recovery_codes|join('<br>') }}</div>
+  <div class="text-center mt-2">
+  <button type="button" class="btn btn-primary" onclick="copySecret()">
+    Copy Secret
+  </button>
+</div>
+</div>
+{{ actionlib.add_modal_button(url=get_url('.verify_tfa_modal',action=url_for('.enable_tfa',enable=True)), btn_class='nav-link', title=gettext('Enable 2FA'),
+content=gettext('Enable')) }}
+{% endif %}
+{{ actionlib.add_modal_window() }}
+{#
+<div class="form-group">
+  <label for="secret">Secret Token</label>
+  <input type="text" class="form-control" id="secret" value="{{ current_user.recovery_codes[0] }}" readonly>
 </div>
 
+
+<script>
+  function copySecret() {
+    var copyText = document.getElementById("secret");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+    document.execCommand("copy");
+    alert("Successfully copied TOTP secret token!");
+  }
+</script>
+#}
+
+{% endblock %}
+
+
+{% block tail %}
+{{ super() }}
+{{ qrcode_js() }}
+{{ actionlib.add_modal_js() }}
+
+<script>
+  // generate QR code
+  let qr = new QrCode(20, 'M');
+  let text = document.getElementById('qrimg').dataset.uri;
+  qr.addData(text);
+  qr.make();
+  const qrsvg = qr.createSvgTag(4,4);
+  document.getElementById('qrimg').innerHTML = qrsvg;
+
+</script>
 
 {% endblock %}

@@ -6,7 +6,7 @@ from flask_exts.datastore.sqla import db
 from flask_exts.utils.decorators import auth_required
 from flask_exts.utils.decorators import needs_required
 from flask_exts.utils.jwt import jwt_encode
-from flask_exts.proxies import _usercenter
+from flask_exts.proxies import _userstore
 from flask_exts.security.authorizer.sqlalchemy_adapter import CasbinRule
 from flask_exts.security.authorizer.casbin_authorizer import casbin_prefix_user
 
@@ -24,20 +24,20 @@ def init_data(app):
         db.create_all()
         s = db.session
 
-        u_alice, msg_alice = _usercenter.create_user(username="alice")
-        u_bob, msg_bob = _usercenter.create_user(username="bob")
-        u_cathy, msg_bob = _usercenter.create_user(username="cathy")
-        u_david, msg_bob = _usercenter.create_user(username="david")
+        u_alice, msg_alice = _userstore.create_user(username="alice")
+        u_bob, msg_bob = _userstore.create_user(username="bob")
+        u_cathy, msg_bob = _userstore.create_user(username="cathy")
+        u_david, msg_bob = _userstore.create_user(username="david")
 
-        role_admin, _ = _usercenter.create_role("admin")
-        role_edit, _ = _usercenter.create_role("edit")
-        role_write, _ = _usercenter.create_role("write")
-        role_read, _ = _usercenter.create_role("read")
+        role_admin, _ = _userstore.create_role("admin")
+        role_edit, _ = _userstore.create_role("edit")
+        role_write, _ = _userstore.create_role("write")
+        role_read, _ = _userstore.create_role("read")
 
-        _usercenter.user_add_role(u_alice, role_admin)
-        _usercenter.user_add_role(u_bob, role_edit)
-        _usercenter.user_add_role(u_cathy, role_write)
-        _usercenter.user_add_role(u_david, role_read)
+        _userstore.user_add_role(u_alice, role_admin)
+        _userstore.user_add_role(u_bob, role_edit)
+        _userstore.user_add_role(u_cathy, role_write)
+        _userstore.user_add_role(u_david, role_read)
 
         s.add(
             CasbinRule(
@@ -123,7 +123,7 @@ def test_enforcer(app, client, username, method, status, status_read, status_wri
             return jsonify({"message": "passed"}), 200
 
     with app.app_context():
-        u = _usercenter.get_user_by_username(username)
+        u = _userstore.get_user_by_username(username)
         token = jwt_encode({"id": u.id})
         # print(token)
     headers = {"Authorization": "Bearer " + token}

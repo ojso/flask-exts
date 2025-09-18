@@ -1,12 +1,12 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import select
-from .base_usercenter import BaseUserCenter
+from .base_user_store import BaseUserStore
 from ..datastore.sqla import db
 from ..datastore.sqla.models.user import User
 from ..datastore.sqla.models.user import Role
 
 
-class SqlaUserCenter(BaseUserCenter):
+class SqlaUserStore(BaseUserStore):
     user_class = User
     role_class = Role
 

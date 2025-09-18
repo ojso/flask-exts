@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
-from ..signals import user_registered
-from ..proxies import _security
 
 
-class BaseUserCenter(ABC):
+class BaseUserStore(ABC):
     identity_name = "id"
 
     @abstractmethod
@@ -29,15 +27,3 @@ class BaseUserCenter(ABC):
 
     @abstractmethod
     def save_user(self, user): ...
-
-    def init_app(self, app):
-        self.app = app
-        self.subscribe_signal(app)
-
-    def subscribe_signal(self, app):
-        user_registered.connect(self.after_user_registered, app)
-
-    def after_user_registered(self, sender, user, **kwargs):
-        """Signal handler for user registration."""
-        if user.email and not user.email_verified:
-            _security.email_verification.send_verify_email_token(user)

@@ -1,0 +1,10 @@
+{% extends 'admin/master.html' %}
+{% from 'macro/form.html' import render_form_fields %}
+
+{% block title %}verify 2FA{% endblock %}
+
+{% block main %}
+<form action="" method="post">
+    {{ render_form_fields(form) }}
+</form>
+{% endblock %}

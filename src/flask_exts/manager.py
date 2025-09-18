@@ -1,10 +1,8 @@
-from flask_login import LoginManager
 from .datastore.sqla import db
 from .babel import babel_init_app
 from .template.base import Template
 from .email.base import Email
-from .usercenter.sqla_usercenter import SqlaUserCenter
-from .utils.request_user import load_user_from_request
+from .usercenter.core import UserCenter
 from .security.core import Security
 
 
@@ -21,9 +19,11 @@ class Manager:
 
     def get_email(self):
         return Email()
+    
+    def get_admin_class(self):
+        from .admin.base_admin import BaseAdmin
 
-    def get_usercenter(self):
-        return SqlaUserCenter()
+        return BaseAdmin
 
     def init_app(self, app):
         self.app = app
@@ -56,18 +56,9 @@ class Manager:
         self.email.init_app(app)
         self.email.register_senders()
 
-        # init usercenter
-        self.usercenter = self.get_usercenter()
+        # init usercenter and initial login manager in usercenter
+        self.usercenter = UserCenter()
         self.usercenter.init_app(app)
-
-        # login
-        if not hasattr(app, "login_manager"):
-            login_manager = LoginManager()
-            login_manager.init_app(app)
-            login_manager.login_view = "user.login"
-            # login_manager.login_message = "Please login in"
-            login_manager.user_loader(self.usercenter.user_loader)
-            login_manager.request_loader(load_user_from_request)
 
         # init security
         self.security = Security()
@@ -77,7 +68,4 @@ class Manager:
         self.admin = self.get_admin_class()()
         self.admin.init_app(app)
 
-    def get_admin_class(self):
-        from .admin.base_admin import BaseAdmin
-
-        return BaseAdmin
+    

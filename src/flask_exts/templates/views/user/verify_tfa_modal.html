@@ -1,0 +1,17 @@
+{% from 'macro/form.html' import render_form_fields %}
+
+<div class="modal-header">
+  {% block header_text %}
+  <h5 class="modal-title">two factor authentication code</h5>
+  {% endblock %}
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<form action="{{ action or '' }}" method="POST" role="form" enctype="multipart/form-data">
+  <fieldset>
+    <div class="modal-body">
+      {{ render_form_fields(form) }}
+    </div>
+  </fieldset>
+</form>

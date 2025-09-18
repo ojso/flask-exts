@@ -1,5 +1,6 @@
 from flask import render_template
 from flask import url_for
+from flask import make_response
 from .menu import Menu
 
 
@@ -122,4 +123,11 @@ class BaseAdmin:
         # Add URL generation method to kwargs
         kwargs["get_url"] = self.get_url
 
-        return render_template(template, **kwargs)
+        if "_headers" in kwargs:
+            headers = kwargs.pop("_headers")
+            response = make_response(render_template(template, **kwargs))
+            for key, value in headers.items():
+                response.headers[key] = value
+            return response
+        else:
+            return render_template(template, **kwargs)

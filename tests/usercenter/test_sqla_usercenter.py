@@ -1,4 +1,4 @@
-from flask_exts.usercenter.sqla_usercenter import SqlaUserCenter
+from flask_exts.usercenter.sqla_user_store import SqlaUserStore
 from flask_exts.datastore.sqla.models.user import User
 from flask_exts.datastore.sqla import db
 
@@ -10,7 +10,7 @@ def reset_models():
 
 class TestSqlaUserCenter:
     def test_base(self, app):
-        uc = SqlaUserCenter()
+        uc = SqlaUserStore()
         assert uc.user_class == User
 
         with app.app_context():

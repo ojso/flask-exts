@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import url_for
 from flask import current_app
 from ..proxies import _security
-from ..proxies import _usercenter
+from ..proxies import _userstore
 from ..signals import to_send_email
 
 
@@ -63,7 +63,7 @@ class EmailVerification:
             return ("invalid_token", None)
 
         token_user_identity, token_email_hash = token_data
-        user = _usercenter.get_user_by_identity(token_user_identity)
+        user = _userstore.get_user_by_identity(token_user_identity)
 
         if not user:
             return ("no_user", None)
@@ -78,6 +78,6 @@ class EmailVerification:
         user.email_verified_at = datetime.now()
         user.actived = True
 
-        _usercenter.save_user(user)
+        _userstore.save_user(user)
 
         return ("verified", user)

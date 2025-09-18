@@ -1,5 +1,5 @@
 from flask_exts.proxies import _security
-from flask_exts.proxies import _usercenter
+from flask_exts.proxies import _userstore
 from flask_exts.datastore.sqla import db
 
 
@@ -27,7 +27,7 @@ class TestSecurity:
     def test_verify_email(self, app):
         with app.app_context():
             db.create_all()
-            r = _usercenter.create_user(
+            r = _userstore.create_user(
                 username="testuser",
                 password="testpassword",
                 email="testuser@example.com",

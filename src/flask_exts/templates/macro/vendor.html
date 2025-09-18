@@ -16,5 +16,6 @@
   <script src="{{ url_for('template.static',filename='js/form.js') }}"></script>
 {% endmacro %}
 
-
-
+{% macro qrcode_js() -%}
+  <script src="{{ url_for('template.static',filename='js/qrcode.js') }}"></script>
+{%- endmacro %}
