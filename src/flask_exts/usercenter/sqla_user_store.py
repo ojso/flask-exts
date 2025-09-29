@@ -1,4 +1,3 @@
-from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import select
 from .base_user_store import BaseUserStore
 from ..datastore.sqla import db
@@ -41,7 +40,7 @@ class SqlaUserStore(BaseUserStore):
         if username:
             user.username = username
         if password:
-            user.password = generate_password_hash(password)
+            user.password = user.hash_password(password)
         if email:
             user.email = email
         db.session.add(user)
@@ -74,7 +73,7 @@ class SqlaUserStore(BaseUserStore):
         user = db.session.execute(stmt).scalar()
         if user is None:
             return (None, "invalid username")
-        elif not check_password_hash(user.password, password):
+        elif not user.check_password(password):
             return (None, "invalid password")
         else:
             return (user, None)
@@ -85,7 +84,7 @@ class SqlaUserStore(BaseUserStore):
         db.session.commit()
         return (r, None)
 
-    def user_set(self,user,**kwargs):
+    def user_set(self, user, **kwargs):
         for key, value in kwargs.items():
             setattr(user, key, value)
         db.session.commit()
@@ -104,3 +103,4 @@ class SqlaUserStore(BaseUserStore):
         if user.id is not None:
             db.session.add(user)
         db.session.commit()
+

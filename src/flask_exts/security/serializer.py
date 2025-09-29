@@ -22,7 +22,7 @@ class TimedUrlSerializer:
         return token
 
     def loads(
-        self, serializer_name: str, token: str, max_age: int | None = None
+        self, serializer_name: str, token: str, max_age: int | None = 259200  # 3 days
     ) -> tuple[bool, bool, t.Any]:
         """Get the status of a token and return data.
 
@@ -42,7 +42,7 @@ class TimedUrlSerializer:
         try:
             data = s.loads(token, max_age=max_age)
         except SignatureExpired:
-            _, data = s.loads_unsafe(token)
+            # _, data = s.loads_unsafe(token)
             expired = True
         except (BadSignature, TypeError, ValueError):
             invalid = True

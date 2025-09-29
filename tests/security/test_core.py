@@ -20,9 +20,17 @@ class TestSecurity:
             token = security_serializer.dumps("test", data)
             assert token is not None
             r = security_serializer.loads("test", token, max_age=3600)
+            print(r)
             assert r[0] is False
             assert r[1] is False
             assert r[2] == data
+            # import time
+            # time.sleep(3)
+            # r = security_serializer.loads("test", token, max_age=2)
+            # print(r)
+            # assert r[0] is True
+            # assert r[1] is False
+            # assert r[2] == data
 
     def test_verify_email(self, app):
         with app.app_context():
@@ -35,7 +43,7 @@ class TestSecurity:
             assert r[0] is not None
             assert r[0].is_active is False
             token = _security.email_verification.generate_verify_email_token(r[0])
-            r = _security.email_verification.verify_email_token(token)
+            r = _security.email_verification.verify_email_with_token(token)
             assert r[0] == "verified"
             assert r[1].email_verified is True
             assert r[1].is_active is True

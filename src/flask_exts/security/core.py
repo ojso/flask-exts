@@ -2,7 +2,9 @@ from .hasher import Blake2bHasher
 from .serializer import TimedUrlSerializer
 from .authorizer.casbin_authorizer import CasbinAuthorizer
 from .email_verification import EmailVerification
+from .reset_password import ResetPassword
 from .two_factor_authentication import TwoFactorAuthentication
+
 
 class Security:
     def __init__(self, app=None):
@@ -19,6 +21,8 @@ class Security:
         self.serializer = TimedUrlSerializer(secret_key)
         # email verification
         self.email_verification = EmailVerification(app)
+        # reset password
+        self.reset_password = ResetPassword(app)
         # authorizer
         self.authorizer = CasbinAuthorizer(app)
         # 2FA

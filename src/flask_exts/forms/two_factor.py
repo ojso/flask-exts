@@ -6,5 +6,5 @@ from ..template.form.flask_form import FlaskForm
 
 
 class TwoFactorForm(FlaskForm):
-    code = StringField("Code", validators=[DataRequired(), Length(min=6, max=6)])
+    code = StringField("2FA Code", validators=[DataRequired(), Length(min=6, max=6)])
     submit = SubmitField("Verify")

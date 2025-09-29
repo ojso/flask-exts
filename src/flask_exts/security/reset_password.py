@@ -6,36 +6,36 @@ from ..proxies import _userstore
 from ..signals import to_send_email
 
 
-class EmailVerification:
+class ResetPassword:
     """
-    Class to handle verify email functionality.
-    This class provides methods to generate verify tokens and
-    email addresses based on those tokens.
+    Class to handle reset password functionality.
+    This class provides methods to generate reset token and reset password with the token.
     """
 
     def __init__(self, app=None):
         self.app = app
-        self.serializer_name = "verify_email"
+        self.serializer_name = "reset_password"
 
-    def generate_verify_email_token(self, user):
-        """Generates a verification token for the specified user.
+    def generate_reset_password_token(self, user):
+        """Generates a reset password token for the specified user.
         :param user: The user to work with
         """
         data = (str(user.id), _security.hasher.hash(user.email))
         token = _security.serializer.dumps(self.serializer_name, data)
         return token
 
-    def send_verify_email_token(self, user):
-        """Sends the verify instructions email for the specified user.
-
-        :param user: The user to send the instructions to
+    def send_reset_password_token(self, email):
+        """Sends the reset password with email.
+        :param email: The email address of the user to send the reset password token to.
         """
-
-        token = self.generate_verify_email_token(user)
-        link = url_for("user.verify_email", token=token, _external=True)
+        user = _userstore.get_user_by_identity(email, "email")
+        if not user:
+            return
+        token = self.generate_reset_password_token(user)
+        link = url_for("user.reset_password", token=token, _external=True)
 
         data = {
-            "type": "verify_email",
+            "type": "reset_password",
             "email": user.email,
             "verification_link": link,
             "verification_token": token,
@@ -44,10 +44,9 @@ class EmailVerification:
 
         to_send_email.send(current_app._get_current_object(), data=data)
 
-    def verify_email_with_token(self, token, within=None):
+    def reset_password_with_token(self, token, password, within=None):
         """
-        View function which handles an email verification request.
-        This is always a GET from an email - so for 'spa' must always redirect.
+        Resets the password for a user with the given token.
         """
         if within is None:
             within = _security.get_within(self.serializer_name)
@@ -69,15 +68,12 @@ class EmailVerification:
             return ("no_user", None)
 
         if not _security.hasher.verify(user.email, token_email_hash):
-            return ("invalid_email", None)
+            return ("invalid_token", None)
 
-        if user.email_verified:
-            return ("already_verified", user)
+        if not user.email_verified:
+            return ("email_not_verified", None)
 
-        user.email_verified = True
-        user.email_verified_at = datetime.now()
-        user.actived = True
-
+        _userstore.user_set(user, password=user.hash_password(password))
         _userstore.save_user(user)
 
-        return ("verified", user)
+        return ("ok", None)

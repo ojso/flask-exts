@@ -9,6 +9,8 @@ class TwoFactorAuthentication:
         return pyotp.random_base32()
 
     def get_totp_code(self, otp_secret):
+        if otp_secret is None:
+            return None
         otp = pyotp.TOTP(otp_secret)
         return otp.now()
 

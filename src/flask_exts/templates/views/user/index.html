@@ -6,4 +6,6 @@
 <div> email: {{ current_user.email}} </div>
 <div> tfa_enabled: {{ current_user.tfa_enabled}} </div>
 <div> tfa_verified: {{ session["tfa_verified"]}} </div>
+<div> want to change password?  Click <a href="{{url_for('.change_password')}}"> here </a> to proceed.</div>
+<div> set up 2FA?  Click <a href="{{url_for('.setup_tfa')}}"> here </a> to begin.</div>
 {% endblock %}
