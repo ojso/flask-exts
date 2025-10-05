@@ -1,24 +1,19 @@
 {% extends 'admin/master.html' %}
 {% import 'macro/actions.html' as actionlib with context %}
 
-{% block title %}setup 2fa{% endblock %}
+{% block title %}show 2fa{% endblock %}
 
 {% block main %}
 
+<div>Two-Factor Authentication (2FA) is currently <b>enabled</b> for your account.</div>
 <div>
-  <div>Scan this QR code with your authenticator app:</div>
-  <div id="qrimg" data-uri="{{ totp_uri }}"></div>
-  <div>Or enter this secret manually: <b>{{ totp_secret }}</b></div>
-
+{{ actionlib.add_modal_button(url=get_url('.verify_tfa',modal=True,action=url_for('.enable_tfa',enable=False)), btn_class='nav-link', title=gettext('Disable 2FA'),
+content=gettext('Disable 2FA')) }}
 </div>
-{% if not current_user.tfa_enabled %}
-
-{{ actionlib.add_modal_button(url=get_url('.verify_tfa',modal=True,action=url_for('.enable_tfa',enable=True)), btn_class='nav-link', title=gettext('Enable 2FA'),
-content=gettext('Enable 2FA')) }}
-
-{{ actionlib.add_modal_window() }}
-
-{% endif %}
+<div>
+recover codes can be used if you lose access to your authenticator app.
+<a href="{{ url_for('.recovery_codes') }}">View Recovery Codes</a>
+</div>
 
 {% endblock %}
 
@@ -29,7 +24,6 @@ content=gettext('Enable 2FA')) }}
 
 {% block tail %}
 {{ super() }}
-{{ actionlib.add_modal_js() }}
 
 <script>
   // generate QR code

@@ -24,31 +24,24 @@ class Bootstrap:
     fluid: bool = False
 
 
-@dataclass
-class Title:
-    view = "View"
-    edit = "Edit"
-    delete = "Remove"
-    new = "Create"
-
 class BootstrapTheme:
-    admin_base_template: str = "admin/base.html"
     icon_sprite_url = ICON_SPRITE_URL
     icon_font_css = ICON_FONT_CSS
     icon_size = "1em"
-    title = Title()
 
-    def __init__(self,version=4):
+    def __init__(self, version=4):
         bootstrap = Bootstrap()
         bootstrap.version = version
         self.bootstrap = bootstrap
 
     def load_css(self):
-        bootstrap_css_url = BOOTSTRAP4_CSS_URL if self.bootstrap.version < 5 else BOOTSTRAP5_CSS_URL
+        bootstrap_css_url = (
+            BOOTSTRAP4_CSS_URL if self.bootstrap.version < 5 else BOOTSTRAP5_CSS_URL
+        )
         css = (
             f'<link rel="stylesheet" href="{bootstrap_css_url}">'
             f'<link rel="stylesheet" href="{self.icon_font_css}">'
-            )
+        )
         return Markup(css)
 
     def load_js(self):

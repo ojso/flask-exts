@@ -42,6 +42,7 @@ More examples, please click :doc:`examples`.
 
    configure
    develop
+   user
    examples
    changes
 

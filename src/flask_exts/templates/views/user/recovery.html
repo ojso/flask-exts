@@ -1,14 +1,10 @@
 {% extends 'admin/master.html' %}
-
 {% from 'macro/form.html' import render_form_fields %}
 
-{% block title %}register{% endblock %}
+{% block title %}recovery{% endblock %}
 
 {% block main %}
 <form action="" method="post">
     {{ render_form_fields(form) }}
 </form>
-
-<div>Already have an account?  Click <a href="{{url_for('.login')}}"> here </a> to log in.</div>
-
 {% endblock %}

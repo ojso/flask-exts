@@ -27,6 +27,8 @@ class TestUserView:
 
         email_sender = EmailSender()
         app.extensions["manager"].email.register_sender("verify_email", email_sender)
+        app.extensions["manager"].email.register_sender("reset_password", email_sender)
+        # print(app.extensions["manager"].email.senders)
 
         with app.test_request_context():
             self.sess_csrf_token, self.csrf_token = _get_csrf_token_of_session_and_g()
@@ -37,6 +39,10 @@ class TestUserView:
             self.user_setup_tfa_url = url_for("user.setup_tfa")
             self.user_verify_tfa_url = url_for("user.verify_tfa")
             self.user_change_password_url = url_for("user.change_password")
+            self.user_forgot_password_url = url_for("user.forgot_password")
+            self.user_reset_password_url = url_for("user.reset_password")
+            self.user_recovery_codes_url = url_for("user.recovery_codes")
+            self.user_recovery_url = url_for("user.recovery")
 
         with client.session_transaction() as sess:
             sess["csrf_token"] = self.sess_csrf_token
@@ -62,6 +68,26 @@ class TestUserView:
             assert "_user_id" in sess
             self.test_user_id = sess["_user_id"]
 
+    @pytest.fixture
+    def register_user_and_active(self, client, register_user):
+        rv = client.post(
+            self.user_register_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "password_repeat": self.test_password,
+                "email": self.test_email,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        with client.session_transaction() as sess:
+            assert "_user_id" in sess
+            self.test_user_id = sess["_user_id"]
+
+        verification_link = mail_data[0]["verification_link"]
+        rv = client.get(verification_link, follow_redirects=True)
+
     def test_register(self, client, setup):
         rv = client.post(
             self.user_register_url,
@@ -80,6 +106,7 @@ class TestUserView:
             assert "_user_id" in sess
             test_user_id = sess["_user_id"]
 
+        # print(mail_data)
         # logout
         client.get(self.user_logout_url)
         with client.session_transaction() as sess:
@@ -331,3 +358,126 @@ class TestUserView:
         with client.session_transaction() as sess:
             assert "_user_id" in sess
         assert self.test_username in rv.text
+
+    def test_forgot_password(self, client, register_user_and_active):
+        # logout
+        client.get(self.user_logout_url)
+
+        # access forgot_password page
+        rv = client.get(self.user_forgot_password_url)
+        assert rv.status_code == 200
+        assert "form" in rv.text
+
+        # submit invalid email
+        rv = client.post(
+            self.user_forgot_password_url,
+            data={
+                "email": "invalid@example.com",
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        assert "Found no user with this email" in rv.text
+
+        # forgot password successfully
+        rv = client.post(
+            self.user_forgot_password_url,
+            data={
+                "email": self.test_email,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        reset_password_mail_data = mail_data[-1]
+        assert reset_password_mail_data["type"] == "reset_password"
+        assert reset_password_mail_data["email"] == self.test_email
+        assert "reset_password_link" in reset_password_mail_data
+        reset_password_link = reset_password_mail_data["reset_password_link"]
+
+        # reset password with new password
+        newpassword = "newpassword1234"
+        rv = client.post(
+            reset_password_link,
+            data={
+                "password": newpassword,
+                "password_repeat": newpassword,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+
+        # login with new password
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": newpassword,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        with client.session_transaction() as sess:
+            assert "_user_id" in sess
+        assert self.test_username in rv.text
+
+    def test_recovery(self, app, client, register_user):
+        rv = client.get(self.user_recovery_codes_url)
+        assert rv.status_code == 403
+
+        rv = client.get(self.user_recovery_url)
+        assert rv.status_code == 403
+
+        # tfa enable
+        rv = client.get(self.user_setup_tfa_url)
+        assert rv.status_code == 200
+
+        with app.app_context():
+            u = _userstore.get_user_by_id(self.test_user_id)
+            totp_code = _security.tfa.get_totp_code(u.totp_secret)
+
+        rv = client.post(
+            self.user_enable_tfa_url,
+            query_string={"enable": True},
+            data={"csrf_token": self.csrf_token, "code": totp_code},
+        )
+        assert rv.status_code == 200
+        assert rv.json["tfa_enabled"] is True
+        with client.session_transaction() as sess:
+            assert "_user_id" in sess
+            assert "tfa_verified" in sess and sess["tfa_verified"] is True
+
+        # show recovery codes
+        rv = client.get(self.user_recovery_codes_url)
+        assert rv.status_code == 200
+
+        with app.app_context():
+            u = _userstore.get_user_by_id(self.test_user_id)
+            totp_secret = u.totp_secret
+            recovery_codes = u.recovery_codes
+
+        assert recovery_codes[0] in rv.text
+
+        rv = client.get(self.user_recovery_url)
+        assert rv.status_code == 200
+
+        # recovery to get totp_secret
+        recovery_code = recovery_codes[0]
+        rv = client.post(
+            self.user_recovery_url,
+            data={"csrf_token": self.csrf_token, "code": recovery_code},
+        )
+
+        assert rv.status_code == 200
+        assert totp_secret in rv.text
+
+        # u.recovery_codes removed recovery_code
+        with app.app_context():
+            u = _userstore.get_user_by_id(self.test_user_id)
+            recovery_codes_2 = u.recovery_codes
+
+        assert len(recovery_codes) == len(recovery_codes_2) + 1
+        assert recovery_code not in recovery_codes_2

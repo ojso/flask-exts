@@ -123,6 +123,7 @@ class BaseAdmin:
         # Add URL generation method to kwargs
         kwargs["get_url"] = self.get_url
 
+        # If _headers is provided in kwargs, use make_response to set headers
         if "_headers" in kwargs:
             headers = kwargs.pop("_headers")
             response = make_response(render_template(template, **kwargs))

@@ -12,15 +12,17 @@ from flask_login import logout_user
 from flask_login import login_required
 from ..admin import BaseView
 from ..admin import expose
-from ..forms.login import LoginForm
-from ..forms.register import RegisterForm
-from ..forms.change_password import ChangePasswordForm
-from ..forms.forgot_password import ForgotPasswordForm
-from ..forms.reset_password import ResetPasswordForm
-from ..forms.two_factor import TwoFactorForm
+from ..template.forms.login import LoginForm
+from ..template.forms.register import RegisterForm
+from ..template.forms.change_password import ChangePasswordForm
+from ..template.forms.forgot_password import ForgotPasswordForm
+from ..template.forms.reset_password import ResetPasswordForm
+from ..template.forms.two_factor import TwoFactorForm
+from ..template.forms.recovery import RecoveryForm
 from ..proxies import _userstore
 from ..proxies import _security
 from ..signals import user_registered
+from ..constants import NO_CACHE_HEADER
 
 
 class UserView(BaseView):
@@ -162,25 +164,21 @@ class UserView(BaseView):
     def setup_tfa(self):
         if current_user.tfa_enabled:
             return self.render(
-                "views/user/setup_tfa.html",
+                "views/user/show_tfa.html",
             )
         if not current_user.totp_secret:
             _userstore.user_set(
                 current_user, totp_secret=_security.tfa.generate_totp_secret()
             )
+
         totp_uri = _security.tfa.get_totp_uri(
             current_user.totp_secret, current_user.username
         )
-        _headers = {
-            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
-            "Pragma": "no-cache",
-            "Expires": "0",
-        }
         return self.render(
             "views/user/setup_tfa.html",
             totp_uri=totp_uri,
             totp_secret=current_user.totp_secret,
-            _headers=_headers,
+            _headers=NO_CACHE_HEADER,
         )
 
     @login_required
@@ -227,10 +225,12 @@ class UserView(BaseView):
             return redirect(url_for(".index"))
         form = ForgotPasswordForm()
         if form.validate_on_submit():
-            _security.forgot_password.send_forgot_password_token(form.email.data)
+            _security.reset_password.send_reset_password_token(
+                _userstore.get_user_by_identity(form.email.data, "email")
+            )
             flash(
-                "If the email is registered, you will receive a password reset email shortly.",
-                "info",
+                "An email has been sent with instructions to reset your password.",
+                "success",
             )
             return redirect(url_for(".login"))
         return self.render("views/user/forgot_password.html", form=form)
@@ -240,10 +240,61 @@ class UserView(BaseView):
         token = request.args.get("token")
         form = ResetPasswordForm()
         if form.validate_on_submit():
-            r = _security.forgot_password.set_password_with_token(
+            r = _security.reset_password.reset_password_with_token(
                 token, form.password.data
             )
-            if r:
-                flash("Your password has been updated.", "success")
+            if r[0] == "ok":
+                flash("Your password has been reset.", "success")
                 return redirect(url_for(".login"))
+            else:
+                print(r)
+                flash("The reset password link is invalid or has expired.", "error")
         return self.render("views/user/reset_password.html", form=form)
+
+    @login_required
+    @expose("/recovery_codes")
+    def recovery_codes(self):
+        if not session.get("tfa_verified"):
+            abort(403)
+        if not current_user.recovery_codes:
+            _userstore.user_set(
+                current_user,
+                recovery_codes=_security.tfa.generate_recovery_codes(),
+            )
+        return self.render(
+            "views/user/recovery_codes.html",
+            recovery_codes=current_user.recovery_codes,
+            _headers=NO_CACHE_HEADER,
+        )
+
+    @login_required
+    @expose("/recovery", methods=("GET", "POST"))
+    def recovery(self):
+        if not current_user.tfa_enabled:
+            return jsonify({"error": "2FA is not enabled"}), 403
+        form = RecoveryForm()
+        if form.validate_on_submit():
+            if (
+                current_user.recovery_codes
+                and form.code.data in current_user.recovery_codes
+            ):
+                recovery_codes = current_user.recovery_codes
+                recovery_codes.remove(form.code.data)
+                _userstore.user_set(current_user, recovery_codes=recovery_codes)
+                totp_uri = _security.tfa.get_totp_uri(
+                    current_user.totp_secret, current_user.username
+                )
+                return self.render(
+                    "views/user/setup_tfa.html",
+                    totp_uri=totp_uri,
+                    totp_secret=current_user.totp_secret,
+                    _headers=NO_CACHE_HEADER,
+                )
+            else:
+                flash("Invalid recovery code", "error")
+        return self.render("views/user/recovery.html", form=form)
+
+    @login_required
+    @expose("/profile")
+    def profile(self):
+        pass

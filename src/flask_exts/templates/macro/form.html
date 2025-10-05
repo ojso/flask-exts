@@ -1,5 +1,5 @@
 {% macro render_field_required_star(field) %}
-  {%- if is_required_form_field(field) %}<strong class="text-danger">&#42;</strong>{% endif -%}
+  {%- if template.funcs.is_required_form_field(field) %}<strong class="text-danger">&#42;</strong>{% endif -%}
 {% endmacro %}
 
 

@@ -4,10 +4,11 @@
 {% block title %}login{% endblock %}
 
 {% block main %}
+<div>
 <form action="" method="post">
-    {{ render_form_fields(form) }}
+{{ render_form_fields(form) }}
 </form>
-
+</div>
 <div>Don't have an account? Click <a href="{{ url_for('.register') | safe }}">here</a> to register.</div>
-
+<div>Forgot your password? Click <a href="{{ url_for('.forgot_password') | safe }}">here</a> to reset it.</div>
 {% endblock %}

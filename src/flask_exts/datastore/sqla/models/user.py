@@ -10,6 +10,8 @@ from ..orm import relationship
 from ..orm import ForeignKey
 from ..orm import Table
 from ..orm import Column
+from ..orm import MutableList
+from ..orm import JSON
 from .role import Role
 from .user_profile import UserProfile
 
@@ -40,7 +42,9 @@ class User(db.Model, BaseUser):
     tfa_enabled: Mapped[bool] = mapped_column(default=False)
     tfa_method: Mapped[Optional[str]]
     totp_secret: Mapped[Optional[str]]
-    recovery_codes: Mapped[Optional[str]]
+    recovery_codes: Mapped[Optional[list[str]]] = mapped_column(
+        type_=MutableList.as_mutable(JSON)
+    )
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(
         default=datetime.now, onupdate=datetime.now

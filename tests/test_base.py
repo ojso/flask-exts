@@ -19,7 +19,7 @@ def test_extensions(app):
     assert manager.admin is not None
     admin = manager.admin
     assert admin.app is not None
-    print(app.config.get("VERIFY_EMAIL_SENDER"))
+    print(app.config.get("NOREPLY_EMAIL_SENDER"))
 
 @pytest.mark.skip(reason="not print.")
 def test_prints(app):

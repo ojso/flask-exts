@@ -7,6 +7,5 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.types import LargeBinary
 from sqlalchemy.types import JSON
-
-
-
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.ext.mutable import MutableList

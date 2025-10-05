@@ -4,7 +4,7 @@ from wtforms.validators import DataRequired
 from wtforms.validators import EqualTo
 from wtforms.validators import Length
 from flask_login import current_user
-from ..template.form.flask_form import FlaskForm
+from ..form.flask_form import FlaskForm
 
 
 class ChangePasswordForm(FlaskForm):

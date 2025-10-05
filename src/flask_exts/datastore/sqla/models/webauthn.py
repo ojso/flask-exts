@@ -8,6 +8,7 @@ from ..orm import LargeBinary
 from ..orm import ForeignKey
 from ..orm import relationship
 from ..orm import JSON
+from ..orm import MutableList
 
 
 class WebAuthnMixin(db.Model):
@@ -19,7 +20,9 @@ class WebAuthnMixin(db.Model):
     )
     public_key: Mapped[bytes] = mapped_column(LargeBinary)
     sign_count: Mapped[Optional[int]] = mapped_column(default=0)
-    transports: Mapped[Optional[list[str]]] = mapped_column(type_=JSON)
+    transports: Mapped[Optional[list[str]]] = mapped_column(
+        type_=MutableList.as_mutable(JSON)
+    )
     backup_state: Mapped[bool] = mapped_column()
     device_type: Mapped[str] = mapped_column()
     extensions: Mapped[Optional[str]] = mapped_column()

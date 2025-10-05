@@ -1,3 +1,5 @@
+import secrets
+import string
 import pyotp
 
 
@@ -7,6 +9,14 @@ class TwoFactorAuthentication:
 
     def generate_totp_secret(self):
         return pyotp.random_base32()
+
+    def generate_recovery_codes(self, count=10, length=16):
+        alphabet = string.ascii_letters + string.digits
+        codes = set()
+        while len(codes) < count:
+            code = "".join(secrets.choice(alphabet) for _ in range(length))
+            codes.add(code)
+        return list(codes)
 
     def get_totp_code(self, otp_secret):
         if otp_secret is None:

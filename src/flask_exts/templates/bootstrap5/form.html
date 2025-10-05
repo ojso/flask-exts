@@ -1,7 +1,7 @@
 {% macro render_hidden_errors(form) %}
     {%- if form.errors %}
         {%- for fieldname, errors in form.errors.items() %}
-            {%- if is_hidden_field(form[fieldname]) %}
+            {%- if template.funcs.is_hidden_field(form[fieldname]) %}
                 {%- for error in errors %}
                     <div class="invalid-feedback d-block">{{ error }}</div>
                 {%- endfor %}
@@ -36,7 +36,7 @@
         {% set kwargs = dict(required=True, **kwargs) %}
     {%- endif %}
 
-    {%- set form_group_classes = form_group_classes or template.bootstrap.form_group_classes -%}
+    {%- set form_group_classes = form_group_classes or template.theme.bootstrap.form_group_classes -%}
 
     {# combine render_kw class or class/class_ argument with Bootstrap classes #}
     {%- set render_kw_class = ' ' + field.render_kw.class if field.render_kw.class else '' %}
@@ -112,8 +112,8 @@
         {% set field_kwargs = kwargs %}
         {# note: same issue as above - should check widget, not field type #}
         {% call _hz_form_wrap(horizontal_columns, form_type, True, required=required) %}
-            {% set default_button_style = button_style or template.bootstrap.btn_style %}
-            {% set default_button_size = button_size or template.bootstrap.btn_size %}
+            {% set default_button_style = button_style or template.theme.bootstrap.btn_style %}
+            {% set default_button_size = button_size or template.theme.bootstrap.btn_size %}
             {{ field(class='btn btn-%s btn-%s%s' % (button_map.get(field.name, default_button_style), default_button_size, extra_classes), **field_kwargs) }}
         {% endcall %}
     {%- elif field.type in ['CSRFTokenField', 'HiddenField'] -%}
@@ -122,7 +122,7 @@
         <fieldset>
             <legend>{{ field.label }}</legend>
             {%- for subfield in field %}
-                {% if not is_hidden_field(subfield) -%}
+                {% if not template.funcs.is_hidden_field(subfield) -%}
                     {{ render_field(subfield,
                       form_type=form_type,
                       horizontal_columns=horizontal_columns,
@@ -238,7 +238,7 @@
                     render_kw={},
                     form_group_classes='',
                     form_inline_classes='') -%}
-    {%- set form_inline_classes = form_inline_classes or template.bootstrap.form_inline_classes %}
+    {%- set form_inline_classes = form_inline_classes or template.theme.bootstrap.form_inline_classes %}
     {%- set _enctype = [] %}
     {%- if enctype is none %}
         {%- for field in form %}

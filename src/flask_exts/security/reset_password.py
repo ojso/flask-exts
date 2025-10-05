@@ -24,12 +24,11 @@ class ResetPassword:
         token = _security.serializer.dumps(self.serializer_name, data)
         return token
 
-    def send_reset_password_token(self, email):
-        """Sends the reset password with email.
-        :param email: The email address of the user to send the reset password token to.
+    def send_reset_password_token(self, user):
+        """Sends the reset password token.
+        :param user: The user to send the reset password token to.
         """
-        user = _userstore.get_user_by_identity(email, "email")
-        if not user:
+        if user is None or user.email is None:
             return
         token = self.generate_reset_password_token(user)
         link = url_for("user.reset_password", token=token, _external=True)
@@ -37,8 +36,8 @@ class ResetPassword:
         data = {
             "type": "reset_password",
             "email": user.email,
-            "verification_link": link,
-            "verification_token": token,
+            "reset_password_link": link,
+            "reset_password_token": token,
             "user": user,
         }
 

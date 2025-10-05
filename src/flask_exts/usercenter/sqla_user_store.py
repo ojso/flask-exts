@@ -1,3 +1,4 @@
+import copy
 from sqlalchemy import select
 from .base_user_store import BaseUserStore
 from ..datastore.sqla import db
@@ -103,4 +104,3 @@ class SqlaUserStore(BaseUserStore):
         if user.id is not None:
             db.session.add(user)
         db.session.commit()
-

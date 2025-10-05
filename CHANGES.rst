@@ -3,7 +3,11 @@ v0.2.4
 
 Unreleased
 
-- add two factor authentication (2FA) with TOTP
+- user change password
+- user forgot password
+- user 2FA with TOTP
+- user recovery codes
+- user recovery
 
 v0.2.3
 ------

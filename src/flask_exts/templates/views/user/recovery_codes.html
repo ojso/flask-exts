@@ -1,0 +1,32 @@
+{% extends 'admin/master.html' %}
+{% import 'macro/actions.html' as actionlib with context %}
+
+{% block title %}recovery codes{% endblock %}
+
+{% block main %}
+
+<div><b>Recovery Codes (save these!):</b></div>
+<button type="button" class="btn btn-primary" onclick="copyRecoveryCodes()">Copy Recovery Codes</button>
+<div>
+<textarea readonly style="width:100%;">
+{%- for rc in recovery_codes -%}
+{{ rc }}
+{% endfor -%}
+  </textarea>
+  </div>
+
+{% endblock %}
+
+{% block tail %}
+{{ super() }}
+<script>
+  function copyRecoveryCodes() {
+    var recoveryCodes = {{ current_user.recovery_codes|tojson }};
+    navigator.clipboard.writeText(recoveryCodes.join("\n")).then(function() {
+      alert("Successfully copied recovery codes!");
+    }, function(err) {
+      alert("Error copying recovery codes: " + err);
+    });
+  }
+</script>
+{% endblock %}

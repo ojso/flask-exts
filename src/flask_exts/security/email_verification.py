@@ -30,7 +30,8 @@ class EmailVerification:
 
         :param user: The user to send the instructions to
         """
-
+        if user is None or user.email is None:
+            return
         token = self.generate_verify_email_token(user)
         link = url_for("user.verify_email", token=token, _external=True)
 

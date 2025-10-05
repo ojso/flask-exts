@@ -14,8 +14,8 @@
   <form id="action_form" action="{{ url }}" method="POST" class="d-none">
     {% if action_form.csrf_token %}
       {{ action_form.csrf_token }}
-    {% elif csrf_token %}
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    {% elif template.funcs.csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ template.funcs.csrf_token() }}"/>
     {% endif %}
     {{ action_form.url(value=return_url) }}
     {{ action_form.action() }}

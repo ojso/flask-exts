@@ -19,7 +19,7 @@ class Manager:
 
     def get_email(self):
         return Email()
-    
+
     def get_admin_class(self):
         from .admin.base_admin import BaseAdmin
 
@@ -54,7 +54,6 @@ class Manager:
         # init email
         self.email = self.get_email()
         self.email.init_app(app)
-        self.email.register_senders()
 
         # init usercenter and initial login manager in usercenter
         self.usercenter = UserCenter()
@@ -67,5 +66,3 @@ class Manager:
         # init admin
         self.admin = self.get_admin_class()()
         self.admin.init_app(app)
-
-    

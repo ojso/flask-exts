@@ -1,21 +1,12 @@
 {% extends "base.html" %}
 
-{% block ns_setting %}
-{% endblock %}
-
-{% block metas %}
-<meta name="description" content="">
-<meta name="keywords" content="">
-{% endblock %}
-
 {% block styles -%}
-  {%- if template -%}
-    {{ template.load_css() }}
-  {%- endif -%}
+{{ template.theme.load_css() }}
 {%- endblock %}
 
 {% block scripts -%}
-  {%- if template -%}
-    {{ template.load_js() }}
-  {%- endif -%}
+{{ template.theme.load_js() }}
+{%- for name in template.plugin.names %}
+{{ template.plugin.load_js(name) }}
+{% endfor -%}
 {%- endblock %}
