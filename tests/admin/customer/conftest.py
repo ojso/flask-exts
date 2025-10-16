@@ -3,13 +3,6 @@ from flask import Flask
 from flask_exts import Manager
 
 
-class MyManager(Manager):
-    def get_admin_class(self):
-        from flask_exts.admin.admin import Admin
-        return Admin
-
-
-
 @pytest.fixture
 def app():
     app = Flask(__name__)
@@ -20,8 +13,8 @@ def app():
     # app.config["SQLALCHEMY_ECHO"] = True
     app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
     app.config["JWT_HASH"] = "HS256"
-
-    manager = MyManager()
+    app.config["ENABLE_USER"] = True
+    manager = Manager()
     manager.init_app(app)
     yield app
 

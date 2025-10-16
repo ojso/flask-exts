@@ -1,18 +1,13 @@
-import copy
 from sqlalchemy import select
 from .base_user_store import BaseUserStore
 from ..datastore.sqla import db
-from ..datastore.sqla.models.user import User
-from ..datastore.sqla.models.user import Role
+from .models.user import User
+from .models.role import Role
 
 
 class SqlaUserStore(BaseUserStore):
     user_class = User
     role_class = Role
-
-    def __init__(self, user_class=None):
-        if user_class:
-            self.user_class = user_class
 
     def user_loader(self, user_id):
         u = db.session.get(self.user_class, int(user_id))

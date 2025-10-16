@@ -1,0 +1,48 @@
+{% macro dropdown(actions, btn_class='nav-link dropdown-toggle') -%}
+    <a class="{{ btn_class }}" data-toggle="dropdown" href="javascript:void(0)" role="button" aria-haspopup="true"
+       aria-expanded="false">{{ gettext('With selected') }}<b class="caret"></b></a>
+    <div class="dropdown-menu">
+        {% for p in actions %}
+            <a class="dropdown-item" href="javascript:void(0)" onclick="return modelActions.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{% macro form(url) %}
+  <form id="action_form" action="{{ url }}" method="POST" class="d-none">
+    {% if action_form.csrf_token %}
+      {{ action_form.csrf_token }}
+    {% elif _template.funcs.csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ _template.funcs.csrf_token() }}"/>
+    {% endif %}
+    {{ action_form.url(value=return_url) }}
+    {{ action_form.action() }}
+  </form>
+{% endmacro %}
+
+{% macro add_action_js(message, actions, actions_confirmation) %}
+  <div id="actions-confirmation-data" class="d-none">{{ actions_confirmation|tojson|safe }}</div>
+  <div id="message-data" class="d-none">{{ message|tojson|safe }}</div>
+  <script src="{{ url_for('_template.static',filename='js/actions.js') }}"></script>
+{% endmacro %}
+
+{# ---------------------- Modal Window ------------------- #}
+
+{% macro add_modal_button(url='', title='', content='', modal_window_id='fa_modal_window', btn_class='icon') %}
+  <a class="{{ btn_class }}" data-target="#{{ modal_window_id }}" title="{{ title }}" href="{{ url }}" data-toggle="modal">
+    {{ content|safe }}
+  </a>
+{% endmacro %}
+
+{% macro add_modal_window(modal_window_id='fa_modal_window', modal_label_id='fa_modal_label') %}
+  <div class="modal fade" id="{{ modal_window_id }}" tabindex="-1" role="dialog" aria-labelledby="{{ modal_label_id }}">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro add_modal_js() %}
+  <script src="{{ url_for('_template.static',filename='js/modal.js') }}"></script>
+{% endmacro %}

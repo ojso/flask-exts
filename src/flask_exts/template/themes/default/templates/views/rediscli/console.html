@@ -1,0 +1,27 @@
+{% extends 'admin/master.html' %}
+
+{% block styles -%}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('_template.static',filename='css/rediscli.css') }}">
+{%- endblock %}
+
+
+{% block main %}
+<div class="console">
+  <div class="console-container">
+  </div>
+  <div class="console-line mb-4">
+    <form action="#">
+      <input type="text">
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <div id="execute-view-data" class="d-none">{{ get_url('.execute_view')|tojson|safe }}</div>
+  <script src="{{ url_for('_template.static',filename='js/rediscli.js') }}"></script>
+{% endblock %}
+
+

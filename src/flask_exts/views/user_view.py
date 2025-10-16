@@ -70,7 +70,7 @@ class UserView(BaseView):
         return RegisterForm
 
     @login_required
-    @expose("/")
+    @expose("/index/")
     def index(self):
         return self.render(self.index_template)
 
@@ -135,7 +135,7 @@ class UserView(BaseView):
         return self.render(self.verify_email_template, result=r[0])
 
     @login_required
-    @expose("/enable_tfa", methods=("GET", "POST"))
+    @expose("/enable_tfa/", methods=("GET", "POST"))
     def enable_tfa(self):
         enable = request.args.get("enable")
         if enable is None:
@@ -160,7 +160,7 @@ class UserView(BaseView):
         return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
     @login_required
-    @expose("/setup_tfa")
+    @expose("/setup_tfa/")
     def setup_tfa(self):
         if current_user.tfa_enabled:
             return self.render(
@@ -182,7 +182,7 @@ class UserView(BaseView):
         )
 
     @login_required
-    @expose("/verify_tfa", methods=("GET", "POST"))
+    @expose("/verify_tfa/", methods=("GET", "POST"))
     def verify_tfa(self):
         if request.method == "GET" and "modal" in request.args:
             action = request.args.get("action")
@@ -206,7 +206,7 @@ class UserView(BaseView):
         return self.render("views/user/verify_tfa.html", form=form)
 
     @login_required
-    @expose("/change_password", methods=("GET", "POST"))
+    @expose("/change_password/", methods=("GET", "POST"))
     def change_password(self):
         form = ChangePasswordForm()
         if form.validate_on_submit():
@@ -219,7 +219,7 @@ class UserView(BaseView):
 
         return self.render("views/user/change_password.html", form=form)
 
-    @expose("/forgot_password", methods=("GET", "POST"))
+    @expose("/forgot_password/", methods=("GET", "POST"))
     def forgot_password(self):
         if current_user.is_authenticated:
             return redirect(url_for(".index"))
@@ -235,7 +235,7 @@ class UserView(BaseView):
             return redirect(url_for(".login"))
         return self.render("views/user/forgot_password.html", form=form)
 
-    @expose("/reset_password", methods=("GET", "POST"))
+    @expose("/reset_password/", methods=("GET", "POST"))
     def reset_password(self):
         token = request.args.get("token")
         form = ResetPasswordForm()
@@ -252,7 +252,7 @@ class UserView(BaseView):
         return self.render("views/user/reset_password.html", form=form)
 
     @login_required
-    @expose("/recovery_codes")
+    @expose("/recovery_codes/")
     def recovery_codes(self):
         if not session.get("tfa_verified"):
             abort(403)
@@ -268,7 +268,7 @@ class UserView(BaseView):
         )
 
     @login_required
-    @expose("/recovery", methods=("GET", "POST"))
+    @expose("/recovery/", methods=("GET", "POST"))
     def recovery(self):
         if not current_user.tfa_enabled:
             return jsonify({"error": "2FA is not enabled"}), 403
@@ -294,7 +294,3 @@ class UserView(BaseView):
                 flash("Invalid recovery code", "error")
         return self.render("views/user/recovery.html", form=form)
 
-    @login_required
-    @expose("/profile")
-    def profile(self):
-        pass

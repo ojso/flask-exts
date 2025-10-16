@@ -1,0 +1,18 @@
+{% extends 'admin/master.html' %}
+{% import 'macro/actions.html' as actionlib with context %}
+
+{% block title %}show 2fa{% endblock %}
+
+{% block main %}
+
+<div>Two-Factor Authentication (2FA) is currently <b>enabled</b> for your account.</div>
+<div>
+{{ actionlib.add_modal_button(url=get_url('.verify_tfa',modal=True,action=url_for('.enable_tfa',enable=False)), btn_class='nav-link', title=gettext('Disable 2FA'),
+content=gettext('Disable 2FA')) }}
+</div>
+<div>
+recover codes can be used if you lose access to your authenticator app.
+<a href="{{ url_for('.recovery_codes') }}">View Recovery Codes</a>
+</div>
+
+{% endblock %}

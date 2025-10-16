@@ -1,0 +1,17 @@
+{% macro form_css() %}
+  <link href="{{ url_for('_template.static',filename='vendor/select2/select2.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('_template.static',filename='vendor/daterangepicker/daterangepicker.css') }}" rel="stylesheet">
+  {% if kwargs.get("xeditable") %}
+  <link href="{{ url_for('_template.static',filename='vendor/vanilla-editor/css/bootstrap-editable.css') }}" rel="stylesheet">
+  {% endif %}
+{% endmacro %}
+
+{% macro form_js() %}
+  <script src="{{ url_for('_template.static',filename='vendor/moment.min.js') }}"></script>
+  <script src="{{ url_for('_template.static',filename='vendor/select2/select2.min.js') }}"></script>
+  <script src="{{ url_for('_template.static',filename='vendor/daterangepicker/daterangepicker.js') }}"></script>
+  {% if kwargs.get("xeditable") %}
+  <script src="{{ url_for('_template.static',filename='vendor/vanilla-editor/js/bootstrap-editable.min.js') }}"></script>
+  {% endif %}
+  <script src="{{ url_for('_template.static',filename='js/form.js') }}"></script>
+{% endmacro %}

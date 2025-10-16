@@ -52,7 +52,7 @@ def test_app_admin_default(app, client, admin):
 
     assert index_index_url == "/"
     assert admin_index_url == "/admin/"
-    assert user_index_url == "/user/"
+    assert user_index_url == "/user/index/"
     assert user_login_url == "/user/login/"
     assert user_logout_url == "/user/logout/"
     assert user_register_url == "/user/register/"

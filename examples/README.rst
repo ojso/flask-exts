@@ -63,6 +63,8 @@ then run:
     
     $ flask --app rediscli run
 
+go to http://localhost:5000/admin/rediscli/
+
 Bootstrap 4
 -----------------
 

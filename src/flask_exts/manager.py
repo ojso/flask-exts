@@ -4,13 +4,16 @@ from .template.base import Template
 from .email.base import Email
 from .usercenter.core import UserCenter
 from .security.core import Security
+from .admin.admin import Admin
+from .views.index_view import IndexView
+from .views.user_view import UserView
 
 
 class Manager:
     """This is used to manager babel,template,admin, and so on..."""
 
     def __init__(self, app=None):
-        self.admins = []
+        self.app = app
         if app is not None:
             self.init_app(app)
 
@@ -20,10 +23,6 @@ class Manager:
     def get_email(self):
         return Email()
 
-    def get_admin_class(self):
-        from .admin.base_admin import BaseAdmin
-
-        return BaseAdmin
 
     def init_app(self, app):
         self.app = app
@@ -64,5 +63,12 @@ class Manager:
         self.security.init_app(app)
 
         # init admin
-        self.admin = self.get_admin_class()()
+        self.admin = Admin()
         self.admin.init_app(app)
+
+        # add default views
+        self.admin.add_view(IndexView(), is_menu=False)
+
+        if app.config.get("ENABLE_USER"):
+            self.admin.enable_user = True
+            self.admin.add_view(UserView(), is_menu=False)

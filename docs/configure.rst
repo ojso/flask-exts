@@ -6,6 +6,8 @@ Configuration
 ==============
 
 ========================== =====================================================================
+``ENABLE_USER``            Set to ``True`` to enable user management.
+                           Default is ``None``.
 ``BABEL_ACCEPT_LANGUAGES`` Set to ``en;zh`` to bebel's accept languages.
                            Default is ``None``.
 ``BABEL_DEFAULT_TIMEZONE`` Set to ``Asia/Shanghai`` to babel's default timezone.

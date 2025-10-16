@@ -1,0 +1,98 @@
+{% macro menu_icon(item) -%}
+  {% set icon_type = item.get_icon_type() %}
+  {%- if icon_type %}
+    {% set icon_value = item.get_icon_value() %}
+    {% if icon_type == 'bi' %}
+      <i class="bi-{{ icon_value }}"></i>
+    {% elif icon_type == 'image' %}
+      <img src="{{ url_for('static', filename=icon_value) }}" alt="menu image">
+    {% elif icon_type == 'image-url' %}
+      <img src="{{ icon_value }}" alt="menu image">
+    {% endif %}
+  {% endif %}
+{%- endmacro %}
+
+{% macro render_menu(menu_root,current_view) %}
+  {%- for item in menu_root %}
+    {%- if item.is_category() -%}
+      {% set children = item.get_children() %}
+      {%- if children %}
+        {% set class_name = item.get_class_name() or '' %}
+        {%- if item.is_active(current_view) %}
+          <li class="active dropdown{% if class_name %} {{ class_name }}{% endif %}">
+            {% else -%}
+          <li class="dropdown{% if class_name %} {{ class_name }}{% endif %}">
+        {%- endif %}
+      <a class="dropdown-toggle nav-link" data-toggle="dropdown" href="javascript:void(0)">
+        {% if item.class_name %}<span class="{{ item.class_name }}"></span> {% endif %}
+        {{ menu_icon(item) }}{{ item.name }}
+      </a>
+      <ul class="dropdown-menu">
+        {%- for child in children -%}
+          {%- if child.is_category() -%}
+            {{ render_menu([child]) }}
+          {% else %}
+            {% set class_name = child.get_class_name() %}
+            <li{% if class_name %} class="{{ class_name }}"{% endif %}>
+              {%- if child.is_active(current_view) %}
+                <a class="dropdown-item active" href="{{ child.get_url() }}"{% if child.target %}
+                   target="{{ child.target }}"{% endif %}>
+                  {{ menu_icon(child) }}{{ child.name }}</a>
+              {% else %}
+                <a class="dropdown-item" href="{{ child.get_url() }}"{% if child.target %}
+                   target="{{ child.target }}"{% endif %}>
+                  {{ menu_icon(child) }}{{ child.name }}</a>
+              {%- endif %}
+            </li>
+          {%- endif %}
+        {%- endfor %}
+      </ul>
+      </li>
+      {% endif %}
+    {%- else %}
+      {%- if item.is_accessible() -%}
+        {% set class_name = item.get_class_name() %}
+        {%- if item.is_active(current_view) %}
+          <li class="active{% if class_name %} {{ class_name }}{% endif %}">
+        {%- else %}
+          <li{% if class_name %} class="{{ class_name }}"{% endif %}>
+        {%- endif %}
+      <a class="nav-link" href="{{ item.get_url() }}"{% if item.target %} target="{{ item.target }}"{% endif %}>
+        {{ menu_icon(item) }}{{ item.name }}</a>
+      </li>
+      {%- endif -%}
+    {% endif -%}
+  {% endfor %}
+{% endmacro %}
+
+{% macro menu_links(links) %}
+  {% for item in links %}
+    {% set class_name = item.get_class_name() %}
+    {% if item.is_accessible() %}
+      <li{% if class_name %} class="{{ class_name }}"{% endif %}>
+        <a class="nav-link" href="{{ item.get_url() }}"{% if item.target %} target="{{ item.target }}"{% endif %}>
+          {{ menu_icon(item) }}{{ item.name }}</a>
+      </li>
+    {% endif %}
+  {% endfor %}
+{% endmacro %}
+
+{% macro menu_user(current_user) %}
+{% if current_user is defined -%}
+    {% if current_user.is_authenticated -%}
+    <ul class="navbar-nav">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('user.index') }}" >
+            {{ current_user.username }}{%- if not current_user.is_active %} <span class="text-warning text-inactive">(inactive)</span>{% endif -%}
+        </a>
+    </li>
+    </ul>
+    {% else -%}
+    <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('user.login') }}">Login</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('user.register') }}">Register</a></li>
+    </ul>
+    {% endif %}
+{% endif %}
+{% endmacro %}
+

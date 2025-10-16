@@ -1,0 +1,24 @@
+{% extends 'admin/master.html' %}
+
+{% block main %}
+<div> id: {{ current_user.id }} </div>
+<div> username: {{ current_user.username }} </div>
+<div> email: {{ current_user.email }} </div>
+<div> tfa_enabled: {{ current_user.tfa_enabled }} </div>
+<div> tfa_verified: {{ session.get('tfa_verified', false) }} </div>
+{%- if current_user.tfa_enabled and not session.get('tfa_verified', false) %}
+	<div>
+		{{ _('Verify 2FA. Click') }} <a href="{{ url_for('.verify_tfa') }}">{{ _('here') }}</a> {{ _('to proceed.') }}
+	</div>
+{%- endif %}
+<div>
+	{{ _('Want to change password? Click') }} <a href="{{ url_for('.change_password') }}">{{ _('here') }}</a> {{ _('to proceed.') }}
+</div>
+<div>
+	{{ _('Set up 2FA? Click') }} <a href="{{ url_for('.setup_tfa') }}">{{ _('here') }}</a> {{ _('to begin.') }}
+</div>
+<div>
+	{{ _('Want to logout? Click') }} <a href="{{ url_for('.logout') }}">{{ _('here') }}</a> {{ _('to proceed.') }}
+</div>
+{% endblock %}
+

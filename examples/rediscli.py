@@ -9,10 +9,10 @@ app.config["SECRET_KEY"] = "dev"
 # Manager init
 manager = Manager()
 manager.init_app(app)
+
 # add rediscli
-admin = app.extensions["manager"].admins[0]
 redis_view = RedisCli(Redis())
-admin.add_view(redis_view)
+manager.admin.add_view(redis_view)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -22,5 +22,4 @@ def init_app(app: Flask):
         # db.drop_all()
         db.create_all()
 
-    admin = manager.admins[0]
-    admin.add_view(file_view)
+    manager.admin.add_view(file_view)

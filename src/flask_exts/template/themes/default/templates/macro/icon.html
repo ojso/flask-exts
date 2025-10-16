@@ -1,0 +1,16 @@
+{% macro render_icon(name, size=_template.theme.icon_size, color=None,sprite=_template.theme.icon_sprite_url, title=None, desc=None) -%}
+    {%- set bootstrap_colors = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark", "muted"] %}
+    {%- if color and color in bootstrap_colors %}
+        {%- set text_color = " text-" + color %}
+    {%- elif color %}
+        {%- set fill_color = color %}
+    {%- endif -%}
+    <svg class="bi{{ text_color }}" width="{{ size }}" height="{{ size }}" fill="{{ fill_color | default('currentColor') }}">
+        {%- if title is not none %}<title>{{ title }}</title>{% endif -%}
+        {%- if desc is not none %}<desc>{{ desc }}</desc>{% endif -%}
+        {%- if sprite -%}
+            <use xlink:href="{{ sprite }}#{{ name }}" />
+        {%- endif -%}
+    </svg>
+{%- endmacro %}
+

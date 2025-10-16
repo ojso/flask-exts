@@ -64,6 +64,8 @@ class ViewMeta(type):
                     cls._urls.append((url, name, methods))
                     if url == "/":
                         cls._default_view = name
+                    elif url == "/index/" and cls._default_view is None:
+                        cls._default_view = name
                 # Wrap views
                 setattr(cls, name, _wrap_view(attr))
 
@@ -117,6 +119,7 @@ class BaseView(metaclass=ViewMeta):
         self.template_folder = template_folder
         self.static_folder = static_folder
         self.static_url_path = static_url_path
+        # Menu
         self.menu = None
         self.menu_class_name = menu_class_name
         self.menu_icon_type = menu_icon_type

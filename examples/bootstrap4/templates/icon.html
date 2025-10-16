@@ -11,14 +11,14 @@ Output: {{ render_icon('heart-fill') }}
 
 <h2>Icon with custom size</h2>
 <pre>{% raw %}{{ render_icon('heart', 32) }}{% endraw %}</pre>
-Output: {{ render_icon('heart', 'h1', size=32) }}
+Output: {{ render_icon('heart', size=32) }}
 
 <h2>Icon with custom size and Bootstrap color</h2>
 <pre>{% raw %}{{ render_icon('heart', 25, 'primary') }}{% endraw %}</pre>
-Output: {{ render_icon('heart', size=25, icon_class='text-primary') }}
+Output: {{ render_icon('heart', size=25, color='primary') }}
 
-<pre>{% raw %}{{ render_icon('heart-fill', 25, icon_class='text-primary') }}{% endraw %}</pre>
-Output: {{ render_icon('heart-fill', size=25, icon_class='text-primary') }}
+<pre>{% raw %}{{ render_icon('heart-fill', 25, color='primary') }}{% endraw %}</pre>
+Output: {{ render_icon('heart-fill', size=25, color='primary') }}
 
 <h2>Icon with custom size and custom color</h2>
 <pre>{% raw %}{{ render_icon('heart', '2em', 'red') }}{% endraw %}</pre>

@@ -2,11 +2,6 @@ import os.path as op
 from flask import Flask
 from flask_exts import Manager
 
-class MyManager(Manager):
-    def get_admin_class(self):
-        from flask_exts.admin.admin import Admin
-        return Admin
-
 
 def get_sqlite_path():
     app_dir = op.realpath(op.dirname(__file__))
@@ -24,12 +19,13 @@ def create_app():
     # app.config["SQLALCHEMY_ECHO"] = True
     app.config["DATABASE_FILE"] = get_sqlite_path()
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + app.config["DATABASE_FILE"]
+    app.config["ENABLE_USER"] = True
     init_app(app)
     return app
 
 
 def init_app(app: Flask):
-    manager = MyManager()
+    manager = Manager()
     manager.init_app(app)
 
     from .models import init_models

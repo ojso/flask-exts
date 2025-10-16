@@ -3,12 +3,7 @@ from .meta import FlaskMeta
 
 
 class FlaskForm(BaseForm):
-    """Flask-specific subclass of WTForms :class:`~wtforms.form.Form`.
-
-    If ``formdata`` is not specified, this will use :attr:`flask.request.form`
-    and :attr:`flask.request.files`.  Explicitly pass ``formdata=None`` to
-    prevent this.
-    """
+    """Flask-WTF style form, includes CSRF token field."""
 
     Meta = FlaskMeta
 

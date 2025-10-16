@@ -1,0 +1,51 @@
+{% extends 'admin/master.html' %}
+
+{% block main %}
+  {% block navlinks %}
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ return_url }}">{{ gettext('List') }}</a>
+    </li>
+    {%- if view.can_create -%}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('.create_view', url=return_url) }}">{{ gettext('Create') }}</a>
+    </li>
+    {%- endif -%}
+    {%- if view.can_edit -%}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('.edit_view', id=request.args.get('id'), url=return_url) }}">{{ gettext('Edit') }}</a>
+    </li>
+    {%- endif -%}
+    <li class="nav-item">
+        <a class="nav-link active disabled" href="javascript:void(0)">{{ gettext('Details') }}</a>
+    </li>
+  </ul>
+  {% endblock %}
+
+  {% block details_search %}
+    <div class="form-inline fa_filter_container col-lg-6">
+      <label for="fa_filter">{{ gettext('Filter') }}</label>
+      <input id="fa_filter" type="text" class="ml-3 form-control">
+    </div>
+  {% endblock %}
+
+  {% block details_table %}
+    <table class="table table-hover table-bordered searchable">
+    {% for c, name in details_columns %}
+      <tr>
+        <td>
+          <b>{{ name }}</b>
+        </td>
+        <td>
+        {{ get_value(model, c) }}
+        </td>
+      </tr>
+    {% endfor %}
+    </table>
+  {% endblock %}
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script src="{{ url_for('_template.static',filename='js/details_filter.js') }}"></script>
+{% endblock %}

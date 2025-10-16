@@ -74,7 +74,7 @@ Released 2024-09-14
 
 - merge translations of wtforms, flask_exts and app into flask_babel.get_translations()
 - update FileField and ImageField
-- add url for template.static
+- add url for _template.static
 
 v0.1.5
 ------

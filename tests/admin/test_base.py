@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 from flask_exts.admin import expose
 from flask_exts.admin import BaseView
-from flask_exts.admin.base_admin import BaseAdmin
+from flask_exts.admin.admin import Admin
 from flask_exts.admin.menu import MenuLink
 
 from ..helper import print_app_endpoint_rule
@@ -47,8 +47,8 @@ def test_baseview_default():
     assert view.blueprint is None
 
 
-def test_baseadmin_default():
-    admin = BaseAdmin()
+def test_admin_default():
+    admin = Admin()
     # print(admin.name)
     # print(admin.url)
     # print(admin.endpoint)
@@ -60,7 +60,7 @@ def test_baseadmin_default():
 
 
 def test_admin_menu():
-    admin = BaseAdmin()
+    admin = Admin()
     menu = admin.menu
     assert menu.admin == admin
     menu.add_category("Category1", "class-name", "icon-type", "icon-value")
@@ -110,7 +110,7 @@ def test_admin_menu():
     assert children[0].is_accessible()
 
 
-def test_app_admin_add_view(app, client, admin: BaseAdmin):
+def test_app_admin_add_view(app, client, admin: Admin):
     mock_view = MockView()
     admin.add_view(mock_view)
     assert "mockview" in app.blueprints
@@ -137,11 +137,7 @@ def test_app_admin_add_view(app, client, admin: BaseAdmin):
 
 
 def test_menu_links(client, admin):
-    from flask_exts.views.index_view import IndexView
     from flask_exts.views.user_view import UserView
-
-    index_view = IndexView()
-    admin.add_view(index_view, is_menu=False)
     user_view = UserView()
     admin.add_view(user_view, is_menu=False)
     menu = admin.menu

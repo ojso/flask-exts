@@ -10,9 +10,10 @@ def test_extensions(app):
     assert "sqlalchemy" in app.extensions
     assert getattr(app, "login_manager", None) is not None
     assert "manager" in app.extensions
-    assert len(app.blueprints) == 1
-    assert "template" in app.blueprints
-    assert "template" in app.jinja_env.globals
+    assert len(app.blueprints) == 2
+    assert "_template" in app.blueprints
+    assert "index" in app.blueprints
+    assert "_template" in app.jinja_env.globals    
     manager = app.extensions["manager"]
     assert manager.usercenter is not None
     assert manager.security is not None
