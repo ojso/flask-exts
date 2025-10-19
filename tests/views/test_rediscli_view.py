@@ -1,6 +1,6 @@
 import pytest
 from redis import Redis
-from flask_exts.views.rediscli_view import RedisCli
+from flask_exts.views.rediscli.view import RedisCli
 
 
 class TestRedisCliView:

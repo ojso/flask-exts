@@ -1,121 +1,142 @@
-var RedisCli = function(postUrl) {
-	// Constants
-	var KEY_UP = 38;
-	var KEY_DOWN = 40;
-	var MAX_ITEMS = 128;
+const KEY_UP = 38;
+const KEY_DOWN = 40;
+const MAX_ITEMS = 128;
 
-	var $con = $('.console');
-	var $container = $con.find('.console-container');
-	var $input = $con.find('input');
-
-	var history = [];
-	var historyPos = 0;
-
-	function resizeConsole() {
-		var height = $(window).height();
-
-		var offset = $con.offset();
-		$con.height(height - offset.top);
+class History {
+	constructor() {
+		this.items = [];
+		this.position = 0;
 	}
 
-	function scrollBottom() {
-		$container.animate({scrollTop: $container[0].scrollHeight}, 100);
+	add(cmd) {
+		this.items.push(cmd);
+		if (this.items.length > MAX_ITEMS) {
+			this.items.shift();
+		}
+		this.position = this.items.length;
 	}
 
-	function createEntry(cmd) {
-		var $entry = $('<div>').addClass('entry').appendTo($container);
-		$entry.append($('<div>').addClass('cmd').html(cmd));
-
-		if ($container.find('>div').length > MAX_ITEMS)
-			$container.find('>div:first-child').remove();
-
-		scrollBottom();
-		return $entry;
+	getPrevious() {
+		if (this.position > 0) {
+			this.position -= 1;
+		}
+		return this.items[this.position] || '';
 	}
 
-	function addResponse($entry, response) {
-		$entry.append($('<div>').addClass('response').html(response));
-		scrollBottom();
+	getNext() {
+		if (this.position < this.items.length) {
+			this.position += 1;
+		}
+		return this.items[this.position] || '';
 	}
-	function addError($entry, response) {
-		$entry.append($('<div>').addClass('response').addClass('error').html(response));
-		scrollBottom();
+}
+
+class RedisCli {
+	constructor() {
+		this.history = new History();
+		this.console = document.querySelector('.console');
+		this.container = this.console.querySelector('.console-container');
+		this.form = this.console.querySelector('form');
+		this.postUrl = this.form.getAttribute('action');
+		this.input = this.form.querySelector('input');
+
+		// Bind methods
+		this.resizeConsole = this.resizeConsole.bind(this);
+		this.submitCommand = this.submitCommand.bind(this);
+		this.onKeyPress = this.onKeyPress.bind(this);
+
+		this.form.addEventListener('submit', this.submitCommand);
+		this.input.addEventListener('keydown', this.onKeyPress);
+		window.addEventListener('resize', this.resizeConsole);
 	}
 
-	function addHistory(cmd) {
-		history.push(cmd);
-
-		if (history > MAX_ITEMS)
-			history.splice(0, 1);
-
-		historyPos = history.length;
+	resizeConsole() {
+		const height = window.innerHeight;
+		const offset = this.console.getBoundingClientRect();
+		this.console.style.height = `${height - offset.top}px`;
 	}
 
-	function sendCommand(val) {
-		var $entry = createEntry('> ' + val);
-
-		addHistory(val);
-
-		$.ajax({
-			type: 'POST',
-			url: postUrl,
-			data: {'cmd': val},
-			success: function(response) {
-				addResponse($entry, response);
-			},
-			error: function() {
-				addError($entry, 'Failed to communicate with server.');
-			}
+	scrollBottom = () => {
+		this.container.scrollTo({
+			top: this.container.scrollHeight,
+			behavior: 'smooth'
 		});
-
-		return false;
 	}
 
-	function submitCommand() {
-		var val = $input.val().trim();
-		if (!val.length)
-			return false;
-
-		sendCommand(val);
-
-		$input.val('');
-		return false;
+	createElementWithClass(tagName, className, content, isHtml = true) {
+		const elem = document.createElement(tagName);
+		const classNames = className.split(' ');
+		classNames.forEach(c => elem.classList.add(c));
+		if (isHtml) {
+			elem.innerHTML = content;
+		} else {
+			elem.textContent = content;
+		}
+		return elem;
 	}
 
-	function onKeyPress(e) {
-		if (e.keyCode == KEY_UP) {
-			historyPos -= 1;
-			if (historyPos < 0)
-				historyPos = 0;
+	createEntry(cmd) {
+		const entry = document.createElement('div');
+		entry.classList.add('entry');
 
-			if (historyPos < history.length)
-				$input.val(history[historyPos]);
-		} else
-		if (e.keyCode == KEY_DOWN) {
-			historyPos += 1;
+		const cmdElement = document.createElement('div');
+		cmdElement.className = 'cmd';
+		cmdElement.textContent = cmd;
 
-			if (historyPos >= history.length) {
-				$input.val('');
-				historyPos = history.length;
-			} else {
-				$input.val(history[historyPos]);
-			}
+		entry.appendChild(cmdElement);
+
+		this.container.appendChild(entry);
+
+
+		if (this.container.children.length > MAX_ITEMS)
+			this.container.removeChild(this.container.firstChild);
+
+		this.scrollBottom();
+		return entry;
+	}
+
+	sendCommand(val) {
+		let entry = this.createEntry('> ' + val);
+		this.history.add(val);
+		fetch(this.postUrl,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ 'cmd': val }),
+			})
+			.then(response => response.text())
+			.then(data => {
+				const responseDiv = this.createElementWithClass('div', 'response', data);
+				entry.appendChild(responseDiv);
+			})
+			.catch(() => {
+				const responseDiv = this.createElementWithClass('div', 'response error', 'Failed to communicate with server.');
+				entry.appendChild(responseDiv);
+			})
+			.finally(() => {
+				this.scrollBottom();
+			});
+	}
+
+	submitCommand(event) {
+		event.preventDefault();
+		// const postUrl = event.target.getAttribute('action');
+		const formData = new FormData(event.target);
+		const cmd = formData.get('cmd').trim();
+		if (cmd.length) {
+			this.sendCommand(cmd);
+			this.input.value = '';
 		}
 	}
 
-	// Setup
-	$con.find('form').submit(submitCommand);
+	onKeyPress(event) {
+		if (event.keyCode == KEY_UP) {
+			this.input.value = this.history.getPrevious();
+		} else if (event.keyCode == KEY_DOWN) {
+			this.input.value = this.history.getNext();
+		}
+	}
+}
 
-	$input.keydown(onKeyPress);
-
-	$(window).resize(resizeConsole);
-	resizeConsole();
-
-	$input.focus();
-
-	sendCommand('ping');
-};
-
-$(function() {
-    var redisCli = new RedisCli(JSON.parse($('#execute-view-data').text()));
-});

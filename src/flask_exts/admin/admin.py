@@ -20,7 +20,6 @@ class Admin:
         self._views = {}
         self.menu = Menu(self)
         self.enable_user = False
-        self.init_views()
         if app is not None:
             self.init_app(app)
 
@@ -107,12 +106,6 @@ class Admin:
             return True
         else:
             return authorize_allow(*args, **kwargs)
-
-    def init_views(self):
-        """
-        Initialize views. This method can be overridden in subclasses to add custom views.
-        """
-        pass
 
     def render(self, template, **kwargs):
         """

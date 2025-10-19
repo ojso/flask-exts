@@ -10,19 +10,18 @@ from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ..admin import BaseView
-from ..admin import expose
-from ..template.forms.login import LoginForm
-from ..template.forms.register import RegisterForm
-from ..template.forms.change_password import ChangePasswordForm
-from ..template.forms.forgot_password import ForgotPasswordForm
-from ..template.forms.reset_password import ResetPasswordForm
-from ..template.forms.two_factor import TwoFactorForm
-from ..template.forms.recovery import RecoveryForm
-from ..proxies import _userstore
-from ..proxies import _security
-from ..signals import user_registered
-from ..constants import NO_CACHE_HEADER
+from ...admin import BaseView,expose
+from ...template.forms.login import LoginForm
+from ...template.forms.register import RegisterForm
+from ...template.forms.change_password import ChangePasswordForm
+from ...template.forms.forgot_password import ForgotPasswordForm
+from ...template.forms.reset_password import ResetPasswordForm
+from ...template.forms.two_factor import TwoFactorForm
+from ...template.forms.recovery import RecoveryForm
+from ...proxies import _userstore
+from ...proxies import _security
+from ...signals import user_registered
+from ...constants import NO_CACHE_HEADER
 
 
 class UserView(BaseView):

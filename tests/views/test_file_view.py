@@ -2,7 +2,7 @@ from io import BytesIO
 import os
 import os.path as op
 
-from flask_exts.views.file_view import LocalFileView
+from flask_exts.views.file.local_file_view import LocalFileView
 
 
 class FileViewTests:

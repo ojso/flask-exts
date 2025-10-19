@@ -1,13 +1,9 @@
-import logging
 import shlex
 from flask import request
 from markupsafe import Markup
 from flask_babel import gettext
-from ..admin import BaseView
-from ..admin import expose
+from ...admin import BaseView, expose
 
-# Set up logger
-log = logging.getLogger("flask-exts.redis")
 
 
 class CommandError(Exception):
@@ -174,7 +170,7 @@ class RedisCli(BaseView):
         AJAX API.
         """
         try:
-            cmd = request.form.get("cmd")
+            cmd = request.json.get("cmd")
             if not cmd:
                 return self._error("Cli: Empty command.")
 
@@ -186,5 +182,4 @@ class RedisCli(BaseView):
         except CommandError as err:
             return self._error("Cli: %s" % err)
         except Exception as ex:
-            log.exception(ex)
             return self._error("Cli: %s" % ex)

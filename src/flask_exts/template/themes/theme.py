@@ -1,12 +1,8 @@
-from dataclasses import dataclass
-
 LOCAL_VENDOR_URL = "/template/static/vendor"
 ICON_SPRITE_URL = f"{LOCAL_VENDOR_URL}/bootstrap-icons/bootstrap-icons.svg"
 
 
-@dataclass
 class Theme:
-    name = "default"
     icon_sprite_url = ICON_SPRITE_URL
     icon_size = "1em"
     btn_style = "primary"
@@ -24,3 +20,6 @@ class Theme:
         "delete": "Remove",
         "new": "Create",
     }
+
+    def __init__(self):
+        self.name = "default"

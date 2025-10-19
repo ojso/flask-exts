@@ -1,5 +1,5 @@
 import os.path as op
-from flask_exts.views.file_view import LocalFileView
+from flask_exts.views.file.local_file_view import LocalFileView
 
 class FileView(LocalFileView):
     upload_modal = True

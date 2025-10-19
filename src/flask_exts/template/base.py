@@ -2,7 +2,7 @@ import os.path as op
 from flask import Blueprint
 from markupsafe import Markup
 from .funcs import Funcs
-from .theme import Theme
+from .themes.theme import Theme
 from .plugins.plugin_manager import PluginManager
 
 
@@ -17,8 +17,8 @@ class Template:
     def init_app(self, app):
         self.app = app
         app.jinja_env.globals["_template"] = self
-        self.funcs = Funcs()
         self.theme = Theme()
+        self.funcs = Funcs()
         self.plugin = PluginManager()
         self.init_blueprint(app)
         self.init_plugins(app)
@@ -38,6 +38,7 @@ class Template:
         from .plugins.jquery_plugin import jQueryPlugin
         from .plugins.bootstrap4_plugin import Bootstrap4Plugin
         from .plugins.qrcode_plugin import QRCodePlugin
+        from .plugins.rediscli_plugin import RedisCliPlugin
 
         self.plugin.register_plugins(
             [
@@ -45,6 +46,7 @@ class Template:
                 Bootstrap4Plugin(),
                 QRCodePlugin(),
                 CopyButtonPlugin(),
+                RedisCliPlugin(),
             ]
         )
         self.plugin.enable_plugin(["jquery", "bootstrap4"])

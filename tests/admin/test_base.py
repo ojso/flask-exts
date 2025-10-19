@@ -137,7 +137,7 @@ def test_app_admin_add_view(app, client, admin: Admin):
 
 
 def test_menu_links(client, admin):
-    from flask_exts.views.user_view import UserView
+    from flask_exts.views.user.view import UserView
     user_view = UserView()
     admin.add_view(user_view, is_menu=False)
     menu = admin.menu

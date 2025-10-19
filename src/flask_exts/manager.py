@@ -5,8 +5,8 @@ from .email.base import Email
 from .usercenter.core import UserCenter
 from .security.core import Security
 from .admin.admin import Admin
-from .views.index_view import IndexView
-from .views.user_view import UserView
+from .views.index.view import IndexView
+from .views.user.view import UserView
 
 
 class Manager:
@@ -22,7 +22,6 @@ class Manager:
 
     def get_email(self):
         return Email()
-
 
     def init_app(self, app):
         self.app = app

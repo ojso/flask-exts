@@ -7,7 +7,7 @@ from wtforms.fields import *
 from flask_exts.template.form.flask_form import FlaskForm
 from flask_exts.template.fields import SwitchField
 from flask_exts import Manager
-from flask_exts.template.theme import BootstrapTheme
+from flask_exts.template.themes.theme import BootstrapTheme
 from flask_exts.datastore.sqla import db
 
 

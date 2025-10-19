@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 from flask import session
 from flask_exts.datastore.sqla import db
-from flask_exts.views.user_view import UserView
+from flask_exts.views.user.view import UserView
 from flask_exts.template.form.csrf import _get_csrf_token_of_session_and_g
 from flask_exts.email.sender import Sender
 from flask_exts.proxies import _security

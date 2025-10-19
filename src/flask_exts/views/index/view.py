@@ -1,12 +1,7 @@
-from ..admin import BaseView
-from ..admin import expose
+from ...admin import BaseView, expose
 
 
 class IndexView(BaseView):
-    """
-    Default administrative interface index page when visiting the ``/admin/`` URL.
-    """
-
     index_template = "index.html"
     admin_index_template = "admin/index.html"
 
