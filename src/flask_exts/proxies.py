@@ -8,7 +8,6 @@ if t.TYPE_CHECKING:
     from .template.base import Template
     from .usercenter.base_user_store import BaseUserStore
     from .security.core import Security
-    from .security.authorizer.base import Authorizer
 
 
 _manager: "Manager" = LocalProxy(lambda: current_app.extensions["manager"])
@@ -18,5 +17,3 @@ _template: "Template" = LocalProxy(lambda: _manager.template)
 _userstore: "BaseUserStore" = LocalProxy(lambda: _manager.usercenter.userstore)
 
 _security: "Security" = LocalProxy(lambda: _manager.security)
-
-_authorizer: "Authorizer" = LocalProxy(lambda: _manager.security.authorizer)

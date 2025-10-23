@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{%- set _none = _template.theme.plugin.enable_plugin(['jquery','bootstrap4']) -%}
+
+{% block styles -%}
+{{ _template.theme.plugin.load_css() }}
+{%- endblock %}
+
+{% block scripts -%}
+{{ _template.theme.plugin.load_js() }}
+{%- endblock %}

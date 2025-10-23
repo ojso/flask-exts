@@ -20,26 +20,49 @@ Run the examples
 
 Type the command in the terminal, then go to http://localhost:5000.
 
-Start
-----------
-
 simple 
 ---------
-
-run only one file.
 
 .. code-block:: bash
 
     $ python simple.py
 
-demo
+rediscli
 -----------------
 
-With sqlite db.
+Use with mock redis server.
 
 .. code-block:: bash
     
-    $ flask --app demo run --debug --port=5000
+    $ python rediscli.py
+
+go to http://localhost:5000/admin/rediscli/
+
+if you want to use real redis server, then do this:
+
+1. First install redis,
+
+.. code-block:: bash
+
+    $ pip install redis
+
+2. Modify code in ``rediscli.py``
+
+.. code-block:: python
+
+    # from flask_exts.views.rediscli.mock_redis import MockRedis as Redis
+    from redis import Redis
+
+3. At last, run  ``python rediscli.py``
+
+demo
+-----------------
+
+Default admin user is ``admin``, password is ``admin``.
+
+.. code-block:: bash
+    
+    $ flask --app demo run
 
 fileadmin
 -----------------
@@ -48,35 +71,10 @@ fileadmin
     
     $ flask --app fileadmin run
 
-rediscli
------------------
-
-First install redis,
-
-.. code-block:: bash
-
-    $ pip install redis
-
-then run:
-
-.. code-block:: bash
-    
-    $ flask --app rediscli run
-
-go to http://localhost:5000/admin/rediscli/
-
-Bootstrap 4
+Bootstrap
 -----------------
 
 .. code-block:: bash
 
-    $ flask --app bootstrap4/app.py run
-
-Bootstrap 5
------------------
-
-.. code-block:: bash
-    
-    $ flask --app bootstrap5/app.py run
-
+    $ flask --app bootstrap run
 

@@ -8,18 +8,16 @@ def create_app():
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "dev"
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-
     init_app(app)
+
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+
     return app
 
 
 def init_app(app: Flask):
     manager = Manager()
     manager.init_app(app)
-
-    with app.app_context():
-        # db.drop_all()
-        db.create_all()
-
     manager.admin.add_view(file_view)

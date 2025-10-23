@@ -1,7 +1,15 @@
+v0.2.5
+------
+
+Released 2025-10-24
+
+- rewrite template structure
+- rewrite user view, user authentication and authorization
+
 v0.2.4
 ------
 
-Unreleased
+Released 2025-10-06
 
 - user change password
 - user forgot password

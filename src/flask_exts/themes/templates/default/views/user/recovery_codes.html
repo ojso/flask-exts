@@ -1,0 +1,50 @@
+{% extends 'admin/master.html' %}
+{% import 'macro/actions.html' as actionlib with context %}
+
+{% block title %}recovery codes{% endblock %}
+
+{%- set _none = _template.theme.plugin.enable_plugin('copybutton') -%}
+
+{% block main %}
+
+<div class="container border p-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div><b>Recovery Codes (save these!):</b></div>
+    <div>
+      <button id="copyButton" type="button" class="btn btn-primary" title="copy">&#x29C9;</button>
+      <button id="downloadButton" type="button" class="btn btn-primary" title="download">&#x2B73;</button>
+    </div>
+  </div>
+  <div class="highlight border">
+    <pre id="recoveryCodes">
+{% for rc in recovery_codes -%}
+{{ rc }}
+{% endfor -%}
+  </pre>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block tail %}
+{{ super() }}
+<script>
+  document.getElementById("copyButton").addEventListener("click", function () {
+    copyNextPreCodes(this);
+  });
+  document.getElementById("downloadButton").addEventListener("click", function () {
+    downloadNextPreCodes(this);
+  });
+  function copyNextPreCodes(btn) {
+    const preElement = btn.parentNode.parentNode.nextElementSibling.querySelector("pre");
+    copyToClipboard(preElement.textContent, function () {
+      temporarilyBtnChangeSuccess(btn);
+    });
+  }
+  function downloadNextPreCodes(btn) {
+    const preElement = btn.parentNode.parentNode.nextElementSibling.querySelector("pre");
+    downloadTextToFile(preElement.textContent, 'recovery_codes.txt');
+  }
+</script>
+{% endblock %}

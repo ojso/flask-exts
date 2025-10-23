@@ -52,7 +52,7 @@ class CasbinAuthorizer(Authorizer):
         if self.app is not None:
             self.init_app(self.app)
 
-    def init_app(self, app, authorizer_context_processor=None):
+    def init_app(self, app):
         self.app = app
         m = Model()
         if app.config.get("CASBIN_MODEL", None) is not None:
@@ -61,9 +61,6 @@ class CasbinAuthorizer(Authorizer):
         else:
             m.load_model_from_text(CASBIN_RBAC_MODEL)
         self.m = m
-
-        if authorizer_context_processor:
-            app.context_processor(authorizer_context_processor)
 
     def allow(self, user, obj, act):
         e = self.get_casbin_enforcer()

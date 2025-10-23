@@ -1,7 +1,7 @@
 import sys
 import traceback
 from functools import reduce
-from re import sub
+
 
 CHAR_ESCAPE = "."
 CHAR_SEPARATOR = ","
@@ -76,6 +76,7 @@ def rec_getattr(obj, attr):
     """
     return reduce(getattr, attr.split("."), obj)
 
+
 def get_dict_attr(obj, attr, default=None):
     """
     Get attribute of the object without triggering its __getattr__.
@@ -95,8 +96,10 @@ def get_dict_attr(obj, attr, default=None):
 
 
 def escape(value):
-    return str(value).replace(CHAR_ESCAPE, CHAR_ESCAPE + CHAR_ESCAPE).replace(
-        CHAR_SEPARATOR, CHAR_ESCAPE + CHAR_SEPARATOR
+    return (
+        str(value)
+        .replace(CHAR_ESCAPE, CHAR_ESCAPE + CHAR_ESCAPE)
+        .replace(CHAR_SEPARATOR, CHAR_ESCAPE + CHAR_SEPARATOR)
     )
 
 
@@ -108,9 +111,9 @@ def iterencode(iter):
         Enumerable
     """
     return ",".join(
-        str(v).replace(CHAR_ESCAPE, CHAR_ESCAPE + CHAR_ESCAPE).replace(
-            CHAR_SEPARATOR, CHAR_ESCAPE + CHAR_SEPARATOR
-        )
+        str(v)
+        .replace(CHAR_ESCAPE, CHAR_ESCAPE + CHAR_ESCAPE)
+        .replace(CHAR_SEPARATOR, CHAR_ESCAPE + CHAR_SEPARATOR)
         for v in iter
     )
 
@@ -146,44 +149,25 @@ def iterdecode(value):
 
     return tuple(result)
 
-def prettify_name(name):
-    """
-        Prettify pythonic variable name.
-
-        For example, 'hello_world' will be converted to 'Hello World'
-
-        :param name:
-            Name to prettify
-    """
-    return name.replace('_', ' ').title()
-
-def prettify_class_name(name):
-    """Split words in PascalCase string into separate words.
-
-    :param name:
-        String to split
-    """
-    return sub(r"(?<=.)([A-Z])", r" \1", name)
-
 
 def get_mdict_item_or_list(mdict, key):
     """
-        Return the value for the given key of the multidict.
+    Return the value for the given key of the multidict.
 
-        A werkzeug.datastructures.multidict can have a single
-        value or a list of items. If there is only one item,
-        return only this item, else the whole list as a tuple
+    A werkzeug.datastructures.multidict can have a single
+    value or a list of items. If there is only one item,
+    return only this item, else the whole list as a tuple
 
-        :param mdict: Multidict to search for the key
-        :type mdict: werkzeug.datastructures.multidict
-        :param key: key to look for
-        :return: the value for the key or None if the Key has not be found
+    :param mdict: Multidict to search for the key
+    :type mdict: werkzeug.datastructures.multidict
+    :param key: key to look for
+    :return: the value for the key or None if the Key has not be found
     """
-    if hasattr(mdict, 'getlist'):
+    if hasattr(mdict, "getlist"):
         v = mdict.getlist(key)
         if len(v) == 1:
             value = v[0]
-            if value == '':
+            if value == "":
                 value = None
             return value
         elif len(v) == 0:

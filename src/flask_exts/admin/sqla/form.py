@@ -30,7 +30,6 @@ from ..model.form import (
     FieldPlaceholder,
 )
 
-from ...utils import prettify_name
 from ...utils.sqla import (
     has_multiple_pks,
     filter_foreign_columns,
@@ -55,7 +54,7 @@ class AdminModelConverter(ModelConverterBase):
     def _get_label(self, name, field_args):
         """
         Label for field name. If it is not specified explicitly,
-        then the views prettify_name method is used to find it.
+        then the views _prettify_name method is used to find it.
 
         :param field_args:
             Dictionary with additional field arguments
@@ -68,11 +67,8 @@ class AdminModelConverter(ModelConverterBase):
         if column_labels:
             return column_labels.get(name)
 
-        prettify_override = getattr(self.view, "prettify_name", None)
-        if prettify_override:
-            return prettify_override(name)
-
-        return prettify_name(name)
+        return name.replace("_", " ").title()
+        return self.view._prettify_name(name)
 
     def _get_description(self, name, field_args):
         if "description" in field_args:

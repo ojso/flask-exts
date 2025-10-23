@@ -34,7 +34,6 @@ def test_app_admin_default(app, client, admin):
     assert index_view is not None
     assert index_view.endpoint == "index"
     assert index_view.url == "/"
-    assert index_view.index_template == "index.html"
 
     # check user_view
     assert user_view is not None

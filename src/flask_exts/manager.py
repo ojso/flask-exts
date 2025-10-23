@@ -57,7 +57,7 @@ class Manager:
         self.usercenter = UserCenter()
         self.usercenter.init_app(app)
 
-        # init security
+        # # init security
         self.security = Security()
         self.security.init_app(app)
 
@@ -67,7 +67,4 @@ class Manager:
 
         # add default views
         self.admin.add_view(IndexView(), is_menu=False)
-
-        if app.config.get("ENABLE_USER"):
-            self.admin.enable_user = True
-            self.admin.add_view(UserView(), is_menu=False)
+        self.admin.add_view(UserView(), is_menu=False)

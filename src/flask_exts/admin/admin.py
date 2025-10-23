@@ -2,7 +2,7 @@ from flask import render_template
 from flask import url_for
 from flask import make_response
 from .menu import Menu
-from ..utils.authorize import authorize_allow
+from ..proxies import _security
 
 
 class Admin:
@@ -19,7 +19,7 @@ class Admin:
         self.static_folder = self.get_admin_static_folder()
         self._views = {}
         self.menu = Menu(self)
-        self.enable_user = False
+        self.all_accessed = True
         if app is not None:
             self.init_app(app)
 
@@ -39,6 +39,9 @@ class Admin:
 
         """
         self.app = app
+
+        if not app.config.get("ADMIN_ALL_ACCESSED", True):
+            self.all_accessed = False
 
         # Register views
         for v in self._views.values():
@@ -102,10 +105,10 @@ class Admin:
         return url_for(endpoint, **kwargs)
 
     def allow(self, *args, **kwargs):
-        if not self.enable_user:
+        if self.all_accessed:
             return True
         else:
-            return authorize_allow(*args, **kwargs)
+            return _security.authorize_allow(*args, **kwargs)
 
     def render(self, template, **kwargs):
         """

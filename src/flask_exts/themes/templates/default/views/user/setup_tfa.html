@@ -1,0 +1,49 @@
+{% extends 'admin/master.html' %}
+{% import 'macro/actions.html' as actionlib with context %}
+{% from 'macro/javascript.html' import runWhenDOMLoaded %}
+
+{%- set _none = _template.theme.plugin.enable_plugin('qrcode') -%}
+
+{% block title %}setup 2fa{% endblock %}
+
+{% block main %}
+
+<div>
+  <div>Scan this QR code with your authenticator app:</div>
+  <div id="qrimg" data-uri="{{ totp_uri }}"></div>
+  <div>Or enter this secret manually: <b>{{ totp_secret }}</b></div>
+
+</div>
+{% if not current_user.tfa_enabled %}
+
+{{ actionlib.add_modal_button(url=get_url('.verify_tfa',modal=True,action=url_for('.enable_tfa',enable=True)), btn_class='nav-link', title=gettext('Enable 2FA'),
+content=gettext('Enable 2FA')) }}
+
+{{ actionlib.add_modal_window() }}
+
+{% endif %}
+
+{% endblock %}
+
+
+{% block tail %}
+{{ super() }}
+{{ actionlib.add_modal_js() }}
+
+<script>
+// generate QR code
+const showqrcode = () => {
+  let qr = new QrCode(20, 'M');
+  let text = document.getElementById('qrimg').dataset.uri;
+  qr.addData(text);
+  qr.make();
+  const qrsvg = qr.createSvgTag(4,4);
+  document.getElementById('qrimg').innerHTML = qrsvg;
+}
+
+{{ runWhenDOMLoaded('showqrcode') }}
+
+  
+</script>
+
+{% endblock %}

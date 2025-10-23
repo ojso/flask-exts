@@ -324,7 +324,7 @@ class BaseFileView(BaseView, ActionsMixin):
         class ActionForm(self.form_base_class):
             action = fields.HiddenField()
             url = fields.HiddenField()
-            # rowid is retrieved using getlist, for backward compatibility
+            # rowid = fields.HiddenField()
 
         return ActionForm
 

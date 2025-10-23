@@ -69,28 +69,3 @@ pybabel
 
     $ pybabel compile -d src/flask_exts/translations -D messages 
 
-
-tests
------
-
-.. code-block:: console
-
-
-    cd tests/
-
-    # extract messages from source files and generate a POT file
-    pybabel extract -o translations/messages.pot .
-
-    # create new message catalogs from a POT file
-    pybabel init -i translations/messages.pot -d translations -l en
-    pybabel init -i translations/messages.pot -d translations -l zh_CN
-
-    # update existing message catalogs from a POT file
-    pybabel update -i translations/messages.pot -d translations
-
-    # edit
-    # open the '.po' file
-
-    # compile message catalogs to MO files
-
-    pybabel compile -d translations

@@ -1,3 +1,4 @@
+from flask_login import current_user
 from .hasher import Blake2bHasher
 from .serializer import TimedUrlSerializer
 from .authorizer.casbin_authorizer import CasbinAuthorizer
@@ -33,3 +34,21 @@ class Security:
         return self.app.config.get(
             f"{serializer_name.upper()}_MAX_AGE", 86400 * 7
         )  # default 1 week
+    
+    def authorize_allow(self, *args, **kwargs):
+        if "user" in kwargs:
+            user = kwargs["user"]
+        else:
+            user = current_user
+            
+        if self.authorizer.is_root_user(user):
+            return True
+        
+        if "role_need" in kwargs:
+            if self.authorizer.has_role(user, kwargs["role_need"]):
+                return True
+        elif "resource" in kwargs and "method" in kwargs:
+            if self.authorizer.allow(user, kwargs["resource"], kwargs["method"]):
+                return True
+            
+        return False

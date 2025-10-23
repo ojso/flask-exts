@@ -19,7 +19,7 @@ def create_app():
     # app.config["SQLALCHEMY_ECHO"] = True
     app.config["DATABASE_FILE"] = get_sqlite_path()
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + app.config["DATABASE_FILE"]
-    app.config["ENABLE_USER"] = True
+    app.config["ADMIN_ALL_ACCESSED"] = False
     init_app(app)
     return app
 

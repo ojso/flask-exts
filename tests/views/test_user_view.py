@@ -2,7 +2,6 @@ import pytest
 from flask import url_for
 from flask import session
 from flask_exts.datastore.sqla import db
-from flask_exts.views.user.view import UserView
 from flask_exts.template.form.csrf import _get_csrf_token_of_session_and_g
 from flask_exts.email.sender import Sender
 from flask_exts.proxies import _security
@@ -19,10 +18,9 @@ class EmailSender(Sender):
 
 class TestUserView:
     @pytest.fixture
-    def setup(self, app, client, admin):
+    def setup(self, app, client):
         # app.config.update(CSRF_ENABLED=False)
         with app.app_context():
-            admin.add_view(UserView())
             db.create_all()
 
         email_sender = EmailSender()

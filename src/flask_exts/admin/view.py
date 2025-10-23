@@ -1,9 +1,8 @@
+from re import sub
 from functools import wraps
 from flask import Blueprint
 from flask import url_for
 from flask import abort
-
-from ..utils import prettify_class_name
 
 
 def expose(url="/", methods=("GET",)):
@@ -213,11 +212,23 @@ class BaseView(metaclass=ViewMeta):
     def _prettify_class_name(self, name):
         """
         Split words in PascalCase string into separate words.
+        For example, 'HelloWorld' will be converted to 'Hello World'
 
         :param name:
             String to prettify
         """
-        return prettify_class_name(name)
+        return sub(r"(?<=.)([A-Z])", r" \1", name)
+
+    def _prettify_name(self, name):
+        """
+        Prettify pythonic variable name.
+
+        For example, 'hello_world' will be converted to 'Hello World'
+
+        :param name:
+            Name to prettify
+        """
+        return name.replace("_", " ").title()
 
     def allow(self, *args, **kwargs):
         """

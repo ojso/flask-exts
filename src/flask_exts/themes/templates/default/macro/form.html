@@ -1,0 +1,168 @@
+{% macro render_field_required_star(field) %}
+  {%- if _template.funcs.is_required_form_field(field) %}<strong class="text-danger">&#42;</strong>{% endif -%}
+{% endmacro %}
+
+
+{% macro render_field(field) %}
+  {%- if field.widget.input_type == 'submit' %}
+  {{ field(**kwargs) }}
+  {%- else %}
+  {%- set direct_error = field.errors | length %}
+  {%- if field.widget.input_type == 'checkbox' %}
+    {%- set _none = kwargs.setdefault('class', 'form-check-input') %}
+  {%- elif field.widget.input_type == 'file' %}
+    {%- set _none = kwargs.setdefault('class', 'form-control-file') %}
+  {%- else %}
+    {%- set _none = kwargs.setdefault('class', 'form-control') %}
+  {%- endif %}
+  {%- if direct_error %} 
+    {%- set _none = kwargs.update({'class': kwargs['class'] ~ ' is-invalid'}) %} 
+  {%- endif -%}
+  {%- set prepend = kwargs.pop('prepend', None) %}
+  {%- set append = kwargs.pop('append', None) -%}
+  
+  {%- set group_class="form-group" %}
+  {%- if field.widget.input_type == 'checkbox' %} {%- set group_class=group_class+" form-check" %} {% endif %}
+  {%- if kwargs.get('column_class') %} {%- set group_class=group_class+" "+kwargs.get('column_class') %} {% endif %}
+  <div class="{{ group_class }}">
+
+  {%- if field.widget.input_type != 'checkbox' %}
+    {{ field.label }} {{ render_field_required_star(field) }}
+  {%- endif %}
+    
+    {%- if prepend or append %}
+    <div class="input-group">
+      {%- if prepend -%}
+      <div class="input-group-prepend">
+        {{ prepend }}
+      </div>
+      {%- endif -%}
+    {%- endif %}    
+    {{ field(**kwargs) | safe }}
+    {# label for checkbox #}
+    {%- if field.widget.input_type == 'checkbox' %}{{ field.label(class_="form-check-label") }} {{ render_field_required_star(field) }}{% endif %}
+    {%- if append -%}
+    <div class="input-group-append">
+      {{ append }}
+    </div>
+    {%- endif -%}
+    {%- if direct_error %}
+      <div class="invalid-feedback">
+        <ul class="form-text text-muted">
+        {% for e in field.errors %}
+          <li>{{ e }}</li>
+        {% endfor %}
+        </ul>
+      </div>
+    {%- elif field.description %}
+      <small class="form-text text-muted">
+          {{ field.description|safe }}
+      </small>
+    {%- endif %}
+    {%- if prepend or append %}
+    </div>
+    {%- endif %}
+  </div>
+  {%- endif %}
+{% endmacro %}
+
+
+{% macro render_form_field(form, field, kwargs={}) %}
+  {{ render_field(field,**kwargs) }}
+{% endmacro %}
+
+
+{% macro render_form_rule(rule, form, form_opts) %}
+  {%- if rule.type == 'text' %}
+    {{ rule(form, from_opts) }}
+  {%- elif rule.type == 'field' %}
+    {% set params=rule.get_params(form, form_opts) %}
+    {{ render_form_field(form, params.field, params.kwargs) }}
+  {%- elif rule.type == 'nest' %}
+    {% for r in rule.rules %}
+      {% if not loop.first %}
+        {{ rule.separator|safe }}
+      {% endif %}
+      {{ render_form_rule(r, form, form_opts) }}
+    {% else %}
+    {% endfor %}
+  {%- elif rule.type == 'row' %}
+    <div class="form-row">
+      {% for r in rule.rules %}
+        {{ render_form_rule(r, form, form_opts) }}
+      {% endfor %}
+    </div>
+  {%- else %}
+    {{ rule.type or 'rule.type is None' }}
+  {%- endif %}
+{% endmacro %}
+
+{% macro render_form_fields(form, form_opts=None) %}
+    {% if form_opts and form_opts.form_rules %}
+        {% for r in form_opts.form_rules %}
+          {{ render_form_rule(r, form, form_opts) }}
+        {% endfor %}
+    {% else %}
+        {% for f in form if f.widget.input_type != 'hidden' %}
+          {% if form_opts %}
+            {% set kwargs = form_opts.widget_args.get(f.short_name, {}) %}
+          {% else %}
+            {% set kwargs = {} %}
+          {% endif %}
+          {{ render_form_field(form, f, kwargs) }}
+        {% endfor %}
+    {% endif %}
+    {% for f in form if f.widget.input_type == 'hidden' %}
+      {{ f }}
+    {% endfor %}
+{% endmacro %}
+
+{% macro render_form_buttons(cancel_url, extra=None) %}
+  <div class="form-group">
+    <input type="submit" class="btn btn-primary" value="{{ gettext('Save') }}" />
+    {% if extra %}{{ extra }}{% endif %}
+    {% if cancel_url %}
+    <a href="{{ cancel_url }}" class="btn btn-danger" role="button">{{ gettext('Cancel') }}</a>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro render_modal_form_buttons(cancel_url, extra=None) %}
+    <input type="submit" class="btn btn-primary" value="{{ gettext('Save') }}" />
+    {% if extra %}{{ extra }}{% endif %}
+    {% if cancel_url %}
+      <a href="{{ cancel_url }}" class="btn btn-danger" role="button" data-dismiss="modal">{{ gettext('Cancel') }}</a>
+    {% endif %}
+{% endmacro %}
+
+{% macro render_form(form, cancel_url, extra=None, form_opts=None, action=None) -%}
+  <form action="{{ action or '' }}" method="POST" role="form" class="admin-form" enctype="multipart/form-data">
+  <fieldset>
+    {{ render_form_fields(form, form_opts=form_opts) }}
+    {{ render_form_buttons(cancel_url, extra) }}
+  </fieldset>
+  </form>
+{% endmacro %}
+
+
+{% macro render_modal_form(form, cancel_url, extra=None, form_opts=None, action=None) -%}
+  <form action="{{ action or '' }}" method="POST" role="form" class="admin-form" enctype="multipart/form-data">
+  <fieldset>
+    <div class="modal-body">
+      {{ render_form_fields(form, form_opts=form_opts) }}
+    </div>
+    <div class="modal-footer">
+      {{ render_modal_form_buttons(cancel_url, extra) }}
+    </div>
+  </fieldset>
+  </form>
+{% endmacro %}
+
+{% macro extra(view) %}
+  {% if view.can_create %}
+  <input name="_add_another" type="submit" class="btn btn-secondary" value="{{ gettext('Save and Add Another') }}" />
+  {% endif %}
+  {% if view.can_edit %}
+  <input name="_continue_editing" type="submit" class="btn btn-secondary" value="{{ gettext('Save and Continue Editing') }}" />
+  {% endif %}
+{% endmacro %}

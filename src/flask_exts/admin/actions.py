@@ -99,7 +99,6 @@ class ActionsMixin:
             # using getlist instead of FieldList for backward compatibility
             ids = request.form.getlist("rowid")
             action = form.action.data
-
             handler = self._actions_data.get(action)
 
             if handler and self.is_action_allowed(action):

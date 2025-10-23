@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% import 'macro/menu.html' as menu -%}
+{%- from 'macro/message.html' import render_messages -%}
+
+{% block styles -%}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('_template.static',filename='css/admin.css') }}">
+{%- endblock %}
+
+{%- block body -%}
+<div class="container{% if _template.theme.navbar_fluid %}-fluid{% endif %}">
+    <nav class="navbar navbar-expand-lg {{ _template.theme.navbar_classes }} mb-2" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#admin-navbar-collapse"
+                aria-controls="admin-navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- navbar content -->
+            <div class="collapse navbar-collapse" id="admin-navbar-collapse">
+                {% block brand -%}
+                <a class="navbar-brand" href="{{ admin.url }}">{{ admin.name }}</a>
+                {%- endblock %}
+                {% block main_menu -%}
+                <ul class="navbar-nav mr-auto">
+                    {{ menu.render_menu(admin.menu.menus(),view) }}
+                </ul>
+                {%- endblock %}
+                {% block menu_links -%}
+                <ul class="navbar-nav navbar-right">
+                    {{ menu.menu_links(admin.menu.menu_links()) }}
+                </ul>
+                {%- endblock %}
+                {%- if "user" in admin._views %}
+                {% block access_control %} {{ menu.menu_user(current_user) }}{% endblock %}
+                {%- endif %}
+            </div>
+        </div>
+    </nav>
+</div>
+<div class="container{% if _template.theme.fluid %}-fluid{% endif %}">
+    {% block head %}{% endblock %}
+    {% block messages %}{{ render_messages() }}{% endblock %}
+    {% block main %}{% endblock %}
+</div>
+
+{%- endblock -%}
+
+{% block tail %}
+  {{ super() }}
+  <script src="{{ url_for('_template.static',filename='js/helper.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'admin/master.html' %}
+{% from 'macro/javascript.html' import runWhenDOMLoaded %}
+
+{%- set _none = _template.theme.plugin.enable_plugin('rediscli') -%}
+
+{% block main %}
+<div class="console">
+  <div class="console-container">
+  </div>
+  <div class="console-line mb-4">
+    <form action="{{ url_for('.execute_view') }}" method="post" class="d-flex">
+      <input name="cmd" type="text">
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block tail %}
+{{ super() }}
+
+<script>
+const redisInit = () => {
+  const redisCli = new RedisCli();
+  redisCli.resizeConsole();
+  redisCli.input.focus();
+  redisCli.sendCommand('ping');
+}
+
+{{ runWhenDOMLoaded('redisInit') }}
+</script>
+
+{% endblock %}
+

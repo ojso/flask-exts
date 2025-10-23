@@ -20,6 +20,7 @@ from flask import stream_with_context
 from jinja2 import pass_context
 from werkzeug.utils import secure_filename
 from wtforms.form import Form
+from wtforms.fields import FieldList
 from wtforms.fields import HiddenField
 from wtforms.fields.core import UnboundField
 from wtforms.validators import ValidationError, InputRequired
@@ -40,7 +41,7 @@ from ...template.form.utils import validate_form_on_submit
 from ...utils import flash_errors
 from ...utils import get_redirect_target
 from ...utils import rec_getattr
-from ...utils import prettify_name, get_mdict_item_or_list
+from ...utils import get_mdict_item_or_list
 
 
 # Used to generate filter query string name
@@ -807,7 +808,7 @@ class BaseModelView(BaseView, ActionsMixin):
 
         # If name not provided, it is model name
         if name is None:
-            name = "%s" % self._prettify_class_name(model.__name__)
+            name = self._prettify_class_name(model.__name__)
 
         super().__init__(
             name,
@@ -1335,7 +1336,7 @@ class BaseModelView(BaseView, ActionsMixin):
         class ActionForm(self.form_base_class):
             action = HiddenField()
             url = HiddenField()
-            # rowid is retrieved using getlist, for backward compatibility
+            # rowid = HiddenField() # for multiple ids, process_formdata must be rewritten
 
         return ActionForm
 
@@ -1708,16 +1709,7 @@ class BaseModelView(BaseView, ActionsMixin):
         raise NotImplementedError()
 
     # Various helpers
-    def _prettify_name(self, name):
-        """
-        Prettify pythonic variable name.
 
-        For example, 'hello_world' will be converted to 'Hello World'
-
-        :param name:
-            Name to prettify
-        """
-        return prettify_name(name)
 
     def get_empty_list_message(self):
         return gettext("There are no items in the table.")
