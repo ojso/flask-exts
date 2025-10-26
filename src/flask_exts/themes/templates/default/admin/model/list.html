@@ -1,10 +1,15 @@
 {% extends 'admin/master.html' %}
 
+{% from 'macro/javascript.html' import runWhenDOMLoaded %}
 {% from 'macro/vendor.html' import form_css, form_js %}
 {% from 'macro/pagination.html' import render_pager, render_simple_pager %}
 {% import 'macro/layout.html' as model_layout with context %}
 {% import 'macro/actions.html' as actionlib with context %}
 {% from 'macro/row_actions.html' import render_row_action with context %}
+
+{% if actions %}
+  {%- set _none = _template.theme.plugin.enable_plugin(['list_action']) -%}
+{% endif %}
 
 {% block styles -%}
   {{ super() }}
@@ -187,6 +192,13 @@
     <script src="{{ url_for('_template.static',filename='js/modal.js') }}"></script>
     <script src="{{ url_for('_template.static',filename='js/filters.js') }}"></script>
     {% if actions %}
-      {{ actionlib.add_action_js(gettext('Please select at least one record.'), actions, actions_confirmation) }}
+        <div id="message-data" class="d-none">{{ _('Please select at least one record.') }}</div>
+        <div id="actions-confirmation-data" class="d-none">{{ actions_confirmation|tojson|safe }}</div>
+        <script>
+        {{ runWhenDOMLoaded('start_rows_toggle') }}
+        let modelActions = new AdminModelActions($('#message-data').text(), JSON.parse($('#actions-confirmation-data').text()));
+        </script>
     {% endif %}
+    
+
 {% endblock %}

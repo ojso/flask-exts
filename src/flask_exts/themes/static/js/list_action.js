@@ -47,5 +47,5 @@ class AdminModelActions {
     };
 }
 
-start_rows_toggle();
-let modelActions = new AdminModelActions(JSON.parse($('#message-data').text()), JSON.parse($('#actions-confirmation-data').text()));
+
+

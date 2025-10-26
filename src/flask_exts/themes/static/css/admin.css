@@ -99,7 +99,7 @@ body.modal-open {
 }
 
 /* Details View - add space between navbar and results */
-.fa_filter_container {
+.detail_filter_container {
     margin-top: 20px;
     margin-bottom: 10px;
 }

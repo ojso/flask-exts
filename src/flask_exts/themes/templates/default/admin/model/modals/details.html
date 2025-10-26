@@ -1,3 +1,7 @@
+{% from 'macro/javascript.html' import runWhenDOMLoaded %}
+
+{%- set _none = _template.theme.plugin.enable_plugin(['detail_filter']) -%}
+
 {% block body %}
   <div class="modal-header">
     {% block header_text %}
@@ -7,9 +11,9 @@
   </div>
   <div class="modal-body">
   {% block details_search %}
-    <div class="form-inline fa_filter_container col-lg-6">
-      <label for="fa_filter">{{ gettext('Filter') }}</label>
-      <input id="fa_filter" type="text" class="ml-3 form-control">
+    <div class="form-inline detail_filter_container col-lg-6">
+      <label for="detail_filter">{{ gettext('Filter') }}</label>
+      <input id="detail_filter" type="text" class="ml-3 form-control">
     </div>
   {% endblock %}  
   {% block details_table %}
@@ -30,7 +34,9 @@
 {% endblock %}
 
 {% block tail %}
-  <script src="{{ url_for('_template.static',filename='js/details_filter.js') }}"></script>
+  <script>
+    {{ runWhenDOMLoaded('detail_filter') }}
+  </script>
 {% endblock %}
 
 

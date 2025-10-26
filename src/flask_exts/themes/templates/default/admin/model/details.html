@@ -1,4 +1,7 @@
 {% extends 'admin/master.html' %}
+{% from 'macro/javascript.html' import runWhenDOMLoaded %}
+
+{%- set _none = _template.theme.plugin.enable_plugin(['detail_filter']) -%}
 
 {% block main %}
   {% block navlinks %}
@@ -23,9 +26,9 @@
   {% endblock %}
 
   {% block details_search %}
-    <div class="form-inline fa_filter_container col-lg-6">
-      <label for="fa_filter">{{ gettext('Filter') }}</label>
-      <input id="fa_filter" type="text" class="ml-3 form-control">
+    <div class="form-inline detail_filter_container col-lg-6">
+      <label for="detail_filter">{{ gettext('Filter') }}</label>
+      <input id="detail_filter" type="text" class="ml-3 form-control">
     </div>
   {% endblock %}
 
@@ -47,5 +50,8 @@
 
 {% block tail %}
   {{ super() }}
-  <script src="{{ url_for('_template.static',filename='js/details_filter.js') }}"></script>
+  <script>
+    {{ runWhenDOMLoaded('detail_filter') }}
+  </script>
+  
 {% endblock %}

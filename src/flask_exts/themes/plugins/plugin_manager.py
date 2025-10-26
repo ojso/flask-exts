@@ -1,10 +1,9 @@
 from markupsafe import Markup
-from .copybutton_plugin import CopyButtonPlugin
-from .jquery_plugin import jQueryPlugin
-from .bootstrap4_plugin import Bootstrap4Plugin
-from .qrcode_plugin import QRCodePlugin
-from .rediscli_plugin import RedisCliPlugin
-
+import os
+import sys
+import importlib.util
+import inspect
+from .base_plugin import BasePlugin
 
 class PluginManager:
     def __init__(self):
@@ -23,17 +22,14 @@ class PluginManager:
 
     def init_app(self, app):
         # Register plugins
-        [
-            self.register_plugin(p)
-            for p in (
-                jQueryPlugin(),
-                Bootstrap4Plugin(),
-                QRCodePlugin(),
-                CopyButtonPlugin(),
-                RedisCliPlugin(),
-            )
-        ]
-        # print("registered plugins:", [k for k in self.registered_plugins])
+        plugins_directory = os.path.dirname(__file__)
+        plugin_classes = self.load_plugins_in_directory(plugins_directory, BasePlugin)
+
+        for name, plugin_class in plugin_classes:
+            plugin_instance = plugin_class()
+            self.register_plugin(plugin_instance)
+
+        print("registered plugins:", [k for k in self.registered_plugins])
 
     def load_css(self):
         css_links = [
@@ -53,3 +49,35 @@ class PluginManager:
         js = "\n".join(js_links)
         return Markup(js)
 
+    def load_plugins_in_directory(self,directory, base_class):
+        """
+        Scans the specified directory for Python files, imports them,
+        and returns a list of subclasses of the specified base class.
+
+        :param directory: The directory to scan for Python files.
+        :param base_class: The base class to find subclasses of.
+        :return: A list of subclasses of the specified base class.
+        """
+        subclasses = []
+
+        for filename in os.listdir(directory):
+            if (
+                filename.endswith("plugin.py")
+                and not filename.startswith("__")
+                and filename != "base_plugin.py"
+            ):
+                module_name = filename[:-3]
+                try:
+                    module = importlib.import_module(f"{__package__}.{module_name}")
+                except:
+                    module_path = os.path.join(directory, filename)
+                    spec = importlib.util.spec_from_file_location(module_name, module_path)
+                    module = importlib.util.module_from_spec(spec)
+                    # sys.modules[module_name] = module
+                    spec.loader.exec_module(module)
+
+                for name, obj in inspect.getmembers(module, inspect.isclass):
+                    if issubclass(obj, base_class) and obj is not base_class:
+                        subclasses.append((name, obj))
+
+        return subclasses
