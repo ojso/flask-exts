@@ -1,6 +1,5 @@
 {% extends 'admin/master.html' %}
 {% import 'macro/actions.html' as actionlib with context %}
-{% from 'macro/javascript.html' import runWhenDOMLoaded %}
 
 {%- set _none = _template.theme.plugin.enable_plugin('qrcode') -%}
 
@@ -32,17 +31,14 @@ content=gettext('Enable 2FA')) }}
 
 <script>
 // generate QR code
-const showqrcode = () => {
+document.addEventListener("DOMContentLoaded",()=>{
   let qr = new QrCode(20, 'M');
   let text = document.getElementById('qrimg').dataset.uri;
   qr.addData(text);
   qr.make();
   const qrsvg = qr.createSvgTag(4,4);
   document.getElementById('qrimg').innerHTML = qrsvg;
-}
-
-{{ runWhenDOMLoaded('showqrcode') }}
-
+});
   
 </script>
 

@@ -1,6 +1,5 @@
 {% extends 'admin/master.html' %}
 
-{% from 'macro/javascript.html' import runWhenDOMLoaded %}
 {% from 'macro/vendor.html' import form_css, form_js %}
 {% from 'macro/pagination.html' import render_pager, render_simple_pager %}
 {% import 'macro/layout.html' as model_layout with context %}
@@ -8,7 +7,7 @@
 {% from 'macro/row_actions.html' import render_row_action with context %}
 
 {% if actions %}
-  {%- set _none = _template.theme.plugin.enable_plugin(['list_action']) -%}
+  {%- set _none = _template.theme.plugin.enable_plugin(['model_action']) -%}
 {% endif %}
 
 {% block styles -%}
@@ -185,18 +184,20 @@
 {% block tail %}
     {{ super() }}
     {% if filter_groups %}
-      <div id="filter-groups-data" class="d-none">{{ filter_groups|tojson|safe }}</div>
-      <div id="active-filters-data" class="d-none">{{ active_filters|tojson|safe }}</div>
+      <div id="filter-groups-data" class="d-none">{{ filter_groups|tojson }}</div>
+      <div id="active-filters-data" class="d-none">{{ active_filters|tojson }}</div>
     {% endif %}
     {{ form_js(xeditable=editable_columns) }}
     <script src="{{ url_for('_template.static',filename='js/modal.js') }}"></script>
     <script src="{{ url_for('_template.static',filename='js/filters.js') }}"></script>
     {% if actions %}
-        <div id="message-data" class="d-none">{{ _('Please select at least one record.') }}</div>
-        <div id="actions-confirmation-data" class="d-none">{{ actions_confirmation|tojson|safe }}</div>
         <script>
-        {{ runWhenDOMLoaded('start_rows_toggle') }}
-        let modelActions = new AdminModelActions($('#message-data').text(), JSON.parse($('#actions-confirmation-data').text()));
+            const actionErrorMessage = "{{ _('Please select at least one record.') }}";
+            const actionConfirmations = {{ actions_confirmation|tojson }};
+            let modelActions;
+            document.addEventListener("DOMContentLoaded",()=>{
+                modelActions = new ModelAction(actionErrorMessage, actionConfirmations);
+            });
         </script>
     {% endif %}
     

@@ -1,5 +1,4 @@
 {% extends 'admin/master.html' %}
-{% from 'macro/javascript.html' import runWhenDOMLoaded %}
 
 {%- set _none = _template.theme.plugin.enable_plugin(['detail_filter']) -%}
 
@@ -51,7 +50,8 @@
 {% block tail %}
   {{ super() }}
   <script>
-    {{ runWhenDOMLoaded('detail_filter') }}
-  </script>
-  
+    document.addEventListener("DOMContentLoaded",()=>{
+      new SearchDetail('detail_filter')
+    });
+  </script>  
 {% endblock %}

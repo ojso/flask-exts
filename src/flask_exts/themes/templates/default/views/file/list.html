@@ -1,11 +1,10 @@
 {% extends 'admin/master.html' %}
 
-{% from 'macro/javascript.html' import runWhenDOMLoaded %}
 {% from 'macro/icon.html' import render_icon %}
 {% import 'macro/actions.html' as actionslib with context %}
 
 {% if actions %}
-  {%- set _none = _template.theme.plugin.enable_plugin(['list_action']) -%}
+  {%- set _none = _template.theme.plugin.enable_plugin(['model_action']) -%}
 {% endif %}
 
 {% block main %}
@@ -190,11 +189,14 @@
     {%- endif -%}
 
     {% if actions %}
-        <div id="message-data" class="d-none">{{ _('Please select at least one file.') }}</div>
-        <div id="actions-confirmation-data" class="d-none">{{ actions_confirmation|tojson|safe }}</div>
-        <script>
-        {{ runWhenDOMLoaded('start_rows_toggle') }}
-        let modelActions = new AdminModelActions($('#message-data').text(), JSON.parse($('#actions-confirmation-data').text()));
+          <script>
+            const actionErrorMessage = "{{ _('Please select at least one file.') }}";
+            const actionConfirmations = {{ actions_confirmation|tojson }};
+            let modelActions;
+            document.addEventListener("DOMContentLoaded",()=>{
+                modelActions = new ModelAction(actionErrorMessage, actionConfirmations);
+            });
         </script>
+        
     {% endif %}
 {% endblock %}

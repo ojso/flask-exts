@@ -5,6 +5,7 @@ import importlib.util
 import inspect
 from .base_plugin import BasePlugin
 
+
 class PluginManager:
     def __init__(self):
         self.registered_plugins = {}
@@ -23,13 +24,8 @@ class PluginManager:
     def init_app(self, app):
         # Register plugins
         plugins_directory = os.path.dirname(__file__)
-        plugin_classes = self.load_plugins_in_directory(plugins_directory, BasePlugin)
-
-        for name, plugin_class in plugin_classes:
-            plugin_instance = plugin_class()
-            self.register_plugin(plugin_instance)
-
-        print("registered plugins:", [k for k in self.registered_plugins])
+        self.load_plugins_in_directory(plugins_directory, BasePlugin)
+        # print("registered plugins:", [k for k in self.registered_plugins])
 
     def load_css(self):
         css_links = [
@@ -49,7 +45,7 @@ class PluginManager:
         js = "\n".join(js_links)
         return Markup(js)
 
-    def load_plugins_in_directory(self,directory, base_class):
+    def load_plugins_in_directory(self, directory, base_class):
         """
         Scans the specified directory for Python files, imports them,
         and returns a list of subclasses of the specified base class.
@@ -71,7 +67,9 @@ class PluginManager:
                     module = importlib.import_module(f"{__package__}.{module_name}")
                 except:
                     module_path = os.path.join(directory, filename)
-                    spec = importlib.util.spec_from_file_location(module_name, module_path)
+                    spec = importlib.util.spec_from_file_location(
+                        module_name, module_path
+                    )
                     module = importlib.util.module_from_spec(spec)
                     # sys.modules[module_name] = module
                     spec.loader.exec_module(module)
@@ -79,5 +77,7 @@ class PluginManager:
                 for name, obj in inspect.getmembers(module, inspect.isclass):
                     if issubclass(obj, base_class) and obj is not base_class:
                         subclasses.append((name, obj))
+                        plugin_instance = obj()
+                        self.register_plugin(plugin_instance)
 
-        return subclasses
+        # print(subclasses)

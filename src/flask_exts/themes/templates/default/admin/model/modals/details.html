@@ -1,5 +1,3 @@
-{% from 'macro/javascript.html' import runWhenDOMLoaded %}
-
 {%- set _none = _template.theme.plugin.enable_plugin(['detail_filter']) -%}
 
 {% block body %}
@@ -35,7 +33,9 @@
 
 {% block tail %}
   <script>
-    {{ runWhenDOMLoaded('detail_filter') }}
+    document.addEventListener("DOMContentLoaded",()=>{
+      new SearchDetail('detail_filter')
+    });
   </script>
 {% endblock %}
 
