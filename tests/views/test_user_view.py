@@ -24,9 +24,9 @@ class TestUserView:
             db.create_all()
 
         email_sender = EmailSender()
-        app.extensions["manager"].email.register_sender("verify_email", email_sender)
-        app.extensions["manager"].email.register_sender("reset_password", email_sender)
-        # print(app.extensions["manager"].email.senders)
+        app.extensions["exts"].email.register_sender("verify_email", email_sender)
+        app.extensions["exts"].email.register_sender("reset_password", email_sender)
+        # print(app.extensions["exts"].email.senders)
 
         with app.test_request_context():
             self.sess_csrf_token, self.csrf_token = _get_csrf_token_of_session_and_g()

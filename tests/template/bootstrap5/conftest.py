@@ -1,6 +1,6 @@
 import pytest
 from flask import Flask
-from flask_exts import Manager
+from flask_exts import Exts
 
 from flask_exts.template.base import Template
 
@@ -10,6 +10,6 @@ from flask_exts.template.base import Template
 def app():
     app = Flask(__name__)
     app.secret_key = "1"
-    manager = Manager()
-    manager.init_app(app)
+    exts = Exts()
+    exts.init_app(app)
     yield app

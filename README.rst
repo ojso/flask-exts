@@ -3,6 +3,7 @@ Flask Exts
 
 Flask-Exts is mainly inspired by:
 
+- `Bootstrap <https://getbootstrap.com/>`_
 - `Flask-Admin <https://github.com/pallets-eco/flask-admin/>`_
 - `Flask-Security <https://github.com/pallets-eco/flask-security/>`_
 
@@ -29,13 +30,13 @@ Examples
 .. code-block:: python
 
     from flask import Flask
-    from flask_exts import Manager
+    from flask_exts import Exts
 
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "dev"
-    # Manager init
-    manager = Manager()
-    manager.init_app(app)
+    # Exts init
+    exts = Exts()
+    exts.init_app(app)
 
     if __name__ == "__main__":
         app.run(debug=True)

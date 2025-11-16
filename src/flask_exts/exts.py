@@ -9,7 +9,7 @@ from .views.index.view import IndexView
 from .views.user.view import UserView
 
 
-class Manager:
+class Exts:
     """This is used to manager babel,template,admin, and so on..."""
 
     def __init__(self, app=None):
@@ -29,10 +29,10 @@ class Manager:
         if not hasattr(app, "extensions"):
             app.extensions = {}
 
-        if "manager" in app.extensions:
-            raise Exception("manager extension already exists in app.extensions.")
+        if "exts" in app.extensions:
+            raise Exception("exts extension already exists in app.extensions.")
 
-        app.extensions["manager"] = self
+        app.extensions["exts"] = self
 
         # init sqlalchemy db
         if app.config.get("SQLALCHEMY_DATABASE_URI", None) is None:

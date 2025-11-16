@@ -1,3 +1,11 @@
+v0.2.6
+------
+
+Released 2025-11-16
+
+- rename manager.py to exts.py
+- rename Class Manager to Exts
+
 v0.2.5
 ------
 

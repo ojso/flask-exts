@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_exts import Manager
+from flask_exts import Exts
 from .models import db, Message, MyCategory
 from .view import BootstrapView
 
@@ -11,9 +11,9 @@ def create_app():
 
 
 def init_app(app: Flask):
-    manager = Manager()
-    manager.init_app(app)
-    manager.admin.add_view(BootstrapView())
+    exts = Exts()
+    exts.init_app(app)
+    exts.admin.add_view(BootstrapView())
 
     with app.app_context():
         db.drop_all()

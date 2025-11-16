@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_exts import Manager
+from flask_exts import Exts
 from .file_view import file_view
 from flask_exts.datastore.sqla import db
 
@@ -18,6 +18,6 @@ def create_app():
 
 
 def init_app(app: Flask):
-    manager = Manager()
-    manager.init_app(app)
-    manager.admin.add_view(file_view)
+    exts = Exts()
+    exts.init_app(app)
+    exts.admin.add_view(file_view)

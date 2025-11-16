@@ -1,6 +1,6 @@
 import os.path as op
 from flask import Flask
-from flask_exts import Manager
+from flask_exts import Exts
 
 
 def get_sqlite_path():
@@ -25,8 +25,8 @@ def create_app():
 
 
 def init_app(app: Flask):
-    manager = Manager()
-    manager.init_app(app)
+    exts = Exts()
+    exts.init_app(app)
 
     from .models import init_models
 

@@ -1,6 +1,6 @@
 import pytest
 from flask import Flask
-from flask_exts import Manager
+from flask_exts import Exts
 
 
 @pytest.fixture
@@ -14,8 +14,8 @@ def app():
     app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
     app.config["JWT_HASH"] = "HS256"
     app.config["ADMIN_ALL_ACCESSED"] = False
-    manager = Manager()
-    manager.init_app(app)
+    exts = Exts()
+    exts.init_app(app)
     yield app
 
 
@@ -25,13 +25,13 @@ def client(app):
 
 
 @pytest.fixture
-def manager(app):
-    if hasattr(app, "extensions") and "manager" in app.extensions:
-        return app.extensions["manager"]
+def exts(app):
+    if hasattr(app, "extensions") and "exts" in app.extensions:
+        return app.extensions["exts"]
     else:
         return None
 
 
 @pytest.fixture
-def admin(manager):
-    return manager.admin
+def admin(exts):
+    return exts.admin

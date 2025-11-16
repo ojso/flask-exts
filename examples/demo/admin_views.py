@@ -10,7 +10,7 @@ from flask_exts.admin.menu import MenuLink
 
 
 def add_views(app):
-    admin = app.extensions["manager"].admin
+    admin = app.extensions["exts"].admin
 
     admin.add_view(myview)
     admin.add_view(userview)

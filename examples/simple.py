@@ -2,7 +2,7 @@
 
 from flask import Flask
 from flask import render_template_string
-from flask_exts import Manager
+from flask_exts import Exts
 from flask_exts.admin import expose
 from flask_exts.admin import BaseView
 from flask_exts.datastore.sqla import db
@@ -19,10 +19,10 @@ class MockView(BaseView):
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev"
-manager = Manager()
-manager.init_app(app)
+exts = Exts()
+exts.init_app(app)
 # Register a mock view
-manager.admin.add_view(MockView())
+exts.admin.add_view(MockView())
 
 with app.app_context():
     db.drop_all()

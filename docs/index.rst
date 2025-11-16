@@ -10,6 +10,7 @@ Welcome to Flask-Exts's documentation!
 
 Flask-Exts is mainly inspired by:
 
+- `Bootstrap <https://getbootstrap.com/>`_
 - `Flask-Admin <https://github.com/pallets-eco/flask-admin/>`_
 - `Flask-Security <https://github.com/pallets-eco/flask-security/>`_
 
