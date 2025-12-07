@@ -5,25 +5,6 @@ from flask import url_for
 from flask import abort
 
 
-def expose(url="/", methods=("GET",)):
-    """
-    Use this decorator to expose views in your view classes.
-
-    :param url:
-        Relative URL for the view
-    :param methods:
-        Allowed HTTP methods. By default only GET is allowed.
-    """
-
-    def wrap(f):
-        if not hasattr(f, "_urls"):
-            f._urls = []
-        f._urls.append((url, methods))
-        return f
-
-    return wrap
-
-
 def _wrap_view(f):
     """wrapping f with self._allow_view_fn"""
     # Avoid wrapping view method twice
@@ -39,7 +20,6 @@ def _wrap_view(f):
         return f(self, *args, **kwargs)
 
     inner._wrapped = True
-
     return inner
 
 
@@ -67,6 +47,18 @@ class ViewMeta(type):
                         cls._default_view = name
                 # Wrap views
                 setattr(cls, name, _wrap_view(attr))
+
+        # Initialize actions
+        cls._actions = []
+        cls._actions_data = {}
+
+        for p in dir(cls):
+            attr = getattr(cls, p)
+
+            if hasattr(attr, "_action"):
+                name, text, desc = attr._action
+                cls._actions.append((name, text))
+                cls._actions_data[name] = (attr, text, desc)
 
 
 class BaseView(metaclass=ViewMeta):

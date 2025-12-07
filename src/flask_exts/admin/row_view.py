@@ -1,61 +1,19 @@
 from flask import request, redirect
+from .view import BaseView
+from .decorate import expose
 from ..utils import get_redirect_target
 from ..utils import flash_errors
 
 
-def action(name, text, confirmation=None):
-    """
-    Use this decorator to expose actions that span more than one entity (model, file, etc)
-
-    :param name:
-        Action name
-    :param text:
-        Action text.
-    :param confirmation:
-        Confirmation text. If not provided, action will be executed
-        unconditionally.
-    """
-
-    def wrap(f):
-        f._action = (name, text, confirmation)
-        return f
-
-    return wrap
-
-
-class ActionsMixin:
-    """
-    Actions mixin.
-
-    In some cases, you might work with more than one "entity" (model, file, etc) in
-    your admin view and will want to perform actions on a group of entities simultaneously.
-
-    In this case, you can add this functionality by doing this:
-    1. Add this mixin to your administrative view class
-    2. Call `init_actions` in your class constructor
-    3. Expose actions view
-    4. Import `actions.html` library and add call library macros in your template
-    """
-
-    def __init__(self):
-        self._actions = []
-        self._actions_data = {}
-
-    def init_actions(self):
+class RowView(BaseView):
+    @expose("/action/", methods=("POST",))
+    def action_view(self):
         """
-        Initialize list of actions for the current administrative view.
+        Mass-model action view.
         """
-        self._actions = []
-        self._actions_data = {}
+        return self.handle_action()
 
-        for p in dir(self):
-            attr = getattr(self, p)
-
-            if hasattr(attr, "_action"):
-                name, text, desc = attr._action
-                self._actions.append((name, text))
-                self._actions_data[name] = (attr, text, desc)
-
+    # action
     def is_action_allowed(self, name):
         """
         Verify if action with `name` is allowed.
@@ -102,7 +60,7 @@ class ActionsMixin:
             handler = self._actions_data.get(action)
 
             if handler and self.is_action_allowed(action):
-                response = handler[0](ids)
+                response = handler[0](self, ids)
 
                 if response is not None:
                     return response

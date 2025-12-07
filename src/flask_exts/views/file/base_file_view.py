@@ -9,12 +9,12 @@ from wtforms import fields, validators
 from werkzeug.utils import secure_filename
 from ...template.form.base_form import BaseForm
 from ...utils import flash_errors
-from ...admin import BaseView
+from ...admin.row_view import RowView
 from ...admin import expose
-from ...admin.actions import action, ActionsMixin
+from ...admin import action
 
 
-class BaseFileView(BaseView, ActionsMixin):
+class BaseFileView(RowView):
     can_upload = True
     """
         Is file upload allowed.
@@ -186,8 +186,6 @@ class BaseFileView(BaseView, ActionsMixin):
             The storage backend that the `BaseFileAdmin` will use to operate on the files.
         """
         self.storage = storage
-
-        self.init_actions()
 
         self._on_windows = platform.system() == "Windows"
 

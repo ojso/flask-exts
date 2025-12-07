@@ -29,10 +29,9 @@ from ...types import T_COLUMN_LIST, T_FORMATTERS
 from . import typefmt
 from .filters import BaseFilter
 from .ajax import AjaxModelLoader
-from ..view import BaseView
-from ..actions import ActionsMixin
 from .. import row_action
-from ..view import expose
+from .. import expose
+from ..row_view import RowView
 from ...template.form.base_form import BaseForm
 from ...template.form.form_opts import FormOpts
 from ...template.rules import RuleSet
@@ -117,7 +116,7 @@ class FilterGroup:
         return iter(self.filters)
 
 
-class BaseModelView(BaseView, ActionsMixin):
+class BaseModelView(RowView):
     """
     Base model view.
 
@@ -819,9 +818,6 @@ class BaseModelView(BaseView, ActionsMixin):
             menu_icon_type=menu_icon_type,
             menu_icon_value=menu_icon_value,
         )
-
-        # Actions
-        self.init_actions()
 
         # Scaffolding
         self._refresh_cache()
@@ -2289,13 +2285,6 @@ class BaseModelView(BaseView, ActionsMixin):
             flash_errors(form, message="Failed to delete record. %(error)s")
 
         return redirect(return_url)
-
-    @expose("/action/", methods=("POST",))
-    def action_view(self):
-        """
-        Mass-model action view.
-        """
-        return self.handle_action()
 
     def _export_data(self):
         # Macros in column_formatters are not supported.

@@ -24,7 +24,7 @@ from ...utils.sqla import get_query_for_ids
 from ...utils.tools import iterencode, escape
 from ..model import BaseModelView
 from ..model.form import create_editable_list_form
-from ..actions import action
+from .. import action
 from . import form
 from ...utils import sqla
 from .filters import BaseSQLAFilter
