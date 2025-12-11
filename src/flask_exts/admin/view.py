@@ -5,7 +5,7 @@ from flask import url_for
 from flask import abort
 
 
-def _wrap_view(f):
+def _wrap_view_func(f):
     """wrapping f with self._allow_view_fn"""
     # Avoid wrapping view method twice
     if hasattr(f, "_wrapped"):
@@ -15,8 +15,7 @@ def _wrap_view(f):
     def inner(self, *args, **kwargs):
         # check for access
         if not self._allow_view_fn(f, *args, **kwargs):
-            return self.inaccessible_callback(f, **kwargs)
-        # run view
+            return self._inaccessible_callback(f, **kwargs)
         return f(self, *args, **kwargs)
 
     inner._wrapped = True
@@ -46,19 +45,8 @@ class ViewMeta(type):
                     elif url == "/index/" and cls._default_view is None:
                         cls._default_view = name
                 # Wrap views
-                setattr(cls, name, _wrap_view(attr))
+                setattr(cls, name, _wrap_view_func(attr))
 
-        # Initialize actions
-        cls._actions = []
-        cls._actions_data = {}
-
-        for p in dir(cls):
-            attr = getattr(cls, p)
-
-            if hasattr(attr, "_action"):
-                name, text, desc = attr._action
-                cls._actions.append((name, text))
-                cls._actions_data[name] = (attr, text, desc)
 
 
 class BaseView(metaclass=ViewMeta):
@@ -92,6 +80,10 @@ class BaseView(metaclass=ViewMeta):
             is "test", the resulting URL will look like "/admin/test/". If not provided, will
             use endpoint as a base url. However, if URL starts with '/', absolute path is assumed
             and '/admin/' prefix won't be applied.
+        :param template_folder:
+            Template folder for this view. If not provided, default admin template folder will be used.
+        :param static_folder:
+            Static folder for this view. If provided, will be used to serve static files for this view.
         :param static_url_path:
             Static URL Path. If provided, this specifies the path to the static url directory.
         :param menu_class_name:
@@ -104,6 +96,7 @@ class BaseView(metaclass=ViewMeta):
         :param menu_icon_value:
             Icon name or URL, depending on `menu_icon_type` setting
         """
+
         self.name = name or self._prettify_class_name(self.__class__.__name__)
         self.endpoint = endpoint or self._get_endpoint()
         self.url = url
@@ -111,7 +104,6 @@ class BaseView(metaclass=ViewMeta):
         self.static_folder = static_folder
         self.static_url_path = static_url_path
         # Menu
-        self.menu = None
         self.menu_class_name = menu_class_name
         self.menu_icon_type = menu_icon_type
         self.menu_icon_value = menu_icon_value
@@ -258,7 +250,7 @@ class BaseView(metaclass=ViewMeta):
         """
         return self.allow(view=self, fn=fn)
 
-    def inaccessible_callback(self, fn, **kwargs):
+    def _inaccessible_callback(self, fn, **kwargs):
         """
         Handle the response to inaccessible views.
 
