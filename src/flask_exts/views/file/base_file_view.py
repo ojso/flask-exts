@@ -10,8 +10,8 @@ from werkzeug.utils import secure_filename
 from ...template.form.base_form import BaseForm
 from ...utils import flash_errors
 from ...admin.action_view import ActionView
-from ...admin import expose
-from ...admin import action
+from ...admin import expose_url
+from ...admin import expose_action
 
 
 class BaseFileView(ActionView):
@@ -684,8 +684,8 @@ class BaseFileView(ActionView):
             breadcrumbs.append((n, self._separator.join(accumulator)))
         return breadcrumbs
 
-    @expose("/")
-    @expose("/b/<path:path>")
+    @expose_url("/")
+    @expose_url("/b/<path:path>")
     def index_view(self, path=None):
         """
         Index view method
@@ -785,8 +785,8 @@ class BaseFileView(ActionView):
             timestamp_format=self.timestamp_format,
         )
 
-    @expose("/upload/", methods=("GET", "POST"))
-    @expose("/upload/<path:path>", methods=("GET", "POST"))
+    @expose_url("/upload/", methods=("GET", "POST"))
+    @expose_url("/upload/<path:path>", methods=("GET", "POST"))
     def upload(self, path=None):
         """
         Upload view method
@@ -832,7 +832,7 @@ class BaseFileView(ActionView):
             modal=request.args.get("modal"),
         )
 
-    @expose("/download/<path:path>")
+    @expose_url("/download/<path:path>")
     def download(self, path=None):
         """
         Download view method.
@@ -847,8 +847,8 @@ class BaseFileView(ActionView):
 
         return self.storage.send_file(directory)
 
-    @expose("/mkdir/", methods=("GET", "POST"))
-    @expose("/mkdir/<path:path>", methods=("GET", "POST"))
+    @expose_url("/mkdir/", methods=("GET", "POST"))
+    @expose_url("/mkdir/<path:path>", methods=("GET", "POST"))
     def mkdir(self, path=None):
         """
         Directory creation view method
@@ -908,7 +908,7 @@ class BaseFileView(ActionView):
         """
         self.storage.delete_file(file_path)
 
-    @expose("/delete/", methods=("POST",))
+    @expose_url("/delete/", methods=("POST",))
     def delete(self):
         """
         Delete view method
@@ -968,7 +968,7 @@ class BaseFileView(ActionView):
 
         return redirect(return_url)
 
-    @expose("/rename/", methods=("GET", "POST"))
+    @expose_url("/rename/", methods=("GET", "POST"))
     def rename(self):
         """
         Rename view method
@@ -1032,7 +1032,7 @@ class BaseFileView(ActionView):
             header_text=gettext("Rename %(name)s", name=op.basename(path)),
         )
 
-    @expose("/edit/", methods=("GET", "POST"))
+    @expose_url("/edit/", methods=("GET", "POST"))
     def edit(self):
         """
         Edit view method
@@ -1125,8 +1125,7 @@ class BaseFileView(ActionView):
             header_text=gettext("Editing %(path)s", path=path),
         )
 
-    # Actions
-    @action(
+    @expose_action(
         "delete",
         lazy_gettext("Delete"),
         lazy_gettext("Are you sure you want to delete these files?"),
@@ -1149,6 +1148,9 @@ class BaseFileView(ActionView):
                 except Exception as ex:
                     flash(gettext("Failed to delete file: %(name)s", name=ex), "error")
 
-    @action("edit", lazy_gettext("Edit"))
+    @expose_action(
+        "edit",
+        lazy_gettext("Edit"),
+    )
     def action_edit(self, items):
         return redirect(self.get_url(".edit", path=items))

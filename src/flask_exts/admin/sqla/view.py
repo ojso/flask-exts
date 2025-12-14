@@ -24,7 +24,7 @@ from ...utils.sqla import get_query_for_ids
 from ...utils.tools import iterencode, escape
 from ..model import BaseModelView
 from ..model.form import create_editable_list_form
-from ..decorate import action
+from ..exposer import expose_action
 from . import form
 from ...utils import sqla
 from .filters import BaseSQLAFilter
@@ -1285,7 +1285,7 @@ class ModelView(BaseModelView):
 
         return super().is_action_allowed(name)
 
-    @action(
+    @expose_action(
         "delete",
         lazy_gettext("Delete"),
         lazy_gettext("Are you sure you want to delete selected records?"),

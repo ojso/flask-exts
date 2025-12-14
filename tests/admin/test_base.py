@@ -1,6 +1,6 @@
 import pytest
 from flask import url_for
-from flask_exts.admin import expose
+from flask_exts.admin import expose_url
 from flask_exts.admin import View
 from flask_exts.admin.admin import Admin
 from flask_exts.admin.menu import MenuLink
@@ -12,11 +12,11 @@ from ..helper import get_app_endpoint_rule
 class MockView(View):
     allow_access = True
 
-    @expose("/")
+    @expose_url("/")
     def index(self):
         return "Success!"
 
-    @expose("/test/")
+    @expose_url("/test/")
     def test(self):
         return self.render("mock.html")
 
@@ -27,7 +27,7 @@ class MockView(View):
 class MockNoindexView(View):
     allow_access = True
 
-    @expose("/test/")
+    @expose_url("/test/")
     def test(self):
         return self.render("mock.html")
 

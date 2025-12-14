@@ -1,4 +1,4 @@
-def expose(url="/", methods=("GET",)):
+def expose_url(url="/", methods=("GET",)):
     """
     Use this decorator to expose views in your view classes.
 
@@ -17,7 +17,7 @@ def expose(url="/", methods=("GET",)):
     return wrap
 
 
-def action(name, text, confirmation=None):
+def expose_action(name, text, confirmation=None):
     """
     Use this decorator to expose actions that span more than one entity (model, file, etc)
 

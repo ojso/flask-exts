@@ -3,13 +3,13 @@
 from flask import Flask
 from flask import render_template_string
 from flask_exts import Exts
-from flask_exts.admin import expose
+from flask_exts.admin import expose_url
 from flask_exts.admin import View
 from flask_exts.datastore.sqla import db
 
 
 class MockView(View):
-    @expose("/")
+    @expose_url("/")
     def index(self):
         return render_template_string(
             "<h1>Mock</h1><div>{{ message }}</div>",

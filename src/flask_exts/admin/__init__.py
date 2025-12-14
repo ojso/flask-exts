@@ -1,3 +1,3 @@
 from .view import View
-from .decorate import expose
-from .decorate import action
+from .exposer import expose_url
+from .exposer import expose_action

@@ -10,7 +10,7 @@ from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ...admin import View,expose
+from ...admin import View,expose_url
 from ...template.forms.login import LoginForm
 from ...template.forms.register import RegisterForm
 from ...template.forms.change_password import ChangePasswordForm
@@ -69,11 +69,11 @@ class UserView(View):
         return RegisterForm
 
     @login_required
-    @expose("/index/")
+    @expose_url("/index/")
     def index(self):
         return self.render(self.index_template)
 
-    @expose("/login/", methods=("GET", "POST"))
+    @expose_url("/login/", methods=("GET", "POST"))
     def login(self):
         if current_user.is_authenticated:
             return redirect(url_for(".index"))
@@ -102,7 +102,7 @@ class UserView(View):
                 return redirect(next_page)
         return self.render(self.login_template, form=form)
 
-    @expose("/register/", methods=("GET", "POST"))
+    @expose_url("/register/", methods=("GET", "POST"))
     def register(self):
         if current_user.is_authenticated:
             return redirect(url_for(".index"))
@@ -122,19 +122,19 @@ class UserView(View):
 
         return self.render(self.register_template, form=form)
 
-    @expose("/logout/")
+    @expose_url("/logout/")
     def logout(self):
         logout_user()
         return redirect(url_for(".index"))
 
-    @expose("/verify_email/")
+    @expose_url("/verify_email/")
     def verify_email(self):
         token = request.args.get("token")
         r = _security.email_verification.verify_email_with_token(token)
         return self.render(self.verify_email_template, result=r[0])
 
     @login_required
-    @expose("/enable_tfa/", methods=("GET", "POST"))
+    @expose_url("/enable_tfa/", methods=("GET", "POST"))
     def enable_tfa(self):
         enable = request.args.get("enable")
         if enable is None:
@@ -159,7 +159,7 @@ class UserView(View):
         return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
     @login_required
-    @expose("/setup_tfa/")
+    @expose_url("/setup_tfa/")
     def setup_tfa(self):
         if current_user.tfa_enabled:
             return self.render(
@@ -181,7 +181,7 @@ class UserView(View):
         )
 
     @login_required
-    @expose("/verify_tfa/", methods=("GET", "POST"))
+    @expose_url("/verify_tfa/", methods=("GET", "POST"))
     def verify_tfa(self):
         if request.method == "GET" and "modal" in request.args:
             action = request.args.get("action")
@@ -205,7 +205,7 @@ class UserView(View):
         return self.render("views/user/verify_tfa.html", form=form)
 
     @login_required
-    @expose("/change_password/", methods=("GET", "POST"))
+    @expose_url("/change_password/", methods=("GET", "POST"))
     def change_password(self):
         form = ChangePasswordForm()
         if form.validate_on_submit():
@@ -218,7 +218,7 @@ class UserView(View):
 
         return self.render("views/user/change_password.html", form=form)
 
-    @expose("/forgot_password/", methods=("GET", "POST"))
+    @expose_url("/forgot_password/", methods=("GET", "POST"))
     def forgot_password(self):
         if current_user.is_authenticated:
             return redirect(url_for(".index"))
@@ -234,7 +234,7 @@ class UserView(View):
             return redirect(url_for(".login"))
         return self.render("views/user/forgot_password.html", form=form)
 
-    @expose("/reset_password/", methods=("GET", "POST"))
+    @expose_url("/reset_password/", methods=("GET", "POST"))
     def reset_password(self):
         token = request.args.get("token")
         form = ResetPasswordForm()
@@ -251,7 +251,7 @@ class UserView(View):
         return self.render("views/user/reset_password.html", form=form)
 
     @login_required
-    @expose("/recovery_codes/")
+    @expose_url("/recovery_codes/")
     def recovery_codes(self):
         if not session.get("tfa_verified"):
             abort(403)
@@ -267,7 +267,7 @@ class UserView(View):
         )
 
     @login_required
-    @expose("/recovery/", methods=("GET", "POST"))
+    @expose_url("/recovery/", methods=("GET", "POST"))
     def recovery(self):
         if not current_user.tfa_enabled:
             return jsonify({"error": "2FA is not enabled"}), 403

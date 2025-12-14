@@ -2,7 +2,7 @@ import shlex
 from flask import request
 from markupsafe import Markup
 from flask_babel import gettext
-from ...admin import View, expose
+from ...admin import View, expose_url
 
 
 
@@ -157,14 +157,14 @@ class RedisCli(View):
         return TextWrapper(help)
 
     # Views
-    @expose("/")
+    @expose_url("/")
     def console_view(self):
         """
         Console view.
         """
         return self.render("views/rediscli/console.html")
 
-    @expose("/run/", methods=("POST",))
+    @expose_url("/run/", methods=("POST",))
     def execute_view(self):
         """
         AJAX API.

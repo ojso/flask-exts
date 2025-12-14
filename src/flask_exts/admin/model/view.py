@@ -30,7 +30,7 @@ from . import typefmt
 from .filters import BaseFilter
 from .ajax import AjaxModelLoader
 from .. import row_action
-from .. import expose
+from .. import expose_url
 from ..action_view import ActionView
 from ...template.form.base_form import BaseForm
 from ...template.form.form_opts import FormOpts
@@ -1985,7 +1985,7 @@ class BaseModelView(ActionView):
         raise NotImplementedError()
 
     # Views
-    @expose("/")
+    @expose_url("/")
     def index_view(self):
         """
         List view
@@ -2111,7 +2111,7 @@ class BaseModelView(ActionView):
             extra_args=view_args.extra_args,
         )
 
-    @expose("/new/", methods=("GET", "POST"))
+    @expose_url("/new/", methods=("GET", "POST"))
     def create_view(self):
         """
         Create model view
@@ -2159,7 +2159,7 @@ class BaseModelView(ActionView):
             template, form=form, form_opts=form_opts, return_url=return_url
         )
 
-    @expose("/edit/", methods=("GET", "POST"))
+    @expose_url("/edit/", methods=("GET", "POST"))
     def edit_view(self):
         """
         Edit model view
@@ -2212,7 +2212,7 @@ class BaseModelView(ActionView):
             template, model=model, form=form, form_opts=form_opts, return_url=return_url
         )
 
-    @expose("/details/")
+    @expose_url("/details/")
     def details_view(self):
         """
         Details model view
@@ -2245,7 +2245,7 @@ class BaseModelView(ActionView):
             return_url=return_url,
         )
 
-    @expose("/delete/", methods=("POST",))
+    @expose_url("/delete/", methods=("POST",))
     def delete_view(self):
         """
         Delete model view. Only POST method is allowed.
@@ -2321,7 +2321,7 @@ class BaseModelView(ActionView):
 
         return count, data
 
-    @expose("/export/<export_type>/")
+    @expose_url("/export/<export_type>/")
     def export(self, export_type):
         return_url = get_redirect_target() or self.get_url(".index_view")
 
@@ -2416,7 +2416,7 @@ class BaseModelView(ActionView):
             mimetype=mimetype,
         )
 
-    @expose("/ajax/lookup/")
+    @expose_url("/ajax/lookup/")
     def ajax_lookup(self):
         name = request.args.get("name")
         query = request.args.get("query")
@@ -2431,7 +2431,7 @@ class BaseModelView(ActionView):
         data = [loader.format(m) for m in loader.get_list(query, offset, limit)]
         return jsonify(data)
 
-    @expose("/ajax/update/", methods=("POST",))
+    @expose_url("/ajax/update/", methods=("POST",))
     def ajax_update(self):
         """
         Edits a single column of a record in list view.

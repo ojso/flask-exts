@@ -1,10 +1,10 @@
 from .view import View
-from .decorate import expose
+from .exposer import expose_url
 from .action_mixin import ActionMixin
 
 
 class ActionView(View, ActionMixin):
-    @expose("/action/", methods=("POST",))
+    @expose_url("/action/", methods=("POST",))
     def action_view(self):
         """
         Mass-model action view.
