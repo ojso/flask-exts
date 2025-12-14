@@ -1,22 +1,21 @@
+import inspect
 from flask import request, redirect
 from ..utils import get_redirect_target
 from ..utils import flash_errors
 
 
 class ActionMixin:
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        cls._actions = []
-        cls._actions_data = {}
-
-        for attr_name in dir(cls):
-            attr = getattr(cls, attr_name)
+    def __init__(self, *args, **kwargs):
+        self._actions = {}
+        self._actions_data = []
+        for name, attr in inspect.getmembers(self, predicate=inspect.ismethod):
             if callable(attr) and hasattr(attr, "_action"):
-                name, text, desc = attr._action
-                cls._actions.append((name, text))
-                cls._actions_data[name] = (attr, text, desc)
+                name, text, confirmation = attr._action
+                self._actions[name] = attr
+                self._actions_data.append((name, text, confirmation))
 
-    # action
+        super().__init__(*args, **kwargs)
+
     def is_action_allowed(self, name):
         """
         Verify if action with `name` is allowed.
@@ -30,20 +29,12 @@ class ActionMixin:
         """
         Return a list and a dictionary of allowed actions.
         """
-        actions = []
-        actions_confirmation = {}
-
-        for act in self._actions:
-            name, text = act
-
+        actions_data = []
+        for action in self._actions_data:
+            name, text, confirmation = action
             if self.is_action_allowed(name):
-                actions.append((name, text))
-
-                confirmation = self._actions_data[name][2]
-                if confirmation:
-                    actions_confirmation[name] = confirmation
-
-        return actions, actions_confirmation
+                actions_data.append((name, text, confirmation))
+        return actions_data
 
     def handle_action(self, return_view=None):
         """
@@ -60,11 +51,10 @@ class ActionMixin:
             # using getlist instead of FieldList for backward compatibility
             ids = request.form.getlist("rowid")
             action = form.action.data
-            handler = self._actions_data.get(action)
+            handler = self._actions.get(action)
 
             if handler and self.is_action_allowed(action):
-                response = handler[0](self, ids)
-
+                response = handler(ids)
                 if response is not None:
                     return response
         else:

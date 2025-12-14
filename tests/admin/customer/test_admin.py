@@ -1,10 +1,10 @@
 import pytest
 from flask import url_for
 from flask_exts.admin import expose
-from flask_exts.admin import BaseView
+from flask_exts.admin import View
 
 
-class MockView(BaseView):
+class MockView(View):
     allow_access = True
 
     @expose("/")

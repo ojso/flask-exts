@@ -1,7 +1,7 @@
 from flask import request, flash, redirect, url_for
 from markupsafe import Markup
 from flask_exts.admin import expose
-from flask_exts.admin import BaseView
+from flask_exts.admin import View
 from .forms import (
     HelloForm,
     TelephoneForm,
@@ -15,7 +15,7 @@ from .models import Message
 from flask_exts.datastore.sqla import db
 
 
-class BootstrapView(BaseView):
+class BootstrapView(View):
     @expose("/")
     def index(self):
         return self.render("bootstrap/index.html")

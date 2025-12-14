@@ -1,7 +1,7 @@
 import pytest
 from flask import url_for
 from flask_exts.admin import expose
-from flask_exts.admin import BaseView
+from flask_exts.admin import View
 from flask_exts.admin.admin import Admin
 from flask_exts.admin.menu import MenuLink
 
@@ -9,7 +9,7 @@ from ..helper import print_app_endpoint_rule
 from ..helper import get_app_endpoint_rule
 
 
-class MockView(BaseView):
+class MockView(View):
     allow_access = True
 
     @expose("/")
@@ -24,7 +24,7 @@ class MockView(BaseView):
         return self.allow_access
 
 
-class MockNoindexView(BaseView):
+class MockNoindexView(View):
     allow_access = True
 
     @expose("/test/")
@@ -39,6 +39,7 @@ class MockNoindexView(BaseView):
 
 def test_baseview_default():
     view = MockView()
+
     assert view.name == "Mock View"
     assert view.endpoint == "mockview"
     assert view.url is None

@@ -2,7 +2,7 @@ import shlex
 from flask import request
 from markupsafe import Markup
 from flask_babel import gettext
-from ...admin import BaseView, expose
+from ...admin import View, expose
 
 
 
@@ -23,7 +23,7 @@ class TextWrapper(str):
     pass
 
 
-class RedisCli(BaseView):
+class RedisCli(View):
     """
     Simple redis console.
 

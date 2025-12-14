@@ -4,11 +4,11 @@ from flask import Flask
 from flask import render_template_string
 from flask_exts import Exts
 from flask_exts.admin import expose
-from flask_exts.admin import BaseView
+from flask_exts.admin import View
 from flask_exts.datastore.sqla import db
 
 
-class MockView(BaseView):
+class MockView(View):
     @expose("/")
     def index(self):
         return render_template_string(

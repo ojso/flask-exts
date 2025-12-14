@@ -1,59 +1,12 @@
+import inspect
 from re import sub
-from functools import wraps
 from flask import Blueprint
 from flask import url_for
 from flask import abort
+from .viewmeta import ViewMeta
 
 
-def _wrap_view_func(f):
-    """wrapping f with self._allow_view_fn"""
-    # Avoid wrapping view method twice
-    if hasattr(f, "_wrapped"):
-        return f
-
-    @wraps(f)
-    def inner(self, *args, **kwargs):
-        # check for access
-        if not self._allow_view_fn(f, *args, **kwargs):
-            return self._inaccessible_callback(f, **kwargs)
-        return f(self, *args, **kwargs)
-
-    inner._wrapped = True
-    return inner
-
-
-class ViewMeta(type):
-    """
-    View metaclass.
-    """
-
-    def __init__(cls, classname, bases, fields):
-        type.__init__(cls, classname, bases, fields)
-
-        # Gather exposed views
-        cls._urls = []
-        cls._default_view = None
-
-        for name in dir(cls):
-            attr = getattr(cls, name)
-            if hasattr(attr, "_urls"):
-                # Collect methods
-                for url, methods in attr._urls:
-                    cls._urls.append((url, name, methods))
-                    if url == "/":
-                        cls._default_view = name
-                    elif url == "/index/" and cls._default_view is None:
-                        cls._default_view = name
-                # Wrap views
-                setattr(cls, name, _wrap_view_func(attr))
-
-
-
-class BaseView(metaclass=ViewMeta):
-    """
-    Base view.
-    """
-
+class View(metaclass=ViewMeta):
     def __init__(
         self,
         name=None,
@@ -65,6 +18,7 @@ class BaseView(metaclass=ViewMeta):
         menu_class_name=None,
         menu_icon_type=None,
         menu_icon_value=None,
+        **kwargs,
     ):
         """
         Constructor.
@@ -112,12 +66,31 @@ class BaseView(metaclass=ViewMeta):
         self.admin = None
         self.blueprint = None
 
+        # initialize URLs
+        self._urls = []
+        self._default_view = None
+        self.collect_urls()
+        # print(self._urls)
+        # print(self._default_view)
+
         # Default view
         if self._default_view is None:
             raise Exception(
                 "Attempted to instantiate admin view %s without default view"
                 % self.__class__.__name__
             )
+        
+        super().__init__(**kwargs)
+
+    def collect_urls(self):
+        for name, attr in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(attr, "_urls"):
+                for url, methods in attr._urls:
+                    self._urls.append((url, name, methods))
+                    if url == "/":
+                        self._default_view = name
+                    elif url == "/index/" and self._default_view is None:
+                        self._default_view = name
 
     def _get_endpoint(self):
         """

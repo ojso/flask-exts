@@ -10,7 +10,7 @@ from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ...admin import BaseView,expose
+from ...admin import View,expose
 from ...template.forms.login import LoginForm
 from ...template.forms.register import RegisterForm
 from ...template.forms.change_password import ChangePasswordForm
@@ -24,7 +24,7 @@ from ...signals import user_registered
 from ...constants import NO_CACHE_HEADER
 
 
-class UserView(BaseView):
+class UserView(View):
     """
     Default administrative interface index page when visiting the ``/user/`` URL.
     """

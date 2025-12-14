@@ -31,7 +31,7 @@ from .filters import BaseFilter
 from .ajax import AjaxModelLoader
 from .. import row_action
 from .. import expose
-from ..row_view import RowView
+from ..action_view import ActionView
 from ...template.form.base_form import BaseForm
 from ...template.form.form_opts import FormOpts
 from ...template.rules import RuleSet
@@ -116,7 +116,7 @@ class FilterGroup:
         return iter(self.filters)
 
 
-class BaseModelView(RowView):
+class BaseModelView(ActionView):
     """
     Base model view.
 
@@ -2050,7 +2050,7 @@ class BaseModelView(RowView):
             return self._get_list_url(view_args.clone(page_size=s))
 
         # Actions
-        actions, actions_confirmation = self.get_actions_list()
+        actions = self.get_actions_list()
         if actions:
             action_form = self.action_form()
         else:
@@ -2102,7 +2102,6 @@ class BaseModelView(RowView):
             filter_args=self._get_filters(view_args.filters),
             # Actions
             actions=actions,
-            actions_confirmation=actions_confirmation,
             # Misc
             enumerate=enumerate,
             get_pk_value=self.get_pk_value,

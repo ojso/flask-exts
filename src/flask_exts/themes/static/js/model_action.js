@@ -1,11 +1,18 @@
 class ModelAction {
-    constructor(actionErrorMessage, actionConfirmations) {
+    constructor(actionErrorMessage, actionsData) {
         this.actionErrorMessage = actionErrorMessage;
-        this.actionConfirmations = actionConfirmations;
+        this.actionsData = actionsData;
         this.init();
     }
 
     init = () => {
+        this.actionConfirmations={};
+        this.actionsData.forEach(action => {
+            const [name, text, confirmation] = action;
+            if (confirmation) {
+                this.actionConfirmations[name] = confirmation;
+            }
+        });
         this.rowToggle = document.querySelector('.action-rowtoggle');
         this.inputs = document.querySelectorAll('input.action-checkbox');
         this.setupEventListeners();

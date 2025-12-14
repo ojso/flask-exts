@@ -1,8 +1,8 @@
 from flask_exts.admin import expose
-from flask_exts.admin import BaseView
+from flask_exts.admin import View
 
 
-class MyView(BaseView):
+class MyView(View):
     @expose("/")
     def index(self):
         return self.render("my/index.html",x=[1,2,3])

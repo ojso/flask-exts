@@ -193,10 +193,10 @@
     {% if actions %}
         <script>
             const actionErrorMessage = "{{ _('Please select at least one record.') }}";
-            const actionConfirmations = {{ actions_confirmation|tojson }};
+            const actionsData = {{ actions|tojson }};
             let modelActions;
             document.addEventListener("DOMContentLoaded",()=>{
-                modelActions = new ModelAction(actionErrorMessage, actionConfirmations);
+                modelActions = new ModelAction(actionErrorMessage, actionsData);
             });
         </script>
     {% endif %}

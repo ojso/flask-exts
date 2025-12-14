@@ -9,12 +9,12 @@ from wtforms import fields, validators
 from werkzeug.utils import secure_filename
 from ...template.form.base_form import BaseForm
 from ...utils import flash_errors
-from ...admin.row_view import RowView
+from ...admin.action_view import ActionView
 from ...admin import expose
 from ...admin import action
 
 
-class BaseFileView(RowView):
+class BaseFileView(ActionView):
     can_upload = True
     """
         Is file upload allowed.
@@ -752,7 +752,7 @@ class BaseFileView(RowView):
         breadcrumbs = self._get_breadcrumbs(path)
 
         # Actions
-        actions, actions_confirmation = self.get_actions_list()
+        actions = self.get_actions_list()
         if actions:
             action_form = self.action_form()
         else:
@@ -777,7 +777,6 @@ class BaseFileView(RowView):
             get_file_url=self._get_file_url,
             items=items,
             actions=actions,
-            actions_confirmation=actions_confirmation,
             action_form=action_form,
             delete_form=delete_form,
             sort_column=sort_column,
@@ -1125,10 +1124,6 @@ class BaseFileView(RowView):
             error=error,
             header_text=gettext("Editing %(path)s", path=path),
         )
-
-    @expose("/action/", methods=("POST",))
-    def action_view(self):
-        return self.handle_action()
 
     # Actions
     @action(

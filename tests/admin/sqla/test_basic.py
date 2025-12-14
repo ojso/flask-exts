@@ -1715,7 +1715,9 @@ def test_multiple_delete(app, client, admin):
 
         db.session.add_all([Model1("a"), Model1("b"), Model1("c")])
         db.session.commit()
-        assert Model1.query.count() == 3
+        # assert Model1.query.count() == 3
+        assert db.session.scalar(db.select(db.func.count()).select_from(Model1)) == 3
+        
 
         view = ModelView(Model1)
         admin.add_view(view)
@@ -1724,7 +1726,8 @@ def test_multiple_delete(app, client, admin):
             "/admin/model1/action/", data=dict(action="delete", rowid=[1, 2, 3])
         )
         assert rv.status_code == 302
-        assert Model1.query.count() == 0
+        # assert Model1.query.count() == 0
+        assert db.session.scalar(db.select(db.func.count()).select_from(Model1)) == 0
 
 
 def test_default_sort(app, admin):
@@ -1733,7 +1736,8 @@ def test_default_sort(app, admin):
 
         db.session.add_all([Model1("c", "x"), Model1("b", "x"), Model1("a", "y")])
         db.session.commit()
-        assert Model1.query.count() == 3
+        # assert Model1.query.count() == 3
+        assert db.session.scalar(db.select(db.func.count()).select_from(Model1)) == 3
 
         view1 = CustomModelView(Model1, name="view1", column_default_sort="test1")
         admin.add_view(view1)

@@ -1,7 +1,7 @@
-from ...admin import BaseView, expose
+from ...admin import View, expose
 
 
-class IndexView(BaseView):
+class IndexView(View):
     def __init__(
         self,
         name="Index",
