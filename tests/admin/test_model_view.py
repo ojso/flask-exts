@@ -1,8 +1,8 @@
 from wtforms.fields import StringField
 from flask_exts.template.form.base_form import BaseForm
 from flask_exts.template.form.flask_form import FlaskForm
-from flask_exts.admin.model.view import BaseModelView
-from flask_exts.admin.model.filters import BaseFilter
+from flask_exts.admin.model.view import ModelView
+from flask_exts.admin.model.filter import BaseFilter
 
 
 class Model:
@@ -28,7 +28,7 @@ class SimpleFilter(BaseFilter):
         return "test"
 
 
-class MockModelView(BaseModelView):
+class MockModelView(ModelView):
     def __init__(
         self,
         model,
@@ -686,7 +686,7 @@ def test_export_tablib(client, admin):
 
 
 def test_list_row_actions(client, admin):
-    from flask_exts.admin import row_action
+    from flask_exts.admin.model import row_action
 
     # Test default actions
     view = MockModelView(Model, name="test", endpoint="test")

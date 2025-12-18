@@ -5,7 +5,7 @@ from wtforms.fields import FileField
 from flask_exts.admin.sqla.ajax import QueryAjaxModelLoader
 from flask_exts.template.widgets.render_template import RenderTemplateWidget
 from flask_exts.admin.model.form import InlineFormAdmin
-from flask_exts.admin.sqla import ModelView
+from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla.form import InlineModelConverter
 from flask_exts.template.fields.sqla import InlineModelFormList
 from ..models.location_image import ImageType, Location, LocationImage
@@ -65,7 +65,7 @@ class LocationImageInlineModelForm(InlineFormAdmin):
 
 
 # Administrative class
-class LocationView(ModelView):
+class LocationView(SqlaModelView):
     inline_model_form_converter = CustomInlineModelConverter
 
     inline_models = (LocationImageInlineModelForm(),)

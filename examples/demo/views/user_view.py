@@ -1,8 +1,8 @@
-from flask_exts.admin.sqla import ModelView
+from flask_exts.admin.sqla.view import SqlaModelView
 from ..models.user import MyUser
 
 
-class UserView(ModelView):
+class UserView(SqlaModelView):
     column_list = ("id", "username", "keywords", "keywords_values")
     column_sortable_list = ("id", "username")
     column_filters = ("id", "username", "keywords")

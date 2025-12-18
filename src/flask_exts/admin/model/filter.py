@@ -277,8 +277,7 @@ class BaseFilterConverter:
     """
     Base filter converter.
 
-    Derive from this class to implement custom field to filter conversion
-    logic.
+    Derive from this class to implement custom field to filter conversion logic.
     """
 
     def __init__(self):

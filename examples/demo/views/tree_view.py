@@ -1,8 +1,8 @@
-from flask_exts.admin.sqla import ModelView
+from flask_exts.admin.sqla.view import SqlaModelView
 from ..models.tree import Tree
 
 
-class TreeView(ModelView):
+class TreeView(SqlaModelView):
     list_template = "tree_list.html"
     column_auto_select_related = True
     column_list = [

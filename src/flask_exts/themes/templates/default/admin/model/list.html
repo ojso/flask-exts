@@ -4,7 +4,7 @@
 {% from 'macro/pagination.html' import render_pager, render_simple_pager %}
 {% import 'macro/layout.html' as model_layout with context %}
 {% import 'macro/actions.html' as actionlib with context %}
-{% from 'macro/row_actions.html' import render_row_action with context %}
+{% from 'macro/row_action.html' import render_row_action with context %}
 
 {% if actions %}
   {%- set _none = _template.theme.plugin.enable_plugin(['model_action']) -%}

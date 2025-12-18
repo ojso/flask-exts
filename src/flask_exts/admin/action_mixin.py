@@ -1,7 +1,6 @@
 import inspect
 from flask import request, redirect
 from ..utils import get_redirect_target
-from ..utils import flash_errors
 
 
 class ActionMixin:
@@ -58,7 +57,7 @@ class ActionMixin:
                 if response is not None:
                     return response
         else:
-            flash_errors(form, message="Failed to perform action. %(error)s")
+            self.flash_form_errors(form, message="Failed to perform action. %(error)s")
 
         if return_view:
             url = self.get_url("." + return_view)

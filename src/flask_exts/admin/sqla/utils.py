@@ -6,7 +6,7 @@ from sqlalchemy.ext.associationproxy import AssociationProxyExtensionType
 from sqlalchemy.sql.operators import eq
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from . import iterdecode
+from ...utils import iterdecode
 
 
 def parse_like_term(term):

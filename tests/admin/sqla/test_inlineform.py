@@ -1,6 +1,6 @@
 from wtforms import fields
 from flask_exts.template.form.base_form import BaseForm
-from flask_exts.admin.sqla import ModelView
+from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.template.fields.sqla import InlineModelFormList
 from flask_exts.template.validators.sqla import ItemsRequired
 from ...models import db, reset_models
@@ -12,7 +12,7 @@ def test_inline_form(app, client, admin):
     with app.app_context():
         reset_models()
 
-        class UserModelView(ModelView):
+        class UserModelView(SqlaModelView):
             inline_models = (UserInfo,)
 
         view = UserModelView(MyUser, endpoint="users")
@@ -91,7 +91,7 @@ def test_inline_form_required(app, client, admin):
     with app.app_context():
         reset_models()
 
-        class UserModelView(ModelView):
+        class UserModelView(SqlaModelView):
             inline_models = (UserEmail,)
             form_args = {"emails": {"validators": [ItemsRequired()]}}
 
@@ -128,7 +128,7 @@ def test_inline_form_ajax_fk(app, admin):
     with app.app_context():
         reset_models()
 
-        class UserModelView(ModelView):
+        class UserModelView(SqlaModelView):
             opts = {"form_ajax_refs": {"tag": {"fields": ["name"]}}}
 
             inline_models = [(UserInfo, opts)]
@@ -149,7 +149,7 @@ def test_inline_form_self(app, admin):
     with app.app_context():
         reset_models()
 
-        class TreeView(ModelView):
+        class TreeView(SqlaModelView):
             inline_models = (Tree,)
 
         view = TreeView(Tree)
@@ -178,7 +178,7 @@ def test_inline_form_base_class(app, client, admin):
                     return StubTranslation()
 
         # Set up Admin
-        class UserModelView(ModelView):
+        class UserModelView(SqlaModelView):
             inline_models = ((UserEmail, {"form_base_class": StubBaseForm}),)
             form_args = {"emails": {"validators": [ItemsRequired()]}}
 

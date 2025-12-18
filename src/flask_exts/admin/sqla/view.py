@@ -13,32 +13,84 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.expression import cast
 from sqlalchemy import Unicode
 from ...datastore.sqla import db
-from ...utils.sqla import is_relationship
-from ...utils.sqla import get_primary_key
-from ...utils.sqla import get_field_with_path
-from ...utils.sqla import get_columns_for_field
-from ...utils.sqla import need_join
-from ...utils.sqla import filter_foreign_columns
-from ...utils.sqla import is_hybrid_property
-from ...utils.sqla import get_query_for_ids
+from .utils import is_relationship
+from .utils import get_primary_key
+from .utils import get_field_with_path
+from .utils import get_columns_for_field
+from .utils import need_join
+from .utils import filter_foreign_columns
+from .utils import is_hybrid_property
+from .utils import get_query_for_ids
+from .utils import parse_like_term
 from ...utils.tools import iterencode, escape
-from ..model import BaseModelView
+from ..model.view import ModelView
 from ..model.form import create_editable_list_form
 from ..exposer import expose_action
 from . import form
-from ...utils import sqla
-from .filters import BaseSQLAFilter
-from .filters import FilterConverter
-from .typefmt import DEFAULT_FORMATTERS
+from .filter import BaseSQLAFilter
+from .filter import FilterConverter
 from .ajax import create_ajax_loader
+from .types import T_COLUMN_LIST
+from .typefmt import DEFAULT_FORMATTERS
 
 # Set up logger
 log = logging.getLogger("flask-exts.sqla")
 
 
-class ModelView(BaseModelView):
+class SqlaModelView(ModelView):
     """
     SQLAlchemy model view
+    """
+
+    column_list: Optional[T_COLUMN_LIST] = None
+    """
+        Collection of the model field names for the list view.
+        If set to `None`, will get them from the model.
+
+        For example::
+
+            class MyModelView(BaseModelView):
+                column_list = ('name', 'last_name', 'email')
+
+        SQLAlchemy model attributes can be used instead of strings::
+
+            class MyModelView(BaseModelView):
+                column_list = ('name', User.last_name)
+
+        When using SQLAlchemy models, you can reference related columns like this::
+            class MyModelView(BaseModelView):
+                column_list = ('<relationship>.<related column name>',)
+    """
+
+    column_exclude_list: Optional[T_COLUMN_LIST] = None
+
+    column_sortable_list: Optional[T_COLUMN_LIST] = None
+    """
+        Collection of the sortable columns for the list view.
+        If set to `None`, will get them from the model.
+
+        For example::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = ('name', 'last_name')
+
+        If you want to explicitly specify field/column to be used while
+        sorting, you can use a tuple::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = ('name', ('user', 'user.username'))
+
+        You can also specify multiple fields to be used while sorting::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = (
+                    'name', ('user', ('user.first_name', 'user.last_name')))
+
+        When using SQLAlchemy models, model attributes can be used instead
+        of strings::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = ('name', ('user', User.username))
     """
 
     column_auto_select_related = True
@@ -258,7 +310,7 @@ class ModelView(BaseModelView):
                 inline_models = (MyInlineModelForm(MyInlineModel),)
     """
 
-    column_type_formatters = DEFAULT_FORMATTERS  # type: ignore[assignment]
+    column_type_formatters = DEFAULT_FORMATTERS
 
     form_choices: Optional[Dict[str, List[Tuple[str, str]]]] = None
     """
@@ -968,7 +1020,7 @@ class ModelView(BaseModelView):
             if not term:
                 continue
 
-            stmt = sqla.parse_like_term(term)
+            stmt = parse_like_term(term)
 
             filter_stmt = []
             count_filter_stmt = []
@@ -1146,7 +1198,7 @@ class ModelView(BaseModelView):
         :param id:
             Model id
         """
-        return self.session.get(self.model, sqla.iterdecode(id))
+        return self.session.get(self.model, id)
 
     # Error handler
     def handle_view_exception(self, exc):

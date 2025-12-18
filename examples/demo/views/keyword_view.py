@@ -1,8 +1,8 @@
-from flask_exts.admin.sqla import ModelView
+from flask_exts.admin.sqla.view import SqlaModelView
 from ..models.keyword import Keyword
 
 
-class KeywordView(ModelView):
+class KeywordView(SqlaModelView):
     column_list = ("id", "keyword")
 
 

@@ -1,4 +1,4 @@
-from flask_exts.admin.sqla import ModelView
+from flask_exts.admin.sqla.view import SqlaModelView
 from ..models.tag import Tag
 
-tagview = ModelView(Tag)
+tagview = SqlaModelView(Tag)

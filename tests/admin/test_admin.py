@@ -36,18 +36,6 @@ class MockNoindexView(View):
             return super().is_accessible()
         return False
 
-
-def test_baseview_default():
-    view = MockView()
-
-    assert view.name == "Mock View"
-    assert view.endpoint == "mockview"
-    assert view.url is None
-    assert view.static_folder is None
-    assert view.admin is None
-    assert view.blueprint is None
-
-
 def test_admin_default():
     admin = Admin()
     # print(admin.name)

@@ -1,9 +1,9 @@
 from markupsafe import Markup
 from wtforms import validators
 from flask_babel import gettext
-from flask_exts.admin.sqla.filters import BaseSQLAFilter
-from flask_exts.admin.sqla.filters import FilterEqual
-from flask_exts.admin.sqla import ModelView
+from flask_exts.admin.sqla.filter import BaseSQLAFilter
+from flask_exts.admin.sqla.filter import FilterEqual
+from flask_exts.admin.sqla.view import SqlaModelView
 from ..models.author import Author, AVAILABLE_USER_TYPES
 from ..models.post import Post
 
@@ -34,7 +34,7 @@ def is_numberic_validator(form, field):
         raise validators.ValidationError(gettext("Only numbers are allowed."))
 
 
-class AuthorView(ModelView):
+class AuthorView(SqlaModelView):
     can_set_page_size = True
     page_size = 5
     page_size_options = (5, 10, 15)

@@ -3,7 +3,7 @@ from re import sub
 from flask import Blueprint
 from flask import url_for
 from flask import abort
-from .viewmeta import ViewMeta
+from .view_meta import ViewMeta
 
 
 class View(metaclass=ViewMeta):

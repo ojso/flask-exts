@@ -1,10 +1,11 @@
 import pytest
 from datetime import datetime, time, date
 from wtforms import fields, validators
+from flask_exts.admin.sqla import filter
 from flask_exts.template.form.base_form import BaseForm
 from flask_exts.template.fields import Select2Field
-from flask_exts.admin.sqla import ModelView, filters
-from flask_exts.utils import sqla
+from flask_exts.admin.sqla.view import SqlaModelView
+from flask_exts.admin.sqla import utils
 from ...models import db, reset_models
 from ...models.model1 import EnumChoices
 from ...models.model1 import Model1, Model2, Model3
@@ -15,7 +16,7 @@ from ...models.model1 import ModelMult
 from ...models.model1 import ModelOnetoone1, ModelOnetoone2
 
 
-class CustomModelView(ModelView):
+class CustomModelView(SqlaModelView):
     def __init__(
         self,
         model,
@@ -631,7 +632,7 @@ def test_column_filters(app, client, admin):
         view13 = CustomModelView(
             Model2,
             name="view13",
-            column_filters=[filters.FilterEqual(Model1.test1, "Test1")],
+            column_filters=[filter.FilterEqual(Model1.test1, "Test1")],
             endpoint="_relation_test",
         )
         admin.add_view(view13)
@@ -1424,10 +1425,10 @@ def test_column_filters_sqla_obj(app, admin):
 def test_hybrid_property(app, client, admin):
     with app.app_context():
         reset_models()
-        assert sqla.is_hybrid_property(ModelHybrid, "number_of_pixels")
-        assert sqla.is_hybrid_property(ModelHybrid, "number_of_pixels_str")
-        assert not sqla.is_hybrid_property(ModelHybrid, "height")
-        assert not sqla.is_hybrid_property(ModelHybrid, "width")
+        assert utils.is_hybrid_property(ModelHybrid, "number_of_pixels")
+        assert utils.is_hybrid_property(ModelHybrid, "number_of_pixels_str")
+        assert not utils.is_hybrid_property(ModelHybrid, "height")
+        assert not utils.is_hybrid_property(ModelHybrid, "width")
 
         db.session.add(ModelHybrid(id=1, name="test_row_1", width=25, height=25))
         db.session.add(ModelHybrid(id=2, name="test_row_2", width=10, height=10))
@@ -1437,7 +1438,7 @@ def test_hybrid_property(app, client, admin):
             ModelHybrid,
             column_default_sort="number_of_pixels",
             column_filters=[
-                filters.IntGreaterFilter(
+                filter.IntGreaterFilter(
                     ModelHybrid.number_of_pixels, "Number of Pixels"
                 )
             ],
@@ -1474,8 +1475,8 @@ def test_hybrid_property(app, client, admin):
 def test_hybrid_property_nested(app, client, admin):
     with app.app_context():
         reset_models()
-        assert sqla.is_hybrid_property(ModelHybrid2, "owner.fullname")
-        assert not sqla.is_hybrid_property(ModelHybrid2, "owner.firstname")
+        assert utils.is_hybrid_property(ModelHybrid2, "owner.fullname")
+        assert not utils.is_hybrid_property(ModelHybrid2, "owner.firstname")
 
         db.session.add(ModelHybrid(id=1, firstname="John", lastname="Dow"))
         db.session.add(ModelHybrid(id=2, firstname="Jim", lastname="Smith"))
@@ -1719,7 +1720,7 @@ def test_multiple_delete(app, client, admin):
         assert db.session.scalar(db.select(db.func.count()).select_from(Model1)) == 3
         
 
-        view = ModelView(Model1)
+        view = SqlaModelView(Model1)
         admin.add_view(view)
 
         rv = client.post(
@@ -2321,15 +2322,15 @@ def test_advanced_joins(app, admin):
         admin.add_view(view3)
 
         # Test joins
-        attr, path = sqla.get_field_with_path(Modeljoin2, "model1.val1")
+        attr, path = utils.get_field_with_path(Modeljoin2, "model1.val1")
         assert attr == Modeljoin1.val1
         assert path == [Modeljoin2.model1]
 
-        attr, path = sqla.get_field_with_path(Modeljoin1, "model2.val2")
+        attr, path = utils.get_field_with_path(Modeljoin1, "model2.val2")
         assert attr == Modeljoin2.val2
         assert id(path[0]) == id(Modeljoin1.model2)
 
-        attr, path = sqla.get_field_with_path(Modeljoin3, "model2.model1.val1")
+        attr, path = utils.get_field_with_path(Modeljoin3, "model2.model1.val1")
         assert attr == Modeljoin1.val1
         assert path == [Modeljoin3.model2, Modeljoin2.model1]
 
@@ -2343,7 +2344,7 @@ def test_advanced_joins(app, admin):
         assert alias is not None
 
         # Check if another join would use same path
-        attr, path = sqla.get_field_with_path(Modeljoin2, "model1.test")
+        attr, path = utils.get_field_with_path(Modeljoin2, "model1.test")
         q2, joins, alias = view2._apply_path_joins(query, joins, path)
 
         assert len(joins) == 2
@@ -2355,7 +2356,7 @@ def test_advanced_joins(app, admin):
         assert alias is not None
 
         # Check if normal properties are supported by tools.get_field_with_path
-        attr, path = sqla.get_field_with_path(Modeljoin2, Modeljoin1.test)
+        attr, path = utils.get_field_with_path(Modeljoin2, Modeljoin1.test)
         assert attr == Modeljoin1.test
         assert path == [Modeljoin1.__table__]
 

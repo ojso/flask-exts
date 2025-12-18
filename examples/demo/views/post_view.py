@@ -1,12 +1,12 @@
 from wtforms import validators
-from flask_exts.admin.sqla import ModelView
-from flask_exts.admin.sqla.filters import FilterLike
+from flask_exts.admin.sqla.view import SqlaModelView
+from flask_exts.admin.sqla.filter import FilterLike
 from ..models.post import Post
 from ..models.author import Author
 
 
 # Customized Post model admin
-class PostView(ModelView):
+class PostView(SqlaModelView):
     can_view_details = True
     column_display_pk = True
     column_list = [

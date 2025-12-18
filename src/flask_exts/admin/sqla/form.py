@@ -30,7 +30,7 @@ from ..model.form import (
     FieldPlaceholder,
 )
 
-from ...utils.sqla import (
+from .utils import (
     has_multiple_pks,
     filter_foreign_columns,
     get_field_with_path,

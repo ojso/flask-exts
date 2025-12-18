@@ -25,11 +25,13 @@ from wtforms.fields import HiddenField
 from wtforms.fields.core import UnboundField
 from wtforms.validators import ValidationError, InputRequired
 from flask_babel import gettext, ngettext
-from ...types import T_COLUMN_LIST, T_FORMATTERS
-from . import typefmt
-from .filters import BaseFilter
+from .types import T_COLUMN_LIST, T_FORMATTERS
+from .typefmt import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
 from .ajax import AjaxModelLoader
-from .. import row_action
+from .view_args import ViewArgs
+from .filter_group import FilterGroup
+from .filter import BaseFilter
+from . import row_action
 from .. import expose_url
 from ..action_view import ActionView
 from ...template.form.base_form import BaseForm
@@ -37,10 +39,10 @@ from ...template.form.form_opts import FormOpts
 from ...template.rules import RuleSet
 from ...template.form.utils import get_form_data
 from ...template.form.utils import validate_form_on_submit
-from ...utils import flash_errors
 from ...utils import get_redirect_target
 from ...utils import rec_getattr
 from ...utils import get_mdict_item_or_list
+
 
 
 # Used to generate filter query string name
@@ -48,75 +50,7 @@ filter_char_re = re.compile("[^a-z0-9 ]")
 filter_compact_re = re.compile(" +")
 
 
-class ViewArgs:
-    """
-    List view arguments.
-    """
-
-    def __init__(
-        self,
-        page=None,
-        page_size=None,
-        sort=None,
-        sort_desc=None,
-        search=None,
-        filters=None,
-        extra_args=None,
-    ):
-        self.page = page
-        self.page_size = page_size
-        self.sort = sort
-        self.sort_desc = bool(sort_desc)
-        self.search = search
-        self.filters = filters
-
-        if not self.search:
-            self.search = None
-
-        self.extra_args = extra_args or dict()
-
-    def clone(self, **kwargs):
-        if self.filters:
-            flt = list(self.filters)
-        else:
-            flt = None
-
-        kwargs.setdefault("page", self.page)
-        kwargs.setdefault("page_size", self.page_size)
-        kwargs.setdefault("sort", self.sort)
-        kwargs.setdefault("sort_desc", self.sort_desc)
-        kwargs.setdefault("search", self.search)
-        kwargs.setdefault("filters", flt)
-        kwargs.setdefault("extra_args", dict(self.extra_args))
-
-        return ViewArgs(**kwargs)
-
-
-class FilterGroup:
-    def __init__(self, label):
-        self.label = label
-        self.filters = []
-
-    def append(self, filter):
-        self.filters.append(filter)
-
-    def non_lazy(self):
-        filters = []
-        for item in self.filters:
-            copy = dict(item)
-            copy["operation"] = copy["operation"]
-            options = copy["options"]
-            if options:
-                copy["options"] = [(k, v) for k, v in options]
-
-            filters.append(copy)
-        return self.label, filters
-
-    def __iter__(self):
-        return iter(self.filters)
-
-
-class BaseModelView(ActionView):
+class ModelView(ActionView):
     """
     Base model view.
 
@@ -392,12 +326,6 @@ class BaseModelView(ActionView):
             class MyModelView(BaseModelView):
                 column_sortable_list = (
                     'name', ('user', ('user.first_name', 'user.last_name')))
-
-        When using SQLAlchemy models, model attributes can be used instead
-        of strings::
-
-            class MyModelView(BaseModelView):
-                column_sortable_list = ('name', ('user', User.username))
     """
 
     column_default_sort = None
@@ -500,14 +428,14 @@ class BaseModelView(ActionView):
 
     column_extra_row_actions = None
     """
-        List of row actions (instances of :class:`~.model.template.BaseListRowAction`).
+        List of row actions (instances of :class:`~.row_action.BaseRowAction`).
 
         It will generate standard per-row actions (edit, delete, etc)
         and will append custom actions from this list right after them.
 
         For example::
 
-            from .model.template import EndpointLinkRowAction, LinkRowAction
+            from ~.row_action import EndpointLinkRowAction, LinkRowAction
 
             class MyModelView(BaseModelView):
                 column_extra_row_actions = [
@@ -941,13 +869,13 @@ class BaseModelView(ActionView):
 
         # Type formatters
         if self.column_type_formatters is None:
-            self.column_type_formatters = dict(typefmt.BASE_FORMATTERS)
+            self.column_type_formatters = dict(BASE_FORMATTERS)
 
         if self.column_type_formatters_export is None:
-            self.column_type_formatters_export = dict(typefmt.EXPORT_FORMATTERS)
+            self.column_type_formatters_export = dict(EXPORT_FORMATTERS)
 
         if self.column_type_formatters_detail is None:
-            self.column_type_formatters_detail = dict(typefmt.DETAIL_FORMATTERS)
+            self.column_type_formatters_detail = dict(DETAIL_FORMATTERS)
 
         if self.column_descriptions is None:
             self.column_descriptions = dict()
@@ -996,7 +924,7 @@ class BaseModelView(ActionView):
     def get_list_row_actions(self):
         """
         Return list of row action objects, each is instance of
-        :class:`~.row_action.BaseListRowAction`
+        :class:`~.row_action.BaseRowAction`
         """
         actions = []
 
@@ -1180,8 +1108,7 @@ class BaseModelView(ActionView):
 
     def get_filter_arg(self, index, flt):
         """
-        Given a filter `flt`, return a unique name for that filter in
-        this view.
+        Given a filter `flt`, return a unique name for that filter in this view.
 
         Does not include the `flt[n]_` portion of the filter name.
 
@@ -1705,7 +1632,6 @@ class BaseModelView(ActionView):
         raise NotImplementedError()
 
     # Various helpers
-
 
     def get_empty_list_message(self):
         return gettext("There are no items in the table.")
@@ -2281,7 +2207,7 @@ class BaseModelView(ActionView):
                 )
                 return redirect(return_url)
         else:
-            flash_errors(form, message="Failed to delete record. %(error)s")
+            self.flash_form_errors(form, message="Failed to delete record. %(error)s")
 
         return redirect(return_url)
 

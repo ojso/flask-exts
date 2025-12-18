@@ -1,6 +1,6 @@
 from flask_babel import gettext
 from flask_babel import force_locale
-from flask_exts.admin.sqla import ModelView
+from flask_exts.admin.sqla.view import SqlaModelView
 from ...models import db, reset_models
 from ...models.model1 import Model1
 from .test_basic import CustomModelView
@@ -36,7 +36,7 @@ def test_unique_validator_translation_is_dynamic(app, client, admin):
 
         db.create_all()
 
-        view = ModelView(UniqueTable)
+        view = SqlaModelView(UniqueTable)
         view.can_create = True
         admin.add_view(view)
 

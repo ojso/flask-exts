@@ -1,11 +1,11 @@
 from sqlalchemy.sql import not_, or_
 import enum
 from flask_babel import lazy_gettext
-from ...utils import sqla
-from ..model import filters
+from . import utils
+from ..model import filter
 
 
-class BaseSQLAFilter(filters.BaseFilter):
+class BaseSQLAFilter(filter.BaseFilter):
     """
     Base SQLAlchemy filter.
     """
@@ -53,7 +53,7 @@ class FilterNotEqual(BaseSQLAFilter):
 
 class FilterLike(BaseSQLAFilter):
     def apply(self, query, value, alias=None):
-        stmt = sqla.parse_like_term(value)
+        stmt = utils.parse_like_term(value)
         return query.filter(self.get_column(alias).ilike(stmt))
 
     def operation(self):
@@ -62,7 +62,7 @@ class FilterLike(BaseSQLAFilter):
 
 class FilterNotLike(BaseSQLAFilter):
     def apply(self, query, value, alias=None):
-        stmt = sqla.parse_like_term(value)
+        stmt = utils.parse_like_term(value)
         return query.filter(~self.get_column(alias).ilike(stmt))
 
     def operation(self):
@@ -85,7 +85,7 @@ class FilterSmaller(BaseSQLAFilter):
         return lazy_gettext("smaller than")
 
 
-class FilterEmpty(BaseSQLAFilter, filters.BaseBooleanFilter):
+class FilterEmpty(BaseSQLAFilter, filter.BaseBooleanFilter):
     def apply(self, query, value, alias=None):
         if value == "1":
             return query.filter(self.get_column(alias) == None)  # noqa: E711
@@ -123,79 +123,79 @@ class FilterNotInList(FilterInList):
 
 
 # Customized type filters
-class BooleanEqualFilter(FilterEqual, filters.BaseBooleanFilter):
+class BooleanEqualFilter(FilterEqual, filter.BaseBooleanFilter):
     pass
 
 
-class BooleanNotEqualFilter(FilterNotEqual, filters.BaseBooleanFilter):
+class BooleanNotEqualFilter(FilterNotEqual, filter.BaseBooleanFilter):
     pass
 
 
-class IntEqualFilter(FilterEqual, filters.BaseIntFilter):
+class IntEqualFilter(FilterEqual, filter.BaseIntFilter):
     pass
 
 
-class IntNotEqualFilter(FilterNotEqual, filters.BaseIntFilter):
+class IntNotEqualFilter(FilterNotEqual, filter.BaseIntFilter):
     pass
 
 
-class IntGreaterFilter(FilterGreater, filters.BaseIntFilter):
+class IntGreaterFilter(FilterGreater, filter.BaseIntFilter):
     pass
 
 
-class IntSmallerFilter(FilterSmaller, filters.BaseIntFilter):
+class IntSmallerFilter(FilterSmaller, filter.BaseIntFilter):
     pass
 
 
-class IntInListFilter(filters.BaseIntListFilter, FilterInList):
+class IntInListFilter(filter.BaseIntListFilter, FilterInList):
     pass
 
 
-class IntNotInListFilter(filters.BaseIntListFilter, FilterNotInList):
+class IntNotInListFilter(filter.BaseIntListFilter, FilterNotInList):
     pass
 
 
-class FloatEqualFilter(FilterEqual, filters.BaseFloatFilter):
+class FloatEqualFilter(FilterEqual, filter.BaseFloatFilter):
     pass
 
 
-class FloatNotEqualFilter(FilterNotEqual, filters.BaseFloatFilter):
+class FloatNotEqualFilter(FilterNotEqual, filter.BaseFloatFilter):
     pass
 
 
-class FloatGreaterFilter(FilterGreater, filters.BaseFloatFilter):
+class FloatGreaterFilter(FilterGreater, filter.BaseFloatFilter):
     pass
 
 
-class FloatSmallerFilter(FilterSmaller, filters.BaseFloatFilter):
+class FloatSmallerFilter(FilterSmaller, filter.BaseFloatFilter):
     pass
 
 
-class FloatInListFilter(filters.BaseFloatListFilter, FilterInList):
+class FloatInListFilter(filter.BaseFloatListFilter, FilterInList):
     pass
 
 
-class FloatNotInListFilter(filters.BaseFloatListFilter, FilterNotInList):
+class FloatNotInListFilter(filter.BaseFloatListFilter, FilterNotInList):
     pass
 
 
-class DateEqualFilter(FilterEqual, filters.BaseDateFilter):
+class DateEqualFilter(FilterEqual, filter.BaseDateFilter):
     pass
 
 
-class DateNotEqualFilter(FilterNotEqual, filters.BaseDateFilter):
+class DateNotEqualFilter(FilterNotEqual, filter.BaseDateFilter):
     pass
 
 
-class DateGreaterFilter(FilterGreater, filters.BaseDateFilter):
+class DateGreaterFilter(FilterGreater, filter.BaseDateFilter):
     pass
 
 
-class DateSmallerFilter(FilterSmaller, filters.BaseDateFilter):
+class DateSmallerFilter(FilterSmaller, filter.BaseDateFilter):
     pass
 
 
-class DateBetweenFilter(BaseSQLAFilter, filters.BaseDateBetweenFilter):
+class DateBetweenFilter(BaseSQLAFilter, filter.BaseDateBetweenFilter):
     def __init__(self, column, name, options=None, data_type=None):
         super().__init__(
             column, name, options, data_type="daterangepicker"
@@ -215,23 +215,23 @@ class DateNotBetweenFilter(DateBetweenFilter):
         return lazy_gettext("not between")
 
 
-class DateTimeEqualFilter(FilterEqual, filters.BaseDateTimeFilter):
+class DateTimeEqualFilter(FilterEqual, filter.BaseDateTimeFilter):
     pass
 
 
-class DateTimeNotEqualFilter(FilterNotEqual, filters.BaseDateTimeFilter):
+class DateTimeNotEqualFilter(FilterNotEqual, filter.BaseDateTimeFilter):
     pass
 
 
-class DateTimeGreaterFilter(FilterGreater, filters.BaseDateTimeFilter):
+class DateTimeGreaterFilter(FilterGreater, filter.BaseDateTimeFilter):
     pass
 
 
-class DateTimeSmallerFilter(FilterSmaller, filters.BaseDateTimeFilter):
+class DateTimeSmallerFilter(FilterSmaller, filter.BaseDateTimeFilter):
     pass
 
 
-class DateTimeBetweenFilter(BaseSQLAFilter, filters.BaseDateTimeBetweenFilter):
+class DateTimeBetweenFilter(BaseSQLAFilter, filter.BaseDateTimeBetweenFilter):
     def __init__(self, column, name, options=None, data_type=None):
         super().__init__(
             column, name, options, data_type="datetimerangepicker"
@@ -251,23 +251,23 @@ class DateTimeNotBetweenFilter(DateTimeBetweenFilter):
         return lazy_gettext("not between")
 
 
-class TimeEqualFilter(FilterEqual, filters.BaseTimeFilter):
+class TimeEqualFilter(FilterEqual, filter.BaseTimeFilter):
     pass
 
 
-class TimeNotEqualFilter(FilterNotEqual, filters.BaseTimeFilter):
+class TimeNotEqualFilter(FilterNotEqual, filter.BaseTimeFilter):
     pass
 
 
-class TimeGreaterFilter(FilterGreater, filters.BaseTimeFilter):
+class TimeGreaterFilter(FilterGreater, filter.BaseTimeFilter):
     pass
 
 
-class TimeSmallerFilter(FilterSmaller, filters.BaseTimeFilter):
+class TimeSmallerFilter(FilterSmaller, filter.BaseTimeFilter):
     pass
 
 
-class TimeBetweenFilter(BaseSQLAFilter, filters.BaseTimeBetweenFilter):
+class TimeBetweenFilter(BaseSQLAFilter, filter.BaseTimeBetweenFilter):
     def __init__(self, column, name, options=None, data_type=None):
         super().__init__(
             column, name, options, data_type="timerangepicker"
@@ -439,24 +439,24 @@ class ChoiceTypeNotLikeFilter(FilterNotLike):
             return query
 
 
-class UuidFilterEqual(FilterEqual, filters.BaseUuidFilter):
+class UuidFilterEqual(FilterEqual, filter.BaseUuidFilter):
     pass
 
 
-class UuidFilterNotEqual(FilterNotEqual, filters.BaseUuidFilter):
+class UuidFilterNotEqual(FilterNotEqual, filter.BaseUuidFilter):
     pass
 
 
-class UuidFilterInList(filters.BaseUuidListFilter, FilterInList):
+class UuidFilterInList(filter.BaseUuidListFilter, FilterInList):
     pass
 
 
-class UuidFilterNotInList(filters.BaseUuidListFilter, FilterNotInList):
+class UuidFilterNotInList(filter.BaseUuidListFilter, FilterNotInList):
     pass
 
 
 # Base SQLA filter field converter
-class FilterConverter(filters.BaseFilterConverter):
+class FilterConverter(filter.BaseFilterConverter):
     strings = (
         FilterLike,
         FilterNotLike,
@@ -550,7 +550,7 @@ class FilterConverter(filters.BaseFilterConverter):
 
         return None
 
-    @filters.convert(
+    @filter.convert(
         "string",
         "char",
         "unicode",
@@ -571,15 +571,15 @@ class FilterConverter(filters.BaseFilterConverter):
     def conv_string(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.strings]
 
-    @filters.convert("UUIDType", "ColorType", "TimezoneType", "CurrencyType")
+    @filter.convert("UUIDType", "ColorType", "TimezoneType", "CurrencyType")
     def conv_string_keys(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.string_key_filters]
 
-    @filters.convert("boolean", "tinyint")
+    @filter.convert("boolean", "tinyint")
     def conv_bool(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.bool_filters]
 
-    @filters.convert(
+    @filter.convert(
         "int",
         "integer",
         "smallinteger",
@@ -591,35 +591,35 @@ class FilterConverter(filters.BaseFilterConverter):
     def conv_int(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.int_filters]
 
-    @filters.convert(
+    @filter.convert(
         "float", "real", "decimal", "numeric", "double_precision", "double"
     )
     def conv_float(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.float_filters]
 
-    @filters.convert("date")
+    @filter.convert("date")
     def conv_date(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.date_filters]
 
-    @filters.convert("datetime", "datetime2", "timestamp", "smalldatetime")
+    @filter.convert("datetime", "datetime2", "timestamp", "smalldatetime")
     def conv_datetime(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.datetime_filters]
 
-    @filters.convert("time")
+    @filter.convert("time")
     def conv_time(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.time_filters]
 
-    @filters.convert("ChoiceType")
+    @filter.convert("ChoiceType")
     def conv_sqla_utils_choice(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.choice_type_filters]
 
-    @filters.convert("enum")
+    @filter.convert("enum")
     def conv_enum(self, column, name, options=None, **kwargs):
         if not options:
             options = [(v, v) for v in column.type.enums]
 
         return [f(column, name, options, **kwargs) for f in self.enum]
 
-    @filters.convert("uuid")
+    @filter.convert("uuid")
     def conv_uuid(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.uuid_filters]

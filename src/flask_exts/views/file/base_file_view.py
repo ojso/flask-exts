@@ -8,7 +8,6 @@ from flask import flash, redirect, abort, request
 from wtforms import fields, validators
 from werkzeug.utils import secure_filename
 from ...template.form.base_form import BaseForm
-from ...utils import flash_errors
 from ...admin.action_view import ActionView
 from ...admin import expose_url
 from ...admin import expose_action
@@ -888,7 +887,7 @@ class BaseFileView(ActionView):
                     gettext("Failed to create directory: %(error)s", error=ex), "error"
                 )
         else:
-            flash_errors(form, message="Failed to create directory: %(error)s")
+            self.flash_form_errors(form, message="Failed to create directory: %(error)s")
 
         if self.mkdir_modal and request.args.get("modal"):
             template = self.mkdir_modal_template
@@ -964,7 +963,7 @@ class BaseFileView(ActionView):
                 except Exception as ex:
                     flash(gettext("Failed to delete file: %(name)s", name=ex), "error")
         else:
-            flash_errors(form, message="Failed to delete file. %(error)s")
+            self.flash_form_errors(form, message="Failed to delete file. %(error)s")
 
         return redirect(return_url)
 
@@ -1016,7 +1015,7 @@ class BaseFileView(ActionView):
 
             return redirect(return_url)
         else:
-            flash_errors(form, message="Failed to rename: %(error)s")
+            self.flash_form_errors(form, message="Failed to rename: %(error)s")
 
         if self.rename_modal and request.args.get("modal"):
             template = self.rename_modal_template
@@ -1078,7 +1077,7 @@ class BaseFileView(ActionView):
                     )
                     return redirect(next_url)
         else:
-            flash_errors(form, message="Failed to edit file. %(error)s")
+            self.flash_form_errors(form, message="Failed to edit file. %(error)s")
 
             try:
                 content = self.storage.read_file(full_path)
