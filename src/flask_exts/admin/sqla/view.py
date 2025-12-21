@@ -5,7 +5,6 @@ from typing import Optional, Dict, List, Tuple
 from flask import current_app, flash
 from flask_babel import gettext, ngettext, lazy_gettext
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy.orm.base import manager_of_class, instance_state
 from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.sql.expression import desc
 from sqlalchemy import Boolean, Table, func, or_
@@ -14,13 +13,11 @@ from sqlalchemy.sql.expression import cast
 from sqlalchemy import Unicode
 from ...datastore.sqla import db
 from .utils import is_relationship
-from .utils import get_primary_key
 from .utils import get_field_with_path
 from .utils import get_columns_for_field
 from .utils import need_join
 from .utils import filter_foreign_columns
 from .utils import is_hybrid_property
-from .utils import get_query_for_ids
 from .utils import parse_like_term
 from ...utils.tools import iterencode, escape
 from ..model.view import ModelView
@@ -32,12 +29,13 @@ from .filter import FilterConverter
 from .ajax import create_ajax_loader
 from .types import T_COLUMN_LIST
 from .typefmt import DEFAULT_FORMATTERS
+from .sqla_mixin import SqlaMixin
 
 # Set up logger
 log = logging.getLogger("flask-exts.sqla")
 
 
-class SqlaModelView(ModelView):
+class SqlaModelView(ModelView, SqlaMixin):
     """
     SQLAlchemy model view
     """
@@ -236,18 +234,6 @@ class SqlaModelView(ModelView):
         Override this attribute to use non-default converter.
     """
 
-    fast_mass_delete = False
-    """
-        If set to `False` and user deletes more than one model using built in action,
-        all models will be read from the database and then deleted one by one
-        giving SQLAlchemy a chance to manually cleanup any dependencies (many-to-many
-        relationships, etc).
-
-        If set to `True`, will run a ``DELETE`` statement which is somewhat faster,
-        but may leave corrupted data if you forget to configure ``DELETE
-        CASCADE`` for your model.
-    """
-
     inline_models = None
     """
         Inline related-model editing for models with parent-child relations.
@@ -397,10 +383,8 @@ class SqlaModelView(ModelView):
             menu_icon_value=menu_icon_value,
         )
 
-        self._manager = manager_of_class(self.model)
-
         # Primary key
-        self._primary_key = self.scaffold_pk()
+        self.scaffold_pk()
 
         if self._primary_key is None:
             raise Exception("Model %s does not have primary key." % self.model.__name__)
@@ -411,15 +395,7 @@ class SqlaModelView(ModelView):
         else:
             self._auto_joins = self.column_select_related_list
 
-    # Internal API
-    def _get_model_iterator(self, model=None):
-        """
-        Return property iterator for the model
-        """
-        if model is None:
-            model = self.model
-
-        return model._sa_class_manager.mapper.attrs
+    
 
     def _apply_path_joins(self, query, joins, path, inner_join=True):
         """
@@ -459,23 +435,16 @@ class SqlaModelView(ModelView):
 
         return query, joins, last
 
-    # Scaffolding
-    def scaffold_pk(self):
-        """
-        Return the primary key name(s) from a model
-        If model has single primary key, will return a string and tuple otherwise
-        """
-        return get_primary_key(self.model)
-
-    def get_pk_value(self, model):
+    def get_pk_value(self, instance):
         """
         Return the primary key value from a model object.
         If there are multiple primary keys, they're encoded into string representation.
         """
-        if isinstance(self._primary_key, tuple):
-            return iterencode(getattr(model, attr) for attr in self._primary_key)
+        value = self.get_primary_key_values(instance)
+        if isinstance(value, tuple):
+            return ",".join([str(v) for v in value])
         else:
-            return escape(getattr(model, self._primary_key))
+            return str(value)
 
     def scaffold_list_columns(self):
         """
@@ -1198,6 +1167,8 @@ class SqlaModelView(ModelView):
         :param id:
             Model id
         """
+        if self.has_multiple_pks():
+            id = tuple(id.split(","))
         return self.session.get(self.model, id)
 
     # Error handler
@@ -1227,20 +1198,6 @@ class SqlaModelView(ModelView):
         form._obj = obj
         return form
 
-    def build_new_instance(self):
-        """
-        Build new instance of a model. Useful to override the behavior
-        when the model has a custom __init__ method.
-        """
-        model = self._manager.new_instance()
-
-        # TODO: We need a better way to create model instances and stay compatible with
-        # SQLAlchemy __init__() behavior
-        state = instance_state(model)
-        self._manager.dispatch.init(state, [], {})
-
-        return model
-
     # Model handlers
     def create_model(self, form):
         """
@@ -1250,11 +1207,10 @@ class SqlaModelView(ModelView):
             Form instance
         """
         try:
-            model = self.build_new_instance()
-
-            form.populate_obj(model)
-            self.session.add(model)
-            self._on_model_change(form, model, True)
+            instance = self.model()
+            form.populate_obj(instance)
+            self.session.add(instance)
+            self._on_model_change(form, instance, True)
             self.session.commit()
         except Exception as ex:
             if not self.handle_view_exception(ex):
@@ -1268,9 +1224,9 @@ class SqlaModelView(ModelView):
 
             return False
         else:
-            self.after_model_change(form, model, True)
+            self.after_model_change(form, instance, True)
 
-        return model
+        return instance
 
     def update_model(self, form, model):
         """
@@ -1344,18 +1300,9 @@ class SqlaModelView(ModelView):
     )
     def action_delete(self, ids):
         try:
-            query = get_query_for_ids(self.get_query(), self.model, ids)
-
-            if self.fast_mass_delete:
-                count = query.delete(synchronize_session=False)
-            else:
-                count = 0
-
-                for m in query.all():
-                    if self.delete_model(m):
-                        count += 1
-
-            self.session.commit()
+            result = self.delete_pk_ids(ids)
+            count = result.rowcount
+            # self.session.commit()
 
             flash(
                 ngettext(

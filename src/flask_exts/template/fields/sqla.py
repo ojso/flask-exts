@@ -4,7 +4,7 @@ from sqlalchemy.orm.util import identity_key
 from wtforms.fields import SelectFieldBase, StringField
 from wtforms.utils import unset_value
 from wtforms.validators import ValidationError
-from ...admin.sqla.utils import get_primary_key
+from ...datastore.sqla.utils import get_primary_key
 from .inline import InlineFieldList, InlineModelFormField
 from ..form.base_form import BaseForm
 from ..form.form_opts import FormOpts

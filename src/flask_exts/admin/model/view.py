@@ -891,7 +891,7 @@ class ModelView(ActionView):
         self._validate_form_class(self._form_create_rules, self._create_form_class)
 
     # Primary key
-    def get_pk_value(self, model):
+    def get_pk_value(self, obj):
         """
         Return PK value from a model object.
         """

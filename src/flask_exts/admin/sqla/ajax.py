@@ -2,9 +2,9 @@ from sqlalchemy import or_, and_, cast, text
 from sqlalchemy.types import String
 from ...datastore.sqla import db
 from ..model.ajax import AjaxModelLoader, DEFAULT_PAGE_SIZE
+from ...datastore.sqla.utils import get_primary_key
+from ...datastore.sqla.utils import has_multiple_pks
 from .utils import (
-    get_primary_key,
-    has_multiple_pks,
     is_relationship,
     is_association_proxy,
 )

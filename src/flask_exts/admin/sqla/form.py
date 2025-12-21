@@ -3,7 +3,8 @@ from enum import Enum
 from wtforms import fields, validators
 from sqlalchemy import Boolean, Column
 from sqlalchemy.orm import ColumnProperty
-from wtforms.fields import DateTimeLocalField as DateTimeField 
+from wtforms.fields import DateTimeLocalField as DateTimeField
+
 # from wtforms.fields import TimeField
 from ...template.fields import TimeField
 from ...template.fields import Select2Field
@@ -29,9 +30,8 @@ from ..model.form import (
     InlineModelConverterBase,
     FieldPlaceholder,
 )
-
+from ...datastore.sqla.utils import has_multiple_pks
 from .utils import (
-    has_multiple_pks,
     filter_foreign_columns,
     get_field_with_path,
     is_association_proxy,
@@ -438,6 +438,7 @@ def avoid_empty_strings(value):
             pass
     return value if value else None
 
+
 def _resolve_prop(prop):
     """
     Resolve proxied property
@@ -484,11 +485,6 @@ def get_form(
     :param ignore_hidden:
         If set to True (default), will ignore properties that start with underscore
     """
-
-    # TODO: Support new 0.8 API
-    if not hasattr(model, "_sa_class_manager"):
-        raise TypeError("model must be a sqlalchemy mapped model")
-
     mapper = model._sa_class_manager.mapper
     field_args = field_args or {}
 
