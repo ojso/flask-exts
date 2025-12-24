@@ -13,11 +13,11 @@ from .models.location_image import ImageType
 
 
 def build_user_admin():
-    u, _ = _userstore.create_user(
+    status, user_admin = _userstore.create_user(
         username="admin", password="admin", email="admin@example.com"
     )
-    r, _ = _userstore.create_role(name="admin")
-    _userstore.user_add_role(u, r)
+    role_admin = _userstore.create_role(name="admin")
+    _userstore.user_add_role(user_admin, role_admin)
 
 
 def build_sample_image_type():

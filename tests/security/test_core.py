@@ -35,14 +35,15 @@ class TestSecurity:
     def test_verify_email(self, app):
         with app.app_context():
             db.create_all()
-            r = _userstore.create_user(
+            status, user = _userstore.create_user(
                 username="testuser",
                 password="testpassword",
                 email="testuser@example.com",
             )
-            assert r[0] is not None
-            assert r[0].is_active is False
-            token = _security.email_verification.generate_verify_email_token(r[0])
+            assert status == "ok"
+            assert user is not None
+            assert user.is_active is False
+            token = _security.email_verification.generate_verify_email_token(user)
             r = _security.email_verification.verify_email_with_token(token)
             assert r[0] == "verified"
             assert r[1].email_verified is True

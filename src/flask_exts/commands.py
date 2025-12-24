@@ -27,8 +27,8 @@ def create_user(name):
 @security_cli.command("create_admin", help="create user:admin with admin:role")
 @click.argument("password", default="admin")
 def create_admin(password):
-    u, _ = _userstore.create_user(username="admin", password=password)
-    r, _ = _userstore.create_role(name="admin")
-    _userstore.user_add_role(u, r)
+    _, user_admin = _userstore.create_user(username="admin", password=password)
+    role_admin = _userstore.create_role(name="admin")
+    _userstore.user_add_role(user_admin, role_admin)
 
-    print(f"security create admin {u.username} with role {r.name} ")
+    print(f"security create admin {user_admin.username} with role {role_admin.name} ")

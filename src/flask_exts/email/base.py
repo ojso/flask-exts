@@ -14,14 +14,15 @@ class Email:
         self.app = app
         self.subscribe_signal(app)
         self.register_senders()
-        if "verify_email" not in self.senders:
-            app.logger.warning(
-                "Please configure the NOREPLY_EMAIL_SENDER in your app config."
-            )
-        if "reset_password" not in self.senders:
-            app.logger.warning(
-                "Please configure the NOREPLY_EMAIL_SENDER in your app config."
-            )
+        # TODO: add logger.warning
+        # if "verify_email" not in self.senders:
+        #     app.logger.warning(
+        #         "Please configure the NOREPLY_EMAIL_SENDER in your app config."
+        #     )
+        # if "reset_password" not in self.senders:
+        #     app.logger.warning(
+        #         "Please configure the NOREPLY_EMAIL_SENDER in your app config."
+        #     )
 
     def subscribe_signal(self, app):
         to_send_email.connect(self.send, app)

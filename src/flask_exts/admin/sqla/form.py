@@ -4,7 +4,8 @@ from wtforms import fields, validators
 from sqlalchemy import Boolean, Column
 from sqlalchemy.orm import ColumnProperty
 from wtforms.fields import DateTimeLocalField as DateTimeField
-
+from ...datastore.sqla.utils import has_multiple_pks
+from ...datastore.sqla.utils import get_model_mapper
 # from wtforms.fields import TimeField
 from ...template.fields import TimeField
 from ...template.fields import Select2Field
@@ -30,7 +31,7 @@ from ..model.form import (
     InlineModelConverterBase,
     FieldPlaceholder,
 )
-from ...datastore.sqla.utils import has_multiple_pks
+
 from .utils import (
     filter_foreign_columns,
     get_field_with_path,
@@ -485,7 +486,7 @@ def get_form(
     :param ignore_hidden:
         If set to True (default), will ignore properties that start with underscore
     """
-    mapper = model._sa_class_manager.mapper
+    mapper = get_model_mapper(model)
     field_args = field_args or {}
 
     properties = ((p.key, p) for p in mapper.attrs)
@@ -641,12 +642,11 @@ class InlineModelConverter(InlineModelConverterBase):
         :return:
             A dict of forward property key and reverse property key
         """
-        mapper = model._sa_class_manager.mapper
+        mapper = get_model_mapper(model)
 
         # Find property from target model to current model
         # Use the base mapper to support inheritance
-        target_mapper = info.model._sa_class_manager.mapper.base_mapper
-
+        target_mapper = get_model_mapper(info.model).base_mapper
         reverse_props = []
         forward_reverse_props_keys = dict()
         for prop in target_mapper.iterate_properties:
@@ -776,8 +776,8 @@ class InlineOneToOneModelConverter(InlineModelConverter):
 
     def _calculate_mapping_key_pair(self, model, info):
 
-        mapper = info.model._sa_class_manager.mapper.base_mapper
-        target_mapper = model._sa_class_manager.mapper
+        mapper = get_model_mapper(info.model).base_mapper
+        target_mapper = get_model_mapper(info.model)
 
         inline_relationship = dict()
 

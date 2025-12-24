@@ -19,7 +19,6 @@ from .utils import need_join
 from .utils import filter_foreign_columns
 from .utils import is_hybrid_property
 from .utils import parse_like_term
-from ...utils.tools import iterencode, escape
 from ..model.view import ModelView
 from ..model.form import create_editable_list_form
 from ..exposer import expose_action
@@ -440,7 +439,7 @@ class SqlaModelView(ModelView, SqlaMixin):
         Return the primary key value from a model object.
         If there are multiple primary keys, they're encoded into string representation.
         """
-        value = self.get_primary_key_values(instance)
+        value = self.get_primary_key_value(instance)
         if isinstance(value, tuple):
             return ",".join([str(v) for v in value])
         else:

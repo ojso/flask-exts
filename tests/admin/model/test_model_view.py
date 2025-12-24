@@ -28,6 +28,7 @@ class SimpleFilter(BaseFilter):
         return "test"
 
 
+
 class MockModelView(ModelView):
     def __init__(
         self,

@@ -10,7 +10,7 @@ from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ...admin import View,expose_url
+from ...admin import View, expose_url
 from ...template.forms.login import LoginForm
 from ...template.forms.register import RegisterForm
 from ...template.forms.change_password import ChangePasswordForm
@@ -79,13 +79,10 @@ class UserView(View):
             return redirect(url_for(".index"))
         form = self.get_login_form_class()()
         if form.validate_on_submit():
-            user, error = _userstore.login_user_by_username_password(
+            status, user = _userstore.login_user_by_username_password(
                 form.username.data, form.password.data
             )
-            if user is None:
-                flash(error, "error")
-                # form.username.errors.append(error)
-            else:
+            if status == "ok" and user is not None:
                 if hasattr(form, "remember_me"):
                     login_user(user, force=True, remember=form.remember_me.data)
                 else:
@@ -100,6 +97,8 @@ class UserView(View):
                 if not next_page:
                     next_page = url_for(".index")
                 return redirect(next_page)
+            else:
+                flash(status, "error")
         return self.render(self.login_template, form=form)
 
     @expose_url("/register/", methods=("GET", "POST"))
@@ -108,17 +107,17 @@ class UserView(View):
             return redirect(url_for(".index"))
         form = self.get_register_form_class()()
         if form.validate_on_submit():
-            user, error = _userstore.create_user(
+            status, user = _userstore.create_user(
                 username=form.username.data,
                 password=form.password.data,
                 email=form.email.data,
             )
-            if user is None:
-                flash(error)
-            else:
+            if status == "ok" and user is not None:
                 user_registered.send(current_app._get_current_object(), user=user)
                 login_user(user, force=True)
                 return redirect(url_for(".index"))
+            else:
+                flash(status, "error")
 
         return self.render(self.register_template, form=form)
 
@@ -292,4 +291,3 @@ class UserView(View):
             else:
                 flash("Invalid recovery code", "error")
         return self.render("views/user/recovery.html", form=form)
-

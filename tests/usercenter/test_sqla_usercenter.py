@@ -15,8 +15,9 @@ class TestSqlaUserCenter:
 
         with app.app_context():
             reset_models()
-            u1, r = uc.create_user(username="u1", password="u1", email="u1")
-            assert r is None
+            r, u1 = uc.create_user(username="u1", password="u1", email="u1")
+            assert r == "ok"
+            assert u1 is not None
             assert u1.id == 1
             assert u1.username == "u1"
 

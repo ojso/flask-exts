@@ -4,6 +4,7 @@ from .template.base import Template
 from .email.base import Email
 from .usercenter.core import UserCenter
 from .security.core import Security
+from .bootstrap.startup import run_bootstrap
 from .admin.admin import Admin
 from .views.index.view import IndexView
 from .views.user.view import UserView
@@ -57,7 +58,7 @@ class Exts:
         self.usercenter = UserCenter()
         self.usercenter.init_app(app)
 
-        # # init security
+        # init security
         self.security = Security()
         self.security.init_app(app)
 
@@ -68,3 +69,6 @@ class Exts:
         # add default views
         self.admin.add_view(IndexView(), is_menu=False)
         self.admin.add_view(UserView(), is_menu=False)
+
+        # at last, run bootstrap tasks
+        run_bootstrap(app)

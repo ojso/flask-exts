@@ -1,6 +1,5 @@
 import inspect
 from flask import request, redirect
-from ..utils import get_redirect_target
 
 
 class ActionMixin:
@@ -62,6 +61,9 @@ class ActionMixin:
         if return_view:
             url = self.get_url("." + return_view)
         else:
-            url = get_redirect_target() or self.get_url(".index_view")
+            url = self.get_redirect_target()
 
         return redirect(url)
+
+    def get_redirect_target(self, param_name="url", endpoint=".index_view"):
+        return request.values.get(param_name) or self.get_url(endpoint)

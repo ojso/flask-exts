@@ -1,25 +1,10 @@
-from .jwt import jwt_decode
-from .jwt import UnSupportedAuthType
+from flask_login import LoginManager
+from ..security.auth_crypt import authorization_decoder
 from ..proxies import _userstore
 
 
-def authorization_decoder(auth_str: str):
-    """
-    Authorization token decoder based on type. Current only support jwt.
-    Args:
-        auth_str: Authorization string should be in "<type> <token>" format
-    Returns:
-        decoded owner from token
-    """
-    type, token = auth_str.split()
-    if type == "Bearer" and len(token.split(".")) == 3:
-        payload = jwt_decode(token)
-        return payload
-    else:
-        raise UnSupportedAuthType(
-            "Authorization %s is not supported" % type,
-            payload=auth_str,
-        )
+def user_loader(user_id):
+    return _userstore.user_loader(int(user_id))
 
 
 def load_user_from_request(request):
@@ -46,8 +31,8 @@ def load_user_from_request(request):
     # next, try to login using Bearer Jwt and load user
 
     if "Authorization" in request.headers:
-        auth_str = request.headers.get("Authorization")
-        payload = authorization_decoder(auth_str)
+        authstr = request.headers.get("Authorization")
+        payload = authorization_decoder(authstr)
         if isinstance(payload, dict):
             if "id" in payload and payload["id"] is not None:
                 user = _userstore.get_user_by_id(int(payload["id"]))
@@ -62,3 +47,13 @@ def load_user_from_request(request):
 
     # finally, return None if both methods did not login the user
     return None
+
+
+def init_login(app):
+    if not hasattr(app, "login_manager"):
+        login_manager = LoginManager()
+        login_manager.init_app(app)
+        login_manager.login_view = "user.login"
+        # login_manager.login_message = "Please login in"
+        login_manager.user_loader(user_loader)
+        login_manager.request_loader(load_user_from_request)

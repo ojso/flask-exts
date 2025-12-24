@@ -7,6 +7,7 @@ from typing import Optional, Type
 from math import ceil
 import inspect
 from collections import OrderedDict
+from functools import reduce
 import tablib
 from flask import current_app
 from flask import request
@@ -39,9 +40,8 @@ from ...template.form.form_opts import FormOpts
 from ...template.rules import RuleSet
 from ...template.form.utils import get_form_data
 from ...template.form.utils import validate_form_on_submit
-from ...utils import get_redirect_target
-from ...utils import rec_getattr
-from ...utils import get_mdict_item_or_list
+
+
 
 
 
@@ -1339,7 +1339,10 @@ class ModelView(ActionView):
                     return self.get_url('.details_view', id=model.id)
 
         """
-        return get_redirect_target() or self.get_url(".index_view")
+        if self.can_view_details:
+            return self.get_url('.details_view', id=model.id)
+        else:
+            return self.get_redirect_target()
 
     def _get_ruleset_missing_fields(self, ruleset, form):
         missing_fields = []
@@ -1567,28 +1570,6 @@ class ModelView(ActionView):
         """
         pass
 
-    def on_form_prefill(self, form, id):
-        """
-        Perform additional actions to pre-fill the edit form.
-
-        Called from edit_view, if the current action is rendering
-        the form rather than receiving client side input, after
-        default pre-filling has been performed.
-
-        By default does nothing.
-
-        You only need to override this if you have added custom
-        fields that depend on the database contents in a way that
-        it can't figure out by itself. Fields that were
-        added by name of a normal column or relationship should
-        work out of the box.
-
-        :param form:
-            Form instance
-        :param id:
-            id of the object that is going to be edited
-        """
-        pass
 
     def create_model(self, form):
         """
@@ -1757,11 +1738,19 @@ class ModelView(ActionView):
         """
         return name not in self.action_disallowed_list
 
-    def _get_field_value(self, model, name):
+    def _get_object_attr(self, obj, attr):
         """
-        Get unformatted field value from the model
+        Recursive getattr from the obj
+        Recursive getattr.
+
+        :param attr:
+            Dot delimited attribute name
+
+        Example::
+
+            rec_getattr(obj, 'a.b.c')
         """
-        return rec_getattr(model, name)
+        return reduce(getattr, attr.split("."), obj)
 
     def _get_list_value(
         self, context, model, name, column_formatters, column_type_formatters
@@ -1784,7 +1773,7 @@ class ModelView(ActionView):
         if column_fmt is not None:
             value = column_fmt(self, context, model, name)
         else:
-            value = self._get_field_value(model, name)
+            value = self._get_object_attr(model, name)
 
         choices_map = self._column_choices_map.get(name, {})
         if choices_map:
@@ -2042,7 +2031,7 @@ class ModelView(ActionView):
         """
         Create model view
         """
-        return_url = get_redirect_target() or self.get_url(".index_view")
+        return_url = self.get_redirect_target()
 
         if not self.can_create:
             return redirect(return_url)
@@ -2090,12 +2079,14 @@ class ModelView(ActionView):
         """
         Edit model view
         """
-        return_url = get_redirect_target() or self.get_url(".index_view")
+        return_url = self.get_redirect_target()
 
         if not self.can_edit:
             return redirect(return_url)
 
-        id = get_mdict_item_or_list(request.args, "id")
+        # TODO: request.args.getlist("id")  # return list for multipk
+        id = request.args.get("id")        
+
         if id is None:
             return redirect(return_url)
 
@@ -2119,11 +2110,10 @@ class ModelView(ActionView):
                         self.get_url(".edit_view", id=self.get_pk_value(model))
                     )
                 else:
+                    print("update ok")
+                    print(self.get_save_return_url(model, is_created=False))
                     # save button
                     return redirect(self.get_save_return_url(model, is_created=False))
-
-        if request.method == "GET" or form.errors:
-            self.on_form_prefill(form, id)
 
         form_opts = FormOpts(
             widget_args=self.form_widget_args, form_rules=self._form_edit_rules
@@ -2143,12 +2133,12 @@ class ModelView(ActionView):
         """
         Details model view
         """
-        return_url = get_redirect_target() or self.get_url(".index_view")
+        return_url = self.get_redirect_target()
 
         if not self.can_view_details:
             return redirect(return_url)
 
-        id = get_mdict_item_or_list(request.args, "id")
+        id = request.args.get("id")
         if id is None:
             return redirect(return_url)
 
@@ -2176,7 +2166,7 @@ class ModelView(ActionView):
         """
         Delete model view. Only POST method is allowed.
         """
-        return_url = get_redirect_target() or self.get_url(".index_view")
+        return_url = self.get_redirect_target()
 
         if not self.can_delete:
             return redirect(return_url)
@@ -2249,7 +2239,7 @@ class ModelView(ActionView):
 
     @expose_url("/export/<export_type>/")
     def export(self, export_type):
-        return_url = get_redirect_target() or self.get_url(".index_view")
+        return_url = self.get_redirect_target()
 
         if not self.can_export or (export_type not in self.export_types):
             flash(gettext("Permission denied."), "error")

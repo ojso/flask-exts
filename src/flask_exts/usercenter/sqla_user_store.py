@@ -26,12 +26,12 @@ class SqlaUserStore(BaseUserStore):
             stmt_filter_username = select(self.user_class).filter_by(username=username)
             user_exist_username = db.session.execute(stmt_filter_username).scalar()
             if user_exist_username is not None:
-                return (None, "invalid username")
+                return ("invalid username", None)
         if email:
             stmt_filter_email = select(self.user_class).filter_by(email=email)
             user_exist_email = db.session.execute(stmt_filter_email).scalar()
             if user_exist_email is not None:
-                return (None, "invalid email")
+                return ("invalid email", None)
         user = self.user_class()
         if username:
             user.username = username
@@ -41,7 +41,7 @@ class SqlaUserStore(BaseUserStore):
             user.email = email
         db.session.add(user)
         db.session.commit()
-        return (user, None)
+        return ("ok", user)
 
     def get_user_by_id(self, id: int):
         user = db.session.get(self.user_class, id)
@@ -68,17 +68,17 @@ class SqlaUserStore(BaseUserStore):
         stmt = select(self.user_class).filter_by(username=username)
         user = db.session.execute(stmt).scalar()
         if user is None:
-            return (None, "invalid username")
+            return ("invalid username", None)
         elif not user.check_password(password):
-            return (None, "invalid password")
+            return ("invalid password", None)
         else:
-            return (user, None)
+            return ("ok", user)
 
     def create_role(self, name):
         r = self.role_class(name=name)
         db.session.add(r)
         db.session.commit()
-        return (r, None)
+        return r
 
     def user_set(self, user, **kwargs):
         for key, value in kwargs.items():

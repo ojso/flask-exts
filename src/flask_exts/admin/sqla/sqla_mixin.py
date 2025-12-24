@@ -1,7 +1,8 @@
+from ...datastore.sqla.utils import get_model_mapper
 from ...datastore.sqla.utils import get_primary_key
-from ...datastore.sqla.utils import get_primary_key_values
+from ...datastore.sqla.utils import instance_primary_key_value
 from ...datastore.sqla.utils import stmt_delete_model_pk_ids
-from sqlalchemy import inspect
+
 
 
 class SqlaMixin:
@@ -18,11 +19,11 @@ class SqlaMixin:
     def has_multiple_pks(self):
         return isinstance(self._primary_key, tuple)
     
-    def get_primary_key_values(self, instance):
+    def get_primary_key_value(self, instance):
         """
         Return primary key values from an instance.
         """
-        return get_primary_key_values(instance)
+        return instance_primary_key_value(instance)
 
     def delete_pk_ids(self, ids: list):
         """
@@ -40,5 +41,5 @@ class SqlaMixin:
         if model is None:
             model = self.model
 
-        return inspect(model).attrs
+        return get_model_mapper(model).attrs
     

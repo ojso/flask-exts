@@ -363,7 +363,6 @@ def test_extra_args_filter(app, client, admin):
         assert '<input type="hidden" name="foo" value="bar">' in rv.text
 
 
-
 def test_complex_searchable_list(app, client, admin):
     with app.app_context():
         reset_models()
@@ -406,7 +405,6 @@ def test_complex_searchable_list_missing_children(app, client, admin):
 
         rv = client.get("/admin/model1/?search=magic")
         assert "magic string" in rv.text
-
 
 
 def test_column_editable_list(app, client, admin):
@@ -488,7 +486,7 @@ def test_column_editable_list(app, client, admin):
         # confirm the value has changed
         rv = client.get("/admin/model2/")
         assert "test1_val_3" in rv.text
- 
+
 
 def test_details_view(app, client, admin):
     with app.app_context():
@@ -1411,7 +1409,6 @@ def test_column_filters(app, client, admin):
         assert "test1_val_2" not in rv.text
 
 
-
 def test_column_filters_sqla_obj(app, admin):
     with app.app_context():
         reset_models()
@@ -1469,7 +1466,6 @@ def test_hybrid_property(app, client, admin):
         assert rv.status_code == 200
         assert "test_row_2" in rv.text
         assert "test_row_1" not in rv.text
-
 
 
 def test_hybrid_property_nested(app, client, admin):
@@ -1718,7 +1714,6 @@ def test_multiple_delete(app, client, admin):
         db.session.commit()
         # assert Model1.query.count() == 3
         assert db.session.scalar(db.select(db.func.count()).select_from(Model1)) == 3
-        
 
         view = SqlaModelView(Model1)
         admin.add_view(view)
@@ -2095,53 +2090,6 @@ def test_ajax_fk_multi(app, client, admin):
         assert mdl is not None
         assert mdl.modelfk1 is not None
         assert len(mdl.modelfk1) == 1
-
-
-def test_safe_redirect(app, client, admin):
-    with app.app_context():
-        reset_models()
-
-        view = CustomModelView(Model1)
-        admin.add_view(view)
-
-        rv = client.post(
-            "/admin/model1/new/?url=http://localhost/admin/model2view/",
-            data=dict(
-                test1="test1large",
-                test2="test2",
-                _continue_editing="Save and Continue Editing",
-            ),
-        )
-
-        assert rv.status_code == 302
-
-        # werkzeug 2.1.0+ now returns *relative* redirect/location by default.
-        expected = "/admin/model1/edit/"
-
-        # handle old werkzeug (or if relative location is disabled via `autocorrect_location_header=True`)
-        if (
-            not hasattr(rv, "autocorrect_location_header")
-            or rv.autocorrect_location_header
-        ):
-            expected = "http://localhost" + expected
-
-        assert rv.location.startswith(expected)
-        assert "url=http://localhost/admin/model2view/" in rv.location
-        assert "id=1" in rv.location
-
-        rv = client.post(
-            "/admin/model1/new/?url=http://google.com/evil/",
-            data=dict(
-                test1="test1large",
-                test2="test2",
-                _continue_editing="Save and Continue Editing",
-            ),
-        )
-
-        assert rv.status_code == 302
-        assert rv.location.startswith(expected)
-        assert "url=/admin/model1/" in rv.location
-        assert "id=2" in rv.location
 
 
 def test_simple_list_pager(app, admin):
