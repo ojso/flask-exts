@@ -132,7 +132,7 @@ class ModelView(ActionView):
             class MyModelView(BaseModelView):
                 column_list = ('name', 'last_name', 'email')
 
-        (Added in 1.4.0) SQLAlchemy model attributes can be used instead of strings::
+        SQLAlchemy model attributes can be used instead of strings::
 
             class MyModelView(BaseModelView):
                 column_list = ('name', User.last_name)
@@ -737,6 +737,10 @@ class ModelView(ActionView):
         if name is None:
             name = self._prettify_class_name(model.__name__)
 
+        # If endpoint not provided, it is model name in lower case
+        if endpoint is None:
+            endpoint = self.model.__name__.lower()
+
         super().__init__(
             name,
             endpoint,
@@ -749,80 +753,6 @@ class ModelView(ActionView):
 
         # Scaffolding
         self._refresh_cache()
-
-        if self.can_set_page_size and self.page_size not in self.page_size_options:
-            warnings.warn(
-                f"{self.page_size=} is not in {self.page_size_options=}", UserWarning
-            )
-
-    # Endpoint
-    def _get_endpoint(self):
-        return self.model.__name__.lower()
-
-    # Caching
-    def _refresh_forms_cache(self):
-        # Forms
-        self._form_ajax_refs = self._process_ajax_references()
-
-        if self.form_widget_args is None:
-            self.form_widget_args = {}
-
-        self._create_form_class = self.get_create_form()
-        self._edit_form_class = self.get_edit_form()
-        self._delete_form_class = self.get_delete_form()
-        self._action_form_class = self.get_action_form()
-
-        # List View In-Line Editing
-        if self.column_editable_list:
-            self._list_form_class = self.get_list_form()
-        else:
-            self.column_editable_list = {}
-
-    def _refresh_filters_cache(self):
-        self._filters = self.get_filters()
-
-        if self._filters:
-            self._filter_groups = OrderedDict()
-            self._filter_args = {}
-
-            for i, flt in enumerate(self._filters):
-                key = flt.name
-                if key not in self._filter_groups:
-                    self._filter_groups[key] = FilterGroup(flt.name)
-                self._filter_groups[key].append(
-                    {
-                        "index": i,
-                        "arg": self.get_filter_arg(i, flt),
-                        "operation": flt.operation(),
-                        "options": flt.get_options(self) or None,
-                        "type": flt.data_type,
-                    }
-                )
-
-                self._filter_args[self.get_filter_arg(i, flt)] = (i, flt)
-        else:
-            self._filter_groups = None
-            self._filter_args = None
-
-    def _refresh_form_rules_cache(self):
-        if self.form_create_rules:
-            self._form_create_rules = RuleSet(self, self.form_create_rules)
-        else:
-            self._form_create_rules = None
-
-        if self.form_edit_rules:
-            self._form_edit_rules = RuleSet(self, self.form_edit_rules)
-        else:
-            self._form_edit_rules = None
-
-        if self.form_rules:
-            form_rules = RuleSet(self, self.form_rules)
-
-            if not self._form_create_rules:
-                self._form_create_rules = form_rules
-
-            if not self._form_edit_rules:
-                self._form_edit_rules = form_rules
 
     def _refresh_cache(self):
         """
@@ -889,6 +819,73 @@ class ModelView(ActionView):
         # Process form rules
         self._validate_form_class(self._form_edit_rules, self._edit_form_class)
         self._validate_form_class(self._form_create_rules, self._create_form_class)
+
+    # Caching
+    def _refresh_forms_cache(self):
+        # Forms
+        self._form_ajax_refs = self._process_ajax_references()
+
+        if self.form_widget_args is None:
+            self.form_widget_args = {}
+
+        self._create_form_class = self.get_create_form()
+        self._edit_form_class = self.get_edit_form()
+        self._delete_form_class = self.get_delete_form()
+        self._action_form_class = self.get_action_form()
+
+        # List View In-Line Editing
+        if self.column_editable_list:
+            self._list_form_class = self.get_list_form()
+        else:
+            self.column_editable_list = {}
+
+    def _refresh_filters_cache(self):
+        self._filters = self.get_filters()
+
+        if self._filters:
+            self._filter_groups = OrderedDict()
+            self._filter_args = {}
+
+            for i, flt in enumerate(self._filters):
+                key = flt.name
+                if key not in self._filter_groups:
+                    self._filter_groups[key] = FilterGroup(flt.name)
+                self._filter_groups[key].append(
+                    {
+                        "index": i,
+                        "arg": self.get_filter_arg(i, flt),
+                        "operation": flt.operation(),
+                        "options": flt.get_options(self) or None,
+                        "type": flt.data_type,
+                    }
+                )
+
+                self._filter_args[self.get_filter_arg(i, flt)] = (i, flt)
+        else:
+            self._filter_groups = None
+            self._filter_args = None
+
+    def _refresh_form_rules_cache(self):
+        if self.form_create_rules:
+            self._form_create_rules = RuleSet(self, self.form_create_rules)
+        else:
+            self._form_create_rules = None
+
+        if self.form_edit_rules:
+            self._form_edit_rules = RuleSet(self, self.form_edit_rules)
+        else:
+            self._form_edit_rules = None
+
+        if self.form_rules:
+            form_rules = RuleSet(self, self.form_rules)
+
+            if not self._form_create_rules:
+                self._form_create_rules = form_rules
+
+            if not self._form_edit_rules:
+                self._form_edit_rules = form_rules
+
+
 
     # Primary key
     def get_pk_value(self, obj):

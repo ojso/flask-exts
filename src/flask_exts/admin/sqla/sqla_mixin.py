@@ -34,12 +34,9 @@ class SqlaMixin:
         self.session.commit()
         return result
     
-    def _get_model_iterator(self, model=None):
+    def get_model_iterator(self, model):
         """
         Return property iterator for the model
         """
-        if model is None:
-            model = self.model
-
         return get_model_mapper(model).attrs
     

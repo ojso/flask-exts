@@ -451,7 +451,7 @@ class SqlaModelView(ModelView, SqlaMixin):
         """
         columns = []
 
-        for p in self._get_model_iterator():
+        for p in self.get_model_iterator(self.model):
             if hasattr(p, "direction"):
                 if self.column_display_all_relations or p.direction.name == "MANYTOONE":
                     columns.append(p.key)
@@ -489,7 +489,7 @@ class SqlaModelView(ModelView, SqlaMixin):
         """
         columns = dict()
 
-        for p in self._get_model_iterator():
+        for p in self.get_model_iterator(self.model):
             if hasattr(p, "columns"):
                 # Sanity check
                 if len(p.columns) > 1:
@@ -673,7 +673,7 @@ class SqlaModelView(ModelView, SqlaMixin):
         if is_relationship(attr):
             filters = []
 
-            for p in self._get_model_iterator(attr.property.mapper.class_):
+            for p in self.get_model_iterator(attr.property.mapper.class_):
                 if hasattr(p, "columns"):
                     # TODO: Check for multiple columns
                     column = p.columns[0]
@@ -861,7 +861,7 @@ class SqlaModelView(ModelView, SqlaMixin):
 
         relations = set()
 
-        for p in self._get_model_iterator():
+        for p in self.get_model_iterator(self.model):
             if hasattr(p, "direction"):
                 # Check if it is pointing to same model
                 if p.mapper.class_ == self.model:

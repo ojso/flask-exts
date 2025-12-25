@@ -1,7 +1,7 @@
-from ...models import reset_models
-from ...models.model_multpk import ModelMultpk
-from ...models.polymorphic import PolyParent, ChildPoly, Child2
-from ...models.polymorphic import ChildCrete, ChildMultpk
+from tests.datastore.sqla.models import reset_models
+from tests.datastore.sqla.models.model_multpk import ModelMultpk
+from tests.datastore.sqla.models.polymorphic import PolyParent, ChildPoly, Child2
+from tests.datastore.sqla.models.polymorphic import ChildCrete, ChildMultpk
 from .test_basic import CustomModelView
 
 

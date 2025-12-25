@@ -1,6 +1,6 @@
 from flask import render_template_string, request
-from ...models import db, reset_models
-from ...models.message import Message
+from tests.datastore.sqla.models import db, reset_models
+from tests.datastore.sqla.models.message import Message
 
 
 def test_render_simple_table(app, client):

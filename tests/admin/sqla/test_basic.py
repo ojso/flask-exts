@@ -6,14 +6,14 @@ from flask_exts.template.form.base_form import BaseForm
 from flask_exts.template.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla import utils
-from ...models import db, reset_models
-from ...models.model1 import EnumChoices
-from ...models.model1 import Model1, Model2, Model3
-from ...models.model1 import ModelHybrid, ModelHybrid2
-from ...models.model1 import ModelNoint
-from ...models.model1 import ModelForm, ModelChild
-from ...models.model1 import ModelMult
-from ...models.model1 import ModelOnetoone1, ModelOnetoone2
+from tests.datastore.sqla.models import db, reset_models
+from tests.datastore.sqla.models.model1 import EnumChoices
+from tests.datastore.sqla.models.model1 import Model1, Model2, Model3
+from tests.datastore.sqla.models.model1 import ModelHybrid, ModelHybrid2
+from tests.datastore.sqla.models.model1 import ModelNoint
+from tests.datastore.sqla.models.model1 import ModelForm, ModelChild
+from tests.datastore.sqla.models.model1 import ModelMult
+from tests.datastore.sqla.models.model1 import ModelOnetoone1, ModelOnetoone2
 
 
 class CustomModelView(SqlaModelView):
