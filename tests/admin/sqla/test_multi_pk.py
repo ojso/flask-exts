@@ -1,4 +1,4 @@
-from tests.datastore.sqla.models import reset_models
+from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.model_multpk import ModelMultpk
 from tests.datastore.sqla.models.polymorphic import PolyParent, ChildPoly, Child2
 from tests.datastore.sqla.models.polymorphic import ChildCrete, ChildMultpk

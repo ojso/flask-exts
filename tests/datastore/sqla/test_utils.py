@@ -3,7 +3,7 @@ from flask_exts.datastore.sqla.utils import get_primary_key
 from flask_exts.datastore.sqla.utils import has_multiple_pks
 from flask_exts.datastore.sqla.utils import stmt_delete_model_pk_ids
 from flask_exts.datastore.sqla.utils import stmt_select_model_pk_values
-from tests.datastore.sqla.models import reset_models
+from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.model_normal import ModelNormal
 from tests.datastore.sqla.models.model_multpk import ModelMultpk
 

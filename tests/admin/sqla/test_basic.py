@@ -6,7 +6,8 @@ from flask_exts.template.form.base_form import BaseForm
 from flask_exts.template.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla import utils
-from tests.datastore.sqla.models import db, reset_models
+from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.model1 import EnumChoices
 from tests.datastore.sqla.models.model1 import Model1, Model2, Model3
 from tests.datastore.sqla.models.model1 import ModelHybrid, ModelHybrid2

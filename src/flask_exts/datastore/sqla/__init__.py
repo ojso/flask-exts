@@ -7,3 +7,8 @@ class Base(DeclarativeBase):
 
 
 db = SQLAlchemy(model_class=Base)
+
+
+def reset_models():
+    db.drop_all()
+    db.create_all()

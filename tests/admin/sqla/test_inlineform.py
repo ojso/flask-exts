@@ -3,7 +3,8 @@ from flask_exts.template.form.base_form import BaseForm
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.template.fields.sqla import InlineModelFormList
 from flask_exts.template.validators.sqla import ItemsRequired
-from tests.datastore.sqla.models import db, reset_models
+from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.user import MyUser, UserInfo, UserEmail, Tag
 from tests.datastore.sqla.models.tree import Tree
 

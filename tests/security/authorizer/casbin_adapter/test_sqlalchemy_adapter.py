@@ -1,13 +1,10 @@
 import re
 from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla import reset_models
 from flask_exts.security.authorizer.sqlalchemy_adapter import CasbinRule
 from flask_exts.security.authorizer.sqlalchemy_adapter import Filter
 from flask_exts.proxies import _security
 
-
-def reset_models():
-    db.drop_all()
-    db.create_all()
 
 
 def fill_db():

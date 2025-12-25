@@ -1,7 +1,8 @@
 from flask_babel import gettext
 from flask_babel import force_locale
 from flask_exts.admin.sqla.view import SqlaModelView
-from tests.datastore.sqla.models import db, reset_models
+from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.model1 import Model1
 from .test_basic import CustomModelView
 

@@ -1,6 +1,6 @@
 import pytest
 from flask_exts.template import rules
-from tests.datastore.sqla.models import reset_models
+from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.model1 import Model1, Model2
 from .test_basic import CustomModelView
 

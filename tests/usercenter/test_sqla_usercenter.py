@@ -1,12 +1,6 @@
 from flask_exts.usercenter.sqla_user_store import SqlaUserStore
 from flask_exts.usercenter.models.user import User
-from flask_exts.datastore.sqla import db
-
-
-def reset_models():
-    db.drop_all()
-    db.create_all()
-
+from flask_exts.datastore.sqla import reset_models
 
 class TestSqlaUserCenter:
     def test_base(self, app):

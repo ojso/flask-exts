@@ -1,5 +1,6 @@
 from flask import render_template_string, request
-from tests.datastore.sqla.models import db, reset_models
+from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.message import Message
 
 def test_render_pager(app, client):

@@ -1,6 +1,7 @@
 from flask import render_template_string, request
-from ...models import db, reset_models
-from ...models.message import Message
+from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla import reset_models
+from tests.datastore.sqla.models.message import Message
 
 
 def test_render_pagination(app, client):
