@@ -182,13 +182,12 @@ class ModelView(ActionView):
         two, you can do something like this::
 
             class MyModelView(BaseModelView):
-                column_formatters = dict(price=lambda v, c, m, p: m.price*2)
+                column_formatters = dict(price=lambda v, m, p: m.price*2)
 
         The Callback function has the prototype::
 
-            def formatter(view, context, model, name):
+            def formatter(view, model, name):
                 # `view` is current administrative view
-                # `context` is instance of jinja2.runtime.Context
                 # `model` is model instance
                 # `name` is property name
                 pass
@@ -197,21 +196,13 @@ class ModelView(ActionView):
     column_formatters_export = None
     """
         Dictionary of list view column formatters to be used for export.
-
         Defaults to column_formatters when set to None.
-
-        Functions the same way as column_formatters except
-        that macros are not supported.
     """
 
     column_formatters_detail = None
     """
         Dictionary of list view column formatters to be used for the detail view.
-
         Defaults to column_formatters when set to None.
-
-        Functions the same way as column_formatters except
-        that macros are not supported.
     """
 
     column_type_formatters: Optional[T_FORMATTERS] = None
@@ -372,7 +363,7 @@ class ModelView(ActionView):
                 column_editable_list = ('name', 'last_name')
     """
 
-    column_choices = None
+    column_choices = {}
     """
         Map choices to columns in list view
 
@@ -380,9 +371,10 @@ class ModelView(ActionView):
 
             class MyModelView(BaseModelView):
                 column_choices = {
-                    'my_column': [
-                        ('db_value', 'display_value'),
-                    ]
+                    'my_column': {
+                        'db_value': 'display_value',
+                        'db_value2': 'display_value2',
+                    }
                 }
     """
 
@@ -779,17 +771,6 @@ class ModelView(ActionView):
         # Search
         self._search_supported = self.init_search()
 
-        # Choices
-        if self.column_choices:
-            self._column_choices_map = dict(
-                [
-                    (column, dict(choices))
-                    for column, choices in self.column_choices.items()
-                ]
-            )
-        else:
-            self.column_choices = self._column_choices_map = dict()
-
         # Column formatters
         if self.column_formatters_export is None:
             self.column_formatters_export = self.column_formatters
@@ -961,7 +942,7 @@ class ModelView(ActionView):
 
     def get_list_columns(self):
         """
-        Uses `get_column_names` to get a list of tuples with the model
+        Get a list of tuples with the model
         field name and formatted name for the columns in `column_list`
         and not in `column_exclude_list`. If `column_list` is not set,
         the columns from `scaffold_list_columns` will be used.
@@ -978,10 +959,7 @@ class ModelView(ActionView):
         and not in `column_details_exclude_list`. If `column_details_list`
         is not set, the columns from `scaffold_list_columns` will be used.
         """
-        try:
-            only_columns = self.column_details_list or self.scaffold_list_columns()
-        except NotImplementedError:
-            raise Exception("Please define column_details_list")
+        only_columns = self.column_details_list or self.scaffold_list_columns()
 
         return self.get_column_names(
             only_columns=only_columns,
@@ -1749,14 +1727,12 @@ class ModelView(ActionView):
         """
         return reduce(getattr, attr.split("."), obj)
 
-    def _get_list_value(
-        self, context, model, name, column_formatters, column_type_formatters
+    def _get_format_value(
+        self, model, name, column_formatters, column_type_formatters
     ):
         """
         Returns the value to be displayed.
 
-        :param context:
-            :py:class:`jinja2.runtime.Context` if available
         :param model:
             Model instance
         :param name:
@@ -1768,11 +1744,11 @@ class ModelView(ActionView):
         """
         column_fmt = column_formatters.get(name)
         if column_fmt is not None:
-            value = column_fmt(self, context, model, name)
+            value = column_fmt(self, model, name)
         else:
             value = self._get_object_attr(model, name)
 
-        choices_map = self._column_choices_map.get(name, {})
+        choices_map = self.column_choices.get(name, {})
         if choices_map:
             return choices_map.get(value) or value
 
@@ -1782,57 +1758,36 @@ class ModelView(ActionView):
                 type_fmt = formatter
                 break
         if type_fmt is not None:
-            try:
-                value = type_fmt(self, value, name)
-            except TypeError:
-                spec = inspect.getfullargspec(type_fmt)
-
-                if len(spec.args) == 2:
-                    warnings.warn(
-                        f"Please update your type formatter {type_fmt} to "
-                        "include additional `name` parameter."
-                    )
-                else:
-                    raise
-
-                value = type_fmt(self, value)
+            value = type_fmt(self, value, name)
 
         return value
 
-    @pass_context
-    def get_list_value(self, context, model, name):
+    def get_list_value(self, model, name):
         """
         Returns the value to be displayed in the list view
 
-        :param context:
-            :py:class:`jinja2.runtime.Context`
         :param model:
             Model instance
         :param name:
             Field name
         """
-        return self._get_list_value(
-            context,
+        return self._get_format_value(
             model,
             name,
             self.column_formatters,
             self.column_type_formatters,
         )
 
-    @pass_context
-    def get_detail_value(self, context, model, name):
+    def get_detail_value(self, model, name):
         """
         Returns the value to be displayed in the detail view
 
-        :param context:
-            :py:class:`jinja2.runtime.Context`
         :param model:
             Model instance
         :param name:
             Field name
         """
-        return self._get_list_value(
-            context,
+        return self._get_format_value(
             model,
             name,
             self.column_formatters_detail,
@@ -1849,8 +1804,7 @@ class ModelView(ActionView):
         :param name:
             Field name
         """
-        return self._get_list_value(
-            None,
+        return self._get_format_value(
             model,
             name,
             self.column_formatters_export,
@@ -2017,7 +1971,7 @@ class ModelView(ActionView):
             # Misc
             enumerate=enumerate,
             get_pk_value=self.get_pk_value,
-            get_value=self.get_list_value,
+            get_model_value=self.get_list_value,
             return_url=self._get_list_url(view_args),
             # Extras
             extra_args=view_args.extra_args,
@@ -2154,7 +2108,7 @@ class ModelView(ActionView):
             template,
             model=model,
             details_columns=self._details_columns,
-            get_value=self.get_detail_value,
+            get_model_value=self.get_detail_value,
             return_url=return_url,
         )
 

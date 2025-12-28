@@ -501,7 +501,7 @@ def test_export_csv(client, admin):
         can_export=True,
         column_list=["col1", "col2"],
         column_labels={"col1": "Str Field", "col2": "Int Field"},
-        column_formatters=dict(col2=lambda v, c, m, p: m.col2 * 2),
+        column_formatters=dict(col2=lambda v, m, p: m.col2 * 2),
         endpoint="types_and_formatters",
     )
     admin.add_view(view6)
@@ -515,8 +515,8 @@ def test_export_csv(client, admin):
         
         can_export=True,
         column_list=["col1", "col2"],
-        column_formatters_export=dict(col2=lambda v, c, m, p: m.col2 * 3),
-        column_formatters=dict(col2=lambda v, c, m, p: m.col2 * 2),  # overridden
+        column_formatters_export=dict(col2=lambda v, m, p: m.col2 * 3),
+        column_formatters=dict(col2=lambda v, m, p: m.col2 * 2),  # overridden
         column_type_formatters_export=type_formatters,
         endpoint="export_types_and_formatters",
     )
@@ -535,7 +535,7 @@ def test_export_csv(client, admin):
 
     # We should be able to specify column_formatters_export
     # and not get an exception if a column_formatter is using a macro
-    def export_formatter(v, c, m, p):
+    def export_formatter(v, m, p):
         return m.col1 if m else ""
 
     view9 = MockModelView(

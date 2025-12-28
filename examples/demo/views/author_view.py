@@ -21,7 +21,7 @@ class FilterLastNameBrown(BaseSQLAFilter):
 
 
 # Customized User model admin
-def phone_number_formatter(view, context, model, name):
+def phone_number_formatter(view, model, name):
     return (
         Markup("<nobr>{}</nobr>".format(model.phone_number))
         if model.phone_number

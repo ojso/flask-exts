@@ -135,14 +135,14 @@
                     {% if view.is_editable(c) %}
                       {% set form = list_forms[get_pk_value(row)] %}
                       {% if form.csrf_token %}
-                        {{ form[c](pk=get_pk_value(row), display_value=get_value(row, c), csrf=form.csrf_token._value()) }}
+                        {{ form[c](pk=get_pk_value(row), display_value=get_model_value(row, c), csrf=form.csrf_token._value()) }}
                       {% elif _template.funcs.csrf_token %}
-                        {{ form[c](pk=get_pk_value(row), display_value=get_value(row, c), csrf=_template.funcs.csrf_token()) }}
+                        {{ form[c](pk=get_pk_value(row), display_value=get_model_value(row, c), csrf=_template.funcs.csrf_token()) }}
                       {% else %}
-                        {{ form[c](pk=get_pk_value(row), display_value=get_value(row, c)) }}
+                        {{ form[c](pk=get_pk_value(row), display_value=get_model_value(row, c)) }}
                       {% endif %}
                     {% else %}
-                      {{ get_value(row, c) }}
+                      {{ get_model_value(row, c) }}
                     {% endif %}
                     </td>
                 {% endfor %}

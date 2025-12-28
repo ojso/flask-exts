@@ -28,13 +28,16 @@ from .filter import FilterConverter
 from .ajax import create_ajax_loader
 from .types import T_COLUMN_LIST
 from .typefmt import DEFAULT_FORMATTERS
-from .sqla_mixin import SqlaMixin
+from ...datastore.sqla.utils import get_model_mapper
+from ...datastore.sqla.utils import get_primary_key
+from ...datastore.sqla.utils import instance_primary_key_value
+from ...datastore.sqla.utils import stmt_delete_model_pk_ids
 
 # Set up logger
 log = logging.getLogger("flask-exts.sqla")
 
 
-class SqlaModelView(ModelView, SqlaMixin):
+class SqlaModelView(ModelView):
     """
     SQLAlchemy model view
     """
@@ -117,11 +120,6 @@ class SqlaModelView(ModelView, SqlaMixin):
                 column_select_related_list = (Post.user, Post.city)
 
         Please refer to the `subqueryload` on list of possible values.
-    """
-
-    column_display_all_relations = False
-    """
-        Controls if list view should display all relations, not only many-to-one.
     """
 
     column_searchable_list = None
@@ -394,7 +392,36 @@ class SqlaModelView(ModelView, SqlaMixin):
         else:
             self._auto_joins = self.column_select_related_list
 
+    def scaffold_pk(self):
+        """
+        Return primary key name from a model. If the primary key consists of multiple columns,
+        return the corresponding tuple
+        """
+        self._primary_key = get_primary_key(self.model)
+
+    def has_multiple_pks(self):
+        return isinstance(self._primary_key, tuple)
     
+    def get_primary_key_value(self, instance):
+        """
+        Return primary key values from an instance.
+        """
+        return instance_primary_key_value(instance)
+
+    def delete_pk_ids(self, ids: list):
+        """
+        Return a delete statement that deletes all rows with primary key in ids
+        """
+        stmt = stmt_delete_model_pk_ids(self.model, ids)
+        result = self.session.execute(stmt)
+        self.session.commit()
+        return result
+    
+    def get_model_iterator(self, model):
+        """
+        Return property iterator for the model
+        """
+        return get_model_mapper(model).attrs
 
     def _apply_path_joins(self, query, joins, path, inner_join=True):
         """
@@ -453,7 +480,7 @@ class SqlaModelView(ModelView, SqlaMixin):
 
         for p in self.get_model_iterator(self.model):
             if hasattr(p, "direction"):
-                if self.column_display_all_relations or p.direction.name == "MANYTOONE":
+                if p.direction.name == "MANYTOONE":
                     columns.append(p.key)
             elif hasattr(p, "columns"):
                 if len(p.columns) > 1:
