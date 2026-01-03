@@ -3,7 +3,7 @@ import enum
 from flask_babel import lazy_gettext
 from . import utils
 from ..model import filter
-
+from ...datastore.sqla.utils import parse_like_term
 
 class BaseSQLAFilter(filter.BaseFilter):
     """
@@ -53,7 +53,7 @@ class FilterNotEqual(BaseSQLAFilter):
 
 class FilterLike(BaseSQLAFilter):
     def apply(self, query, value, alias=None):
-        stmt = utils.parse_like_term(value)
+        stmt = parse_like_term(value)
         return query.filter(self.get_column(alias).ilike(stmt))
 
     def operation(self):
@@ -62,7 +62,7 @@ class FilterLike(BaseSQLAFilter):
 
 class FilterNotLike(BaseSQLAFilter):
     def apply(self, query, value, alias=None):
-        stmt = utils.parse_like_term(value)
+        stmt = parse_like_term(value)
         return query.filter(~self.get_column(alias).ilike(stmt))
 
     def operation(self):

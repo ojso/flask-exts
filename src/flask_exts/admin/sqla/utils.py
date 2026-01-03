@@ -1,24 +1,6 @@
 import types
 from sqlalchemy import tuple_, or_, and_, inspect
-from sqlalchemy.orm.clsregistry import _class_resolver
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.ext.associationproxy import AssociationProxyExtensionType
 from sqlalchemy.sql.operators import eq
-from sqlalchemy.exc import DBAPIError
-from sqlalchemy.orm.attributes import InstrumentedAttribute
-from ...datastore.sqla.utils import need_join
-
-
-def parse_like_term(term):
-    if term.startswith("^"):
-        stmt = "%s%%" % term[1:]
-    elif term.startswith("="):
-        stmt = term[1:]
-    else:
-        stmt = "%%%s%%" % term
-
-    return stmt
-
 
 def filter_foreign_columns(base_table, columns):
     """
@@ -68,95 +50,9 @@ def get_columns_for_field(field):
     return field.property.columns
 
 
-def get_field_with_path(model, name, return_remote_proxy_attr=True):
-    """
-    Resolve property by name and figure out its join path.
-
-    Join path might contain both properties and tables.
-    """
-    path = []
-
-    # For strings, resolve path
-    if isinstance(name, str):
-        # create a copy to keep original model as `model`
-        current_model = model
-
-        value = None
-        for attribute in name.split("."):
-            value = getattr(current_model, attribute)
-
-            if is_association_proxy(value):
-                relation_values = value.attr
-                if return_remote_proxy_attr:
-                    value = value.remote_attr
-            else:
-                relation_values = [value]
-
-            for relation_value in relation_values:
-                if is_relationship(relation_value):
-                    current_model = relation_value.property.mapper.class_
-                    table = current_model.__table__
-                    if need_join(model, table):
-                        path.append(relation_value)
-
-        attr = value
-    else:
-        attr = name
-
-        # Determine joins if table.column (relation object) is provided
-        if isinstance(attr, InstrumentedAttribute) or is_association_proxy(attr):
-            columns = get_columns_for_field(attr)
-
-            if len(columns) > 1:
-                raise Exception("Can only handle one column for %s" % name)
-
-            column = columns[0]
-
-            # TODO: Use SQLAlchemy "path-finder" to find exact join path to the target property
-            if need_join(model, column.table):
-                path.append(column.table)
-
-    return attr, path
 
 
-# copied from sqlalchemy-utils
-def get_hybrid_properties(model):
-    return dict(
-        (key, prop)
-        for key, prop in inspect(model).all_orm_descriptors.items()
-        if isinstance(prop, hybrid_property)
-    )
 
 
-def is_hybrid_property(model, attr_name):
-    if isinstance(attr_name, str):
-        names = attr_name.split(".")
-        last_model = model
-        for i in range(len(names) - 1):
-            attr = getattr(last_model, names[i])
-            if is_association_proxy(attr):
-                attr = attr.remote_attr
-            last_model = attr.property.argument
-            if isinstance(last_model, str):
-                last_model = attr.property._clsregistry_resolve_name(last_model)()
-            elif isinstance(last_model, _class_resolver):
-                last_model = model._decl_class_registry[last_model.arg]
-            elif isinstance(last_model, (types.FunctionType, types.MethodType)):
-                last_model = last_model()
-        last_name = names[-1]
-        return last_name in get_hybrid_properties(last_model)
-    else:
-        return attr_name.name in get_hybrid_properties(model)
 
 
-def is_relationship(attr):
-    return hasattr(attr, "property") and hasattr(attr.property, "direction")
-
-
-def is_association_proxy(attr):
-    if hasattr(attr, "parent"):
-        attr = attr.parent
-    return (
-        hasattr(attr, "extension_type")
-        and attr.extension_type == AssociationProxyExtensionType.ASSOCIATION_PROXY
-    )

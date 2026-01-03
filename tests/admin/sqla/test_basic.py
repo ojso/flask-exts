@@ -8,6 +8,8 @@ from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla import utils
 from flask_exts.datastore.sqla import db
 from flask_exts.datastore.sqla import reset_models
+from flask_exts.datastore.sqla.utils import get_field_with_path
+from flask_exts.datastore.sqla.utils import is_hybrid_property
 from tests.datastore.sqla.models.model1 import EnumChoices
 from tests.datastore.sqla.models.model1 import Model1, Model2, Model3
 from tests.datastore.sqla.models.model1 import ModelHybrid, ModelHybrid2
@@ -221,7 +223,7 @@ def test_list_columns(app, client, admin):
             Model1,
             name="view2",
             endpoint="model1_2",
-            column_list=[Model1.test1, Model1.test3],
+            column_list=["test1", "test3"],
             column_labels=dict(test1="Column1"),
         )
         admin.add_view(view2)
@@ -1423,10 +1425,10 @@ def test_column_filters_sqla_obj(app, admin):
 def test_hybrid_property(app, client, admin):
     with app.app_context():
         reset_models()
-        assert utils.is_hybrid_property(ModelHybrid, "number_of_pixels")
-        assert utils.is_hybrid_property(ModelHybrid, "number_of_pixels_str")
-        assert not utils.is_hybrid_property(ModelHybrid, "height")
-        assert not utils.is_hybrid_property(ModelHybrid, "width")
+        assert is_hybrid_property(ModelHybrid, "number_of_pixels")
+        assert is_hybrid_property(ModelHybrid, "number_of_pixels_str")
+        assert not is_hybrid_property(ModelHybrid, "height")
+        assert not is_hybrid_property(ModelHybrid, "width")
 
         db.session.add(ModelHybrid(id=1, name="test_row_1", width=25, height=25))
         db.session.add(ModelHybrid(id=2, name="test_row_2", width=10, height=10))
@@ -1472,8 +1474,8 @@ def test_hybrid_property(app, client, admin):
 def test_hybrid_property_nested(app, client, admin):
     with app.app_context():
         reset_models()
-        assert utils.is_hybrid_property(ModelHybrid2, "owner.fullname")
-        assert not utils.is_hybrid_property(ModelHybrid2, "owner.firstname")
+        assert is_hybrid_property(ModelHybrid2, "owner.fullname")
+        assert not is_hybrid_property(ModelHybrid2, "owner.firstname")
 
         db.session.add(ModelHybrid(id=1, firstname="John", lastname="Dow"))
         db.session.add(ModelHybrid(id=2, firstname="Jim", lastname="Smith"))
@@ -2271,15 +2273,15 @@ def test_advanced_joins(app, admin):
         admin.add_view(view3)
 
         # Test joins
-        attr, path = utils.get_field_with_path(Modeljoin2, "model1.val1")
+        attr, path = get_field_with_path(Modeljoin2, "model1.val1")
         assert attr == Modeljoin1.val1
         assert path == [Modeljoin2.model1]
 
-        attr, path = utils.get_field_with_path(Modeljoin1, "model2.val2")
+        attr, path = get_field_with_path(Modeljoin1, "model2.val2")
         assert attr == Modeljoin2.val2
         assert id(path[0]) == id(Modeljoin1.model2)
 
-        attr, path = utils.get_field_with_path(Modeljoin3, "model2.model1.val1")
+        attr, path = get_field_with_path(Modeljoin3, "model2.model1.val1")
         assert attr == Modeljoin1.val1
         assert path == [Modeljoin3.model2, Modeljoin2.model1]
 
@@ -2293,7 +2295,7 @@ def test_advanced_joins(app, admin):
         assert alias is not None
 
         # Check if another join would use same path
-        attr, path = utils.get_field_with_path(Modeljoin2, "model1.test")
+        attr, path = get_field_with_path(Modeljoin2, "model1.test")
         q2, joins, alias = view2._apply_path_joins(query, joins, path)
 
         assert len(joins) == 2
@@ -2304,8 +2306,8 @@ def test_advanced_joins(app, admin):
 
         assert alias is not None
 
-        # Check if normal properties are supported by tools.get_field_with_path
-        attr, path = utils.get_field_with_path(Modeljoin2, Modeljoin1.test)
+        # Check if normal properties are supported by get_field_with_path
+        attr, path = get_field_with_path(Modeljoin2, "model1.test")
         assert attr == Modeljoin1.test
         assert path == [Modeljoin1.__table__]
 

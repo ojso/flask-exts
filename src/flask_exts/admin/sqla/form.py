@@ -32,12 +32,11 @@ from ..model.form import (
     FieldPlaceholder,
 )
 
-from .utils import (
-    filter_foreign_columns,
-    get_field_with_path,
-    is_association_proxy,
-    is_relationship,
-)
+from .utils import filter_foreign_columns
+from ...datastore.sqla.utils import is_relationship
+from ...datastore.sqla.utils import is_association_proxy
+from ...datastore.sqla.utils import get_field_with_path
+
 from .ajax import create_ajax_loader
 
 
@@ -499,7 +498,7 @@ def get_form(
                 return name, FieldPlaceholder(extra_fields[name])
 
             column, path = get_field_with_path(
-                model, name, return_remote_proxy_attr=False
+                model, name
             )
 
             if path and not (is_relationship(column) or is_association_proxy(column)):

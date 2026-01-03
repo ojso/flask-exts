@@ -4,10 +4,8 @@ from ...datastore.sqla import db
 from ..model.ajax import AjaxModelLoader, DEFAULT_PAGE_SIZE
 from ...datastore.sqla.utils import get_primary_key
 from ...datastore.sqla.utils import has_multiple_pks
-from .utils import (
-    is_relationship,
-    is_association_proxy,
-)
+from ...datastore.sqla.utils import is_association_proxy
+from ...datastore.sqla.utils import is_relationship
 
 
 class QueryAjaxModelLoader(AjaxModelLoader):
