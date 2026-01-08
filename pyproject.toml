@@ -31,7 +31,6 @@ dependencies = [
     "Flask>=3.0",
     "WTForms>=3.0",
     "flask-babel>=4.0",
-    "Flask-SQLAlchemy>=3.0",
     "Flask-Login>=0.6",
     "tablib>=3.0",
     "casbin>=1.0",

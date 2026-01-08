@@ -1,14 +1,8 @@
-from sqlalchemy.orm import DeclarativeBase
-from flask_sqlalchemy import SQLAlchemy
+from .db import Db
 
-
-class Base(DeclarativeBase):
-    pass
-
-
-db = SQLAlchemy(model_class=Base)
+db = Db()
 
 
 def reset_models():
-    db.drop_all()
-    db.create_all()
+    db.Model.metadata.drop_all(db.engine)
+    db.Model.metadata.create_all(db.engine)

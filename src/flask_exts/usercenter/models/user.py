@@ -12,7 +12,7 @@ from ...datastore.sqla.orm import Table
 from ...datastore.sqla.orm import Column
 from ...datastore.sqla.orm import MutableList
 from ...datastore.sqla.orm import JSON
-from .role import Role
+# from .role import Role
 from .user_profile import UserProfile
 
 user_role_table = Table(

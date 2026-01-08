@@ -7,6 +7,7 @@ from flask_exts.template.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla import utils
 from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla.orm import Mapped,mapped_column
 from flask_exts.datastore.sqla import reset_models
 from flask_exts.datastore.sqla.utils import get_field_with_path
 from flask_exts.datastore.sqla.utils import is_hybrid_property
@@ -199,7 +200,7 @@ def test_model(app, client, admin):
 @pytest.mark.xfail(raises=Exception)
 def test_no_pk(admin):
     class Model(db.Model):
-        test = db.Column(db.Integer)
+        test:Mapped[int]
 
     view = CustomModelView(Model)
     admin.add_view(view)

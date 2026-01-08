@@ -1,9 +1,12 @@
-from enum import Enum
+import enum
 from typing import Optional, List
+from typing import Literal
+from sqlalchemy import Enum
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import composite
+from sqlalchemy.orm import synonym
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.schema import Table
 from sqlalchemy.schema import Column
@@ -18,6 +21,7 @@ class Point:
     x: int
     y: int
 
+Status = Literal["pending", "received", "completed"]
 
 class Demo(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -28,8 +32,13 @@ class Demo(db.Model):
     y: Mapped[int]
     start: Mapped[int]
     end: Mapped[int]
-
+    status:Mapped[str]
+    enum_status: Mapped[Status] = mapped_column(
+        Enum("pending", "received", "completed", name="status_enum")
+    )
     point: Mapped[Point] = composite("x", "y")
+
+    syn_status = synonym("status")
 
     @hybrid_property
     def full_name(self) -> str:

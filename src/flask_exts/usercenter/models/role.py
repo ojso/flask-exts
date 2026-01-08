@@ -13,3 +13,4 @@ class Role(db.Model):
     updated_at: Mapped[datetime] = mapped_column(
         default=datetime.now, onupdate=datetime.now
     )
+
