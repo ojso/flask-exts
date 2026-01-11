@@ -1,44 +1,32 @@
 from . import db
-from flask_exts.datastore.sqla.orm import Mapped
-from flask_exts.datastore.sqla.orm import mapped_column
-from flask_exts.datastore.sqla.orm import relationship
-from flask_exts.datastore.sqla.orm import ForeignKey
-from flask_exts.datastore.sqla.orm import Table
-from flask_exts.datastore.sqla.orm import Column
-
+from . import Mapped
+from . import mapped_column
+from . import ForeignKey
+from . import relationship
 
 class MyUser(db.Model):
-    __tablename__ = "my_user"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
 
 
 class Tag(db.Model):
-    __tablename__ = "tags"
-
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
 
 
 class UserInfo(db.Model):
-    __tablename__ = "user_info"
     id: Mapped[int] = mapped_column(primary_key=True)
     key: Mapped[str]
     val: Mapped[str]
-    user_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey(MyUser.id))
-    user = db.relationship(
-        MyUser,
-        backref=db.backref("info", cascade="all, delete-orphan", single_parent=True),
-    )
-
-    tag_id = db.Column(db.Integer, db.ForeignKey(Tag.id))
-    tag = db.relationship(Tag, backref="user_info")
+    user_id = mapped_column(ForeignKey("my_user.id"))
+    user: Mapped[MyUser] = relationship(back_populates="info",cascade="all, delete-orphan", single_parent=True)
+    tag_id = mapped_column(ForeignKey("tag.id"))
+    tag:Mapped[Tag] = relationship(backref="user_info")
 
 
 class UserEmail(db.Model):
-    __tablename__ = "user_email"
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String, nullable=False, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email:Mapped[str]=mapped_column(nullable=False, unique=True)
     verified_at = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey(MyUser.id))
     user = db.relationship(

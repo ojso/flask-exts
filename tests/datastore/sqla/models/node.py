@@ -1,8 +1,8 @@
 from . import db
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+from . import ForeignKey
+from . import Mapped
+from . import mapped_column
+from . import relationship
 
 
 class Node(db.Model):

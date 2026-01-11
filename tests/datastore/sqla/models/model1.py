@@ -1,10 +1,10 @@
-from enum import Enum
+import enum
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import cast
 from . import db
 
 
-class EnumChoices(Enum):
+class EnumChoices(enum.Enum):
     first = 1
     second = 2
 

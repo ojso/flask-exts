@@ -1,40 +1,49 @@
+from datetime import datetime
 import enum
 from typing import Optional, List
-from typing import Literal
-from sqlalchemy import Enum
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm import composite
-from sqlalchemy.orm import synonym
-from sqlalchemy.schema import ForeignKey
-from sqlalchemy.schema import Table
-from sqlalchemy.schema import Column
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.associationproxy import AssociationProxy
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.ext.hybrid import hybrid_method
-from . import db
+# from typing import Literal
 
+from . import db
+from . import Enum
+from . import JSON
+from . import Mapped
+from . import mapped_column
+from . import relationship
+from . import composite
+from . import synonym
+from . import Table
+from . import Column
+from . import ForeignKey
+from . import hybrid_property
+from . import hybrid_method
+from . import association_proxy
+from . import AssociationProxy
 
 class Point:
     x: int
     y: int
 
-Status = Literal["pending", "received", "completed"]
+# Status = Literal["pending", "received", "completed"]
+class Status(enum.Enum):
+    PENDING = "pending"
+    RECEIVED = "received"
+    COMPLETED = "completed"
+
 
 class Demo(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     first_name: Mapped[str]
     last_name: Mapped[str]
+    data: Mapped[dict] = mapped_column(JSON)
     x: Mapped[int]
     y: Mapped[int]
     start: Mapped[int]
     end: Mapped[int]
-    status:Mapped[str]
-    enum_status: Mapped[Status] = mapped_column(
-        Enum("pending", "received", "completed", name="status_enum")
+    status: Mapped[Status]
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    updated_at: Mapped[datetime] = mapped_column(
+        default=datetime.now, onupdate=datetime.now
     )
     point: Mapped[Point] = composite("x", "y")
 
@@ -60,7 +69,7 @@ class Demo(db.Model):
 class Address(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     street: Mapped[str]
-    demo_id: Mapped[int] = mapped_column(ForeignKey("demo.id"))    
+    demo_id = mapped_column(ForeignKey("demo.id"))    
     demo: Mapped["Demo"] = relationship(back_populates="addresses")
 
 

@@ -1,6 +1,6 @@
 from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.model_multpk import ModelMultpk
-from tests.datastore.sqla.models.polymorphic import PolyParent, ChildPoly, Child2
+from tests.datastore.sqla.models.polymorphic import Employee, ChildPoly, Manager
 from tests.datastore.sqla.models.polymorphic import ChildCrete, ChildMultpk
 from .test_basic import CustomModelView
 
@@ -63,7 +63,7 @@ def test_single_table_inheritance(app, client, admin):
         reset_models()
 
         view = CustomModelView(
-            Child2,
+            Manager,
             form_columns=["id", "test", "name"],
             endpoint="child",
         )

@@ -1,35 +1,23 @@
+from typing import Optional
 from . import db
+from . import Mapped
+from . import mapped_column
 
 
-class PolyParent(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    test = db.Column(db.String)
+class Employee(db.Model):
+    __tablename__ = "employee"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    type: Mapped[str]
+    engineer_info: Mapped[Optional[str]]
+    manager_info: Mapped[Optional[str]]
 
-    discriminator = db.Column("type", db.String(50))
-    __mapper_args__ = {"polymorphic_on": discriminator}
-
-
-class ChildPoly(PolyParent):
-    __tablename__ = "children"
-    __mapper_args__ = {"polymorphic_identity": "child"}
-
-    id = db.Column(db.ForeignKey(PolyParent.id), primary_key=True)
-    name = db.Column(db.String(100))
+    __mapper_args__ = {"polymorphic_identity": "employee", "polymorphic_on": type}
 
 
-class Child2(PolyParent):
-    __mapper_args__ = {"polymorphic_identity": "child2"}
-    name = db.Column(db.String(100))
+class Engineer(Employee):
+    __mapper_args__ = {"polymorphic_identity": "engineer"}
 
-class ChildCrete(PolyParent):
-    __mapper_args__ = {"concrete": True,"polymorphic_identity": "child3"}
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    test = db.Column(db.String)
 
-class ChildMultpk(PolyParent):
-    __mapper_args__ = {"concrete": True,"polymorphic_identity": "child4"}
-    id = db.Column(db.Integer, primary_key=True)
-    id2 = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    test = db.Column(db.String)
+class Manager(Employee):
+    __mapper_args__ = {"polymorphic_identity": "manager"}
