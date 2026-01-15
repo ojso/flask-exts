@@ -1,6 +1,6 @@
 from flask_exts.usercenter.sqla_user_store import SqlaUserStore
 from flask_exts.usercenter.models.user import User
-from flask_exts.datastore.sqla import reset_models
+from flask_exts.datastore.sqla import db
 
 class TestSqlaUserCenter:
     def test_base(self, app):
@@ -8,7 +8,7 @@ class TestSqlaUserCenter:
         assert uc.user_class == User
 
         with app.app_context():
-            reset_models()
+            db.reset_models()
             r, u1 = uc.create_user(username="u1", password="u1", email="u1")
             assert r == "ok"
             assert u1 is not None

@@ -8,7 +8,6 @@ from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla import utils
 from flask_exts.datastore.sqla import db
 from flask_exts.datastore.sqla.orm import Mapped,mapped_column
-from flask_exts.datastore.sqla import reset_models
 from flask_exts.datastore.sqla.utils import get_field_with_path
 from flask_exts.datastore.sqla.utils import is_hybrid_property
 from tests.datastore.sqla.models.model1 import EnumChoices
@@ -97,7 +96,7 @@ def fill_db():
 
 def test_model(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(Model1)
         admin.add_view(view)
 
@@ -208,7 +207,7 @@ def test_no_pk(admin):
 
 def test_list_columns(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         # test column_list with a list of strings
         view1 = CustomModelView(
@@ -246,7 +245,7 @@ def test_list_columns(app, client, admin):
 
 def test_complex_list_columns(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         m1 = Model1("model1_val1")
         db.session.add(m1)
@@ -265,7 +264,7 @@ def test_complex_list_columns(app, client, admin):
 
 def test_exclude_columns(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(
             Model1,
             column_exclude_list=[
@@ -295,7 +294,7 @@ def test_exclude_columns(app, client, admin):
 
 def test_column_searchable_list(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(
             Model2, column_searchable_list=["string_field", "int_field"]
@@ -325,7 +324,7 @@ def test_column_searchable_list(app, client, admin):
 
 def test_extra_args_search(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view1 = CustomModelView(
             Model1,
             column_searchable_list=[
@@ -349,7 +348,7 @@ def test_extra_args_search(app, client, admin):
 
 def test_extra_args_filter(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view2 = CustomModelView(
             Model2,
@@ -369,7 +368,7 @@ def test_extra_args_filter(app, client, admin):
 
 def test_complex_searchable_list(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view1 = CustomModelView(Model2, column_searchable_list=["model1.test1"])
         admin.add_view(view1)
@@ -397,7 +396,7 @@ def test_complex_searchable_list(app, client, admin):
 
 def test_complex_searchable_list_missing_children(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(
             Model1, column_searchable_list=["test1", "model2.string_field"]
@@ -413,7 +412,7 @@ def test_complex_searchable_list_missing_children(app, client, admin):
 
 def test_column_editable_list(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view1 = CustomModelView(Model1, column_editable_list=["test1", "enum_field"])
         admin.add_view(view1)
@@ -494,7 +493,7 @@ def test_column_editable_list(app, client, admin):
 
 def test_details_view(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view_no_details = CustomModelView(Model1, name="view1")
         admin.add_view(view_no_details)
@@ -543,7 +542,7 @@ def test_details_view(app, client, admin):
 def test_editable_list_special_pks(app, client, admin):
     """Tests editable list view + a primary key with special characters"""
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(Model3, column_editable_list=["val1"])
         admin.add_view(view)
 
@@ -568,7 +567,7 @@ def test_editable_list_special_pks(app, client, admin):
 
 def test_column_filters(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view1 = CustomModelView(Model1, name="view1", column_filters=["test1"])
         admin.add_view(view1)
@@ -1415,7 +1414,7 @@ def test_column_filters(app, client, admin):
 
 def test_column_filters_sqla_obj(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(Model1, column_filters=[Model1.test1])
         admin.add_view(view)
@@ -1425,7 +1424,7 @@ def test_column_filters_sqla_obj(app, admin):
 
 def test_hybrid_property(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         assert is_hybrid_property(ModelHybrid, "number_of_pixels")
         assert is_hybrid_property(ModelHybrid, "number_of_pixels_str")
         assert not is_hybrid_property(ModelHybrid, "height")
@@ -1474,7 +1473,7 @@ def test_hybrid_property(app, client, admin):
 
 def test_hybrid_property_nested(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         assert is_hybrid_property(ModelHybrid2, "owner.fullname")
         assert not is_hybrid_property(ModelHybrid2, "owner.firstname")
 
@@ -1500,7 +1499,7 @@ def test_hybrid_property_nested(app, client, admin):
 
 def test_url_args(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(
             Model1,
@@ -1550,7 +1549,7 @@ def test_url_args(app, client, admin):
 
 def test_non_int_pk(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(ModelNoint, form_columns=["id", "test"])
         admin.add_view(view)
 
@@ -1571,7 +1570,7 @@ def test_non_int_pk(app, client, admin):
 
 def test_form_columns(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view1 = CustomModelView(
             ModelForm,
             endpoint="view1",
@@ -1613,7 +1612,7 @@ def test_form_columns(app, admin):
 @pytest.mark.xfail(raises=Exception)
 def test_complex_form_columns(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         # test using a form column in another table
         view = CustomModelView(Model2, form_columns=["model1.test1"])
@@ -1622,7 +1621,7 @@ def test_complex_form_columns(app, admin):
 
 def test_form_args(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         shared_form_args = {"test1": {"validators": [validators.Regexp("test")]}}
 
         view = CustomModelView(Model1, form_args=shared_form_args)
@@ -1639,7 +1638,7 @@ def test_form_args(app, admin):
 
 def test_form_override(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view1 = CustomModelView(Model1, name="view1", endpoint="view1")
         view2 = CustomModelView(
             Model1,
@@ -1656,7 +1655,7 @@ def test_form_override(app, admin):
 
 def test_form_onetoone(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view1 = CustomModelView(ModelOnetoone1, endpoint="view1")
         view2 = CustomModelView(ModelOnetoone2, endpoint="view2")
         admin.add_view(view1)
@@ -1682,7 +1681,7 @@ def test_relations():
 
 def test_on_model_change_delete(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         class ModelView(CustomModelView):
             def on_model_change(self, form, model, is_created):
@@ -1712,7 +1711,7 @@ def test_on_model_change_delete(app, client, admin):
 
 def test_multiple_delete(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         db.session.add_all([Model1("a"), Model1("b"), Model1("c")])
         db.session.commit()
@@ -1732,7 +1731,7 @@ def test_multiple_delete(app, client, admin):
 
 def test_default_sort(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         db.session.add_all([Model1("c", "x"), Model1("b", "x"), Model1("a", "y")])
         db.session.commit()
@@ -1799,7 +1798,7 @@ def test_default_sort(app, admin):
 
 def test_complex_sort(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         m1 = Model1(test1="c", test2="x")
         db.session.add(m1)
@@ -1855,7 +1854,7 @@ def test_complex_sort(app, client, admin):
 @pytest.mark.xfail(raises=Exception)
 def test_complex_sort_exception(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         # test column_sortable_list on a related table's column object
         view = CustomModelView(
@@ -1873,7 +1872,7 @@ def test_complex_sort_exception(app, admin):
 
 def test_default_complex_sort(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         m1 = Model1("b")
         db.session.add(m1)
@@ -1914,7 +1913,7 @@ def test_default_complex_sort(app, admin):
 
 def test_extra_fields(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(
             Model1,
@@ -1934,7 +1933,7 @@ def test_extra_fields(app, client, admin):
 
 def test_extra_field_order(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(
             Model1,
@@ -1958,7 +1957,7 @@ def test_custom_form_base(app, admin):
         class TestForm(BaseForm):
             pass
 
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(Model1, form_base_class=TestForm)
         admin.add_view(view)
@@ -1971,7 +1970,7 @@ def test_custom_form_base(app, admin):
 
 def test_ajax_fk(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(
             Model2,
@@ -2098,7 +2097,7 @@ def test_ajax_fk_multi(app, client, admin):
 
 def test_simple_list_pager(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         class TestModelView(CustomModelView):
             simple_list_pager = True
@@ -2115,7 +2114,7 @@ def test_simple_list_pager(app, admin):
 
 def test_customising_page_size(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         db.session.add_all([Model1(str(f"instance-{x+1:03d}")) for x in range(101)])
 
@@ -2201,7 +2200,7 @@ def test_customising_page_size(app, client, admin):
 
 def test_unlimited_page_size(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         db.session.add_all(
             [
@@ -2319,7 +2318,7 @@ def test_advanced_joins(app, admin):
 
 def test_multipath_joins(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(ModelMult, filters=["first.test"])
         admin.add_view(view)
 
@@ -2329,7 +2328,7 @@ def test_multipath_joins(app, client, admin):
 
 def test_model_default(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         class ModelView(CustomModelView):
             pass
@@ -2343,7 +2342,7 @@ def test_model_default(app, client, admin):
 
 def test_export_csv(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         for x in range(5):
             fill_db()

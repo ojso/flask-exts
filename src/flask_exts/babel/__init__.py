@@ -9,6 +9,9 @@ babel = Babel()
 
 
 def babel_init_app(app):
+    if "babel" in app.extensions:
+        raise RuntimeError("A 'Babel' instance has already been registered.")    
+
     wtforms_domain = {"translation_directory": messages_path(), "domain": "wtforms"}
 
     exts_domain = {

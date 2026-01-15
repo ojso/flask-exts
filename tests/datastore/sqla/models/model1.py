@@ -1,7 +1,11 @@
 import enum
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import cast
+from datetime import datetime, date, time
 from . import db
+from . import Mapped
+from . import mapped_column
+from . import Enum
+from . import hybrid_property
+from . import cast
 
 
 class EnumChoices(enum.Enum):
@@ -10,19 +14,19 @@ class EnumChoices(enum.Enum):
 
 
 class Model1(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    test1 = db.Column(db.String(20))
-    test2 = db.Column(db.Unicode(20))
-    test3 = db.Column(db.Text)
-    test4 = db.Column(db.Text)
-    bool_field = db.Column(db.Boolean)
-    date_field = db.Column(db.Date)
-    time_field = db.Column(db.Time)
-    datetime_field = db.Column(db.DateTime)
-    email_field = db.Column(db.String)
-    enum_field = db.Column(db.Enum("model1_v1", "model1_v2"), nullable=True)
-    enum_type_field = db.Column(db.Enum(EnumChoices), nullable=True)
-    choice_field = db.Column(db.String, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    test1:Mapped[str]
+    test2:Mapped[str]
+    test3:Mapped[str]
+    test4:Mapped[str]
+    bool_field: Mapped[bool]
+    date_field: Mapped[date]
+    time_field: Mapped[time]
+    datetime_field: Mapped[datetime]
+    email_field:Mapped[str]
+    enum_field: Mapped[str] = mapped_column(Enum("model1_v1", "model1_v2"), nullable=True)
+    enum_type_field = mapped_column(Enum(EnumChoices), nullable=True)
+    choice_field:Mapped[str]
 
     def __init__(
         self,
@@ -55,8 +59,8 @@ class Model1(db.Model):
 
 
 class Model2(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    string_field = db.Column(db.String)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    string_field:Mapped[str]
     string_field_default = db.Column(db.Text, nullable=False, default="")
     string_field_empty_default = db.Column(db.Text, nullable=False, default="")
     int_field = db.Column(db.Integer)
@@ -97,7 +101,7 @@ class Model3(db.Model):
 
 
 class ModelHybrid(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     name = db.Column(db.String)
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)
@@ -123,7 +127,7 @@ class ModelHybrid(db.Model):
 
 
 class ModelHybrid2(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     name = db.Column(db.String)
     owner_id = db.Column(
         db.Integer, db.ForeignKey("model_hybrid.id", ondelete="CASCADE")
@@ -132,12 +136,12 @@ class ModelHybrid2(db.Model):
 
 
 class ModelNoint(db.Model):
-    id = db.Column(db.String, primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     test = db.Column(db.String)
 
 
 class ModelForm(db.Model):
-    id = db.Column(db.String, primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     int_field = db.Column(db.Integer)
     datetime_field = db.Column(db.DateTime)
     text_field = db.Column(db.UnicodeText)
@@ -145,15 +149,15 @@ class ModelForm(db.Model):
 
 
 class ModelChild(db.Model):
-    id = db.Column(db.String, primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     model_id = db.Column(db.Integer, db.ForeignKey(ModelForm.id))
     model = db.relationship(ModelForm, backref="backref")
     enum_field = db.Column(db.Enum("model1_v1", "model1_v2"), nullable=True)
     choice_field = db.Column(db.String, nullable=True)
 
 class ModelMult(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    val2 = db.Column(db.String(20))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    val2:Mapped[str]
 
     first_id = db.Column(db.Integer, db.ForeignKey(Model1.id))
     first = db.relationship(Model1, backref="first", foreign_keys=[first_id])
@@ -162,11 +166,11 @@ class ModelMult(db.Model):
     second = db.relationship(Model1, backref="second", foreign_keys=[second_id])
 
 class ModelOnetoone1(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    test = db.Column(db.String)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    test:Mapped[str]
 
 class ModelOnetoone2(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     model1_id = db.Column(db.Integer, db.ForeignKey(ModelOnetoone1.id))
     model1 = db.relationship(

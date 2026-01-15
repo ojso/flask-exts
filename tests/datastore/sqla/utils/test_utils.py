@@ -3,7 +3,6 @@ from flask_exts.datastore.sqla.utils import get_primary_key
 from flask_exts.datastore.sqla.utils import has_multiple_pks
 from flask_exts.datastore.sqla.utils import stmt_delete_model_pk_ids
 from flask_exts.datastore.sqla.utils import stmt_select_model_pk_values
-from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.model_normal import ModelNormal
 from tests.datastore.sqla.models.model_multpk import ModelMultpk
 
@@ -12,7 +11,7 @@ def test_normal(app):
     with app.app_context():
         assert get_primary_key(ModelNormal) == "id"
         assert has_multiple_pks(ModelNormal) is False
-        reset_models()
+        db.reset_models()
         m1 = ModelNormal(id=1, data="first")
         m2 = ModelNormal(id=2, data="second")
         m3 = ModelNormal(id=3, data="third")
@@ -51,7 +50,7 @@ def test_multiple_pk(app):
     with app.app_context():
         assert get_primary_key(ModelMultpk) == ("id", "id2")
         assert has_multiple_pks(ModelMultpk) is True
-        reset_models()
+        db.reset_models()
         m1 = ModelMultpk(id=1, id2=1, data="first")
         m2 = ModelMultpk(id=1, id2=2, data="second")
         m3 = ModelMultpk(id=2, id2=1, data="third")

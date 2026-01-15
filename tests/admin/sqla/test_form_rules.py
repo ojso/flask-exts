@@ -1,13 +1,13 @@
 import pytest
 from flask_exts.template import rules
-from flask_exts.datastore.sqla import reset_models
+from flask_exts.datastore.sqla import db
 from tests.datastore.sqla.models.model1 import Model1, Model2
 from .test_basic import CustomModelView
 
 
 def test_form_rules(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(
             Model1, form_rules=("test2", "test1", rules.Field("test4"))
         )
@@ -26,7 +26,7 @@ def test_form_rules(app, client, admin):
 
 def test_rule_header(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(Model1, form_create_rules=(rules.Header("hello"),))
         admin.add_view(view)
@@ -38,7 +38,7 @@ def test_rule_header(app, client, admin):
 
 def test_rule_field_set(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(
             Model1,
             form_create_rules=(rules.FieldSet(["test2", "test1", "test4"], "header"),),
@@ -60,7 +60,7 @@ def test_rule_field_set(app, client, admin):
 
 def test_rule_inlinefieldlist(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(
             Model1,
             inline_models=(Model2,),
@@ -74,7 +74,7 @@ def test_rule_inlinefieldlist(app, client, admin):
 
 def test_inline_model_rules(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(
             Model1,
             inline_models=[(Model2, dict(form_rules=("string_field", "bool_field")))],

@@ -1,13 +1,12 @@
 from flask import render_template_string, request
 from flask_exts.datastore.sqla import db
-from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.message import Message
 
 
 def test_render_pagination(app, client):
     @app.route("/pagination")
     def test():
-        reset_models()
+        db.reset_models()
         for i in range(100):  # noqa: F841
             msg = Message()
             db.session.add(msg)

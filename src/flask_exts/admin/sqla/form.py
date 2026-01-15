@@ -491,7 +491,6 @@ def get_form(
     properties = ((p.key, p) for p in mapper.attrs)
 
     if only:
-
         def find(name):
             # If field is in extra_fields, it has higher priority
             if extra_fields and name in extra_fields:

@@ -2,14 +2,13 @@ from flask_babel import gettext
 from flask_babel import force_locale
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.datastore.sqla import db
-from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.model1 import Model1
 from .test_basic import CustomModelView
 
 
 def test_column_label_translation(app, client, admin):
     with app.test_request_context():
-        reset_models()
+        db.reset_models()
 
         with force_locale("zh"):
             label = gettext("Name")

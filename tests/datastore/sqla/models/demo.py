@@ -1,9 +1,19 @@
 from datetime import datetime
+from datetime import date
+from datetime import time
 import enum
 from typing import Optional, List
 # from typing import Literal
 
 from . import db
+from . import Integer
+from . import Boolean
+from . import String
+from . import Float
+from . import DateTime
+from . import Date
+from . import Time
+from . import LargeBinary
 from . import Enum
 from . import JSON
 from . import Mapped
@@ -36,6 +46,10 @@ class Demo(db.Model):
     first_name: Mapped[str]
     last_name: Mapped[str]
     data: Mapped[dict] = mapped_column(JSON)
+    bool_field: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    date_field: Mapped[date] = mapped_column(Date, nullable=True)
+    time_field: Mapped[time] = mapped_column(Time, nullable=True)
+    datetime_field: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     x: Mapped[int]
     y: Mapped[int]
     start: Mapped[int]

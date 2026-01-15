@@ -3,7 +3,6 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import delete
-
 from ...datastore.sqla import db
 
 
@@ -41,7 +40,7 @@ class Filter:
     v5 = []
 
 
-class SqlalchemyAdapter(persist.Adapter, persist.adapters.UpdateAdapter):
+class CasbinSqlalchemyAdapter(persist.Adapter, persist.adapters.UpdateAdapter):
     """the interface for Casbin adapters."""
 
     def __init__(self, filtered=False):

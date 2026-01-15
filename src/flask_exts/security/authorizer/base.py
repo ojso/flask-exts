@@ -3,13 +3,9 @@ from abc import ABC, abstractmethod
 
 class Authorizer(ABC):
     root_rolename = "admin"
-    root_roleid = None
 
     @abstractmethod
     def allow(self, user, resource, method): ...
-
-    def set_root_roleid(self, id):
-        self.root_roleid = id
 
     def set_root_rolename(self, name):
         self.root_rolename = name

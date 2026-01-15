@@ -4,7 +4,6 @@ from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.template.fields.sqla import InlineModelFormList
 from flask_exts.template.validators.sqla import ItemsRequired
 from flask_exts.datastore.sqla import db
-from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.user import MyUser, UserInfo, UserEmail, Tag
 from tests.datastore.sqla.models.node import Node
 
@@ -13,7 +12,7 @@ from tests.datastore.sqla.models.node import Node
 
 def test_inline_form(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         class UserModelView(SqlaModelView):
             inline_models = (UserInfo,)
@@ -92,7 +91,7 @@ def test_inline_form(app, client, admin):
 
 def test_inline_form_required(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         class UserModelView(SqlaModelView):
             inline_models = (UserEmail,)
@@ -129,7 +128,7 @@ def test_inline_form_required(app, client, admin):
 
 def test_inline_form_ajax_fk(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         class UserModelView(SqlaModelView):
             opts = {"form_ajax_refs": {"tag": {"fields": ["name"]}}}
@@ -150,7 +149,7 @@ def test_inline_form_ajax_fk(app, admin):
 
 def test_inline_form_self(app, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         class TreeView(SqlaModelView):
             inline_models = (Node,)
@@ -165,7 +164,7 @@ def test_inline_form_self(app, admin):
 
 def test_inline_form_base_class(app, client, admin):
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         # Customize error message
         class StubTranslation:

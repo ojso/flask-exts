@@ -10,27 +10,23 @@ from sqlalchemy.orm import QueryableAttribute
 from sqlalchemy.orm import MapperProperty
 from sqlalchemy.orm import InstrumentedAttribute
 
+from sqlalchemy.orm import Relationship
 from sqlalchemy.orm import synonym
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.ext.associationproxy import AssociationProxy
-
 from sqlalchemy.schema import Column
-from sqlalchemy.orm import Relationship
+
 from .models.demo import Demo
 from flask_exts.datastore.sqla import db
 
+
 class TestMapper:
-
-    def test_db_mappers(self):
+    def test_mappers(self):
         for mapper in db.Model.registry.mappers:
-            cls = mapper.class_
-            print(cls.__name__)
-            print(mapper.local_table)
-            print(len(mapper.tables))
+            print(mapper.class_.__name__, mapper.local_table)
 
-
-    def test_model_attrs(self):
+    def test_inspect(self):
         Model = Demo
         mapper = inspect(Model)
 
@@ -53,18 +49,22 @@ class TestMapper:
             .difference(set(mapper.synonyms.keys()))
         )
 
-        print("other:",list(others))
+        print("other:", list(others))
         for k in list(others):
             descriptor = mapper.all_orm_descriptors[k]
             if isinstance(descriptor, AssociationProxy):
-                    pass
+                print(k, descriptor, type(descriptor),descriptor.target_collection, descriptor.value_attr)
+                pp = getattr(Model, k)
+                print(pp, type(pp))
+                print(pp.parent, type(pp.parent))
+                pass
             elif isinstance(descriptor, hybrid_property):
                 pass
             elif isinstance(descriptor, hybrid_method):
                 pass
             else:
-                raise Exception(f"unknown {prop}.type {type(descriptor)}")
-
+                raise Exception(f"unknown {descriptor}.type {type(descriptor)}")
+        return
         for prop, descriptor in mapper.all_orm_descriptors.items():
             assert isinstance(descriptor, InspectionAttr) and descriptor.is_attribute
             if isinstance(descriptor, QueryableAttribute):
@@ -82,10 +82,13 @@ class TestMapper:
                         pass
                     else:
                         print(
-                            prop, descriptor, type(descriptor), type(descriptor.property)
+                            prop,
+                            descriptor,
+                            type(descriptor),
+                            type(descriptor.property),
                         )
             else:
-                # print(key,descriptor, type(descriptor))
+                print(descriptor, type(descriptor))
                 if isinstance(descriptor, AssociationProxy):
                     pass
                 elif isinstance(descriptor, hybrid_property):
@@ -108,8 +111,7 @@ class TestMapper:
         for p in mapper.column_attrs:
             assert isinstance(p, ColumnProperty)
             print(p, p.key, type(p))
-        
-    
+
         # relationships
         print("===== relationships =====")
         for p in mapper.relationships:
@@ -120,7 +122,7 @@ class TestMapper:
         print("===== composites =====")
         for p in mapper.composites:
             assert isinstance(p, CompositeProperty)
-            print(p, p.key,p.attrs)
+            print(p, p.key, p.attrs)
 
         # synonyms
         print("===== synonyms =====")
@@ -136,7 +138,14 @@ class TestMapper:
                 assert len(prop.columns) == 1
                 prop = prop.columns[0]
                 assert isinstance(prop, Column)
-                print(prop, type(prop), prop, type(prop), prop.primary_key, prop.foreign_keys)
+                print(
+                    prop,
+                    type(prop),
+                    prop,
+                    type(prop),
+                    prop.primary_key,
+                    prop.foreign_keys,
+                )
             elif isinstance(prop, RelationshipProperty):
                 print(prop, type(prop), prop.direction.name, prop.uselist)
                 pass
@@ -147,5 +156,31 @@ class TestMapper:
             else:
                 raise Exception(f"unknown type{type(prop)}")
 
+    def test_model_attrs(self):
+        Model = Demo
+        mapper = inspect(Model)
 
-
+        for attr_name in mapper.all_orm_descriptors.keys():
+            attr = getattr(Model, attr_name)
+            print(attr,type(attr))
+            continue
+            if hasattr(attr, "property") and isinstance(attr.property, MapperProperty):
+                prop = attr.property
+                if isinstance(prop, ColumnProperty):
+                    print(
+                        f"ColumnProperty: {attr_name}, columns: {[col.name for col in prop.columns]}"
+                    )
+                elif isinstance(prop, RelationshipProperty):
+                    print(
+                        f"RelationshipProperty: {attr_name}, direction: {prop.direction.name}, uselist: {prop.uselist}"
+                    )
+                elif isinstance(prop, CompositeProperty):
+                    print(f"CompositeProperty: {attr_name}, attrs: {prop.attrs}")
+                elif isinstance(prop, SynonymProperty):
+                    print(f"SynonymProperty: {attr_name}, synonym for: {prop.name}")
+                else:
+                    print(f"Unknown MapperProperty type for attribute: {attr_name}")
+            else:
+                # Not a mapped property
+                print(f"Non-mapped attribute: {attr_name}")
+                pass

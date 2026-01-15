@@ -1,13 +1,12 @@
 from flask import render_template_string, request
 from flask_exts.datastore.sqla import db
-from flask_exts.datastore.sqla import reset_models
 from tests.datastore.sqla.models.message import Message
 
 
 def test_render_simple_table(app, client):
     @app.route("/table")
     def test():
-        reset_models()
+        db.reset_models()
         for i in range(3):
             msg = Message(text=f"Test message {i+1}")
             db.session.add(msg)
@@ -299,7 +298,7 @@ def todo_test_render_table_with_actions(app, client):
         assert 'href="/table/me/1/view"' in rv.text
         assert 'action="/table/me/1/delete"' in rv.text
         assert 'href="/table/me/1/edit"' in rv.text
-        assert 'href="/table/new-message"' in data
+        assert 'href="/table/new-message"' in rv.text
 
 
 def test_customize_icon_title_of_table_actions(app, client):

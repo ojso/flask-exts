@@ -34,7 +34,7 @@ class TestSecurity:
 
     def test_verify_email(self, app):
         with app.app_context():
-            db.create_all()
+            db.reset_models()
             status, user = _userstore.create_user(
                 username="testuser",
                 password="testpassword",

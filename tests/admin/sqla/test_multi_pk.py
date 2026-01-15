@@ -1,4 +1,4 @@
-from flask_exts.datastore.sqla import reset_models
+from flask_exts.datastore.sqla import db
 from tests.datastore.sqla.models.model_multpk import ModelMultpk
 from tests.datastore.sqla.models.polymorphic import Employee, ChildPoly, Manager
 from tests.datastore.sqla.models.polymorphic import ChildCrete, ChildMultpk
@@ -8,7 +8,7 @@ from .test_basic import CustomModelView
 def test_multiple_pk(app, client, admin):
     # Test multiple primary keys - mix int and string together
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(
             ModelMultpk,
             form_columns=["id", "id2", "data"],
@@ -38,7 +38,7 @@ def test_multiple_pk(app, client, admin):
 def test_joined_inheritance(app, client, admin):
     # Test multiple primary keys - mix int and string together
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(
             ChildPoly, form_columns=["id", "test", "name"], endpoint="child"
         )
@@ -60,7 +60,7 @@ def test_joined_inheritance(app, client, admin):
 def test_single_table_inheritance(app, client, admin):
     # Test multiple primary keys - mix int and string together
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(
             Manager,
@@ -85,7 +85,7 @@ def test_single_table_inheritance(app, client, admin):
 def test_concrete_table_inheritance(app, client, admin):
     # Test multiple primary keys - mix int and string together
     with app.app_context():
-        reset_models()
+        db.reset_models()
         view = CustomModelView(
             ChildCrete,
             form_columns=["id", "test", "name"],
@@ -109,7 +109,7 @@ def test_concrete_table_inheritance(app, client, admin):
 def test_concrete_multipk_inheritance(app, client, admin):
     # Test multiple primary keys - mix int and string together
     with app.app_context():
-        reset_models()
+        db.reset_models()
 
         view = CustomModelView(
             ChildMultpk,

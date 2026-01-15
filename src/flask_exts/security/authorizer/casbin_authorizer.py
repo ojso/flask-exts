@@ -1,9 +1,8 @@
 import os.path
 from casbin.model import Model
 from casbin import Enforcer
-
 from .base import Authorizer
-from .sqlalchemy_adapter import SqlalchemyAdapter
+
 
 CASBIN_RBAC_MODEL = """
 [request_definition]
@@ -46,14 +45,18 @@ class CasbinAuthorizer(Authorizer):
             adapter: Casbin Adapter
         """
         self.app = app
-        self.adapter = adapter or SqlalchemyAdapter()
+        self.adapter = adapter
         self.watcher = watcher
         self._owner_loader = None
-        if self.app is not None:
-            self.init_app(self.app)
+        if app is not None:
+            self.init_app(app)
 
     def init_app(self, app):
         self.app = app
+        if self.adapter is None:
+            from .casbin_sqlalchemy_adapter import CasbinSqlalchemyAdapter
+
+            self.adapter = CasbinSqlalchemyAdapter()
         m = Model()
         if app.config.get("CASBIN_MODEL", None) is not None:
             m_path = os.path.join(app.instance_path, app.config.get("CASBIN_MODEL"))
@@ -64,15 +67,18 @@ class CasbinAuthorizer(Authorizer):
 
     def allow(self, user, obj, act):
         e = self.get_casbin_enforcer()
+        # step1: check user direct permission
         sub = casbin_prefix_user(user.id)
         access = e.enforce(sub, obj, act)
         if access:
             return access
+        # step2: check user roles permission
         if hasattr(user, "get_roles"):
             for r in user.get_roles():
                 sub = casbin_prefix_role(r)
                 if e.enforce(sub, obj, act):
                     return True
+        # last: deny
         return False
 
     def has_role(self, user, role):

@@ -7,7 +7,7 @@ from flask_exts.decorators.auth import auth_required
 from flask_exts.decorators.auth import needs_required
 from flask_exts.security.auth_crypt import jwt_encode
 from flask_exts.proxies import _userstore
-from flask_exts.security.authorizer.sqlalchemy_adapter import CasbinRule
+from flask_exts.security.authorizer.casbin_sqlalchemy_adapter import CasbinRule
 from flask_exts.security.authorizer.casbin_authorizer import casbin_prefix_user
 
 

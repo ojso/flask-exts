@@ -29,16 +29,18 @@ class Db:
         if "sqlalchemy" in app.extensions:
             raise RuntimeError("A 'SQLAlchemy' instance has already been registered.")
         app.extensions["sqlalchemy"] = self
+
         # engine
-        engine_options = {"url": app.config.get("SQLALCHEMY_DATABASE_URI", None)}
+        engine_options = {"url": app.config.get("SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:")}
         if app.config.get("SQLALCHEMY_ECHO"):
             engine_options["echo"] = True
-
         self.engine = self._make_engine(engine_options)
+
         # session
         session_options = {"bind": self.engine}
         self.session = self._make_scoped_session(session_options)
         app.teardown_appcontext(self._remove_session)
+
         # cli
         app.shell_context_processor(self._add_models_to_shell)
 
@@ -46,10 +48,6 @@ class Db:
         return create_engine(**options)
 
     def _make_scoped_session(self, options):
-        # Do Later
-        # from .session import MultSession
-        # session_factory = sessionmaker(db=self, class_=MultSession, **options)
-
         session_factory = sessionmaker(**options)
         return scoped_session(session_factory, scopefunc=self._get_app_g_id)
 
@@ -68,3 +66,7 @@ class Db:
         out = {m.class_.__name__: m.class_ for m in db.Model.registry.mappers}
         out["db"] = db
         return out
+    
+    def reset_models(self):
+        self.Model.metadata.drop_all(self.engine)
+        self.Model.metadata.create_all(self.engine)

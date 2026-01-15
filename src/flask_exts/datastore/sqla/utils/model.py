@@ -132,7 +132,7 @@ def get_field_with_path(
             current_attr = remote_attr
             break
         else:
-            raise ValueError(f"Unsupported attribute type for '{part}': {type(attr)}")
+            raise ValueError(f"Unsupported attribute type for '{model}':'{part}': {type(attr)}")
 
     if current_attr is None:
         raise RuntimeError("Failed to resolve path — no terminal attribute found.")

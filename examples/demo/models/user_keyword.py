@@ -5,7 +5,6 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.associationproxy import association_proxy
 from . import db
-# from .user import User  # due to a circular import
 from .keyword import Keyword
 
 class UserKeywordAssociation(db.Model):
