@@ -28,6 +28,9 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import composite
 from sqlalchemy.orm import synonym
 
+from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
+
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.associationproxy import AssociationProxy
 from sqlalchemy.ext.hybrid import hybrid_property

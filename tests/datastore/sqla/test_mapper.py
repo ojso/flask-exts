@@ -17,8 +17,8 @@ from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.ext.associationproxy import AssociationProxy
 from sqlalchemy.schema import Column
 
+from . import db
 from .models.demo import Demo
-from flask_exts.datastore.sqla import db
 
 
 class TestMapper:
@@ -53,7 +53,13 @@ class TestMapper:
         for k in list(others):
             descriptor = mapper.all_orm_descriptors[k]
             if isinstance(descriptor, AssociationProxy):
-                print(k, descriptor, type(descriptor),descriptor.target_collection, descriptor.value_attr)
+                print(
+                    k,
+                    descriptor,
+                    type(descriptor),
+                    descriptor.target_collection,
+                    descriptor.value_attr,
+                )
                 pp = getattr(Model, k)
                 print(pp, type(pp))
                 print(pp.parent, type(pp.parent))
@@ -162,7 +168,7 @@ class TestMapper:
 
         for attr_name in mapper.all_orm_descriptors.keys():
             attr = getattr(Model, attr_name)
-            print(attr,type(attr))
+            print(attr, type(attr))
             continue
             if hasattr(attr, "property") and isinstance(attr.property, MapperProperty):
                 prop = attr.property

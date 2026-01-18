@@ -1,5 +1,5 @@
 from flask_exts.admin.sqla.view import SqlaModelView
-from ..models.user import MyUser
+from ..models.myuser import MyUser
 
 
 class UserView(SqlaModelView):

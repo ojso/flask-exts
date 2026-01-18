@@ -8,7 +8,7 @@ from .models.tag import Tag
 from .models.post import Post
 from .models.tree import Tree
 from .models.keyword import Keyword
-from .models.user import MyUser
+from .models.myuser import MyUser
 from .models.location_image import ImageType
 
 

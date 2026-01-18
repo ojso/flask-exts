@@ -5,16 +5,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import declared_attr
-import re
+
 
 class Base(DeclarativeBase):
-    @declared_attr.directive
-    def __tablename__(cls) -> str:
-        # CamelCase -> snake_case
-        name = re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
-        return name
     pass
+
 
 class Db:
     def __init__(self, app: Flask | None = None):
@@ -31,7 +26,9 @@ class Db:
         app.extensions["sqlalchemy"] = self
 
         # engine
-        engine_options = {"url": app.config.get("SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:")}
+        engine_options = {
+            "url": app.config.get("SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:")
+        }
         if app.config.get("SQLALCHEMY_ECHO"):
             engine_options["echo"] = True
         self.engine = self._make_engine(engine_options)
@@ -66,7 +63,12 @@ class Db:
         out = {m.class_.__name__: m.class_ for m in db.Model.registry.mappers}
         out["db"] = db
         return out
-    
+
+    def create_all(self,**kwargs):
+        if 'bind' not in kwargs:
+            kwargs['bind'] = self.engine
+        self.Model.metadata.create_all(**kwargs)
+
     def reset_models(self):
         self.Model.metadata.drop_all(self.engine)
         self.Model.metadata.create_all(self.engine)

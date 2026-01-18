@@ -1,5 +1,5 @@
 from flask_exts.datastore.sqla import db
-from tests.datastore.sqla.models.model_multpk import ModelMultpk
+from tests.datastore.sqla.models.multpk import Multpk
 from tests.datastore.sqla.models.polymorphic import Employee, ChildPoly, Manager
 from tests.datastore.sqla.models.polymorphic import ChildCrete, ChildMultpk
 from .test_basic import CustomModelView
@@ -10,7 +10,7 @@ def test_multiple_pk(app, client, admin):
     with app.app_context():
         db.reset_models()
         view = CustomModelView(
-            ModelMultpk,
+            Multpk,
             form_columns=["id", "id2", "data"],
             endpoint="model",
         )

@@ -1,6 +1,6 @@
 from sqlalchemy.schema import CreateTable
 from sqlalchemy import create_mock_engine
-from flask_exts.datastore.sqla import db
+from . import db
 from .models.demo import Demo
 
 
@@ -26,7 +26,7 @@ class TestCreateTableSQL:
     def test_create_table_sql(self):
         engine = mock_engine_for_dialect("sqlite")
         # engine = mock_engine_for_dialect("postgresql")
-        db.Model.metadata.create_all(engine, checkfirst=False)
+        db.create_all(bind=engine, checkfirst=False)
         return
         print(CreateTable(Demo.__table__))
 

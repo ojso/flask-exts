@@ -5,7 +5,7 @@ from flask_exts.template.fields.sqla import InlineModelFormList
 from flask_exts.template.validators.sqla import ItemsRequired
 from flask_exts.datastore.sqla import db
 from tests.datastore.sqla.models.user import MyUser, UserInfo, UserEmail, Tag
-from tests.datastore.sqla.models.node import Node
+from tests.datastore.sqla.models.tree_node import TreeNode
 
 
 
@@ -152,12 +152,12 @@ def test_inline_form_self(app, admin):
         db.reset_models()
 
         class TreeView(SqlaModelView):
-            inline_models = (Node,)
+            inline_models = (TreeNode,)
 
-        view = TreeView(Node)
+        view = TreeView(TreeNode)
 
-        parent = Node()
-        child = Node(parent=parent)
+        parent = TreeNode()
+        child = TreeNode(parent=parent)
         form = view.edit_form(child)
         assert form.parent.data == parent
 

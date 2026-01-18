@@ -7,7 +7,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.associationproxy import AssociationProxy
 from . import db
 from .keyword import Keyword
-from .user_keyword import UserKeywordAssociation
+
 
 class MyUser(db.Model):
     __tablename__="myuser"
@@ -20,19 +20,8 @@ class MyUser(db.Model):
         default=datetime.now, onupdate=datetime.now
     )
 
-    user_keyword_associations: Mapped[List["UserKeywordAssociation"]] = relationship(
-        back_populates="myuser",
-        cascade="all, delete-orphan",
-    )
+    kw: Mapped[List[Keyword]] = relationship(secondary="myuser_keyword_table")
 
-    # association proxy of "user_keyword_associations" collection to "keyword" attribute
-    keywords: AssociationProxy[List[Keyword]] = association_proxy(
-        "user_keyword_associations",
-        "keyword",
-        creator=lambda keyword_obj: UserKeywordAssociation(keyword=keyword_obj),
-    )
-
-    # Association proxy to association proxy - a list of keywords strings.
-    keywords_values = association_proxy('user_keyword_associations', 'keyword_value')
+    keywords_values = association_proxy('kw', 'keyword')
 
 

@@ -1,7 +1,8 @@
 import pytest
-from sqlalchemy.orm import Session
 from flask import current_app
-from flask_exts.datastore.sqla import db
+from sqlalchemy.orm import Session
+from . import db
+
 
 
 class TestDb:

@@ -70,6 +70,7 @@ def get_field_with_path(
         - join_path: List of relationship attributes for explicit joins
                      (e.g., [User.profile, Profile.contact])
     """
+    print(model,path)
     parts = path.split(".")
     current_model = model
     current_attr = None
