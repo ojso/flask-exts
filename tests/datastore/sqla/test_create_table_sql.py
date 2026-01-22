@@ -24,14 +24,17 @@ def mock_engine_for_dialect(dialect_name: str):
 
 class TestCreateTableSQL:
     def test_create_table_sql(self):
+        print(CreateTable(Demo.__table__))
+        return
         engine = mock_engine_for_dialect("sqlite")
+        print(CreateTable(Demo.__table__).compile(engine))
+        return
         # engine = mock_engine_for_dialect("postgresql")
         db.create_all(bind=engine, checkfirst=False)
-        return
-        print(CreateTable(Demo.__table__))
+
 
         
-        # metadata.create_all(engine, checkfirst=False)
-        print(CreateTable(Demo.__table__).compile(engine))
+
+        
 
     

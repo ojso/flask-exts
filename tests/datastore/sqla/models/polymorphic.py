@@ -1,7 +1,7 @@
 from typing import Optional
-from . import db
-from . import Mapped
-from . import mapped_column
+from .. import db
+from .. import Mapped
+from .. import mapped_column
 
 # see https://docs.sqlalchemy.org/en/20/orm/inheritance.html#single-inheritance
 # see https://docs.sqlalchemy.org/en/20/orm/queryguide/_single_inheritance.html

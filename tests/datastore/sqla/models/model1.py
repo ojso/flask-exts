@@ -1,11 +1,11 @@
 import enum
 from datetime import datetime, date, time
-from . import db
-from . import Mapped
-from . import mapped_column
-from . import Enum
-from . import hybrid_property
-from . import cast
+from .. import db
+from .. import Mapped
+from .. import mapped_column
+from .. import Enum
+from .. import hybrid_property
+from .. import cast
 
 
 class EnumChoices(enum.Enum):

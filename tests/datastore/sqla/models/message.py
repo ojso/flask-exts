@@ -1,7 +1,7 @@
 import enum
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-from . import db
+from .. import db
 
 
 class MyCat(enum.Enum):

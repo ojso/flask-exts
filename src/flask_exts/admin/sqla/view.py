@@ -26,7 +26,6 @@ from . import form
 from .filter import BaseSQLAFilter
 from .filter import FilterConverter
 from .ajax import create_ajax_loader
-from .types import T_COLUMN_LIST
 from .typefmt import DEFAULT_FORMATTERS
 from ...datastore.sqla.utils import get_model_mapper
 from ...datastore.sqla.utils import get_primary_key
@@ -40,86 +39,6 @@ log = logging.getLogger("flask-exts.sqla")
 class SqlaModelView(ModelView):
     """
     SQLAlchemy model view
-    """
-
-    column_list: Optional[T_COLUMN_LIST] = None
-    """
-        Collection of the model field names for the list view.
-        If set to `None`, will get them from the model.
-
-        For example::
-
-            class MyModelView(BaseModelView):
-                column_list = ('name', 'last_name', 'email')
-
-        SQLAlchemy model attributes can be used instead of strings::
-
-            class MyModelView(BaseModelView):
-                column_list = ('name', User.last_name)
-
-        When using SQLAlchemy models, you can reference related columns like this::
-            class MyModelView(BaseModelView):
-                column_list = ('<relationship>.<related column name>',)
-    """
-
-    column_exclude_list: Optional[T_COLUMN_LIST] = None
-
-    column_sortable_list: Optional[T_COLUMN_LIST] = None
-    """
-        Collection of the sortable columns for the list view.
-        If set to `None`, will get them from the model.
-
-        For example::
-
-            class MyModelView(BaseModelView):
-                column_sortable_list = ('name', 'last_name')
-
-        If you want to explicitly specify field/column to be used while
-        sorting, you can use a tuple::
-
-            class MyModelView(BaseModelView):
-                column_sortable_list = ('name', ('user', 'user.username'))
-
-        You can also specify multiple fields to be used while sorting::
-
-            class MyModelView(BaseModelView):
-                column_sortable_list = (
-                    'name', ('user', ('user.first_name', 'user.last_name')))
-
-        When using SQLAlchemy models, model attributes can be used instead
-        of strings::
-
-            class MyModelView(BaseModelView):
-                column_sortable_list = ('name', ('user', User.username))
-    """
-
-    column_auto_select_related = True
-    """
-        Enable automatic detection of displayed foreign keys in this view
-        and perform automatic joined loading for related models to improve
-        query performance.
-
-        Please note that detection is not recursive: if `__unicode__` method
-        of related model uses another model to generate string representation, it
-        will still make separate database call.
-    """
-
-    column_select_related_list = None
-    """
-        List of parameters for SQLAlchemy `subqueryload`. Overrides `column_auto_select_related`
-        property.
-
-        For example::
-
-            class PostAdmin(ModelView):
-                column_select_related_list = ('user', 'city')
-
-        You can also use properties::
-
-            class PostAdmin(ModelView):
-                column_select_related_list = (Post.user, Post.city)
-
-        Please refer to the `subqueryload` on list of possible values.
     """
 
     column_searchable_list = None
@@ -387,10 +306,7 @@ class SqlaModelView(ModelView):
             raise Exception("Model %s does not have primary key." % self.model.__name__)
 
         # Configuration
-        if not self.column_select_related_list:
-            self._auto_joins = self.scaffold_auto_joins()
-        else:
-            self._auto_joins = self.column_select_related_list
+        self._auto_joins = self.scaffold_auto_joins()
 
     def scaffold_pk(self):
         """
@@ -880,12 +796,8 @@ class SqlaModelView(ModelView):
 
     def scaffold_auto_joins(self):
         """
-        Return a list of joined tables by going through the
-        displayed columns.
+        Return a list of joined tables by going through the displayed columns.
         """
-        if not self.column_auto_select_related:
-            return []
-
         relations = set()
 
         for p in self.get_model_iterator(self.model):

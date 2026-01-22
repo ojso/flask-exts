@@ -6,29 +6,29 @@ from typing import Optional, List
 
 # from typing import Literal
 
-from . import db
-from . import Integer
-from . import Boolean
-from . import String
-from . import Float
-from . import DateTime
-from . import Date
-from . import Time
-from . import LargeBinary
-from . import Enum
-from . import JSON
-from . import Mapped
-from . import mapped_column
-from . import relationship
-from . import composite
-from . import synonym
-from . import Table
-from . import Column
-from . import ForeignKey
-from . import hybrid_property
-from . import hybrid_method
-from . import association_proxy
-from . import AssociationProxy
+from .. import db
+from .. import Integer
+from .. import Boolean
+from .. import String
+from .. import Float
+from .. import DateTime
+from .. import Date
+from .. import Time
+from .. import LargeBinary
+from .. import Enum
+from .. import JSON
+from .. import Mapped
+from .. import mapped_column
+from .. import relationship
+from .. import composite
+from .. import synonym
+from .. import Table
+from .. import Column
+from .. import ForeignKey
+from .. import hybrid_property
+from .. import hybrid_method
+from .. import association_proxy
+from .. import AssociationProxy
 
 
 class Point:
@@ -45,6 +45,7 @@ class Status(enum.Enum):
 
 class Demo(db.Model):
     __tablename__ = "demo"
+    
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     first_name: Mapped[str]

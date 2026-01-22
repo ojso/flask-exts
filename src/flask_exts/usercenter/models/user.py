@@ -3,28 +3,20 @@ from typing import Optional
 from typing import List
 import uuid
 from ..base_user import BaseUser
+from .user_profile import UserProfile
+from .role import Role
+from .user_role import user_role_table
 from ...datastore.sqla import db
 from ...datastore.sqla.orm import Mapped
 from ...datastore.sqla.orm import mapped_column
 from ...datastore.sqla.orm import relationship
-from ...datastore.sqla.orm import ForeignKey
-from ...datastore.sqla.orm import Table
-from ...datastore.sqla.orm import Column
 from ...datastore.sqla.orm import MutableList
 from ...datastore.sqla.orm import JSON
-# from .role import Role
-from .user_profile import UserProfile
 
-user_role_table = Table(
-    "user_role",
-    db.Model.metadata,
-    Column("user_id", ForeignKey("user.id"), primary_key=True),
-    Column("role_id", ForeignKey("role.id"), primary_key=True),
-)
 
 
 class User(db.Model, BaseUser):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     uuid: Mapped[str] = mapped_column(unique=True, default=lambda: str(uuid.uuid4()))
@@ -50,10 +42,8 @@ class User(db.Model, BaseUser):
         default=datetime.now, onupdate=datetime.now
     )
 
-    roles: Mapped[List["Role"]] = relationship(secondary=user_role_table)
-    profile: Mapped["UserProfile"] = relationship(
-        "UserProfile", back_populates="user", uselist=False
-    )
+    roles: Mapped[List["Role"]] = relationship(secondary="user_role")  # type: ignore
+    profile: Mapped["UserProfile"] = relationship(back_populates="user", uselist=False)  # type: ignore
 
     def get_roles(self):
         return [r.name for r in self.roles]

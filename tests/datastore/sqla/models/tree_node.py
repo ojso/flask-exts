@@ -1,8 +1,8 @@
-from . import db
-from . import ForeignKey
-from . import Mapped
-from . import mapped_column
-from . import relationship
+from .. import db
+from .. import ForeignKey
+from .. import Mapped
+from .. import mapped_column
+from .. import relationship
 
 # Adjacency List Relationships
 # see https://docs.sqlalchemy.org/en/20/orm/self_referential.html

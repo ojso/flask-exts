@@ -455,15 +455,6 @@ class BaseFileView(ActionView):
         """
         self.storage.save_file(path, file_data)
 
-    def validate_form(self, form):
-        """
-        Validate the form on submit.
-
-        :param form:
-            Form to validate
-        """
-        return form.validate_on_submit()
-
     def _get_dir_url(self, endpoint, path=None, **kwargs):
         """
         Return prettified URL
@@ -805,7 +796,7 @@ class BaseFileView(ActionView):
             return redirect(self._get_dir_url(".index_view"))
 
         form = self.upload_form()
-        if self.validate_form(form):
+        if form.validate_on_submit():
             try:
                 self._save_form_files(directory, path, form)
                 flash(
@@ -870,7 +861,7 @@ class BaseFileView(ActionView):
 
         form = self.name_form()
 
-        if self.validate_form(form):
+        if form.validate_on_submit():
             try:
                 self.storage.make_dir(directory, form.name.data)
                 self.on_mkdir(directory, form.name.data)
@@ -887,7 +878,7 @@ class BaseFileView(ActionView):
                     gettext("Failed to create directory: %(error)s", error=ex), "error"
                 )
         else:
-            self.flash_form_errors(form, message="Failed to create directory: %(error)s")
+            form.flash_errors(message="Failed to create directory: %(error)s")
 
         if self.mkdir_modal and request.args.get("modal"):
             template = self.mkdir_modal_template
@@ -920,7 +911,7 @@ class BaseFileView(ActionView):
         else:
             return_url = self.get_url(".index_view")
 
-        if self.validate_form(form):
+        if form.validate_on_submit():
             # Get path and verify if it is valid
             base_path, full_path, path = self._normalize_path(path)
 
@@ -963,7 +954,7 @@ class BaseFileView(ActionView):
                 except Exception as ex:
                     flash(gettext("Failed to delete file: %(name)s", name=ex), "error")
         else:
-            self.flash_form_errors(form, message="Failed to delete file. %(error)s")
+            form.flash_errors(message="Failed to delete file. %(error)s")
 
         return redirect(return_url)
 
@@ -994,7 +985,7 @@ class BaseFileView(ActionView):
             flash(gettext("Path does not exist."), "error")
             return redirect(return_url)
 
-        if self.validate_form(form):
+        if form.validate_on_submit():
             try:
                 dir_base = op.dirname(full_path)
                 filename = secure_filename(form.name.data)
@@ -1015,7 +1006,7 @@ class BaseFileView(ActionView):
 
             return redirect(return_url)
         else:
-            self.flash_form_errors(form, message="Failed to rename: %(error)s")
+            form.flash_errors(message="Failed to rename: %(error)s")
 
         if self.rename_modal and request.args.get("modal"):
             template = self.rename_modal_template
@@ -1059,7 +1050,7 @@ class BaseFileView(ActionView):
         form = self.edit_form()
         error = False
 
-        if self.validate_form(form):
+        if form.validate_on_submit():
             form.process(request.form, content="")
             if form.validate():
                 try:
@@ -1077,7 +1068,7 @@ class BaseFileView(ActionView):
                     )
                     return redirect(next_url)
         else:
-            self.flash_form_errors(form, message="Failed to edit file. %(error)s")
+            form.flash_errors(message="Failed to edit file. %(error)s")
 
             try:
                 content = self.storage.read_file(full_path)

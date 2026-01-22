@@ -96,7 +96,6 @@ class AuthorView(SqlaModelView):
         "email",
     ]
 
-    column_auto_select_related = True
     column_default_sort = [
         ("last_name", False),
         ("first_name", False),

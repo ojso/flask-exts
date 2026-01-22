@@ -27,3 +27,6 @@ class BaseUserStore(ABC):
 
     @abstractmethod
     def save_user(self, user): ...
+
+    @abstractmethod
+    def create_role(self, name): ...

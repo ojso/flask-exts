@@ -1,5 +1,6 @@
 import inspect
-from flask import request, redirect
+from flask import request
+from flask import redirect
 
 
 class ActionMixin:
@@ -44,8 +45,7 @@ class ActionMixin:
             or the list view.
         """
         form = self.action_form()
-
-        if self.validate_form(form):
+        if form.validate_on_submit():
             # using getlist instead of FieldList for backward compatibility
             ids = request.form.getlist("rowid")
             action = form.action.data
@@ -56,7 +56,7 @@ class ActionMixin:
                 if response is not None:
                     return response
         else:
-            self.flash_form_errors(form, message="Failed to perform action. %(error)s")
+            form.flash_errors(message="Failed to perform action. %(error)s")
 
         if return_view:
             url = self.get_url("." + return_view)

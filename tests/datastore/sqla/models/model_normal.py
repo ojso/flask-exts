@@ -1,6 +1,6 @@
-from . import db
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from .. import db
+from .. import Mapped
+from .. import mapped_column
 
 
 class ModelNormal(db.Model):

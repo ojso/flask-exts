@@ -5,7 +5,6 @@ import mimetypes
 import time
 from typing import Optional, Type
 from math import ceil
-import inspect
 from collections import OrderedDict
 from functools import reduce
 import tablib
@@ -18,7 +17,6 @@ from flask import Response
 from flask import jsonify
 from flask import get_flashed_messages
 from flask import stream_with_context
-from jinja2 import pass_context
 from werkzeug.utils import secure_filename
 from wtforms.form import Form
 from wtforms.fields import FieldList
@@ -39,10 +37,6 @@ from ...template.form.base_form import BaseForm
 from ...template.form.form_opts import FormOpts
 from ...template.rules import RuleSet
 from ...template.form.utils import get_form_data
-from ...template.form.utils import validate_form_on_submit
-
-
-
 
 
 # Used to generate filter query string name
@@ -135,7 +129,7 @@ class ModelView(ActionView):
         SQLAlchemy model attributes can be used instead of strings::
 
             class MyModelView(BaseModelView):
-                column_list = ('name', User.last_name)
+                column_list = ('name', user.last_name)
 
         When using SQLAlchemy models, you can reference related columns like this::
             class MyModelView(BaseModelView):
@@ -317,6 +311,11 @@ class ModelView(ActionView):
             class MyModelView(BaseModelView):
                 column_sortable_list = (
                     'name', ('user', ('user.first_name', 'user.last_name')))
+        When using SQLAlchemy models, model attributes can be used instead
+        of strings::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = ('name', ('user', 'user.username'))
     """
 
     column_default_sort = None
@@ -1287,15 +1286,6 @@ class ModelView(ActionView):
         """
         return self._action_form_class(get_form_data(), obj=obj)
 
-    def validate_form(self, form):
-        """
-        Validate the form on submit.
-
-        :param form:
-            Form to validate
-        """
-        return validate_form_on_submit(form)
-
     def get_save_return_url(self, model, is_created=False):
         """
         Return url where user is redirected after successful form save.
@@ -1991,7 +1981,7 @@ class ModelView(ActionView):
         if not hasattr(form, "_validated_ruleset") or not form._validated_ruleset:
             self._validate_form_instance(ruleset=self._form_create_rules, form=form)
 
-        if self.validate_form(form):
+        if form.validate_on_submit():
             # in versions 1.1.0 and before, this returns a boolean
             # in later versions, this is the model itself
             model = self.create_model(form)
@@ -2051,7 +2041,7 @@ class ModelView(ActionView):
         if not hasattr(form, "_validated_ruleset") or not form._validated_ruleset:
             self._validate_form_instance(ruleset=self._form_edit_rules, form=form)
 
-        if self.validate_form(form):
+        if form.validate_on_submit():
             if self.update_model(form, model):
                 flash(gettext("Record was successfully saved."), "success")
                 if "_add_another" in request.form:
@@ -2124,7 +2114,7 @@ class ModelView(ActionView):
 
         form = self.delete_form()
 
-        if self.validate_form(form):
+        if form.validate_on_submit():
             # id is InputRequired()
             id = form.id.data
 
@@ -2148,7 +2138,7 @@ class ModelView(ActionView):
                 )
                 return redirect(return_url)
         else:
-            self.flash_form_errors(form, message="Failed to delete record. %(error)s")
+            form.flash_errors(message="Failed to delete record. %(error)s")
 
         return redirect(return_url)
 
@@ -2316,7 +2306,7 @@ class ModelView(ActionView):
             else:
                 form.__delitem__(field.name)
 
-        if self.validate_form(form):
+        if form.validate_on_submit():
             pk = form.list_form_pk.data
             record = self.get_one(pk)
 

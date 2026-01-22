@@ -25,13 +25,6 @@ def get_form_data():
     return None
 
 
-def validate_form_on_submit(form):
-    """
-    If current method is PUT or POST, validate form and return validation status.
-    """
-    return is_form_submitted() and form.validate()
-
-
 def recreate_field(unbound):
     """
     Create new instance of the unbound field, resetting wtforms creation counter.

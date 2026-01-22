@@ -1,4 +1,6 @@
 from wtforms import Form
+from flask import flash
+from flask_babel import gettext
 from .utils import is_form_submitted
 
 class BaseForm(Form):
@@ -14,3 +16,8 @@ class BaseForm(Form):
 
     def validate_on_submit(self):
         return is_form_submitted() and self.validate()
+
+    def flash_errors(self, message):
+        for field_name, errors in self.errors.items():
+            err = self[field_name].label.text + ": " + ", ".join(errors)
+            flash(gettext(message, error=str(err)), "error")

@@ -1,8 +1,8 @@
-from . import db
-from . import Mapped
-from . import mapped_column
-from . import ForeignKey
-from . import relationship
+from .. import db
+from .. import Mapped
+from .. import mapped_column
+from .. import ForeignKey
+from .. import relationship
 
 class MyUser(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)

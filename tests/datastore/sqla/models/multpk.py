@@ -1,6 +1,6 @@
-from . import db
-from . import Mapped
-from . import mapped_column
+from .. import db
+from .. import Mapped
+from .. import mapped_column
 
 
 class Multpk(db.Model):

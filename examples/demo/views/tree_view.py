@@ -4,7 +4,6 @@ from ..models.tree import Tree
 
 class TreeView(SqlaModelView):
     list_template = "tree_list.html"
-    column_auto_select_related = True
     column_list = [
         "id",
         "name",
