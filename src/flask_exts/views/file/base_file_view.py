@@ -8,12 +8,13 @@ from flask import flash, redirect, abort, request
 from wtforms import fields, validators
 from werkzeug.utils import secure_filename
 from ...template.form.base_form import BaseForm
-from ...admin.action_view import ActionView
+from ...admin.view import View
+from ...admin.action_mixin import ActionMixin
 from ...admin import expose_url
 from ...admin import expose_action
 
 
-class BaseFileView(ActionView):
+class BaseFileView(View, ActionMixin):
     can_upload = True
     """
         Is file upload allowed.
@@ -311,19 +312,7 @@ class BaseFileView(ActionView):
 
         return DeleteForm
 
-    def get_action_form(self):
-        """
-        Create form class for model action.
-
-        Override to implement customized behavior.
-        """
-
-        class ActionForm(self.form_base_class):
-            action = fields.HiddenField()
-            url = fields.HiddenField()
-            # rowid = fields.HiddenField()
-
-        return ActionForm
+    
 
     def upload_form(self):
         """
@@ -382,18 +371,6 @@ class BaseFileView(ActionView):
             return delete_form_class(request.form)
         else:
             return delete_form_class()
-
-    def action_form(self):
-        """
-        Instantiate action form and return it.
-
-        Override to implement custom behavior.
-        """
-        action_form_class = self.get_action_form()
-        if request.form:
-            return action_form_class(request.form)
-        else:
-            return action_form_class()
 
     def is_file_allowed(self, filename):
         """
@@ -1144,3 +1121,4 @@ class BaseFileView(ActionView):
     )
     def action_edit(self, items):
         return redirect(self.get_url(".edit", path=items))
+    

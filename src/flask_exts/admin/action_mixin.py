@@ -1,6 +1,8 @@
 import inspect
+from wtforms.fields import HiddenField
 from flask import request
 from flask import redirect
+from .exposer import expose_url
 
 
 class ActionMixin:
@@ -35,14 +37,16 @@ class ActionMixin:
                 actions_data.append((name, text, confirmation))
         return actions_data
 
-    def handle_action(self, return_view=None):
+    @expose_url("/action/", methods=("POST",))
+    def action_view(self):
+        """
+        Mass-model action view.
+        """
+        return self.handle_action()
+    
+    def handle_action(self):
         """
         Handle action request.
-
-        :param return_view:
-            Name of the view to return to after the request.
-            If not provided, will return user to the return url in the form
-            or the list view.
         """
         form = self.action_form()
         if form.validate_on_submit():
@@ -58,12 +62,4 @@ class ActionMixin:
         else:
             form.flash_errors(message="Failed to perform action. %(error)s")
 
-        if return_view:
-            url = self.get_url("." + return_view)
-        else:
-            url = self.get_redirect_target()
-
-        return redirect(url)
-
-    def get_redirect_target(self, param_name="url", endpoint=".index_view"):
-        return request.values.get(param_name) or self.get_url(endpoint)
+        return redirect(self.get_redirect_target())

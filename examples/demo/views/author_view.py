@@ -89,13 +89,6 @@ class AuthorView(SqlaModelView):
         "dialling_code",
         "local_phone_number",
     ]
-    form_create_rules = [
-        "last_name",
-        "first_name",
-        "type",
-        "email",
-    ]
-
     column_default_sort = [
         ("last_name", False),
         ("first_name", False),

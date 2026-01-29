@@ -32,7 +32,8 @@ from .filter_group import FilterGroup
 from .filter import BaseFilter
 from . import row_action
 from .. import expose_url
-from ..action_view import ActionView
+from ..view import View
+from ..action_mixin import ActionMixin
 from ...template.form.base_form import BaseForm
 from ...template.form.form_opts import FormOpts
 from ...template.rules import RuleSet
@@ -44,9 +45,9 @@ filter_char_re = re.compile("[^a-z0-9 ]")
 filter_compact_re = re.compile(" +")
 
 
-class ModelView(ActionView):
+class ModelView(View, ActionMixin):
     """
-    Base model view.
+    Model view.
 
     This view does not make any assumptions on how models are stored or managed, but expects the following:
 
@@ -58,7 +59,7 @@ class ModelView(ActionView):
 
     Essentially, if you want to support a new data store, all you have to do is:
 
-        1. Derive from the `BaseModelView` class
+        1. Derive from the `ModelView` class
         2. Implement various data-related methods (`get_list`, `get_one`, `create_model`, etc)
         3. Implement automatic form generation from the model representation (`scaffold_form`)
     """
@@ -74,10 +75,7 @@ class ModelView(ActionView):
     """Is model deletion allowed"""
 
     can_view_details = False
-    """
-        Setting this to true will enable the details view. This is recommended
-        when there are too many columns to display in the list_view.
-    """
+    """Is model details view allowed"""
 
     can_export = False
     """Is model list export allowed"""
@@ -129,7 +127,7 @@ class ModelView(ActionView):
         SQLAlchemy model attributes can be used instead of strings::
 
             class MyModelView(BaseModelView):
-                column_list = ('name', user.last_name)
+                column_list = ('name', 'user.last_name')
 
         When using SQLAlchemy models, you can reference related columns like this::
             class MyModelView(BaseModelView):
@@ -496,8 +494,7 @@ class ModelView(ActionView):
             class MyModelView(BaseModelView):
                 form_columns = ('name', 'email')
 
-        (Added in 1.4.0) SQLAlchemy model attributes can be used instead of
-        strings::
+        SQLAlchemy model attributes can be used instead of strings::
 
             class MyModelView(BaseModelView):
                 form_columns = ('name', User.last_name)
@@ -640,11 +637,6 @@ class ModelView(ActionView):
                 ]
     """
 
-    form_edit_rules = None
-    """
-        Customized rules for the edit form. Override `form_rules` if present.
-    """
-
     form_create_rules = None
     """
         Customized rules for the create form. Override `form_rules` if present.
@@ -743,26 +735,16 @@ class ModelView(ActionView):
         )
 
         # Scaffolding
-        self._refresh_cache()
+        self._init_view()
 
-    def _refresh_cache(self):
-        """
-        Refresh various cached variables.
-        """
-        # List view
+    def _init_view(self):
         self._list_columns = self.get_list_columns()
         self._sortable_columns = self.get_sortable_columns()
 
-        # Details view
         if self.can_view_details:
             self._details_columns = self.get_details_columns()
 
-        # Export view
         self._export_columns = self.get_export_columns()
-
-        # Labels
-        if self.column_labels is None:
-            self.column_labels = {}
 
         # Forms
         self._refresh_forms_cache()
@@ -846,15 +828,6 @@ class ModelView(ActionView):
             self._filter_args = None
 
     def _refresh_form_rules_cache(self):
-        if self.form_create_rules:
-            self._form_create_rules = RuleSet(self, self.form_create_rules)
-        else:
-            self._form_create_rules = None
-
-        if self.form_edit_rules:
-            self._form_edit_rules = RuleSet(self, self.form_edit_rules)
-        else:
-            self._form_edit_rules = None
 
         if self.form_rules:
             form_rules = RuleSet(self, self.form_rules)
@@ -864,8 +837,6 @@ class ModelView(ActionView):
 
             if not self._form_edit_rules:
                 self._form_edit_rules = form_rules
-
-
 
     # Primary key
     def get_pk_value(self, obj):
@@ -1145,20 +1116,6 @@ class ModelView(ActionView):
         """
         raise NotImplementedError("Please implement scaffold_list_form method")
 
-    def get_form(self):
-        """
-        Get form class.
-
-        If ``self.form`` is set, will return it and will call
-        ``self.scaffold_form`` otherwise.
-
-        Override to implement customized behavior.
-        """
-        if self.form is not None:
-            return self.form
-
-        return self.scaffold_form()
-
     def get_list_form(self):
         """
         Get form class for the editable list view.
@@ -1200,7 +1157,7 @@ class ModelView(ActionView):
 
         Override to implement customized behavior.
         """
-        return self.get_form()
+        return self.scaffold_form()
 
     def get_edit_form(self):
         """
@@ -1208,7 +1165,7 @@ class ModelView(ActionView):
 
         Override to implement customized behavior.
         """
-        return self.get_form()
+        return self.scaffold_form()
 
     def get_delete_form(self):
         """
@@ -1226,8 +1183,6 @@ class ModelView(ActionView):
     def get_action_form(self):
         """
         Create form class for a model action.
-
-        Override to implement customized behavior.
         """
 
         class ActionForm(self.form_base_class):
@@ -1305,7 +1260,7 @@ class ModelView(ActionView):
 
         """
         if self.can_view_details:
-            return self.get_url('.details_view', id=model.id)
+            return self.get_url(".details_view", id=model.id)
         else:
             return self.get_redirect_target()
 
@@ -1535,7 +1490,6 @@ class ModelView(ActionView):
         """
         pass
 
-
     def create_model(self, form):
         """
         Create model from the form.
@@ -1717,9 +1671,7 @@ class ModelView(ActionView):
         """
         return reduce(getattr, attr.split("."), obj)
 
-    def _get_format_value(
-        self, model, name, column_formatters, column_type_formatters
-    ):
+    def _get_format_value(self, model, name, column_formatters, column_type_formatters):
         """
         Returns the value to be displayed.
 
@@ -1840,12 +1792,11 @@ class ModelView(ActionView):
         """
         raise NotImplementedError()
 
-    # Views
+    def get_redirect_target(self, param_name="url", endpoint=".index_view"):
+        return request.values.get(param_name) or self.get_url(endpoint)
+
     @expose_url("/")
     def index_view(self):
-        """
-        List view
-        """
         if self.can_delete:
             delete_form = self.delete_form()
         else:
@@ -2026,7 +1977,7 @@ class ModelView(ActionView):
             return redirect(return_url)
 
         # TODO: request.args.getlist("id")  # return list for multipk
-        id = request.args.get("id")        
+        id = request.args.get("id")
 
         if id is None:
             return redirect(return_url)
@@ -2056,9 +2007,7 @@ class ModelView(ActionView):
                     # save button
                     return redirect(self.get_save_return_url(model, is_created=False))
 
-        form_opts = FormOpts(
-            widget_args=self.form_widget_args, form_rules=self._form_edit_rules
-        )
+        form_opts = FormOpts(widget_args=self.form_widget_args)
 
         if self.edit_modal and request.args.get("modal"):
             template = self.edit_modal_template
