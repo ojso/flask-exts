@@ -7,10 +7,6 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import DeclarativeBase
 
 
-class Base(DeclarativeBase):
-    pass
-
-
 class Db:
     def __init__(self, app: Flask | None = None):
         self.Model = self._make_declarative_base()
@@ -18,7 +14,28 @@ class Db:
             self.init_app(app)
 
     def _make_declarative_base(self):
+        class Base(DeclarativeBase):
+            pass
+
         return Base
+
+    def init_session(self, url=None, echo=False):
+        """Initialize the database engine and session factory.
+        This method is used in non-Flask environments.
+        Examples:
+            db = Db()
+            db.init_session(url="sqlite:///mydb.sqlite", echo=True)
+            db.create_all()
+            with db.Session() as session:
+                # use the session here
+                session.add(some_object)
+                session.commit()
+        """
+        options = {"url": url or "sqlite:///:memory:"}
+        if echo:
+            options["echo"] = True
+        self.engine = create_engine(**options)
+        self.Session = sessionmaker(self.engine)
 
     def init_app(self, app: Flask) -> None:
         if "sqlalchemy" in app.extensions:
@@ -64,9 +81,9 @@ class Db:
         out["db"] = db
         return out
 
-    def create_all(self,**kwargs):
-        if 'bind' not in kwargs:
-            kwargs['bind'] = self.engine
+    def create_all(self, **kwargs):
+        if "bind" not in kwargs:
+            kwargs["bind"] = self.engine
         self.Model.metadata.create_all(**kwargs)
 
     def reset_models(self):

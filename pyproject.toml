@@ -30,6 +30,7 @@ requires-python = ">=3.10"
 dependencies = [
     "Flask>=3.0",
     "WTForms>=3.0",
+    "SQLAlchemy>=2.0",
     "flask-babel>=4.0",
     "Flask-Login>=0.6",
     "tablib>=3.0",
