@@ -1,7 +1,7 @@
 from sqlalchemy import inspect
 
 
-def instance_primary_key_value(instance):
+def get_identity(instance):
     """
     Return primary key values from an instance.
     """

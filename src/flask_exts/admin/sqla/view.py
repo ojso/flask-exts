@@ -15,7 +15,6 @@ from ...datastore.sqla import db
 from ...datastore.sqla.utils import is_relationship
 from ...datastore.sqla.utils import get_field_with_path
 from ...datastore.sqla.utils import parse_like_term
-from ...datastore.sqla.utils import need_join
 from ...datastore.sqla.utils import is_hybrid_property
 from .utils import get_columns_for_field
 from .utils import filter_foreign_columns
@@ -29,11 +28,18 @@ from .ajax import create_ajax_loader
 from .typefmt import DEFAULT_FORMATTERS
 from ...datastore.sqla.utils import get_model_mapper
 from ...datastore.sqla.utils import get_primary_key
-from ...datastore.sqla.utils import instance_primary_key_value
-from ...datastore.sqla.utils import stmt_delete_model_pk_ids
+from ...datastore.sqla.utils import get_identity
+from ...datastore.sqla.utils import delete_by_pk_ids
 
 # Set up logger
 log = logging.getLogger("flask-exts.sqla")
+
+from sqlalchemy import inspect
+
+
+def need_join(model, table):
+    mapper = inspect(model)
+    return table not in mapper.tables
 
 
 class SqlaModelView(ModelView):
@@ -317,22 +323,16 @@ class SqlaModelView(ModelView):
 
     def has_multiple_pks(self):
         return isinstance(self._primary_key, tuple)
-    
-    def get_primary_key_value(self, instance):
-        """
-        Return primary key values from an instance.
-        """
-        return instance_primary_key_value(instance)
 
     def delete_pk_ids(self, ids: list):
         """
         Return a delete statement that deletes all rows with primary key in ids
         """
-        stmt = stmt_delete_model_pk_ids(self.model, ids)
+        stmt = delete_by_pk_ids(self.model, ids)
         result = self.session.execute(stmt)
         self.session.commit()
         return result
-    
+
     def get_model_iterator(self, model):
         """
         Return property iterator for the model
@@ -382,7 +382,7 @@ class SqlaModelView(ModelView):
         Return the primary key value from a model object.
         If there are multiple primary keys, they're encoded into string representation.
         """
-        value = self.get_primary_key_value(instance)
+        value = get_identity(instance)
         if isinstance(value, tuple):
             return ",".join([str(v) for v in value])
         else:

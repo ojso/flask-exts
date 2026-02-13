@@ -19,6 +19,7 @@ from tests.datastore.sqla.models.model1 import ModelMult
 from tests.datastore.sqla.models.model1 import ModelOnetoone1, ModelOnetoone2
 
 
+
 class CustomModelView(SqlaModelView):
     def __init__(
         self,
