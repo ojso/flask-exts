@@ -16,7 +16,7 @@ def fill_db():
 
 
 def get_enforcer():
-    db.reset_models()
+    db.reset_all()
     fill_db()
     _security.authorizer.get_casbin_enforcer()
     e = _security.authorizer.e

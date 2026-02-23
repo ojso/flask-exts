@@ -6,7 +6,7 @@ from tests.datastore.sqla.models.message import Message
 def test_render_pagination(app, client):
     @app.route("/pagination")
     def test():
-        db.reset_models()
+        db.reset_all()
         for i in range(100):  # noqa: F841
             msg = Message()
             db.session.add(msg)

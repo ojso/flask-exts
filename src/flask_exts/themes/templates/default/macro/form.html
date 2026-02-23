@@ -72,46 +72,16 @@
 {% endmacro %}
 
 
-{% macro render_form_rule(rule, form, form_opts) %}
-  {%- if rule.type == 'text' %}
-    {{ rule(form, from_opts) }}
-  {%- elif rule.type == 'field' %}
-    {% set params=rule.get_params(form, form_opts) %}
-    {{ render_form_field(form, params.field, params.kwargs) }}
-  {%- elif rule.type == 'nest' %}
-    {% for r in rule.rules %}
-      {% if not loop.first %}
-        {{ rule.separator|safe }}
-      {% endif %}
-      {{ render_form_rule(r, form, form_opts) }}
-    {% else %}
-    {% endfor %}
-  {%- elif rule.type == 'row' %}
-    <div class="form-row">
-      {% for r in rule.rules %}
-        {{ render_form_rule(r, form, form_opts) }}
-      {% endfor %}
-    </div>
-  {%- else %}
-    {{ rule.type or 'rule.type is None' }}
-  {%- endif %}
-{% endmacro %}
-
 {% macro render_form_fields(form, form_opts=None) %}
-    {% if form_opts and form_opts.form_rules %}
-        {% for r in form_opts.form_rules %}
-          {{ render_form_rule(r, form, form_opts) }}
-        {% endfor %}
-    {% else %}
-        {% for f in form if f.widget.input_type != 'hidden' %}
-          {% if form_opts %}
-            {% set kwargs = form_opts.widget_args.get(f.short_name, {}) %}
-          {% else %}
-            {% set kwargs = {} %}
-          {% endif %}
-          {{ render_form_field(form, f, kwargs) }}
-        {% endfor %}
-    {% endif %}
+    {% for f in form if f.widget.input_type != 'hidden' %}
+      {% if form_opts %}
+        {% set kwargs = form_opts.widget_args.get(f.short_name, {}) %}
+      {% else %}
+        {% set kwargs = {} %}
+      {% endif %}
+      {{ render_form_field(form, f, kwargs) }}
+    {% endfor %}
+
     {% for f in form if f.widget.input_type == 'hidden' %}
       {{ f }}
     {% endfor %}

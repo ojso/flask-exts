@@ -86,6 +86,11 @@ class Db:
             kwargs["bind"] = self.engine
         self.Model.metadata.create_all(**kwargs)
 
-    def reset_models(self):
+    def drop_all(self, **kwargs):
+        if "bind" not in kwargs:
+            kwargs["bind"] = self.engine
+        self.Model.metadata.drop_all(**kwargs)
+
+    def reset_all(self):
         self.Model.metadata.drop_all(self.engine)
         self.Model.metadata.create_all(self.engine)

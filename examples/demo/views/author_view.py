@@ -1,6 +1,7 @@
 from markupsafe import Markup
 from wtforms import validators
 from flask_babel import gettext
+from sqlalchemy import select
 from flask_exts.admin.sqla.filter import BaseSQLAFilter
 from flask_exts.admin.sqla.filter import FilterEqual
 from flask_exts.admin.sqla.view import SqlaModelView
@@ -62,12 +63,12 @@ class AuthorView(SqlaModelView):
         "ip_address",
         "currency",
         "timezone",
-        "phone_number",
+        # "phone_number",
     ]
     column_searchable_list = [
         "first_name",
         "last_name",
-        "phone_number",
+        # "phone_number",
         "email",
     ]
     column_editable_list = ["type", "currency", "timezone"]
@@ -104,22 +105,26 @@ class AuthorView(SqlaModelView):
             name="Last Name",
             options=(("1", "Yes"), ("0", "No")),
         ),
-        "phone_number",
+        # "phone_number",
         "email",
         "ip_address",
         "currency",
         "timezone",
     ]
-    column_formatters = {"phone_number": phone_number_formatter}
+    # column_formatters = {"phone_number": phone_number_formatter}
 
     # setup edit forms so that only posts created by this author can be selected as 'featured'
     def edit_form(self, obj):
         return self._filtered_posts(super().edit_form(obj))
 
     def _filtered_posts(self, form):
-        form.featured_post.query_factory = lambda: Post.query.filter(
-            Post.author_id == form.id._value()
-        ).all()
+        form.featured_post.query_factory = (
+            lambda: self.session.execute(
+                select(Post).where(Post.author_id == form.id._value())
+            )
+            .scalars()
+            .all()
+        )
         return form
 
 

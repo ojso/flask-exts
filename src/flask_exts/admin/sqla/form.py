@@ -4,8 +4,6 @@ from wtforms import fields, validators
 from sqlalchemy import Boolean, Column
 from sqlalchemy.orm import ColumnProperty
 from wtforms.fields import DateTimeLocalField as DateTimeField
-from ...datastore.sqla.utils import has_multiple_pks
-from ...datastore.sqla.utils import get_model_mapper
 # from wtforms.fields import TimeField
 from ...template.fields import TimeField
 from ...template.fields import Select2Field
@@ -33,6 +31,8 @@ from ..model.form import (
 )
 
 from .utils import filter_foreign_columns
+from ...datastore.sqla.utils import get_model_mapper
+from ...datastore.sqla.utils import has_multiple_pks
 from ...datastore.sqla.utils import is_relationship
 from ...datastore.sqla.utils import is_association_proxy
 from ...datastore.sqla.utils import get_field_with_path
@@ -104,7 +104,7 @@ class AdminModelConverter(ModelConverterBase):
         else:
             return QuerySelectField(**kwargs)
 
-    def _convert_relation(self, name, prop, property_is_association_proxy, kwargs):
+    def _convert_relation(self, name, prop, kwargs):
         # Check if relation is specified
         form_columns = getattr(self.view, "form_columns", None)
         if form_columns and name not in form_columns:
@@ -126,9 +126,7 @@ class AdminModelConverter(ModelConverterBase):
         requirement_validator_specified = any(
             isinstance(v, requirement_options) for v in kwargs["validators"]
         )
-        if (
-            property_is_association_proxy
-            or column.nullable
+        if (column.nullable
             or prop.direction.name != "MANYTOONE"
         ):
             kwargs["allow_blank"] = True
@@ -144,9 +142,7 @@ class AdminModelConverter(ModelConverterBase):
         if override:
             return override(**kwargs)
 
-        multiple = property_is_association_proxy or (
-            prop.direction.name in ("ONETOMANY", "MANYTOMANY") and prop.uselist
-        )
+        multiple = prop.direction.name in ("ONETOMANY", "MANYTOMANY") and prop.uselist
         return self._model_select_field(prop, multiple, remote_model, **kwargs)
 
     def convert(self, model, mapper, name, prop, field_args, hidden_pk):
@@ -164,16 +160,9 @@ class AdminModelConverter(ModelConverterBase):
             kwargs["validators"] = list(kwargs["validators"])
 
         # Check if it is relation or property
-        if hasattr(prop, "direction") or is_association_proxy(prop):
-            property_is_association_proxy = is_association_proxy(prop)
-            if property_is_association_proxy:
-                if not hasattr(prop.remote_attr, "prop"):
-                    raise Exception(
-                        "Association proxy referencing another association proxy is not supported."
-                    )
-                prop = prop.remote_attr.prop
+        if hasattr(prop, "direction"):
             return self._convert_relation(
-                name, prop, property_is_association_proxy, kwargs
+                name, prop, kwargs
             )
         elif hasattr(prop, "columns"):  # Ignore pk/fk
             # Check if more than one column mapped to the property
@@ -439,20 +428,6 @@ def avoid_empty_strings(value):
     return value if value else None
 
 
-def _resolve_prop(prop):
-    """
-    Resolve proxied property
-
-    :param prop:
-        Property to resolve
-    """
-    # Try to see if it is proxied property
-    if hasattr(prop, "_proxied_property"):
-        return prop._proxied_property
-
-    return prop
-
-
 # Get list of fields and generate form
 def get_form(
     model,
@@ -462,7 +437,6 @@ def get_form(
     exclude=None,
     field_args=None,
     hidden_pk=False,
-    ignore_hidden=True,
     extra_fields=None,
 ):
     """
@@ -482,8 +456,6 @@ def get_form(
         Dictionary with additional field arguments
     :param hidden_pk:
         Generate hidden field with model primary key or not
-    :param ignore_hidden:
-        If set to True (default), will ignore properties that start with underscore
     """
     mapper = get_model_mapper(model)
     field_args = field_args or {}
@@ -491,23 +463,19 @@ def get_form(
     properties = ((p.key, p) for p in mapper.attrs)
 
     if only:
+
         def find(name):
             # If field is in extra_fields, it has higher priority
             if extra_fields and name in extra_fields:
                 return name, FieldPlaceholder(extra_fields[name])
 
-            column, path = get_field_with_path(
-                model, name
-            )
+            column, path = get_field_with_path(model, name)
 
-            if path and not (is_relationship(column) or is_association_proxy(column)):
+            if path and not (is_relationship(column)):
                 raise Exception(
                     "form column is located in another table and "
                     "requires inline_models: {0}".format(name)
                 )
-
-            if is_association_proxy(column):
-                return name, column
 
             relation_name = column.key
 
@@ -524,13 +492,11 @@ def get_form(
     field_dict = {}
     for name, p in properties:
         # Ignore protected properties
-        if ignore_hidden and name.startswith("_"):
+        if name.startswith("_"):
             continue
 
-        prop = _resolve_prop(p)
-
         field = converter.convert(
-            model, mapper, name, prop, field_args.get(name), hidden_pk
+            model, mapper, name, p, field_args.get(name), hidden_pk
         )
         if field is not None:
             field_dict[name] = field

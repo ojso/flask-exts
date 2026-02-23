@@ -6,7 +6,7 @@ from tests.datastore.sqla.models.message import Message
 def test_render_simple_table(app, client):
     @app.route("/table")
     def test():
-        db.reset_models()
+        db.reset_all()
         for i in range(3):
             msg = Message(text=f"Test message {i+1}")
             db.session.add(msg)

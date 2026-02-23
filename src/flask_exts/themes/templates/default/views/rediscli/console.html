@@ -1,6 +1,6 @@
 {% extends 'admin/master.html' %}
 
-{%- set _none = _template.theme.plugin.enable_plugin('rediscli') -%}
+{%- set _none = _template.theme.plugin_manager.enable_plugin('rediscli') -%}
 
 {% block main %}
 <div class="console">

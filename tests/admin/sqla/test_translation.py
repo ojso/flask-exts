@@ -8,7 +8,7 @@ from .test_basic import CustomModelView
 
 def test_column_label_translation(app, client, admin):
     with app.test_request_context():
-        db.reset_models()
+        db.reset_all()
 
         with force_locale("zh"):
             label = gettext("Name")

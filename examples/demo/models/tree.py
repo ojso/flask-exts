@@ -7,6 +7,8 @@ from sqlalchemy.orm import mapped_column
 
 
 class Tree(db.Model):
+    __tablename__ = "tree"
+    
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
 

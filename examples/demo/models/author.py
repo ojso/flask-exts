@@ -2,7 +2,7 @@ from . import db
 from typing import Optional
 from typing import List
 import enum
-from sqlalchemy import sql, cast
+from sqlalchemy import String, sql, cast
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
@@ -24,6 +24,7 @@ class EnumChoices(enum.Enum):
 
 # Create models
 class Author(db.Model):
+    __tablename__ = "author"
     id: Mapped[int] = mapped_column(primary_key=True)
     # we can specify a list of available choices later on
     type: Mapped[str]
@@ -63,7 +64,7 @@ class Author(db.Model):
     @phone_number.expression
     def phone_number(cls):
         return sql.operators.ColumnOperators.concat(
-            cast(cls.dialling_code, db.String), cls.local_phone_number
+            cast(cls.dialling_code, String), cls.local_phone_number
         )
 
     def __str__(self):

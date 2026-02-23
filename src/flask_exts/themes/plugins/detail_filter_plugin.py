@@ -1,8 +1,8 @@
 from flask import url_for
-from .base_plugin import BasePlugin
+from .base_plugin import PluginBase
 
 
-class DetailFilterPlugin(BasePlugin):
+class DetailFilterPlugin(PluginBase):
     def __init__(self):
         super().__init__("detail_filter")
 

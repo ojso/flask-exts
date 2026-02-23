@@ -8,7 +8,6 @@ from ..models.author import Author
 # Customized Post model admin
 class PostView(SqlaModelView):
     can_view_details = True
-    column_display_pk = True
     column_list = [
         "id",
         "author",

@@ -36,7 +36,7 @@ def build_sample_userkeyword():
     user_log.email = "log"
     user_log.password = "log"
     for kw in (Keyword("blammo"), Keyword("itsig")):
-        user_log.keywords.append(kw)
+        user_log.kw.append(kw)
     db.session.add(user_log)
     db.session.commit()
 

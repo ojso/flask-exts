@@ -10,6 +10,8 @@ from .post_tag import post_tag_table
 
 
 class Post(db.Model):
+    __tablename__ = "post"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
     text: Mapped[str]

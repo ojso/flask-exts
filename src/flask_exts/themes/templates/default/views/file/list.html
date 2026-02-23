@@ -4,7 +4,7 @@
 {% import 'macro/actions.html' as actionslib with context %}
 
 {% if actions %}
-  {%- set _none = _template.theme.plugin.enable_plugin(['model_action']) -%}
+  {%- set _none = _template.theme.plugin_manager.enable_plugin(['model_action']) -%}
 {% endif %}
 
 {% block main %}

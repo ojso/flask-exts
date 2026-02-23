@@ -1,8 +1,8 @@
 from flask import url_for
-from .base_plugin import BasePlugin
+from .base_plugin import PluginBase
 
 
-class SphinxCopyButtonPlugin(BasePlugin):
+class SphinxCopyButtonPlugin(PluginBase):
     def __init__(self):
         super().__init__("sphinx_copybutton")
 

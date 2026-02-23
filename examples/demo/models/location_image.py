@@ -9,6 +9,7 @@ from sqlalchemy import event
 from ..file_op import remove_image
 
 class Location(db.Model):
+    __tablename__ = "location"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     images: Mapped[List["LocationImage"]] = relationship(
@@ -17,10 +18,7 @@ class Location(db.Model):
 
 
 class ImageType(db.Model):
-    """
-    Just so the LocationImage can have another foreign key,
-    so we can test the "form_ajax_refs" inside the "inline_models"
-    """
+    __tablename__ = "image_type"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
@@ -34,6 +32,7 @@ class ImageType(db.Model):
 
 
 class LocationImage(db.Model):
+    __tablename__ = "location_image"
     id: Mapped[int] = mapped_column(primary_key=True)
     alt: Mapped[str]
     path: Mapped[str]

@@ -5,7 +5,6 @@ from wtforms.fields.core import UnboundField
 from wtforms.validators import InputRequired
 from ...template.widgets import XEditableWidget
 from ...template.form.base_form import BaseForm
-from ...template.rules import RuleSet
 
 
 def converts(*args):
@@ -74,14 +73,6 @@ class InlineBaseFormAdmin:
 
         for k, v in kwargs.items():
             setattr(self, k, v)
-
-        # Convert form rules
-        form_rules = getattr(self, 'form_rules', None)
-
-        if form_rules:
-            self._form_rules = RuleSet(self, form_rules)
-        else:
-            self._form_rules = None
 
     def get_form(self):
         """

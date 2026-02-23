@@ -36,7 +36,6 @@ from ..view import View
 from ..action_mixin import ActionMixin
 from ...template.form.base_form import BaseForm
 from ...template.form.form_opts import FormOpts
-from ...template.rules import RuleSet
 from ...template.form.utils import get_form_data
 
 
@@ -265,7 +264,7 @@ class ModelView(View, ActionMixin):
         Functions the same way as column_type_formatters.
     """
 
-    column_labels = None
+    column_labels = {}
     """
         Dictionary where key is column name and value is string to display.
 
@@ -394,11 +393,6 @@ class ModelView(View, ActionMixin):
         False by default so as to be robust across translations.
 
         Changing this parameter will break any existing URLs that have filters.
-    """
-
-    column_display_pk = False
-    """
-        Controls if the primary key should be displayed in the list view.
     """
 
     column_display_actions = True
@@ -609,39 +603,6 @@ class ModelView(View, ActionMixin):
         in your `AjaxModelLoader` class.
     """
 
-    form_rules = None
-    """
-        List of rendering rules for model creation form.
-
-        This property changed default form rendering behavior and makes possible to rearrange order
-        of rendered fields, add some text between fields, group them, etc. If not set, will use
-        default form rendering logic.
-
-        Here's simple example which illustrates how to use::
-
-            from .forms.form import rules
-
-            class MyModelView(ModelView):
-                form_rules = [
-                    # Define field set with header text and four fields
-                    rules.FieldSet(('first_name', 'last_name', 'email', 'phone'), 'User'),
-                    # ... and it is just shortcut for:
-                    rules.Header('User'),
-                    rules.Field('first_name'),
-                    rules.Field('last_name'),
-                    # ...
-                    # It is possible to create custom rule blocks:
-                    MyBlock('Hello World'),
-                    # It is possible to call macros from current context
-                    rules.Macro('my_macro', foobar='baz')
-                ]
-    """
-
-    form_create_rules = None
-    """
-        Customized rules for the create form. Override `form_rules` if present.
-    """
-
     # Actions
     action_disallowed_list = []
     """
@@ -752,6 +713,9 @@ class ModelView(View, ActionMixin):
         # Search
         self._search_supported = self.init_search()
 
+        # Filters
+        self._refresh_filters_cache()
+
         # Column formatters
         if self.column_formatters_export is None:
             self.column_formatters_export = self.column_formatters
@@ -772,15 +736,7 @@ class ModelView(View, ActionMixin):
         if self.column_descriptions is None:
             self.column_descriptions = dict()
 
-        # Filters
-        self._refresh_filters_cache()
 
-        # Form rendering rules
-        self._refresh_form_rules_cache()
-
-        # Process form rules
-        self._validate_form_class(self._form_edit_rules, self._edit_form_class)
-        self._validate_form_class(self._form_create_rules, self._create_form_class)
 
     # Caching
     def _refresh_forms_cache(self):
@@ -826,17 +782,6 @@ class ModelView(View, ActionMixin):
         else:
             self._filter_groups = None
             self._filter_args = None
-
-    def _refresh_form_rules_cache(self):
-
-        if self.form_rules:
-            form_rules = RuleSet(self, self.form_rules)
-
-            if not self._form_create_rules:
-                self._form_create_rules = form_rules
-
-            if not self._form_edit_rules:
-                self._form_edit_rules = form_rules
 
     # Primary key
     def get_pk_value(self, obj):
@@ -1263,50 +1208,6 @@ class ModelView(View, ActionMixin):
             return self.get_url(".details_view", id=model.id)
         else:
             return self.get_redirect_target()
-
-    def _get_ruleset_missing_fields(self, ruleset, form):
-        missing_fields = []
-
-        if ruleset:
-            visible_fields = ruleset.visible_fields
-            for field in form:
-                if field.name not in visible_fields:
-                    missing_fields.append(field.name)
-
-        return missing_fields
-
-    def _validate_form_class(self, ruleset, form_class, remove_missing=True):
-        form_fields = []
-        for name, obj in form_class.__dict__.items():
-            if isinstance(obj, UnboundField):
-                form_fields.append(name)
-
-        missing_fields = []
-        if ruleset:
-            visible_fields = ruleset.visible_fields
-            for field_name in form_fields:
-                if field_name not in visible_fields:
-                    missing_fields.append(field_name)
-
-        if missing_fields:
-            # warnings.warn("Fields missing from ruleset: %s" % (",".join(missing_fields)))
-            if remove_missing:
-                self._remove_fields_from_form_class(missing_fields, form_class)
-
-    def _validate_form_instance(self, ruleset, form, remove_missing=True):
-        missing_fields = self._get_ruleset_missing_fields(ruleset=ruleset, form=form)
-        if missing_fields:
-            # warnings.warn("Fields missing from ruleset: %s" % (",".join(missing_fields)))
-            if remove_missing:
-                self._remove_fields_from_form_instance(missing_fields, form)
-
-    def _remove_fields_from_form_instance(self, field_names, form):
-        for field_name in field_names:
-            form.__delitem__(field_name)
-
-    def _remove_fields_from_form_class(self, field_names, form_class):
-        for field_name in field_names:
-            delattr(form_class, field_name)
 
     # Helpers
     def is_sortable(self, name):
@@ -1929,8 +1830,6 @@ class ModelView(View, ActionMixin):
             return redirect(return_url)
 
         form = self.create_form()
-        if not hasattr(form, "_validated_ruleset") or not form._validated_ruleset:
-            self._validate_form_instance(ruleset=self._form_create_rules, form=form)
 
         if form.validate_on_submit():
             # in versions 1.1.0 and before, this returns a boolean
@@ -1953,9 +1852,7 @@ class ModelView(View, ActionMixin):
                     # save button
                     return redirect(self.get_save_return_url(model, is_created=True))
 
-        form_opts = FormOpts(
-            widget_args=self.form_widget_args, form_rules=self._form_create_rules
-        )
+        form_opts = FormOpts(widget_args=self.form_widget_args)
 
         if self.create_modal and request.args.get("modal"):
             template = self.create_modal_template
@@ -1989,8 +1886,6 @@ class ModelView(View, ActionMixin):
             return redirect(return_url)
 
         form = self.edit_form(obj=model)
-        if not hasattr(form, "_validated_ruleset") or not form._validated_ruleset:
-            self._validate_form_instance(ruleset=self._form_edit_rules, form=form)
 
         if form.validate_on_submit():
             if self.update_model(form, model):

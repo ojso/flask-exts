@@ -99,10 +99,10 @@ class QuerySelectField(SelectFieldBase):
 
     def iter_choices(self):
         if self.allow_blank:
-            yield ("__None", self.blank_text, self.data is None,{})
+            yield ("__None", self.blank_text, self.data is None, {})
 
         for pk, obj in self._get_object_list():
-            yield (pk, self.get_label(obj), obj == self.data,{})
+            yield (pk, self.get_label(obj), obj == self.data, {})
 
     def process_formdata(self, valuelist):
         if valuelist:
@@ -162,7 +162,7 @@ class QuerySelectMultipleField(QuerySelectField):
 
     def iter_choices(self):
         for pk, obj in self._get_object_list():
-            yield (pk, self.get_label(obj), obj in self.data,{})
+            yield (pk, self.get_label(obj), obj in self.data, {})
 
     def process_formdata(self, valuelist):
         self._formdata = set(valuelist)
@@ -278,10 +278,7 @@ class InlineModelFormList(InlineFieldList):
         self._pk = get_primary_key(model)
 
         # Generate inline form field
-        form_opts = FormOpts(
-            widget_args=getattr(inline_view, "form_widget_args", None),
-            form_rules=inline_view._form_rules,
-        )
+        form_opts = FormOpts(widget_args=getattr(inline_view, "form_widget_args", None))
 
         form_field = self.form_field_type(form, self._pk, form_opts=form_opts)
 
@@ -330,10 +327,7 @@ class InlineModelOneToOneField(InlineModelFormField):
         self._pk = get_primary_key(model)
 
         # Generate inline form field
-        form_opts = FormOpts(
-            widget_args=getattr(inline_view, "form_widget_args", None),
-            form_rules=inline_view._form_rules,
-        )
+        form_opts = FormOpts(widget_args=getattr(inline_view, "form_widget_args", None))
         super().__init__(form, self._pk, form_opts=form_opts, **kwargs)
 
     @staticmethod

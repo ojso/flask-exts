@@ -12,7 +12,7 @@ from tests.datastore.sqla.models.tree_node import TreeNode
 
 def test_inline_form(app, client, admin):
     with app.app_context():
-        db.reset_models()
+        db.reset_all()
 
         class UserModelView(SqlaModelView):
             inline_models = (UserInfo,)
@@ -91,7 +91,7 @@ def test_inline_form(app, client, admin):
 
 def test_inline_form_required(app, client, admin):
     with app.app_context():
-        db.reset_models()
+        db.reset_all()
 
         class UserModelView(SqlaModelView):
             inline_models = (UserEmail,)
@@ -128,7 +128,7 @@ def test_inline_form_required(app, client, admin):
 
 def test_inline_form_ajax_fk(app, admin):
     with app.app_context():
-        db.reset_models()
+        db.reset_all()
 
         class UserModelView(SqlaModelView):
             opts = {"form_ajax_refs": {"tag": {"fields": ["name"]}}}
@@ -149,7 +149,7 @@ def test_inline_form_ajax_fk(app, admin):
 
 def test_inline_form_self(app, admin):
     with app.app_context():
-        db.reset_models()
+        db.reset_all()
 
         class TreeView(SqlaModelView):
             inline_models = (TreeNode,)
@@ -164,7 +164,7 @@ def test_inline_form_self(app, admin):
 
 def test_inline_form_base_class(app, client, admin):
     with app.app_context():
-        db.reset_models()
+        db.reset_all()
 
         # Customize error message
         class StubTranslation:

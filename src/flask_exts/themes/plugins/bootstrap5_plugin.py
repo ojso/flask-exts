@@ -1,8 +1,8 @@
 from flask import url_for
-from .base_plugin import BasePlugin
+from .base_plugin import PluginBase
 
 
-class Bootstrap5Plugin(BasePlugin):
+class Bootstrap5Plugin(PluginBase):
     def __init__(self):
         super().__init__("bootstrap5")
 

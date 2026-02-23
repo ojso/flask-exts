@@ -207,8 +207,7 @@ class SqlaModelView(ModelView):
         To achieve this, you need to install special ``inline_converter``
         for your model::
 
-            from .sqla.form import \
-                InlineOneToOneModelConverter
+            from .sqla.form import InlineOneToOneModelConverter
 
             class MyInlineModelForm(InlineFormAdmin):
                 form_columns = ('title', 'date')
@@ -242,15 +241,6 @@ class SqlaModelView(ModelView):
                 form_optional_types = (Boolean, Unicode)
     """
 
-    ignore_hidden = True
-    """
-       Ignore field that starts with "_"
-
-       Example::
-
-           class MyModelView(BaseModelView):
-               ignore_hidden = False
-    """
 
     def __init__(
         self,
@@ -360,16 +350,14 @@ class SqlaModelView(ModelView):
                 alias = joins.get(key)
 
                 if key not in joins:
-                    if not isinstance(item, Table):
-                        alias = aliased(item.property.mapper.class_)
-
+                    alias = aliased(item.property.mapper.class_)
                     fn = query.join if inner_join else query.outerjoin
 
                     if last is None:
-                        query = fn(item) if alias is None else fn(alias, item)
+                        query =fn(alias, item)
                     else:
                         prop = getattr(last, item.key)
-                        query = fn(prop) if alias is None else fn(alias, prop)
+                        query = fn(alias, prop)
 
                     joins[key] = alias
 
@@ -418,9 +406,6 @@ class SqlaModelView(ModelView):
                 if column.foreign_keys:
                     continue
 
-                if not self.column_display_pk and column.primary_key:
-                    continue
-
                 columns.append(p.key)
 
         return columns
@@ -443,9 +428,6 @@ class SqlaModelView(ModelView):
 
                 # Can't sort on primary or foreign keys by default
                 if column.foreign_keys:
-                    continue
-
-                if not self.column_display_pk and column.primary_key:
                     continue
 
                 columns[p.key] = column
@@ -741,7 +723,6 @@ class SqlaModelView(ModelView):
             only=self.form_columns,
             exclude=self.form_excluded_columns,
             field_args=self.form_args,
-            ignore_hidden=self.ignore_hidden,
             extra_fields=self.form_extra_fields,
         )
 

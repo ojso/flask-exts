@@ -22,16 +22,12 @@ def is_relationship(attr):
 def is_hybrid_property(model, attr_name):
     mapper = inspect(model)
     descriptor = mapper.all_orm_descriptors.get(attr_name)
-    if descriptor is None:
-        return False
     return isinstance(descriptor, hybrid_property)
 
 
 def is_association_proxy(model, attr_name):
     mapper = inspect(model)
     descriptor = mapper.all_orm_descriptors.get(attr_name)
-    if descriptor is None:
-        return False
     return isinstance(descriptor, AssociationProxy)
 
 
@@ -66,19 +62,19 @@ def get_field_with_path(
         elif is_relationship(attr):
             join_path.append(attr)
             current_model = attr.property.mapper.class_
+            if i == len(parts) - 1:
+                final_attr = attr
+                break
         # Case 3: AssociationProxy
-        elif isinstance(attr, AssociationProxy):
+        elif is_association_proxy(current_model, part):
             if i != len(parts) - 1:
                 raise ValueError(
                     f"AssociationProxy '{part}' cannot be followed by further path segments."
                 )
             # Step into the underlying relationship
-            local_rel_name = attr.local_attr  # str, e.g., 'profile'
-            local_rel = getattr(current_model, local_rel_name)
+            local_rel = attr.local_attr
             join_path.append(local_rel)
-            target_model = local_rel.property.mapper.class_
-            remote_attr_name = attr.remote_attr
-            remote_attr = getattr(target_model, remote_attr_name)
+            remote_attr = attr.remote_attr
             final_attr = remote_attr
             break
         else:

@@ -5,7 +5,7 @@ from tests.datastore.sqla.models.message import Message
 def test_render_pager(app, client):
     @app.route("/pager")
     def test():
-        db.reset_models()
+        db.reset_all()
         for i in range(100):
             msg = Message()
             db.session.add(msg)

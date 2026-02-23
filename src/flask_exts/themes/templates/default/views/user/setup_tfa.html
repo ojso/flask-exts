@@ -1,7 +1,7 @@
 {% extends 'admin/master.html' %}
 {% import 'macro/actions.html' as actionlib with context %}
 
-{%- set _none = _template.theme.plugin.enable_plugin('qrcode') -%}
+{%- set _none = _template.theme.plugin_manager.enable_plugin('qrcode') -%}
 
 {% block title %}setup 2fa{% endblock %}
 

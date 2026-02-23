@@ -27,14 +27,14 @@ class ThemeManager:
 
     def __init__(self, name="default"):
         self.name = name
-        self.plugin = PluginManager()
+        self.plugin_manager = PluginManager()
 
     def init_app(self, app):
         if app.config.get("THEME_NAME"):
             self.name = app.config.get("THEME_NAME")
         # print("Initializing ThemeManager with theme:", self.name)
         self.init_theme_blueprint(app)        
-        self.plugin.init_app(app)
+        self.plugin_manager.init_app(app)
 
     def init_theme_blueprint(self, app):
         blueprint = Blueprint(
