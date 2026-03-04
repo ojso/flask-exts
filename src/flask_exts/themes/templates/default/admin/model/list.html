@@ -136,8 +136,8 @@
                       {% set form = list_forms[get_pk_value(row)] %}
                       {% if form.csrf_token %}
                         {{ form[c](pk=get_pk_value(row), display_value=get_model_value(row, c), csrf=form.csrf_token._value()) }}
-                      {% elif _template.funcs.csrf_token %}
-                        {{ form[c](pk=get_pk_value(row), display_value=get_model_value(row, c), csrf=_template.funcs.csrf_token()) }}
+                      {% elif _template.theme.funcs.csrf_token %}
+                        {{ form[c](pk=get_pk_value(row), display_value=get_model_value(row, c), csrf=_template.theme.funcs.csrf_token()) }}
                       {% else %}
                         {{ form[c](pk=get_pk_value(row), display_value=get_model_value(row, c)) }}
                       {% endif %}

@@ -13,8 +13,8 @@
   {{ delete_form.url(value=return_url) }}
   {% if delete_form.csrf_token %}
   {{ delete_form.csrf_token }}
-  {% elif _template.funcs.csrf_token %}
-  <input type="hidden" name="csrf_token" value="{{ _template.funcs.csrf_token() }}"/>
+  {% elif _template.theme.funcs.csrf_token %}
+  <input type="hidden" name="csrf_token" value="{{ _template.theme.funcs.csrf_token() }}"/>
   {% endif %}
   <button onclick="return confirm('{{ action.confirm }}');" title="{{ gettext('Delete Record') }}">
     {{ render_icon(action.icon) }}

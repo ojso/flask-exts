@@ -1,4 +1,3 @@
-from .funcs import Funcs
 from ..themes.theme import ThemeManager
 
 
@@ -15,4 +14,4 @@ class Template:
         app.jinja_env.globals["_template"] = self
         self.theme = ThemeManager()
         self.theme.init_app(app)
-        self.funcs = Funcs()
+        

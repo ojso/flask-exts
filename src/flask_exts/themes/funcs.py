@@ -1,6 +1,6 @@
 from wtforms import HiddenField
 from wtforms.validators import DataRequired, InputRequired
-from .form.csrf import get_or_generate_csrf_token
+from ..template.form.csrf import get_or_generate_csrf_token
 
 
 class Funcs:

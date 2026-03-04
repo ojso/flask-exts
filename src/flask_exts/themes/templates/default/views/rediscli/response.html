@@ -1,5 +1,5 @@
 {% macro loop_render(item, depth=0) %}
-  {% set type = _template.funcs.type_name(item)%}
+  {% set type = _template.theme.funcs.type_name(item)%}
   {% if type == 'tuple' or type == 'list' %}
     {% if not item %}
       Empty {{ type }}.

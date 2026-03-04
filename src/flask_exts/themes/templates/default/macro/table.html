@@ -44,7 +44,7 @@
     new_url=None,
     action_pk_placeholder=':id') %}
     {% if not titles %}
-        {% set titles = _template.funcs.get_table_titles(data, primary_key, primary_key_title) %}
+        {% set titles = _template.theme.funcs.get_table_titles(data, primary_key, primary_key_title) %}
     {% endif %}
     {% if responsive %}<div class="{{ responsive_class }}">{% endif %}
         <table class="table{% if table_classes %}{{ ' ' + table_classes }}{% endif %}">
@@ -119,10 +119,10 @@
                                     <form class="d-inline"
                                           {% if delete_url is string %} action="{{ delete_url }}" {% else %} action="{{ build_url(row, delete_url[0], delete_url[1], model, primary_key) | trim }}" {% endif %}
                                           method="post">
-                                        {% if _template.funcs.csrf_token is undefined %}
+                                        {% if _template.theme.funcs.csrf_token is undefined %}
                                             {{ raise("You have to enable the CSRF protect to use delete_url") }}
                                         {% else %}
-                                            <input type="hidden" name="csrf_token" value="{{ _template.funcs.csrf_token() }}" />
+                                            <input type="hidden" name="csrf_token" value="{{ _template.theme.funcs.csrf_token() }}" />
                                         {% endif %}
                                         <button type="submit"
                                                 class="btn btn-link p-0 border-0 align-baseline"

@@ -1,6 +1,7 @@
 import os.path as op
 from flask import Blueprint
 from .plugins.plugin_manager import PluginManager
+from .funcs import Funcs
 
 LOCAL_VENDOR_URL = "/template/static/vendor"
 ICON_SPRITE_URL = f"{LOCAL_VENDOR_URL}/bootstrap-icons/bootstrap-icons.svg"
@@ -35,6 +36,7 @@ class ThemeManager:
         # print("Initializing ThemeManager with theme:", self.name)
         self.init_theme_blueprint(app)        
         self.plugin_manager.init_app(app)
+        self.funcs = Funcs()
 
     def init_theme_blueprint(self, app):
         blueprint = Blueprint(
