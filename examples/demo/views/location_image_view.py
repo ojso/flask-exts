@@ -1,6 +1,5 @@
 from werkzeug.utils import secure_filename
 from flask import request
-from flask import current_app
 from wtforms.fields import FileField
 from flask_exts.admin.sqla.ajax import QueryAjaxModelLoader
 from flask_exts.template.widgets.render_template import RenderTemplateWidget
@@ -66,9 +65,12 @@ class LocationImageInlineModelForm(InlineFormAdmin):
 
 # Administrative class
 class LocationView(SqlaModelView):
-    inline_model_form_converter = CustomInlineModelConverter
+    # column_list = [
+    #     "name","images","aaa"
+    # ]
+    # inline_model_form_converter = CustomInlineModelConverter
 
-    inline_models = (LocationImageInlineModelForm(),)
+    # inline_models = (LocationImageInlineModelForm(),)
 
     def __init__(self):
         super().__init__(Location, name="Locations")

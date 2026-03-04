@@ -5,9 +5,7 @@ from ..models.post import Post
 from ..models.author import Author
 
 
-# Customized Post model admin
 class PostView(SqlaModelView):
-    can_view_details = True
     column_list = [
         "id",
         "author",
@@ -17,6 +15,13 @@ class PostView(SqlaModelView):
         "color",
         "created_at",
     ]
+    column_labels = {
+        "title": "Post Title",
+        "tags.name": "TagsName",
+        "author.first_name": "Author's first name",
+        "author.last_name": "Last name",
+    }
+
     column_editable_list = [
         "color",
     ]
@@ -34,19 +39,13 @@ class PostView(SqlaModelView):
             ("author.last_name", "author.first_name"),
         ),  # sort on multiple columns
     ]
-    column_labels = {"title": "Post Title"}  # Rename 'title' column in list view
     column_searchable_list = [
         "title",
         "tags.name",
         "author.first_name",
         "author.last_name",
     ]
-    column_labels = {
-        "title": "Title",
-        "tags.name": "Tags",
-        "author.first_name": "Author's first name",
-        "author.last_name": "Last name",
-    }
+
     column_filters = [
         "id",
         "author.first_name",
@@ -55,7 +54,7 @@ class PostView(SqlaModelView):
         "created_at",
         "title",
         "date",
-        "tags",
+        "tags.name",
         FilterLike(
             Post.title,
             "Fixed Title",

@@ -12,13 +12,7 @@ class InlineFieldList(FieldList):
         super().__init__(*args, **kwargs)
 
     def __call__(self, **kwargs):
-        # Create template
-        meta = getattr(self, "meta", None)
-        if meta:
-            template = self.unbound_field.bind(form=None, name="", _meta=meta)
-        else:
-            template = self.unbound_field.bind(form=None, name="")
-        # Small hack to remove separator from FormField
+        template = self.unbound_field.bind(form=None, name="")
         if isinstance(template, FormField):
             template.separator = ""
 

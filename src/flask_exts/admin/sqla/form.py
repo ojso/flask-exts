@@ -1,8 +1,6 @@
-import warnings
 from enum import Enum
 from wtforms import fields, validators
 from sqlalchemy import Boolean, Column
-from sqlalchemy.orm import ColumnProperty
 from wtforms.fields import DateTimeLocalField as DateTimeField
 # from wtforms.fields import TimeField
 from ...template.fields import TimeField
@@ -20,7 +18,6 @@ from ...template.fields.sqla import InlineModelOneToOneField
 from ...template.fields.inline import InlineFormField
 from ...template.widgets import DatePickerWidget
 from ...template.form.base_form import BaseForm
-from ...template.form.utils import recreate_field
 from ...template.validators.sqla import Unique
 from ...template.validators.sqla import TimeZoneValidator
 from ..model.form import (
@@ -30,11 +27,9 @@ from ..model.form import (
     FieldPlaceholder,
 )
 
-from .utils import filter_foreign_columns
 from ...datastore.sqla.utils import get_model_mapper
 from ...datastore.sqla.utils import has_multiple_pks
 from ...datastore.sqla.utils import is_relationship
-from ...datastore.sqla.utils import is_association_proxy
 from ...datastore.sqla.utils import get_field_with_path
 
 from .ajax import create_ajax_loader
@@ -78,14 +73,6 @@ class AdminModelConverter(ModelConverterBase):
 
         if column_descriptions:
             return column_descriptions.get(name)
-
-    def _get_field_override(self, name):
-        form_overrides = getattr(self.view, "form_overrides", None)
-
-        if form_overrides:
-            return form_overrides.get(name)
-
-        return None
 
     def _model_select_field(self, prop, multiple, remote_model, **kwargs):
         loader = getattr(self.view, "_form_ajax_refs", {}).get(prop.key)
@@ -137,18 +124,14 @@ class AdminModelConverter(ModelConverterBase):
             if not requirement_validator_specified:
                 kwargs["validators"].append(validators.InputRequired())
 
-        # Override field type if necessary
-        override = self._get_field_override(prop.key)
-        if override:
-            return override(**kwargs)
-
         multiple = prop.direction.name in ("ONETOMANY", "MANYTOMANY") and prop.uselist
         return self._model_select_field(prop, multiple, remote_model, **kwargs)
 
     def convert(self, model, mapper, name, prop, field_args, hidden_pk):
         # Properly handle forced fields
         if isinstance(prop, FieldPlaceholder):
-            return recreate_field(prop.field)
+            unbound= prop.field
+            return unbound.field_class(*unbound.args, **unbound.kwargs)
 
         kwargs = {"validators": [], "filters": []}
 
@@ -164,25 +147,8 @@ class AdminModelConverter(ModelConverterBase):
             return self._convert_relation(
                 name, prop, kwargs
             )
-        elif hasattr(prop, "columns"):  # Ignore pk/fk
-            # Check if more than one column mapped to the property
-            if len(prop.columns) > 1 and not isinstance(prop, ColumnProperty):
-                columns = filter_foreign_columns(model.__table__, prop.columns)
-
-                if len(columns) == 0:
-                    return None
-                elif len(columns) > 1:
-                    warnings.warn(
-                        "Can not convert multiple-column properties (%s.%s)"
-                        % (model, prop.key)
-                    )
-                    return None
-
-                column = columns[0]
-            else:
-                # Grab column
-                column = prop.columns[0]
-
+        elif hasattr(prop, "columns"):
+            column = prop.columns[0]
             form_columns = getattr(self.view, "form_columns", None) or ()
 
             # Do not display foreign keys - use relations, except when explicitly instructed
@@ -249,11 +215,6 @@ class AdminModelConverter(ModelConverterBase):
             # Check nullable
             if column.nullable:
                 kwargs["validators"].append(validators.Optional())
-
-            # Override field type if necessary
-            override = self._get_field_override(prop.key)
-            if override:
-                return override(**kwargs)
 
             # Check if a list of 'form_choices' are specified
             form_choices = getattr(self.view, "form_choices", None)
@@ -504,7 +465,8 @@ def get_form(
     # Contribute extra fields
     if not only and extra_fields:
         for name, field in extra_fields.items():
-            field_dict[name] = recreate_field(field)
+            unbound = field            
+            field_dict[name] = unbound.field_class(*unbound.args, **unbound.kwargs)
 
     return type(model.__name__ + "Form", (base_class,), field_dict)
 

@@ -5,7 +5,7 @@ from .views.tree_view import treeview
 from .views.tag_view import tagview
 from .views.author_view import authorview
 from .views.post_view import postview
-from .views.location_image_view import locationview
+# from .views.location_image_view import locationview
 from flask_exts.admin.menu import MenuLink
 
 
@@ -19,7 +19,7 @@ def add_views(app):
     admin.add_view(tagview)
     admin.add_view(postview)
     admin.add_view(treeview)
-    admin.add_view(locationview)
+    # admin.add_view(locationview)
     admin.menu.add_link(
         MenuLink(name="locationlist", url="/locationlist", category="List")
     )

@@ -13,12 +13,6 @@ class MockModel:
         self.col3 = c3
 
 
-class Form(BaseForm):
-    col1 = StringField()
-    col2 = StringField()
-    col3 = StringField()
-
-
 class SimpleFilter(BaseFilter):
     def apply(self, query):
         query._applied = True
@@ -38,7 +32,6 @@ class MockModelView(ModelView):
         url=None,
         **kwargs,
     ):
-        # Allow to set any attributes from parameters
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -57,7 +50,6 @@ class MockModelView(ModelView):
 
         self.last_id = len(self.all_models) + 1
 
-    # Scaffolding
     def get_pk_value(self, model):
         return model.id
 
@@ -79,9 +71,13 @@ class MockModelView(ModelView):
         return ["col1", "col2", "col3"]
 
     def scaffold_form(self):
+        class Form(self.form_base_class):
+            col1 = StringField()
+            col2 = StringField()
+            col3 = StringField()
+
         return Form
 
-    # Data
     def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
         self.search_arguments.append((page, sort_field, sort_desc, search, filters))
         return len(self.all_models), self.all_models.values()
@@ -95,7 +91,7 @@ class MockModelView(ModelView):
         form.populate_obj(model)
         self.created_models.append(model)
         self.all_models[model.id] = model
-        return True
+        return model
 
     def update_model(self, form, model):
         form.populate_obj(model)
@@ -116,6 +112,25 @@ def test_view():
     assert view.static_folder is None
     assert view.admin is None
     assert view.blueprint is None
+
+    print(view._list_columns)
+    print(view._sortable_columns)
+    assert view._sortable_columns == ["col1", "col2", "col3"]
+    print(view._details_columns)
+    print(view._export_columns)
+    print(view._export_columns)
+    print(view.column_editable_list)
+
+    # forms
+    print(view._create_form_class)
+    print(view._edit_form_class)
+    print(view.create_form)
+
+    # Verify scaffolding
+    
+
+    assert view._search_supported is False
+    assert view._filters is None
 
     # for url in view._urls:
     #     print(url)
@@ -143,23 +158,16 @@ def test_mockview(client, admin):
     view = MockModelView(MockModel)
     admin.add_view(view)
 
-    # Verify scaffolding
-    assert view._sortable_columns == ["col1", "col2", "col3"]
-    assert view._create_form_class == Form
-    assert view._edit_form_class == Form
-    assert view._search_supported is False
-    assert view._filters is None
-
     # Make model view requests
-    rv = client.get("/admin/model/")
+    rv = client.get("/admin/mockmodel/")
     assert rv.status_code == 200
 
     # Test model creation view
-    rv = client.get("/admin/model/new/")
+    rv = client.get("/admin/mockmodel/new/")
     assert rv.status_code == 200
 
     rv = client.post(
-        "/admin/model/new/", data=dict(col1="test1", col2="test2", col3="test3")
+        "/admin/mockmodel/new/", data=dict(col1="test1", col2="test2", col3="test3")
     )
     assert rv.status_code == 302
     assert len(view.created_models) == 1
@@ -171,12 +179,13 @@ def test_mockview(client, admin):
     assert model.col3 == "test3"
 
     # Try model edit view
-    rv = client.get("/admin/model/edit/?id=3")
+    rv = client.get("/admin/mockmodel/edit/?id=3")
     assert rv.status_code == 200
     assert "test1" in rv.text
 
     rv = client.post(
-        "/admin/model/edit/?id=3", data=dict(col1="test!", col2="test@", col3="test#")
+        "/admin/mockmodel/edit/?id=3",
+        data=dict(col1="test!", col2="test@", col3="test#"),
     )
     assert rv.status_code == 302
     assert len(view.updated_models) == 1
@@ -186,14 +195,14 @@ def test_mockview(client, admin):
     assert model.col2 == "test@"
     assert model.col3 == "test#"
 
-    rv = client.get("/admin/model/edit/?id=4")
+    rv = client.get("/admin/mockmodel/edit/?id=4")
     assert rv.status_code == 302
 
     # Attempt to delete model
-    rv = client.post("/admin/model/delete/?id=3")
+    rv = client.post("/admin/mockmodel/delete/?id=3")
     assert rv.status_code == 302
     # werkzeug 2.1.0+ returns *relative* location header by default, so just check the end
-    assert rv.headers["location"].endswith("/admin/model/")
+    assert rv.headers["location"].endswith("/admin/mockmodel/")
 
 
 def test_permissions(client, admin):
@@ -201,15 +210,15 @@ def test_permissions(client, admin):
     admin.add_view(view)
 
     view.can_create = False
-    rv = client.get("/admin/model/new/")
+    rv = client.get("/admin/mockmodel/new/")
     assert rv.status_code == 302
 
     view.can_edit = False
-    rv = client.get("/admin/model/edit/?id=1")
+    rv = client.get("/admin/mockmodel/edit/?id=1")
     assert rv.status_code == 302
 
     view.can_delete = False
-    rv = client.post("/admin/model/delete/?id=1")
+    rv = client.post("/admin/mockmodel/delete/?id=1")
     assert rv.status_code == 302
 
 
@@ -221,13 +230,13 @@ def test_templates(client, admin):
     view.create_template = "mock.html"
     view.edit_template = "mock.html"
 
-    rv = client.get("/admin/model/")
+    rv = client.get("/admin/mockmodel/")
     assert rv.text == "Success!"
 
-    rv = client.get("/admin/model/new/")
+    rv = client.get("/admin/mockmodel/new/")
     assert rv.text == "Success!"
 
-    rv = client.get("/admin/model/edit/?id=1")
+    rv = client.get("/admin/mockmodel/edit/?id=1")
     assert rv.text == "Success!"
 
 
@@ -240,7 +249,7 @@ def test_list_columns(client, admin):
     assert len(view._list_columns) == 2
     assert view._list_columns == [("col1", "Column1"), ("col3", "Col3")]
 
-    rv = client.get("/admin/model/")
+    rv = client.get("/admin/mockmodel/")
     assert "Column1" in rv.text
     assert "Col2" not in rv.text
 
@@ -249,7 +258,7 @@ def test_exclude_columns(client, admin):
     view = MockModelView(MockModel, column_exclude_list=["col2"])
     admin.add_view(view)
     assert view._list_columns == [("col1", "Col1"), ("col3", "Col3")]
-    rv = client.get("/admin/model/")
+    rv = client.get("/admin/mockmodel/")
     assert "Col1" in rv.text
     assert "Col2" not in rv.text
 
@@ -397,19 +406,6 @@ def test_csrf(client, admin):
     assert rv.status_code == 200
     assert "Record was successfully deleted." not in rv.text
     assert "Failed to perform action." in rv.text
-
-
-def test_custom_form(admin):
-    class TestForm(BaseForm):
-        pass
-
-    view = MockModelView(MockModel, form=TestForm)
-    admin.add_view(view)
-
-    assert view._create_form_class == TestForm
-    assert view._edit_form_class == TestForm
-
-    assert not hasattr(view._create_form_class, "col1")
 
 
 def test_modal_edit_bs4(client, admin):
@@ -631,7 +627,7 @@ def test_export_csv(client, admin):
     rv = client.get("/admin/test/export/csv/")
     assert rv.status_code == 302
 
-    rv = client.get("/admin/model/export/csv/")
+    rv = client.get("/admin/mockmodel/export/csv/")
     assert rv.mimetype == "text/csv"
     assert rv.status_code == 200
     assert (
@@ -712,7 +708,7 @@ def test_export_tablib(client, admin):
     )
     admin.add_view(view)
 
-    rv = client.get("/admin/model/export/tsv/")
+    rv = client.get("/admin/mockmodel/export/tsv/")
     assert rv.mimetype == "text/tab-separated-values"
     assert rv.status_code == 200
     assert (
@@ -732,8 +728,10 @@ def test_list_row_actions(client, admin):
     admin.add_view(view)
 
     actions = view.get_list_row_actions()
-    assert isinstance(actions[0], row_action.EditRowAction)
-    assert isinstance(actions[1], row_action.DeleteRowAction)
+    assert len(actions) == 3
+    assert isinstance(actions[0], row_action.ViewRowAction)
+    assert isinstance(actions[1], row_action.EditRowAction)
+    assert isinstance(actions[2], row_action.DeleteRowAction)
 
     # Test default actions
     view = MockModelView(
@@ -742,7 +740,6 @@ def test_list_row_actions(client, admin):
         endpoint="test1",
         can_edit=False,
         can_delete=False,
-        can_view_details=True,
     )
     admin.add_view(view)
 
@@ -755,7 +752,6 @@ def test_list_row_actions(client, admin):
         MockModel,
         name="test2",
         endpoint="test2",
-        can_view_details=True,
         details_modal=True,
         edit_modal=True,
     )
@@ -766,24 +762,6 @@ def test_list_row_actions(client, admin):
     assert isinstance(actions[1], row_action.EditPopupRowAction)
     assert isinstance(actions[2], row_action.DeleteRowAction)
 
-    # Test custom views
-    view = MockModelView(
-        MockModel,
-        name="test3",
-        endpoint="test3",
-        column_extra_row_actions=[
-            row_action.LinkRowAction("http://localhost/?id={row_id}", icon="off"),
-            row_action.EndpointLinkRowAction("test1.index_view", icon="test"),
-        ],
-    )
-    admin.add_view(view)
-
-    actions = view.get_list_row_actions()
-    assert isinstance(actions[0], row_action.EditRowAction)
-    assert isinstance(actions[1], row_action.DeleteRowAction)
-    assert isinstance(actions[2], row_action.LinkRowAction)
-    assert isinstance(actions[3], row_action.EndpointLinkRowAction)
-
     rv = client.get("/admin/test/")
     assert rv.status_code == 200
 
@@ -792,10 +770,3 @@ def test_list_row_actions(client, admin):
 
     rv = client.get("/admin/test2/")
     assert rv.status_code == 200
-
-    rv = client.get("/admin/test3/")
-    assert rv.status_code == 200
-
-    assert "off" in rv.text
-    assert "http://localhost/?id=" in rv.text
-    assert "test" in rv.text

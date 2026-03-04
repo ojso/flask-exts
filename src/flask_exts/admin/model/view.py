@@ -19,9 +19,7 @@ from flask import get_flashed_messages
 from flask import stream_with_context
 from werkzeug.utils import secure_filename
 from wtforms.form import Form
-from wtforms.fields import FieldList
 from wtforms.fields import HiddenField
-from wtforms.fields.core import UnboundField
 from wtforms.validators import ValidationError, InputRequired
 from flask_babel import gettext, ngettext
 from .types import T_COLUMN_LIST, T_FORMATTERS
@@ -37,11 +35,6 @@ from ..action_mixin import ActionMixin
 from ...template.form.base_form import BaseForm
 from ...template.form.form_opts import FormOpts
 from ...template.form.utils import get_form_data
-
-
-# Used to generate filter query string name
-filter_char_re = re.compile("[^a-z0-9 ]")
-filter_compact_re = re.compile(" +")
 
 
 class ModelView(View, ActionMixin):
@@ -72,9 +65,6 @@ class ModelView(View, ActionMixin):
 
     can_delete = True
     """Is model deletion allowed"""
-
-    can_view_details = False
-    """Is model details view allowed"""
 
     can_export = False
     """Is model list export allowed"""
@@ -409,42 +399,10 @@ class ModelView(View, ActionMixin):
         actions endpoints are accessible.
     """
 
-    column_extra_row_actions = None
-    """
-        List of row actions (instances of :class:`~.row_action.BaseRowAction`).
-
-        It will generate standard per-row actions (edit, delete, etc)
-        and will append custom actions from this list right after them.
-
-        For example::
-
-            from ~.row_action import EndpointLinkRowAction, LinkRowAction
-
-            class MyModelView(BaseModelView):
-                column_extra_row_actions = [
-                    LinkRowAction('bi-off', 'http://direct.link/?id={row_id}'),
-                    EndpointLinkRowAction('bi-test', 'my_view.index_view')
-                ]
-    """
-
     simple_list_pager = False
     """
         Enable or disable simple list pager.
         If enabled, model interface would not run count query and will only show prev/next pager buttons.
-    """
-
-    form: Optional[Type[Form]] = None
-    """
-        Form class. Override if you want to use custom form for your model.
-        Will completely disable form scaffolding functionality.
-
-        For example::
-
-            class MyForm(Form):
-                name = StringField('Name')
-
-            class MyModelView(BaseModelView):
-                form = MyForm
     """
 
     form_base_class = BaseForm
@@ -491,10 +449,7 @@ class ModelView(View, ActionMixin):
         SQLAlchemy model attributes can be used instead of strings::
 
             class MyModelView(BaseModelView):
-                form_columns = ('name', User.last_name)
-
-        SQLA Note: Model attributes must be on the same model as your ModelView
-        or you will need to use `inline_models`.
+                form_columns = ('name', 'user.last_name')
     """
 
     form_excluded_columns = None
@@ -505,16 +460,6 @@ class ModelView(View, ActionMixin):
 
             class MyModelView(BaseModelView):
                 form_excluded_columns = ('last_name', 'email')
-    """
-
-    form_overrides = None
-    """
-        Dictionary of form column overrides.
-
-        Example::
-
-            class MyModelView(BaseModelView):
-                form_overrides = dict(name=wtf.FileField)
     """
 
     form_widget_args = None
@@ -646,6 +591,10 @@ class ModelView(View, ActionMixin):
         Sets the page size options available, if `can_set_page_size` is True
     """
 
+    # Used to generate filter query string name
+    filter_char_re = re.compile("[^a-z0-9 ]")
+    filter_compact_re = re.compile(" +")
+
     def __init__(
         self,
         model,
@@ -701,14 +650,11 @@ class ModelView(View, ActionMixin):
     def _init_view(self):
         self._list_columns = self.get_list_columns()
         self._sortable_columns = self.get_sortable_columns()
-
-        if self.can_view_details:
-            self._details_columns = self.get_details_columns()
-
+        self._details_columns = self.get_details_columns()
         self._export_columns = self.get_export_columns()
 
         # Forms
-        self._refresh_forms_cache()
+        self._init_forms()
 
         # Search
         self._search_supported = self.init_search()
@@ -738,9 +684,7 @@ class ModelView(View, ActionMixin):
 
 
 
-    # Caching
-    def _refresh_forms_cache(self):
-        # Forms
+    def _init_forms(self):
         self._form_ajax_refs = self._process_ajax_references()
 
         if self.form_widget_args is None:
@@ -821,11 +765,10 @@ class ModelView(View, ActionMixin):
         """
         actions = []
 
-        if self.can_view_details:
-            if self.details_modal:
-                actions.append(row_action.ViewPopupRowAction())
-            else:
-                actions.append(row_action.ViewRowAction())
+        if self.details_modal:
+            actions.append(row_action.ViewPopupRowAction())
+        else:
+            actions.append(row_action.ViewRowAction())
 
         if self.can_edit:
             if self.edit_modal:
@@ -836,7 +779,7 @@ class ModelView(View, ActionMixin):
         if self.can_delete:
             actions.append(row_action.DeleteRowAction())
 
-        return actions + (self.column_extra_row_actions or [])
+        return actions
 
     def get_column_names(self, only_columns, excluded_columns):
         """
@@ -1017,8 +960,8 @@ class ModelView(View, ActionMixin):
                 pass
 
             name = ("%s %s" % (flt.name, operation)).lower()
-            name = filter_char_re.sub("", name)
-            name = filter_compact_re.sub("_", name)
+            name = self.filter_char_re.sub("", name)
+            name = self.filter_compact_re.sub("_", name)
             return name
         else:
             return str(index)
@@ -1198,16 +1141,11 @@ class ModelView(View, ActionMixin):
         For example, redirect use to object details view after form save::
 
             class MyModelView(ModelView):
-                can_view_details = True
-
                 def get_save_return_url(self, model, is_created):
                     return self.get_url('.details_view', id=model.id)
 
         """
-        if self.can_view_details:
-            return self.get_url(".details_view", id=model.id)
-        else:
-            return self.get_redirect_target()
+        return self.get_url(".details_view", id=model.id)
 
     # Helpers
     def is_sortable(self, name):
@@ -1919,9 +1857,6 @@ class ModelView(View, ActionMixin):
         Details model view
         """
         return_url = self.get_redirect_target()
-
-        if not self.can_view_details:
-            return redirect(return_url)
 
         id = request.args.get("id")
         if id is None:

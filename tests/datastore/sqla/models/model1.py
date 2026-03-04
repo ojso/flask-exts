@@ -1,5 +1,6 @@
 import enum
 from datetime import datetime, date, time
+from typing import Optional
 from .. import db
 from .. import Mapped
 from .. import mapped_column
@@ -15,6 +16,7 @@ from .. import Enum
 from .. import Float
 from .. import DateTime
 
+
 class EnumChoices(enum.Enum):
     first = 1
     second = 2
@@ -25,19 +27,19 @@ class Model1(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     test1: Mapped[str]
-    test2: Mapped[str]
-    test3: Mapped[str] = mapped_column(TEXT)
-    test4: Mapped[str] = mapped_column(TEXT)
-    bool_field: Mapped[bool]
-    date_field: Mapped[date]
-    time_field: Mapped[time]
-    datetime_field: Mapped[datetime]
-    email_field: Mapped[str]
+    test2: Mapped[Optional[str]]
+    test3: Mapped[Optional[str]] = mapped_column(TEXT)
+    test4: Mapped[Optional[str]] = mapped_column(TEXT)
+    bool_field: Mapped[Optional[bool]]
+    date_field: Mapped[Optional[date]]
+    time_field: Mapped[Optional[time]]
+    datetime_field: Mapped[Optional[datetime]]
+    email_field: Mapped[Optional[str]]
     enum_field: Mapped[str] = mapped_column(
         Enum("model1_v1", "model1_v2"), nullable=True
     )
     enum_type_field = mapped_column(Enum(EnumChoices), nullable=True)
-    choice_field: Mapped[str]
+    choice_field: Mapped[Optional[str]]
     model2: Mapped["Model2"] = relationship(back_populates="model1")
 
     def __str__(self):
@@ -92,7 +94,7 @@ class ModelHybrid(db.Model):
 
     @number_of_pixels_str.expression
     def number_of_pixels_str(cls):
-        return cast(cls.width * cls.height, db.String)
+        return cast(cls.width * cls.height, String)
 
 
 class ModelHybrid2(db.Model):
@@ -108,7 +110,7 @@ class ModelNoint(db.Model):
     __tablename__ = "model_noint"
 
     id: Mapped[str] = mapped_column(primary_key=True)
-    test = Mapped[str]
+    test: Mapped[str]
 
 
 class ModelForm(db.Model):
@@ -117,8 +119,8 @@ class ModelForm(db.Model):
     id: Mapped[str] = mapped_column(primary_key=True)
     int_field = mapped_column(Integer)
     datetime_field = mapped_column(DateTime)
-    text_field : Mapped[str]
-    excluded_column : Mapped[str]
+    text_field: Mapped[str]
+    excluded_column: Mapped[str]
     backref: Mapped["ModelChild"] = relationship(back_populates="model", uselist=False)
 
 

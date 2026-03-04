@@ -7,7 +7,7 @@ from flask_babel import gettext, ngettext, lazy_gettext
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.sql.expression import desc
-from sqlalchemy import Boolean, Table, func, or_
+from sqlalchemy import Boolean, func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.expression import cast
 from sqlalchemy import Unicode
@@ -15,9 +15,6 @@ from ...datastore.sqla import db
 from ...datastore.sqla.utils import is_relationship
 from ...datastore.sqla.utils import get_field_with_path
 from ...datastore.sqla.utils import parse_like_term
-from ...datastore.sqla.utils import is_hybrid_property
-from .utils import get_columns_for_field
-from .utils import filter_foreign_columns
 from ..model.view import ModelView
 from ..model.form import create_editable_list_form
 from ..exposer import expose_action
@@ -241,7 +238,6 @@ class SqlaModelView(ModelView):
                 form_optional_types = (Boolean, Unicode)
     """
 
-
     def __init__(
         self,
         model,
@@ -296,20 +292,13 @@ class SqlaModelView(ModelView):
         )
 
         # Primary key
-        self.scaffold_pk()
+        self._primary_key = get_primary_key(self.model)
 
         if self._primary_key is None:
             raise Exception("Model %s does not have primary key." % self.model.__name__)
 
         # Configuration
         self._auto_joins = self.scaffold_auto_joins()
-
-    def scaffold_pk(self):
-        """
-        Return primary key name from a model. If the primary key consists of multiple columns,
-        return the corresponding tuple
-        """
-        self._primary_key = get_primary_key(self.model)
 
     def has_multiple_pks(self):
         return isinstance(self._primary_key, tuple)
@@ -354,7 +343,7 @@ class SqlaModelView(ModelView):
                     fn = query.join if inner_join else query.outerjoin
 
                     if last is None:
-                        query =fn(alias, item)
+                        query = fn(alias, item)
                     else:
                         prop = getattr(last, item.key)
                         query = fn(alias, prop)
@@ -387,25 +376,9 @@ class SqlaModelView(ModelView):
                 if p.direction.name == "MANYTOONE":
                     columns.append(p.key)
             elif hasattr(p, "columns"):
-                if len(p.columns) > 1:
-                    filtered = filter_foreign_columns(self.model.__table__, p.columns)
-
-                    if len(filtered) == 0:
-                        continue
-                    elif len(filtered) > 1:
-                        warnings.warn(
-                            "Can not convert multiple-column properties (%s.%s)"
-                            % (self.model, p.key)
-                        )
-                        continue
-
-                    column = filtered[0]
-                else:
-                    column = p.columns[0]
-
+                column = p.columns[0]
                 if column.foreign_keys:
                     continue
-
                 columns.append(p.key)
 
         return columns
@@ -546,14 +519,7 @@ class SqlaModelView(ModelView):
                 if not attr:
                     raise Exception("Failed to find field for search field: %s" % name)
 
-                if is_hybrid_property(self.model, name):
-                    column = attr
-                    if isinstance(name, str):
-                        column.key = name.split(".")[-1]
-                    self._search_fields.append((column, joins))
-                else:
-                    for column in get_columns_for_field(attr):
-                        self._search_fields.append((column, joins))
+                self._search_fields.append((attr, joins))
 
         return bool(self.column_searchable_list)
 
@@ -596,108 +562,62 @@ class SqlaModelView(ModelView):
 
         # Figure out filters for related column
         if is_relationship(attr):
-            filters = []
+            raise Exception("Relationship can not be a filter field: %s" % name)
 
-            for p in self.get_model_iterator(attr.property.mapper.class_):
-                if hasattr(p, "columns"):
-                    # TODO: Check for multiple columns
-                    column = p.columns[0]
+        column = attr
 
-                    if column.foreign_keys or column.primary_key:
-                        continue
+        # If filter related to relation column (represented by
+        # relation_name.target_column) we collect here relation name
+        joined_column_name = None
+        if isinstance(name, str) and "." in name:
+            joined_column_name = name.split(".")[0]
 
-                    visible_name = "%s / %s" % (
-                        self.get_column_name(attr.prop.target.name),
-                        self.get_column_name(p.key),
-                    )
-
-                    type_name = type(column.type).__name__
-                    flt = self.filter_converter.convert(type_name, column, visible_name)
-
-                    if flt:
-                        table = column.table
-
-                        if joins:
-                            self._filter_joins[column] = joins
-                        elif need_join(self.model, table):
-                            self._filter_joins[column] = [table]
-
-                        filters.extend(flt)
-
-            return filters
-        else:
-            is_hybrid = is_hybrid_property(self.model, name)
-            if is_hybrid:
-                column = attr
-                if isinstance(name, str):
-                    column.key = name.split(".")[-1]
-            else:
-                columns = get_columns_for_field(attr)
-
-                if len(columns) > 1:
-                    raise Exception(
-                        "Can not filter more than on one column for %s" % name
-                    )
-
-                column = columns[0]
-
-            # If filter related to relation column (represented by
-            # relation_name.target_column) we collect here relation name
-            joined_column_name = None
-            if isinstance(name, str) and "." in name:
-                joined_column_name = name.split(".")[0]
-
-            # Join not needed for hybrid properties
-            if (
-                not is_hybrid
-                and need_join(self.model, column.table)
-                and name not in self.column_labels
-            ):
-                if joined_column_name:
-                    visible_name = "%s / %s / %s" % (
-                        joined_column_name,
-                        self.get_column_name(column.table.name),
-                        self.get_column_name(column.name),
-                    )
-                else:
-                    visible_name = "%s / %s" % (
-                        self.get_column_name(column.table.name),
-                        self.get_column_name(column.name),
-                    )
-            else:
-                if not isinstance(name, str):
-                    visible_name = self.get_column_name(name.property.key)
-                else:
-                    if self.column_labels and name in self.column_labels:
-                        visible_name = self.column_labels[name]
-                    else:
-                        visible_name = self.get_column_name(name)
-                        visible_name = visible_name.replace(".", " / ")
-
-            type_name = type(column.type).__name__
-
-            flt = self.filter_converter.convert(
-                type_name,
-                column,
-                visible_name,
-                options=self.column_choices.get(name),
-            )
-
-            key_name = column
-            # In case of filter related to relation column filter key
-            # must be named with relation name (to prevent following same
-            # target column to replace previous)
+        if need_join(self.model, column.table) and name not in self.column_labels:
             if joined_column_name:
-                key_name = "{0}.{1}".format(joined_column_name, column)
-                for f in flt:
-                    f.key_name = key_name
+                visible_name = "%s / %s / %s" % (
+                    joined_column_name,
+                    self.get_column_name(column.table.name),
+                    self.get_column_name(column.name),
+                )
+            else:
+                visible_name = "%s / %s" % (
+                    self.get_column_name(column.table.name),
+                    self.get_column_name(column.name),
+                )
+        else:
+            if not isinstance(name, str):
+                visible_name = self.get_column_name(name.property.key)
+            else:
+                if self.column_labels and name in self.column_labels:
+                    visible_name = self.column_labels[name]
+                else:
+                    visible_name = self.get_column_name(name)
+                    visible_name = visible_name.replace(".", " / ")
 
-            if joins:
-                self._filter_joins[key_name] = joins
-            elif not is_hybrid and need_join(self.model, column.table):
-                self._filter_joins[key_name] = [column.table]
+        type_name = type(column.type).__name__
 
-            return flt
+        flt = self.filter_converter.convert(
+            type_name,
+            column,
+            visible_name,
+            options=self.column_choices.get(name),
+        )
+
+        key_name = column
+        # In case of filter related to relation column filter key
+        # must be named with relation name (to prevent following same
+        # target column to replace previous)
+        if joined_column_name:
+            key_name = "{0}.{1}".format(joined_column_name, column)
+            for f in flt:
+                f.key_name = key_name
+
+        if joins:
+            self._filter_joins[key_name] = joins
+        elif need_join(self.model, column.table):
+            self._filter_joins[key_name] = [column.table]
+
+        return flt
 
     def handle_filter(self, filter):
         if isinstance(filter, BaseSQLAFilter):

@@ -194,9 +194,6 @@ class CheckboxListField(QuerySelectMultipleField):
                     'query_factory': Language.query,
                 },
             }
-            form_overrides = {
-                'languages': CheckboxListField,
-            }
     """
 
     widget = CheckboxListInput()

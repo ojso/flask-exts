@@ -1,7 +1,6 @@
-from sqlalchemy.sql import not_, or_
 import enum
 from flask_babel import lazy_gettext
-from . import utils
+from sqlalchemy.sql import not_, or_
 from ..model import filter
 from ...datastore.sqla.utils import parse_like_term
 

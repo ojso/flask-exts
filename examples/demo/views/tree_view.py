@@ -15,7 +15,6 @@ class TreeView(SqlaModelView):
     column_filters = [
         "id",
         "name",
-        "parent",
     ]
 
     # override the 'render' method to pass your own parameters to the template

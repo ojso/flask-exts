@@ -21,6 +21,7 @@ from sqlalchemy.sql import not_
 from sqlalchemy import Column
 from sqlalchemy import Table
 from sqlalchemy import ForeignKey
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column

@@ -2,6 +2,8 @@ from flask_babel import gettext
 from flask_babel import force_locale
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla.orm import Mapped
+from flask_exts.datastore.sqla.orm import mapped_column
 from tests.datastore.sqla.models.model1 import Model1
 from .test_basic import CustomModelView
 
@@ -31,8 +33,9 @@ def test_unique_validator_translation_is_dynamic(app, client, admin):
     with app.app_context():
 
         class UniqueTable(db.Model):
-            id = db.Column(db.Integer, primary_key=True)
-            value = db.Column(db.String, unique=True)
+            __tablename__="unique_table"
+            id: Mapped[int] = mapped_column(primary_key=True)
+            value: Mapped[str] = mapped_column(unique=True)
 
         db.create_all()
 

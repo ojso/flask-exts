@@ -25,17 +25,4 @@ def get_form_data():
     return None
 
 
-def recreate_field(unbound):
-    """
-    Create new instance of the unbound field, resetting wtforms creation counter.
 
-    :param unbound:
-        UnboundField instance
-    """
-    if not isinstance(unbound, UnboundField):
-        raise ValueError(
-            "recreate_field expects UnboundField instance, %s was passed."
-            % type(unbound)
-        )
-
-    return unbound.field_class(*unbound.args, **unbound.kwargs)
