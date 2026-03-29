@@ -11,13 +11,13 @@ from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
 from ...admin import View, expose_url
-from ...template.forms.login import LoginForm
-from ...template.forms.register import RegisterForm
-from ...template.forms.change_password import ChangePasswordForm
-from ...template.forms.forgot_password import ForgotPasswordForm
-from ...template.forms.reset_password import ResetPasswordForm
-from ...template.forms.two_factor import TwoFactorForm
-from ...template.forms.recovery import RecoveryForm
+from .forms.login import LoginForm
+from .forms.register import RegisterForm
+from .forms.change_password import ChangePasswordForm
+from .forms.forgot_password import ForgotPasswordForm
+from .forms.reset_password import ResetPasswordForm
+from .forms.two_factor import TwoFactorForm
+from .forms.recovery import RecoveryForm
 from ...proxies import _userstore
 from ...proxies import _security
 from ...signals import user_registered
@@ -43,9 +43,6 @@ class UserView(View):
         template_folder=None,
         static_folder=None,
         static_url_path=None,
-        menu_class_name=None,
-        menu_icon_type=None,
-        menu_icon_value=None,
     ):
         super().__init__(
             name=name,
@@ -54,9 +51,6 @@ class UserView(View):
             template_folder=template_folder,
             static_folder=static_folder,
             static_url_path=static_url_path,
-            menu_class_name=menu_class_name,
-            menu_icon_type=menu_icon_type,
-            menu_icon_value=menu_icon_value,
         )
 
     def allow(self, *args, **kwargs):
@@ -79,10 +73,10 @@ class UserView(View):
             return redirect(url_for(".index"))
         form = self.get_login_form_class()()
         if form.validate_on_submit():
-            status, user = _userstore.login_user_by_username_password(
+            user,error = _userstore.login_user_by_username_password(
                 form.username.data, form.password.data
             )
-            if status == "ok" and user is not None:
+            if user is not None:
                 if hasattr(form, "remember_me"):
                     login_user(user, force=True, remember=form.remember_me.data)
                 else:
@@ -98,7 +92,8 @@ class UserView(View):
                     next_page = url_for(".index")
                 return redirect(next_page)
             else:
-                flash(status, "error")
+                for field, message in error.items():
+                    form[field].errors.append(message)
         return self.render(self.login_template, form=form)
 
     @expose_url("/register/", methods=("GET", "POST"))

@@ -1,5 +1,5 @@
 from wtforms import fields
-from flask_exts.template.form.base_form import BaseForm
+from flask_exts.template.forms.form.base_form import BaseForm
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.template.fields.sqla import InlineModelFormList
 from flask_exts.template.validators.sqla import ItemsRequired

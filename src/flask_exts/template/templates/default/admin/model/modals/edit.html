@@ -1,0 +1,8 @@
+{% from 'macro/modal.html' import render_modal_form %}
+
+{% with
+  title = gettext("Edit Record") + ' #' + request.args.get('id'),
+  action = url_for('.edit_view', id=request.args.get('id') , url=return_url)
+  %}
+  {{ render_modal_form(form,title,action,form_opts) }}
+{% endwith %}

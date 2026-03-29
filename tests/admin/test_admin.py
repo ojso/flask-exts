@@ -122,14 +122,14 @@ def test_app_admin_default(app, client, admin):
 
     with app.test_request_context():
         index_index_url = url_for("index.index")
-        admin_index_url = url_for("index.admin_index")
+        index_admin_url = url_for("index.adminindex")
         user_index_url = url_for("user.index")
         user_login_url = url_for("user.login")
         user_logout_url = url_for("user.logout")
         user_register_url = url_for("user.register")
 
     assert index_index_url == "/"
-    assert admin_index_url == "/admin/"
+    assert index_admin_url == "/admin/"
     assert user_index_url == "/user/index/"
     assert user_login_url == "/user/login/"
     assert user_logout_url == "/user/logout/"
@@ -137,7 +137,7 @@ def test_app_admin_default(app, client, admin):
 
     rv = client.get(index_index_url)
     assert rv.status_code == 200
-    rv = client.get(admin_index_url)
+    rv = client.get(index_admin_url)
     assert rv.status_code == 200
     rv = client.get(user_index_url)
     assert rv.status_code == 302

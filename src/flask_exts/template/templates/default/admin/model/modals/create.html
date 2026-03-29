@@ -1,0 +1,8 @@
+{% from "macro/modal.html" import render_modal_form %}
+
+{% with
+  title = gettext("Create New Record"),
+  action = url_for('.create_view')
+%}
+  {{ render_modal_form(form, title, action, form_opts) }}
+{% endwith %}

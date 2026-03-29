@@ -4,7 +4,7 @@ from werkzeug.local import LocalProxy
 
 if TYPE_CHECKING:
     from .exts import Exts
-    from .template.base import Template
+    from .template.core import Template
     from .usercenter.base_user_store import BaseUserStore
     from .security.core import Security
 

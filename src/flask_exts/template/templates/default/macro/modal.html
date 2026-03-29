@@ -1,0 +1,27 @@
+{% from "macro/form.html" import render_form_fields %}
+
+{% macro add_modal_button(url='', title='', content='', modal_window_id='fa_modal_window', btn_class='btn btn-primary') %}
+  <button type="button" class="{{ btn_class }}" data-bs-target="#{{ modal_window_id }}" title="{{ title }}" data-href="{{ url }}" data-bs-toggle="modal">{{ content|safe }}</button>
+{% endmacro %}
+
+{% macro add_modal_window(modal_window_id='fa_modal_window') %}
+  <div class="modal fade" id="{{ modal_window_id }}" tabindex="-1" aria-labelledby="fa_modal_label" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content"></div>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro render_modal_form(form, title,action=None,form_opts=None) %}
+  <form action="{{ action or '' }}" method="post">
+    <div class="modal-header">
+      <h5 class="modal-title">{{ title }}</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">{{ render_form_fields(form, form_opts=form_opts) }}</div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Cancel") }}</button>
+      <button type="submit" class="btn btn-primary">{{ gettext("Save") }}</button>
+    </div>
+  </form>
+{% endmacro %}

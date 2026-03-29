@@ -3,8 +3,8 @@ import warnings
 from wtforms.fields import HiddenField
 from wtforms.fields.core import UnboundField
 from wtforms.validators import InputRequired
-from ...template.widgets import XEditableWidget
-from ...template.form.base_form import BaseForm
+from ...template.forms.widgets import XEditableWidget
+from ...template.forms.form.base_form import BaseForm
 
 
 def converts(*args):

@@ -2,8 +2,8 @@ import pytest
 from datetime import datetime, time, date
 from wtforms import fields, validators
 from flask_exts.admin.sqla import filter
-from flask_exts.template.form.base_form import BaseForm
-from flask_exts.template.fields import Select2Field
+from flask_exts.template.forms.form.base_form import BaseForm
+from flask_exts.template.forms.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.datastore.sqla import db
 from flask_exts.datastore.sqla.orm import InstrumentedAttribute

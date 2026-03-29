@@ -3,23 +3,23 @@ from wtforms import fields, validators
 from sqlalchemy import Boolean, Column
 from wtforms.fields import DateTimeLocalField as DateTimeField
 # from wtforms.fields import TimeField
-from ...template.fields import TimeField
-from ...template.fields import Select2Field
-from ...template.fields import Select2TagsField
-from ...template.fields import JSONField
-from ...template.fields.ajax_select import AjaxSelectField
-from ...template.fields.ajax_select import AjaxSelectMultipleField
-from ...template.fields.sqla import QuerySelectField
-from ...template.fields.sqla import QuerySelectMultipleField
-from ...template.fields.sqla import InlineModelFormList
-from ...template.fields.sqla import InlineHstoreList
-from ...template.fields.sqla import HstoreForm
-from ...template.fields.sqla import InlineModelOneToOneField
-from ...template.fields.inline import InlineFormField
-from ...template.widgets import DatePickerWidget
-from ...template.form.base_form import BaseForm
-from ...template.validators.sqla import Unique
-from ...template.validators.sqla import TimeZoneValidator
+from ...template.forms.fields import TimeField
+from ...template.forms.fields import Select2Field
+from ...template.forms.fields import Select2TagsField
+from ...template.forms.fields import JSONField
+from ...template.forms.fields.ajax_select import AjaxSelectField
+from ...template.forms.fields.ajax_select import AjaxSelectMultipleField
+from ...template.forms.fields.sqla import QuerySelectField
+from ...template.forms.fields.sqla import QuerySelectMultipleField
+from ...template.forms.fields.sqla import InlineModelFormList
+from ...template.forms.fields.sqla import InlineHstoreList
+from ...template.forms.fields.sqla import HstoreForm
+from ...template.forms.fields.sqla import InlineModelOneToOneField
+from ...template.forms.fields.inline import InlineFormField
+from ...template.forms.widgets import DatePickerWidget
+from ...template.forms.form.base_form import BaseForm
+from ...template.forms.validators.sqla import Unique
+from ...template.forms.validators.sqla import TimeZoneValidator
 from ..model.form import (
     converts,
     ModelConverterBase,

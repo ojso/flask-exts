@@ -246,9 +246,6 @@ class SqlaModelView(ModelView):
         endpoint=None,
         url=None,
         static_folder=None,
-        menu_class_name=None,
-        menu_icon_type=None,
-        menu_icon_value=None,
     ):
         """
         Constructor.
@@ -263,12 +260,6 @@ class SqlaModelView(ModelView):
             Endpoint name. If not set, defaults to the model name
         :param url:
             Base URL. If not set, defaults to '/admin/' + endpoint
-        :param menu_class_name:
-            Optional class name for the menu item.
-        :param menu_icon_type:
-            Optional icon.
-        :param menu_icon_value:
-            Icon name or URL.
         """
         # set db.session as default session
         self.session = session if session is not None else db.session
@@ -286,9 +277,6 @@ class SqlaModelView(ModelView):
             endpoint,
             url,
             static_folder,
-            menu_class_name=menu_class_name,
-            menu_icon_type=menu_icon_type,
-            menu_icon_value=menu_icon_value,
         )
 
         # Primary key

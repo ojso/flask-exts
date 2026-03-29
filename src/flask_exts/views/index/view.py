@@ -22,5 +22,5 @@ class IndexView(View):
         return self.render("index.html")
 
     @expose_url("/admin/")
-    def admin_index(self):
+    def adminindex(self):
         return self.render("admin/index.html")

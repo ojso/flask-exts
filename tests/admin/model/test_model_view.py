@@ -1,6 +1,6 @@
 from wtforms.fields import StringField
-from flask_exts.template.form.base_form import BaseForm
-from flask_exts.template.form.flask_form import FlaskForm
+from flask_exts.template.forms.form.base_form import BaseForm
+from flask_exts.template.forms.form.flask_form import FlaskForm
 from flask_exts.admin.model.view import ModelView
 from flask_exts.admin.model.filter import BaseFilter
 

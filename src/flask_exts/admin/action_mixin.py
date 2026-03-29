@@ -37,6 +37,18 @@ class ActionMixin:
                 actions_data.append((name, text, confirmation))
         return actions_data
 
+    def get_action_form(self):
+        """
+        Create form class for a model action.
+        """
+
+        class ActionForm(self.form_base_class):
+            action = HiddenField()
+            url = HiddenField()
+            # rowid = HiddenField() # for multiple ids, process_formdata must be rewritten
+
+        return ActionForm
+
     @expose_url("/action/", methods=("POST",))
     def action_view(self):
         """

@@ -69,11 +69,11 @@ class SqlaUserStore(BaseUserStore):
         stmt = select(self.user_class).filter_by(username=username)
         user = db.session.execute(stmt).scalar()
         if user is None:
-            return ("invalid username", None)
+            return (None, {"username": "invalid username"})
         elif not user.check_password(password):
-            return ("invalid password", None)
+            return (None, {"password": "invalid password"})
         else:
-            return ("ok", user)
+            return (user, {})
 
     def create_role(self, name):
         r = self.role_class(name=name)

@@ -1,12 +1,10 @@
 {% extends 'admin/model/create.html' %}
 {% import 'another_macro.html' as test_lib %}
-
 {% macro test(arg) %}
-  Value = {{ arg }}
+    Value = {{ arg }}
 {% endmacro %}
-
 {% macro wrap() %}
-  <wrapper>
+    <wrapper>
     {{ caller() }}
-  </wrapper>
+    </wrapper>
 {% endmacro %}

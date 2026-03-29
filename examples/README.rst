@@ -20,12 +20,22 @@ Run the examples
 
 Type the command in the terminal, then go to http://localhost:5000.
 
-simple 
----------
+demo
+-----------------
+
+Default admin user is ``admin``, password is ``admin``.
 
 .. code-block:: bash
+    
+    $ flask --app demo run
 
-    $ python simple.py
+fileadmin
+-----------------
+
+.. code-block:: bash
+    
+    $ flask --app fileadmin run
+
 
 rediscli
 -----------------
@@ -54,27 +64,4 @@ if you want to use real redis server, then do this:
     from redis import Redis
 
 3. At last, run  ``python rediscli.py``
-
-demo
------------------
-
-Default admin user is ``admin``, password is ``admin``.
-
-.. code-block:: bash
-    
-    $ flask --app demo run
-
-fileadmin
------------------
-
-.. code-block:: bash
-    
-    $ flask --app fileadmin run
-
-Bootstrap
------------------
-
-.. code-block:: bash
-
-    $ flask --app bootstrap run
 

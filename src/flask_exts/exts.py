@@ -17,7 +17,7 @@ class Exts:
         babel_init_app(app)
 
     def get_template(self):
-        from .template.base import Template
+        from .template.core import Template
 
         return Template()
 

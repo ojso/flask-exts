@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% do _template.plugin_manager.enable_plugin(["jquery","bootstrap5"]) %}
+
+{% block styles %}{{ _template.plugin_manager.load_css() }}{% endblock %}
+
+{% block scripts %}{{ _template.plugin_manager.load_js() }}{% endblock %}

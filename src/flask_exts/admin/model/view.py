@@ -32,9 +32,9 @@ from . import row_action
 from .. import expose_url
 from ..view import View
 from ..action_mixin import ActionMixin
-from ...template.form.base_form import BaseForm
-from ...template.form.form_opts import FormOpts
-from ...template.form.utils import get_form_data
+from ...template.forms.form.base_form import BaseForm
+from ...template.forms.form.form_opts import FormOpts
+
 
 
 class ModelView(View, ActionMixin):
@@ -602,9 +602,6 @@ class ModelView(View, ActionMixin):
         endpoint=None,
         url=None,
         static_folder=None,
-        menu_class_name=None,
-        menu_icon_type=None,
-        menu_icon_value=None,
     ):
         """
         Constructor.
@@ -617,12 +614,6 @@ class ModelView(View, ActionMixin):
             Base endpoint. If not provided, will use the model name.
         :param url:
             Base URL. If not provided, will use endpoint as a URL.
-        :param menu_class_name:
-            Optional class name for the menu item.
-        :param menu_icon_type:
-            Optional icon.
-        :param menu_icon_value:
-            Icon name or URL.
         """
         self.model = model
 
@@ -639,9 +630,6 @@ class ModelView(View, ActionMixin):
             endpoint,
             url,
             static_folder,
-            menu_class_name=menu_class_name,
-            menu_icon_type=menu_icon_type,
-            menu_icon_value=menu_icon_value,
         )
 
         # Scaffolding
@@ -1068,25 +1056,15 @@ class ModelView(View, ActionMixin):
 
         return DeleteForm
 
-    def get_action_form(self):
-        """
-        Create form class for a model action.
-        """
+    
 
-        class ActionForm(self.form_base_class):
-            action = HiddenField()
-            url = HiddenField()
-            # rowid = HiddenField() # for multiple ids, process_formdata must be rewritten
-
-        return ActionForm
-
-    def create_form(self, obj=None):
+    def create_form(self):
         """
         Instantiate model creation form and return it.
 
         Override to implement custom behavior.
         """
-        return self._create_form_class(get_form_data(), obj=obj)
+        return self._create_form_class()
 
     def edit_form(self, obj=None):
         """
@@ -1094,24 +1072,15 @@ class ModelView(View, ActionMixin):
 
         Override to implement custom behavior.
         """
-        return self._edit_form_class(get_form_data(), obj=obj)
+        return self._edit_form_class(obj=obj)
 
     def delete_form(self):
         """
         Instantiate model delete form and return it.
 
         Override to implement custom behavior.
-
-        The delete form originally used a GET request, so delete_form
-        accepts both GET and POST request for backwards compatibility.
         """
-        if request.form:
-            return self._delete_form_class(request.form)
-        elif request.args:
-            # allow request.args for backward compatibility
-            return self._delete_form_class(request.args)
-        else:
-            return self._delete_form_class()
+        return self._delete_form_class()
 
     def list_form(self, obj=None):
         """
@@ -1119,7 +1088,7 @@ class ModelView(View, ActionMixin):
 
         Override to implement custom behavior.
         """
-        return self._list_form_class(get_form_data(), obj=obj)
+        return self._list_form_class(obj=obj)
 
     def action_form(self, obj=None):
         """
@@ -1127,7 +1096,7 @@ class ModelView(View, ActionMixin):
 
         Override to implement custom behavior.
         """
-        return self._action_form_class(get_form_data(), obj=obj)
+        return self._action_form_class(obj=obj)
 
     def get_save_return_url(self, model, is_created=False):
         """
@@ -1690,9 +1659,6 @@ class ModelView(View, ActionMixin):
             return self._get_list_url(view_args.clone(sort=column, sort_desc=desc))
 
         def page_size_url(s):
-            if not s:
-                s = self.page_size
-
             return self._get_list_url(view_args.clone(page_size=s))
 
         # Actions

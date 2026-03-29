@@ -1,3 +1,4 @@
+from typing import Optional
 import enum
 from .. import db
 from .. import Mapped
@@ -13,7 +14,7 @@ class Message(db.Model):
     __tablename__ = "message"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    text: Mapped[str]
-    sender: Mapped[str]
-    recipient: Mapped[str]
+    text: Mapped[Optional[str]]
+    sender: Mapped[Optional[str]]
+    recipient: Mapped[Optional[str]]
     category: Mapped[MyCat] = mapped_column(default=MyCat.CAT1, nullable=False)

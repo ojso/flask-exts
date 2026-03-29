@@ -15,9 +15,6 @@ class View(metaclass=ViewMeta):
         template_folder=None,
         static_folder=None,
         static_url_path=None,
-        menu_class_name=None,
-        menu_icon_type=None,
-        menu_icon_value=None,
         **kwargs,
     ):
         """
@@ -27,7 +24,7 @@ class View(metaclass=ViewMeta):
             Name of this view. If not provided, will default to the class name.
         :param endpoint:
             Base endpoint name for the view. For example, if there's a view method called "index" and
-            endpoint is set to "myadmin", you can use `url_for('myadmin.index')` to get the URL to the
+            endpoint is set to "admin", you can use `url_for('admin.index')` to get the URL to the
             view method. Defaults to the class name in lower case.
         :param url:
             Base URL. If provided, affects how URLs are generated. For example, if the url parameter
@@ -40,15 +37,6 @@ class View(metaclass=ViewMeta):
             Static folder for this view. If provided, will be used to serve static files for this view.
         :param static_url_path:
             Static URL Path. If provided, this specifies the path to the static url directory.
-        :param menu_class_name:
-            Optional class name for the menu item.
-        :param menu_icon_type:
-            Optional icon. Possible icon types:
-             - `bi` - Bootstrap icon
-             - `image` - Image relative to Flask static directory
-             - `image_url` - Image with full URL
-        :param menu_icon_value:
-            Icon name or URL, depending on `menu_icon_type` setting
         """
 
         self.name = name or self._prettify_class_name(self.__class__.__name__)
@@ -57,11 +45,6 @@ class View(metaclass=ViewMeta):
         self.template_folder = template_folder
         self.static_folder = static_folder
         self.static_url_path = static_url_path
-        # Menu
-        self.menu_class_name = menu_class_name
-        self.menu_icon_type = menu_icon_type
-        self.menu_icon_value = menu_icon_value
-
         # Initialized from create_blueprint
         self.admin = None
         self.blueprint = None

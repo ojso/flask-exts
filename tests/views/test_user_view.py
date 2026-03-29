@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 from flask import session
 from flask_exts.datastore.sqla import db
-from flask_exts.template.form.csrf import _get_csrf_token_of_session_and_g
+from flask_exts.template.forms.form.csrf import get_g_csrf_token
 from flask_exts.email.sender import Sender
 from flask_exts.proxies import _security
 from flask_exts.proxies import _userstore
@@ -19,7 +19,6 @@ class EmailSender(Sender):
 class TestUserView:
     @pytest.fixture
     def setup(self, app, client):
-        # app.config.update(CSRF_ENABLED=False)
         with app.app_context():
             db.create_all()
 
@@ -29,7 +28,6 @@ class TestUserView:
         # print(app.extensions["exts"].email.senders)
 
         with app.test_request_context():
-            self.sess_csrf_token, self.csrf_token = _get_csrf_token_of_session_and_g()
             self.user_login_url = url_for("user.login")
             self.user_register_url = url_for("user.register")
             self.user_logout_url = url_for("user.logout")
@@ -42,8 +40,13 @@ class TestUserView:
             self.user_recovery_codes_url = url_for("user.recovery_codes")
             self.user_recovery_url = url_for("user.recovery")
 
+        # generate csrf_token for the current request and set it to session and g, 
+        # then pass it to the test client session for later use in form submission.
+        with app.test_request_context():
+            self.csrf_token = get_g_csrf_token()
+            session_csrf_token = session.get("csrf_token")
         with client.session_transaction() as sess:
-            sess["csrf_token"] = self.sess_csrf_token
+            sess["csrf_token"] = session_csrf_token
 
         self.test_username = "test1234"
         self.test_password = "test1234"

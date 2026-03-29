@@ -37,6 +37,8 @@ def is_numberic_validator(form, field):
 
 class AuthorView(SqlaModelView):
     can_set_page_size = True
+    can_export = True
+    edit_modal = True
     page_size = 5
     page_size_options = (5, 10, 15)
     action_disallowed_list = [

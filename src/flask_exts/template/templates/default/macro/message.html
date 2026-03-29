@@ -1,0 +1,22 @@
+{% macro render_messages() %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% with mapping = {
+                'critical':'danger',
+                'error': 'danger',
+                'info': 'info',
+                'warning': 'warning',
+                'debug':'primary',
+                'notset': 'primary',
+                'message': 'primary',
+                } %}
+                {% for category, msg in messages %}
+                    <div class="alert alert-{{ mapping.get(category, category) }} alert-dismissable fade show" role="alert">
+                        {{ msg }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endwith %}
+        {% endif %}
+    {% endwith %}
+{% endmacro %}

@@ -76,12 +76,20 @@ class MenuView(BaseMenu):
     Admin view menu item
     """
 
-    def __init__(self, name, view=None, cache=True):
+    def __init__(
+        self,
+        name,
+        view=None,
+        cache=True,
+        class_name=None,
+        icon_type=None,
+        icon_value=None,
+    ):
         super().__init__(
             name,
-            class_name=view.menu_class_name,
-            icon_type=view.menu_icon_type,
-            icon_value=view.menu_icon_value,
+            class_name=class_name,
+            icon_type=icon_type,
+            icon_value=icon_value,
         )
 
         self._view = view
