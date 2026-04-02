@@ -6,5 +6,7 @@ from . import Form
 
 
 class RecoveryForm(Form):
-    code = StringField("Recovery Code", validators=[DataRequired(), Length(min=6, max=32)])
+    code = StringField(
+        "Recovery Code", validators=[DataRequired(), Length(min=6, max=32)]
+    )
     submit = SubmitField("Recover")

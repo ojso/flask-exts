@@ -4,7 +4,7 @@ from .base_plugin import PluginBase
 
 class Bootstrap4Plugin(PluginBase):
     def __init__(self):
-        super().__init__("bootstrap4")
+        super().__init__("bootstrap4",weight=90)
 
     def css(self):
         return url_for(

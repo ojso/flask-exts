@@ -1,4 +1,5 @@
 from markupsafe import Markup
+from operator import attrgetter
 import os
 import importlib.util
 # import inspect
@@ -34,10 +35,11 @@ class PluginManager:
         return Markup(css)
 
     def load_js(self):
+        plugins = [self.plugins.get(name) for name in self.enabled_plugins if name in self.plugins]
         js_links = [
             f'<script src="{js}"></script>'
-            for name in self.enabled_plugins
-            if (plugin := self.plugins.get(name)) and (js := plugin.js())
+            for plugin in sorted(plugins, key=attrgetter("weight"), reverse=True)
+            if (js := plugin.js())
         ]
         js = "\n".join(js_links)
         return Markup(js)

@@ -20,7 +20,7 @@
         {% set class_name = item.get_class_name() or '' %}
         {% set dropdown_class = "dropdown active" if item.is_active(current_view) else "dropdown" %}
         <li class="{{ dropdown_class }}">
-          <a class="dropdown-toggle nav-link" data-bs-toggle="dropdown" href="#">
+          <a class="dropdown-toggle nav-link" data-toggle="dropdown" href="#">
             {% if item.class_name %}<span class="{{ item.class_name }}"></span>{% endif %}
             {{ render_menu_icon(item) }}{{ item.name }}
           </a>
@@ -40,9 +40,9 @@
       {% endif %}
     {% else %}
       {% if item.is_accessible() %}
-        {% set item_class = item.get_class_name() ~ " active" if item.is_active(current_view) else "" %}
-        <li class="{{ item_class }}">
-          <a class="nav-link" href="{{ item.get_url() }}" {% if item.target %}target="{{ item.target }}"{% endif %}>{{ render_menu_icon(item) }}{{ item.name }}</a>
+        {% set nav_link_class = "nav-link" ~ (" " ~ item.get_class_name() if item.get_class_name() else "") ~ (" active" if item.is_active(current_view) else "") %}
+        <li class="nav-item">
+          <a class="{{ nav_link_class }}" href="{{ item.get_url() }}" {% if item.target %}target="{{ item.target }}"{% endif %}>{{ render_menu_icon(item) }}{{ item.name }}</a>
         </li>
       {% endif %}
     {% endif %}

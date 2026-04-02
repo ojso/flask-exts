@@ -4,7 +4,7 @@
 {% from "macro/icon.html" import render_icon %}
 {% from "macro/modal.html" import add_modal_button,add_modal_window %}
 
-{% do _template.plugin_manager.enable_plugin(["modal","filters"]) %}
+{% do _template.plugin_manager.enable_plugin(["modal","filters","select2","form","xeditor","daterangepicker","moment"]) %}
 
 {% macro link(action, url) %}
   <a class="icon" href="{{ url }}" title="{{ action.title or '' }}">{{ render_icon(action.icon) }}</a>
@@ -65,7 +65,7 @@
     {% if can_set_page_size %}<li class="nav-item">{{ page_size_form(page_size_url, page_size, view.page_size_options) }}</li>{% endif %}
     {% if actions %}
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">{{ gettext("With selected") }}</a>
+        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">{{ gettext("With selected") }}</a>
         <div class="dropdown-menu">
           {% for p in actions %}<a class="dropdown-item" href="#" onclick="return modelActions.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
         </div>
@@ -73,7 +73,7 @@
     {% endif %}
     {% if search_supported %}
       <li class="nav-item ml-2">
-        <form method="get" action="{{ return_url }}" class="d-flex flex-wrap align-items-center my-2 my-lg-0" role="search">
+        <form method="get" action="{{ return_url }}" class="d-flex flex-wrap align-items-center my-2 my-lg-0">
           {% for flt_name, flt_value in filter_args.items() %}<input type="hidden" name="{{ flt_name }}" value="{{ flt_value }}">{% endfor %}
           {% if page_size != default_page_size %}<input type="hidden" name="page_size" value="{{ page_size }}">{% endif %}
           {% for arg_name, arg_value in extra_args.items() %}<input type="hidden" name="{{ arg_name }}" value="{{ arg_value }}">{% endfor %}

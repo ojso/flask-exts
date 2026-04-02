@@ -11,9 +11,9 @@
                 'message': 'primary',
                 } %}
                 {% for category, msg in messages %}
-                    <div class="alert alert-{{ mapping.get(category, category) }} alert-dismissable fade show" role="alert">
+                    <div class="alert alert-{{ mapping.get(category, category) }} alert-dismissable fade show">
                         {{ msg }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-dismiss="alert"></button>
                     </div>
                 {% endfor %}
             {% endwith %}

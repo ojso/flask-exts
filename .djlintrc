@@ -1,5 +1,6 @@
 {
     "profile": "jinja",
+    "indent": 2,
     "ignore": "T003",
     "max_attribute_length": 180,
     "max_line_length": 180,

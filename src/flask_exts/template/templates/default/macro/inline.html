@@ -39,6 +39,6 @@
                 </div>
             {% endfilter %}
         </div>
-        <a id="{{ field.id }}-button" href="#" class="btn btn-primary" role="button" onclick="faForm.addInlineField(this, '{{ field.id }}');">{{ gettext("Add") }} {{ field.label }}</a>
+        <a id="{{ field.id }}-button" href="#" class="btn btn-primary" onclick="faForm.addInlineField(this, '{{ field.id }}');">{{ gettext("Add") }} {{ field.label }}</a>
     </div>
 {% endmacro %}

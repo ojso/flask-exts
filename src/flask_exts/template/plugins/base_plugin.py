@@ -5,8 +5,9 @@ class PluginBase:
         super().__init_subclass__(**kwargs)
         cls._plugins[cls.__name__] = cls
 
-    def __init__(self, name):
+    def __init__(self, name, weight=0):
         self.name = name
+        self.weight = weight
 
     def css(self):
         return ""

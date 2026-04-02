@@ -10,7 +10,7 @@ from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ...admin import View, expose_url
+from ..admin import View, expose_url
 from .forms.login import LoginForm
 from .forms.register import RegisterForm
 from .forms.change_password import ChangePasswordForm
@@ -18,10 +18,10 @@ from .forms.forgot_password import ForgotPasswordForm
 from .forms.reset_password import ResetPasswordForm
 from .forms.two_factor import TwoFactorForm
 from .forms.recovery import RecoveryForm
-from ...proxies import _userstore
-from ...proxies import _security
-from ...signals import user_registered
-from ...constants import NO_CACHE_HEADER
+from ..proxies import _userstore
+from ..proxies import _security
+from ..signals import user_registered
+from ..constants import NO_CACHE_HEADER
 
 
 class UserView(View):
@@ -29,11 +29,11 @@ class UserView(View):
     Default administrative interface index page when visiting the ``/user/`` URL.
     """
 
-    index_template = "views/user/index.html"
-    list_template = "views/user/list.html"
-    login_template = "views/user/login.html"
-    register_template = "views/user/register.html"
-    verify_email_template = "views/user/verify_email.html"
+    index_template = "user/index.html"
+    list_template = "user/list.html"
+    login_template = "user/login.html"
+    register_template = "user/register.html"
+    verify_email_template = "user/verify_email.html"
 
     def __init__(
         self,
@@ -73,7 +73,7 @@ class UserView(View):
             return redirect(url_for(".index"))
         form = self.get_login_form_class()()
         if form.validate_on_submit():
-            user,error = _userstore.login_user_by_username_password(
+            user, error = _userstore.login_user_by_username_password(
                 form.username.data, form.password.data
             )
             if user is not None:
@@ -157,7 +157,7 @@ class UserView(View):
     def setup_tfa(self):
         if current_user.tfa_enabled:
             return self.render(
-                "views/user/show_tfa.html",
+                "user/show_tfa.html",
             )
         if not current_user.totp_secret:
             _userstore.user_set(
@@ -168,7 +168,7 @@ class UserView(View):
             current_user.totp_secret, current_user.username
         )
         return self.render(
-            "views/user/setup_tfa.html",
+            "user/setup_tfa.html",
             totp_uri=totp_uri,
             totp_secret=current_user.totp_secret,
             _headers=NO_CACHE_HEADER,
@@ -180,7 +180,7 @@ class UserView(View):
         if request.method == "GET" and "modal" in request.args:
             action = request.args.get("action")
             return self.render(
-                "views/user/verify_tfa_modal.html", form=TwoFactorForm(), action=action
+                "user/verify_tfa_modal.html", form=TwoFactorForm(), action=action
             )
         if not current_user.tfa_enabled:
             abort(403)
@@ -196,7 +196,7 @@ class UserView(View):
                 return redirect(next_page)
             else:
                 flash("Invalid code", "error")
-        return self.render("views/user/verify_tfa.html", form=form)
+        return self.render("user/verify_tfa.html", form=form)
 
     @login_required
     @expose_url("/change_password/", methods=("GET", "POST"))
@@ -210,7 +210,7 @@ class UserView(View):
             flash("Password has been updated", "success")
             return redirect(url_for(".index"))
 
-        return self.render("views/user/change_password.html", form=form)
+        return self.render("user/change_password.html", form=form)
 
     @expose_url("/forgot_password/", methods=("GET", "POST"))
     def forgot_password(self):
@@ -226,7 +226,7 @@ class UserView(View):
                 "success",
             )
             return redirect(url_for(".login"))
-        return self.render("views/user/forgot_password.html", form=form)
+        return self.render("user/forgot_password.html", form=form)
 
     @expose_url("/reset_password/", methods=("GET", "POST"))
     def reset_password(self):
@@ -242,7 +242,7 @@ class UserView(View):
             else:
                 print(r)
                 flash("The reset password link is invalid or has expired.", "error")
-        return self.render("views/user/reset_password.html", form=form)
+        return self.render("user/reset_password.html", form=form)
 
     @login_required
     @expose_url("/recovery_codes/")
@@ -255,7 +255,7 @@ class UserView(View):
                 recovery_codes=_security.tfa.generate_recovery_codes(),
             )
         return self.render(
-            "views/user/recovery_codes.html",
+            "user/recovery_codes.html",
             recovery_codes=current_user.recovery_codes,
             _headers=NO_CACHE_HEADER,
         )
@@ -278,11 +278,11 @@ class UserView(View):
                     current_user.totp_secret, current_user.username
                 )
                 return self.render(
-                    "views/user/setup_tfa.html",
+                    "user/setup_tfa.html",
                     totp_uri=totp_uri,
                     totp_secret=current_user.totp_secret,
                     _headers=NO_CACHE_HEADER,
                 )
             else:
                 flash("Invalid recovery code", "error")
-        return self.render("views/user/recovery.html", form=form)
+        return self.render("user/recovery.html", form=form)

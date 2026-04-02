@@ -44,10 +44,6 @@
   {%- endif %}
 {% endmacro %}
 
-{% macro render_form_field(form, field) %}
-  {{ render_field(field,**kwargs) }}
-{% endmacro %}
-
 {% macro render_form_fields(form, form_opts=None) %}
   {% for f in form if f.widget.input_type != 'hidden' %}
     {% if form_opts %}
@@ -55,9 +51,30 @@
     {% else %}
       {% set kwargs = {} %}
     {% endif %}
-    {{ render_form_field(form, f, **kwargs) }}
+    {{ render_field(f,**kwargs) }}
   {% endfor %}
   {% for f in form if f.widget.input_type == 'hidden' %}{{ f }}{% endfor %}
+{% endmacro %}
+
+{% macro render_form(form,action=None,form_opts=None,multipart=False) %}
+  <form {% if action %} action="{{ action }}"{% endif %} method="post" {% if multipart %}enctype="multipart/form-data"{% endif %}>
+    {{ render_form_fields(form, form_opts=form_opts) }}
+    <button type="submit" class="btn btn-primary">{{ gettext("Save") }}</button>
+  </form>
+{% endmacro %}
+
+{% macro render_modal_form(form,action=None,title=None,form_opts=None) %}
+  <form action="{{ action or '' }}" method="post">
+    <div class="modal-header">
+      <h5 class="modal-title">{{ title }}</h5>
+      <button type="button" class="btn-close" data-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">{{ render_form_fields(form, form_opts=form_opts) }}</div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ gettext("Cancel") }}</button>
+      <button type="submit" class="btn btn-primary">{{ gettext("Save") }}</button>
+    </div>
+  </form>
 {% endmacro %}
 
 {% macro extra(view) %}

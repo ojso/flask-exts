@@ -1,5 +1,5 @@
-from ..views.index.view import IndexView
-from ..views.user.view import UserView
+from .index_view import IndexView
+from ..usercenter.user_view import UserView
 
 def add_views(app):
     admin = app.extensions["exts"].admin

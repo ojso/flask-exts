@@ -1,4 +1,4 @@
-from ...admin import View, expose_url
+from ..admin import View, expose_url
 
 
 class IndexView(View):

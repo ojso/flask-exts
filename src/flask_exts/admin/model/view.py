@@ -3,7 +3,7 @@ import re
 import csv
 import mimetypes
 import time
-from typing import Optional, Type
+from typing import Optional
 from math import ceil
 from collections import OrderedDict
 from functools import reduce
@@ -18,7 +18,6 @@ from flask import jsonify
 from flask import get_flashed_messages
 from flask import stream_with_context
 from werkzeug.utils import secure_filename
-from wtforms.form import Form
 from wtforms.fields import HiddenField
 from wtforms.validators import ValidationError, InputRequired
 from flask_babel import gettext, ngettext
@@ -32,7 +31,7 @@ from . import row_action
 from .. import expose_url
 from ..view import View
 from ..action_mixin import ActionMixin
-from ...template.forms.form.base_form import BaseForm
+from ...template.forms.form.flask_form import FlaskForm as BaseForm
 from ...template.forms.form.form_opts import FormOpts
 
 
@@ -2050,7 +2049,6 @@ class ModelView(View, ActionMixin):
                 pass
             else:
                 form.__delitem__(field.name)
-
         if form.validate_on_submit():
             pk = form.list_form_pk.data
             record = self.get_one(pk)
@@ -2068,6 +2066,7 @@ class ModelView(View, ActionMixin):
         else:
             for field in form:
                 for error in field.errors:
+                    print(field.name,error)
                     # return validation error to x-editable
                     if isinstance(error, list):
                         return (

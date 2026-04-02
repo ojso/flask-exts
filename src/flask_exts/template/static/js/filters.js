@@ -1,4 +1,4 @@
-var AdminFilters = function(element, filtersElement, filterGroups, activeFilters) {
+var AdminFilters = function (element, filtersElement, filterGroups, activeFilters) {
     var $root = $(element);
     var $container = $('.filters', $root);
     var lastCount = 0;
@@ -21,7 +21,7 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
 
     function removeFilter() {
         $(this).closest('tr').remove();
-        if($('.filters tr').length == 0) {
+        if ($('.filters tr').length == 0) {
             $('button', $root).hide();
             $('a[class=btn]', $root).hide();
             $('.filters tbody').remove();
@@ -54,7 +54,7 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
         } else if (filter.options) {
             var $field = $('<select class="filter-val" />').attr('name', makeName(filter.arg));
 
-            $(filter.options).each(function() {
+            $(filter.options).each(function () {
                 // for active filter inputs with options, add "selected" if there is a matching active filter
                 if (filterValue && (filterValue == this[0])) {
                     $field.append($('<option/>')
@@ -71,7 +71,7 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
         inputContainer.replaceWith($('<td/>').append($field));
 
         // show "Apply Filter" button when filter input is changed
-        $field.on('input change', function() {
+        $field.on('input change', function () {
             $('button', $root).removeClass('d-none');
         });
 
@@ -85,13 +85,13 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
                 field.attr('data-date-format', "YYYY-MM-DD");
             } else if ((filter.type == "datetimepicker") || (filter.type == "datetimerangepicker")) {
                 field.attr('data-date-format', "YYYY-MM-DD HH:mm:ss");
-            } else if ((filter.type == "timepicker")  || (filter.type == "timerangepicker")) {
+            } else if ((filter.type == "timepicker") || (filter.type == "timerangepicker")) {
                 field.attr('data-date-format', "HH:mm:ss");
             } else if (filter.type == "select2-tags") {
                 var options = [];
                 if (filter.options) {
-                    filter.options.forEach(function(option) {
-                        options.push({id:option[0], text:option[1]});
+                    filter.options.forEach(function (option) {
+                        options.push({ id: option[0], text: option[1] });
                     });
                     // save tag options as json on data attribute
                     field.attr('data-tags', JSON.stringify(options));
@@ -117,7 +117,7 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
                     .append('&nbsp;')
                     .append(name)
                     .click(removeFilter)
-                )
+            )
         );
 
         // Filter operation <select> (equal, not equal, etc)
@@ -125,7 +125,7 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
 
         // if one of the subfilters are selected, use that subfilter to create the input field
         var filterSelection = 0;
-        $.each(subfilters, function( subfilterIndex, subfilter ) {
+        $.each(subfilters, function (subfilterIndex, subfilter) {
             if (this.index == selectedIndex) {
                 $select.append($('<option/>').attr('value', subfilter.arg).attr('selected', true).text(subfilter.operation));
                 filterSelection = subfilterIndex;
@@ -139,7 +139,7 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
         );
 
         // select2 for filter-op (equal, not equal, etc)
-        $select.select2({width: 'resolve'}).on("change", function(e) {
+        $select.select2({ width: 'resolve' }).on("change", function (e) {
             changeOperation(subfilters, $el, filter, $select);
         });
 
@@ -154,8 +154,8 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
     }
 
     // Add Filter Button, new filter
-    $('a.filter', filtersElement).click(function() {
-        var name = ($(this).text().trim !== undefined ? $(this).text().trim() : $(this).text().replace(/^\s+|\s+$/g,''));
+    $('a.filter', filtersElement).click(function () {
+        var name = ($(this).text().trim !== undefined ? $(this).text().trim() : $(this).text().replace(/^\s+|\s+$/g, ''));
 
         addFilter(name, filterGroups[name], false, null);
 
@@ -163,7 +163,7 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
     });
 
     // on page load - add active filters
-    $.each(activeFilters, function( activeIndex, activeFilter ) {
+    $.each(activeFilters, function (activeIndex, activeFilter) {
         var idx = activeFilter[0],
             name = activeFilter[1],
             filterValue = activeFilter[2];
@@ -171,13 +171,13 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
     });
 
     // show "Apply Filter" button when filter input is changed
-    $('.filter-val', $root).on('input change', function() {
+    $('.filter-val', $root).on('input change', function () {
         $('button', $root).show();
     });
 
     $('.remove-filter', $root).click(removeFilter);
 
-    $('.filter-val', $root).not('.select2-container').each(function() {
+    $('.filter-val', $root).not('.select2-container').each(function () {
         var count = getCount($(this).attr('name'));
         if (count > lastCount)
             lastCount = count;
@@ -187,15 +187,14 @@ var AdminFilters = function(element, filtersElement, filterGroups, activeFilters
 };
 
 
-(function($) {
-    $(document).on('adminFormReady', function(event){
-        if ($('#filter-groups-data').length == 1) {
-            var filter = new AdminFilters(
-                '#filter_form', '.field-filters',
-                JSON.parse($('#filter-groups-data').text()),
-                JSON.parse($('#active-filters-data').text())
-            );
-        }
-    });
-    $(document).trigger('adminFormReady');  // trigger event to allow dynamic filter form to function properly
-})(jQuery);
+document.addEventListener('DOMContentLoaded', function() {
+    if ($('#filter-groups-data').length == 1) {
+        var filter = new AdminFilters(
+            '#filter_form', '.field-filters',
+            JSON.parse($('#filter-groups-data').text()),
+            JSON.parse($('#active-filters-data').text())
+        );
+    }
+});
+
+

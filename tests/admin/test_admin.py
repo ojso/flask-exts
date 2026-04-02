@@ -118,7 +118,7 @@ def test_app_admin_default(app, client, admin):
     assert user_view is not None
     assert user_view.endpoint == "user"
     assert user_view.url == "/user"
-    assert user_view.index_template == "views/user/index.html"
+    assert user_view.index_template == "user/index.html"
 
     with app.test_request_context():
         index_index_url = url_for("index.index")

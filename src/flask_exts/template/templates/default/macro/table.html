@@ -1,4 +1,5 @@
-{% from 'macro/icon.html' import render_icon %}
+{% from "macro/icon.html" import render_icon %}
+
 {% macro build_url(record, endpoint, url_tuples, model, pk_field) %}
     {% if model != None %}
         {% set record = model.query.get(record[pk_field]) %}

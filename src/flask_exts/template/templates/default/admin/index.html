@@ -1,11 +1,9 @@
-{% extends 'admin/master.html' %}
+{% extends "admin/master.html" %}
+
 {% block main %}
-    <br>
-    template location: admin/admin.html
-    <br>
-    <br>
-    <div>
-        View List:
-        <div>
-            {% for v in admin._views.values() %}<div>{{ v.name }},{{ v.endpoint }},{{ v.url }}</div>{% endfor %}
-        {% endblock %}
+  <br>
+  <div>View List:</div>
+  <div>
+    {% for v in admin._views.values() %}<div>{{ v.name }},{{ v.endpoint }},{{ v.url }}</div>{% endfor %}
+  </div>
+{% endblock %}

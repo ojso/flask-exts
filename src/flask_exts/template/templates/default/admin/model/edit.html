@@ -1,5 +1,5 @@
 {% extends "admin/master.html" %}
-{% from "macro/form.html" import render_form_fields %}
+{% from "macro/form.html" import render_form %}
 
 {% block main %}
   <ul class="nav nav-tabs">
@@ -18,5 +18,5 @@
       <a class="nav-link" href="{{ url_for('.details_view', id=request.args.get('id') , url=return_url) }}">{{ gettext("Details") }}</a>
     </li>
   </ul>
-  {{ render_form_fields(form , form_opts) }}
+  {{ render_form(form,form_opts=form_opts) }}
 {% endblock %}

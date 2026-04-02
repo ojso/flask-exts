@@ -2,8 +2,7 @@ from wtforms import StringField
 from wtforms import SubmitField
 from wtforms.validators import DataRequired
 from . import Form
-from ....proxies import _userstore
-
+from ...proxies import _userstore
 
 
 class ForgotPasswordForm(Form):
