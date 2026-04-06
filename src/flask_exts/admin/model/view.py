@@ -1735,8 +1735,6 @@ class ModelView(View, ActionMixin):
         form = self.create_form()
 
         if form.validate_on_submit():
-            # in versions 1.1.0 and before, this returns a boolean
-            # in later versions, this is the model itself
             model = self.create_model(form)
             if model:
                 flash(gettext("Record was successfully created."), "success")

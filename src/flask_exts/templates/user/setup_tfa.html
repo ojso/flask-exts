@@ -1,0 +1,38 @@
+{% extends "admin/master.html" %}
+
+{% from "macro/modal.html" import add_modal_button, add_modal_window %}
+
+{% do _template.plugin_manager.enable_plugin(["qrcode", "modal"]) %}
+
+{% block title %}setup 2fa{% endblock %}
+
+{% block main %}
+  <div>
+    <div>Scan this QR code with your authenticator app:</div>
+    <div id="qrimg" data-uri="{{ totp_uri }}"></div>
+    <div>
+      Or enter this secret manually: <b>{{ totp_secret }}</b>
+    </div>
+  </div>
+  {% if not current_user.tfa_enabled %}
+    {{ add_modal_button(url=get_url(".verify_tfa", modal=True, action=url_for(".enable_tfa", enable=True) ),
+    title=gettext("Enable 2FA"),
+    content=gettext("Enable 2FA")) }}
+    {{ add_modal_window() }}
+  {% endif %}
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script>
+    // generate QR code
+    document.addEventListener("DOMContentLoaded",()=>{
+      let qr = new QrCode(20, 'M');
+      let text = document.getElementById('qrimg').dataset.uri;
+      qr.addData(text);
+      qr.make();
+      const qrsvg = qr.createSvgTag(4,4);
+      document.getElementById('qrimg').innerHTML = qrsvg;
+    });  
+  </script>
+{% endblock %}

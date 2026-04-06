@@ -1,5 +1,4 @@
 from wtforms import HiddenField
-from wtforms.validators import DataRequired, InputRequired
 from .forms.form.csrf import get_g_csrf_token
 
 
@@ -8,21 +7,6 @@ class Funcs:
 
     def type_name(self, item):
         return type(item).__name__
-
-    def is_hidden_field(self, field):
-        return isinstance(field, HiddenField)
-
-    def is_required_field(self, field):
-        """
-        Check if form field has `DataRequired`, `InputRequired`
-
-        :param field:
-            WTForms field to check
-        """
-        for validator in field.validators:
-            if isinstance(validator, (DataRequired, InputRequired)):
-                return True
-        return False
 
     def get_table_titles(self, data, primary_key, primary_key_title):
         """Detect and build the table titles tuple from ORM object, currently only support SQLAlchemy."""

@@ -22,13 +22,13 @@ class Template:
 
         self.init_theme(app)
 
-    def init_template_blueprint(self, app, theme_name="default"):
+    def init_template_blueprint(self, app):
         blueprint = Blueprint(
             "_template",
             __name__,
             url_prefix="/template",
-            template_folder=op.join("./templates", theme_name),
-            static_folder="./static",
+            template_folder="../templates",
+            static_folder="../static",
         )
         app.register_blueprint(blueprint)
 

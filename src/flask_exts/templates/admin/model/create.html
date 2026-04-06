@@ -1,0 +1,15 @@
+{% extends "admin/master.html" %}
+
+{% from "macro/form.html" import render_form %}
+
+{% block main %}
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link" href="{{ return_url }}">{{ gettext("List") }}</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active" href="#">{{ gettext("Create") }}</a>
+    </li>
+  </ul>
+  {{ render_form(form,form_opts=form_opts) }}
+{% endblock %}

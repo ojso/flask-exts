@@ -1,0 +1,233 @@
+{% extends "admin/master.html" %}
+{% from "macro/pagination.html" import render_pager, render_simple_pager %}
+{% from "macro/layout.html" import filter_options, page_size_form, export_options %}
+{% from "macro/icon.html" import render_icon %}
+{% from "macro/modal.html" import add_modal_button,add_modal_window %}
+
+{% do _template.plugin_manager.enable_plugin(["modal","filters","select2","form","xeditor","daterangepicker","moment"]) %}
+
+{% macro link(action, url) %}
+  <a class="icon" href="{{ url }}" title="{{ action.title or '' }}">{{ render_icon(action.icon) }}</a>
+{% endmacro %}
+
+{% macro delete_row(action, row_id, row) %}
+  <form class="icon" method="post" action="{{ url_for('.delete_view') }}">
+    {{ delete_form.id(value=get_pk_value(row) ) }}
+    {{ delete_form.url(value=return_url) }}
+    {% if delete_form.csrf_token %}
+      {{ delete_form.csrf_token }}
+    {% elif _template.funcs.csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ _template.funcs.csrf_token() }}" />
+    {% endif %}
+    <button onclick="return confirm('{{ action.confirm }}');" title="{{ gettext('Delete Record') }}">{{ render_icon(action.icon) }}</button>
+  </form>
+{% endmacro %}
+
+{% macro render_row_action(action, row_id, row) %}
+  {%- if action.type == 'link' %}
+    {{ link(action, action.get_url(row_id,row) ) }}
+  {%- elif action.type == 'view_row' -%}
+    {{ link(action, url_for('.details_view', id=row_id, url=return_url) ) }}
+  {%- elif action.type == 'view_row_popup' -%}
+    {{ add_modal_button(url=url_for('.details_view', id=row_id, url=return_url, modal=True) , title=action.title, content=render_icon(action.icon)) }}
+  {%- elif action.type == 'edit_row' -%}
+    {{ link(action, url_for('.edit_view', id=row_id, url=return_url) ) }}
+  {%- elif action.type == 'edit_row_popup' -%}
+    {{ add_modal_button(url=url_for('.edit_view', id=row_id, url=return_url, modal=True) , title=action.title, content=render_icon(action.icon), btn_class="btn btn-sm") }}
+  {%- elif action.type == 'delete_row' -%}
+    {{ delete_row(action, row_id, row) }}
+  {%- endif %}
+{% endmacro %}
+
+{% if actions %}
+  {%- do _template.plugin_manager.enable_plugin(['model_action']) -%}
+{% endif %}
+
+{% block main %}
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link active" href="#">{{ gettext("List") }}
+        {% if count %}({{ count }}){% endif %}
+      </a>
+    </li>
+    {% if view.can_create %}
+      <li class="nav-item">
+        {%- if view.create_modal -%}
+          {{ add_modal_button(url=get_url('.create_view', url=return_url, modal=True) , title=gettext('Create New Record'), content=gettext('Create')) }}
+        {% else %}
+          <a href="{{ url_for('.create_view', url=return_url) }}" title="{{ gettext('Create New Record') }}" class="nav-link">{{ gettext("Create") }}</a>
+        {%- endif -%}
+      </li>
+    {% endif %}
+    {% if view.can_export %}{{ export_options(view.export_types) }}{% endif %}
+    {% block model_menu_bar_before_filters %}{% endblock %}
+    {% if filters %}<li class="nav-item">{{ filter_options(filter_groups) }}</li>{% endif %}
+    {% if can_set_page_size %}<li class="nav-item">{{ page_size_form(page_size_url, page_size, view.page_size_options) }}</li>{% endif %}
+    {% if actions %}
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">{{ gettext("With selected") }}</a>
+        <div class="dropdown-menu">
+          {% for p in actions %}<a class="dropdown-item" href="#" onclick="return modelActions.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
+        </div>
+      </li>
+    {% endif %}
+    {% if search_supported %}
+      <li class="nav-item ml-2">
+        <form method="get" action="{{ return_url }}" class="d-flex flex-wrap align-items-center my-2 my-lg-0">
+          {% for flt_name, flt_value in filter_args.items() %}<input type="hidden" name="{{ flt_name }}" value="{{ flt_value }}">{% endfor %}
+          {% if page_size != default_page_size %}<input type="hidden" name="page_size" value="{{ page_size }}">{% endif %}
+          {% for arg_name, arg_value in extra_args.items() %}<input type="hidden" name="{{ arg_name }}" value="{{ arg_value }}">{% endfor %}
+          {% if sort_column is not none %}<input type="hidden" name="sort" value="{{ sort_column }}">{% endif %}
+          {% if sort_desc %}<input type="hidden" name="desc" value="1">{% endif %}
+          {% if search %}
+            <div class="input-group">
+              <input class="form-control" size="30" type="text" name="search" value="{{ search }}" placeholder="{{ gettext('%(placeholder)s', placeholder=search_placeholder) }}">
+              <div class="input-group-append">
+                <span class="input-group-text">
+                  <a href="{{ clear_search_url }}" class="align-middle"><span>X</span></a>
+                </span>
+              </div>
+              <button class="btn btn-secondary my-2 my-sm-0 ml-2" type="submit">{{ gettext("Search") }}</button>
+            </div>
+          {% else %}
+            <div class="d-flex flex-wrap align-items-center my-2 my-lg-0">
+              <input class="form-control" size="30" type="text" name="search" value="" placeholder="{{ gettext('%(placeholder)s', placeholder=search_placeholder) }}">
+              <button class="btn btn-secondary my-2 my-sm-0 ml-2" type="submit">{{ gettext("Search") }}</button>
+            </div>
+          {% endif %}
+        </form>
+      </li>
+    {% endif %}
+    {% block model_menu_bar_after_filters %}{% endblock %}
+  </ul>
+
+  {% if filters %}
+    <form id="filter_form" method="get" action="{{ return_url }}">
+      {% for arg_name, arg_value in extra_args.items() %}<input type="hidden" name="{{ arg_name }}" value="{{ arg_value }}">{% endfor %}
+      {% if sort_column is not none %}<input type="hidden" name="sort" value="{{ sort_column }}">{% endif %}
+      {% if sort_desc %}<input type="hidden" name="desc" value="1">{% endif %}
+      {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+      {% if page_size != default_page_size %}<input type="hidden" name="page_size" value="{{ page_size }}">{% endif %}
+      <div class="pull-right">
+        <button type="submit" class="btn btn-primary d-none">{{ gettext("Apply") }}</button>
+        {% if active_filters %}<a href="{{ clear_search_url }}" class="btn btn-secondary">{{ gettext("Reset Filters") }}</a>{% endif %}
+      </div>
+      <table class="filters">
+      </table>
+    </form>
+  {% endif %}
+
+  {% block model_list_table %}
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered table-hover model-list">
+        <thead>
+          <tr>
+            {% block list_header scoped %}
+              {% if actions %}
+                <th class="list-checkbox-column">
+                  <input type="checkbox" name="rowtoggle" class="action-rowtoggle" title="{{ gettext('Select all records') }}" />
+                </th>
+              {% endif %}
+              {% if view.column_display_actions %}<th>Operates</th>{% endif %}
+              {% for c, name in list_columns %}
+                {% set column = loop.index0 %}
+                <th class="column-header col-{{ c }}">
+                  {% if view.is_sortable(c) %}
+                    {% if sort_column == column %}
+                      <a href="{{ sort_url(column, True) }}" title="{{ gettext('Sort by %(name)s', name=name) }}">
+                        {{ name }}
+                        <span>
+                          {% if sort_desc %}
+                            ↑
+                          {% else %}
+                            ↓
+                          {% endif %}
+                        </span>
+                      </a>
+                    {% else %}
+                      <a href="{{ sort_url(column) }}" title="{{ gettext('Sort by %(name)s', name=name) }}">{{ name }}</a>
+                    {% endif %}
+                  {% else %}
+                    {{ name }}
+                  {% endif %}
+                  {% if view.column_descriptions.get(c) %}<a class="bi-question-circle" title="{{ view.column_descriptions[c] }}" href="#" data-role="tooltip"></a>{% endif %}
+                </th>
+              {% endfor %}
+            {% endblock %}
+          </tr>
+        </thead>
+        {% for row in data %}
+          <tr>
+            {% block list_row scoped %}
+              {% if actions %}
+                <td>
+                  <input type="checkbox" name="rowid" class="action-checkbox" value="{{ get_pk_value(row) }}" title="{{ gettext('Select record') }}" />
+                </td>
+              {% endif %}
+              {% if view.column_display_actions %}
+                <td class="list-buttons-column">
+                  {% for action in list_row_actions %}{{ render_row_action(action, get_pk_value(row) , row) }}{% endfor %}
+                </td>
+              {%- endif -%}
+              {% for c, name in list_columns %}
+                <td class="col-{{ c }}">
+                  {% if view.is_editable(c) %}
+                    {% set form = list_forms[get_pk_value(row)] %}
+                    {% if form.csrf_token %}
+                      {{ form[c](pk=get_pk_value(row) , display_value=get_model_value(row, c), csrf=form.csrf_token._value()) }}
+                    {% elif _template.funcs.csrf_token %}
+                      {{ form[c](pk=get_pk_value(row) , display_value=get_model_value(row, c), csrf=_template.funcs.csrf_token()) }}
+                    {% else %}
+                      {{ form[c](pk=get_pk_value(row) , display_value=get_model_value(row, c)) }}
+                    {% endif %}
+                  {% else %}
+                    {{ get_model_value(row, c) }}
+                  {% endif %}
+                </td>
+              {% endfor %}
+            {% endblock %}
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="999">
+              {% block empty_list_message %}<div class="text-center">{{ view.get_empty_list_message() }}</div>{% endblock %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% block list_pager %}
+      {% if num_pages is not none %}
+        {{ render_pager(page, num_pages, pager_url) }}
+      {% else %}
+        {{ render_simple_pager(page, data|length == page_size, pager_url) }}
+      {% endif %}
+    {% endblock %}
+  {% endblock %}
+  {% if actions %}
+    <form id="action_form" action="{{ get_url('.action_view') }}" method="post" class="d-none">
+      {{ action_form.url(value=return_url) }}
+      {{ action_form.action() }}
+      {{ action_form.csrf_token }}
+    </form>
+  {% endif %}
+  {% if view.edit_modal or view.create_modal or view.details_modal %}{{ add_modal_window() }}{% endif %}
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  {% if filter_groups %}
+    <div id="filter-groups-data" class="d-none">{{ filter_groups|tojson }}</div>
+    <div id="active-filters-data" class="d-none">{{ active_filters|tojson }}</div>
+  {% endif %}
+  {% if actions %}
+    <script>
+      const actionErrorMessage = "{{ _('Please select at least one record.') }}";
+      const actionsData = {{ actions|tojson }};
+      let modelActions;
+      document.addEventListener("DOMContentLoaded",()=>{
+          modelActions = new ModelAction(actionErrorMessage, actionsData);
+      });
+    </script>
+  {% endif %}
+{% endblock %}

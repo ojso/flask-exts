@@ -1,0 +1,83 @@
+{% macro render_field_label(field, class) -%}
+  {{ field.label(class_=class) }}
+  {%- if field.flags.required %}<strong class="text-danger">*</strong>{% endif %}
+{%- endmacro %}
+
+{% macro render_field_description(field) %}
+  {%- if field.errors %}
+    <div class="invalid-feedback">
+      <ul class="form-text text-muted">
+        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+      </ul>
+    </div>
+  {%- elif field.description %}
+    <small class="form-text text-muted">{{ field.description|safe }}</small>
+  {%- endif %}
+{% endmacro %}
+
+{% macro render_field(field) %}
+  {%- if field.widget.input_type == 'submit' or field.widget.input_type == 'hidden' %}
+    {{ field(**kwargs) }}
+  {%- else %}
+    {%- if field.widget.input_type == 'checkbox' %}
+      {%- set group_class = _template.theme.form_group_class ~ " form-check" %}
+      {%- set input_class = "form-check-input" %}
+      {%- set label_class = "form-check-label" %}
+    {%- else %}
+      {%- set group_class = _template.theme.form_group_class %}
+      {%- set input_class = "form-control" %}
+      {%- set label_class = "form-label" %}
+    {%- endif %}
+    {%- if field.errors %}
+      {%- set input_class = input_class ~ " is-invalid" %}
+    {%- endif %}
+    <div class="{{ group_class }}">
+      {%- if field.widget.input_type == 'checkbox' %}
+        {{ field(class_=input_class,**kwargs) | safe }}
+        {{ render_field_label(field, label_class) }}
+      {%- else %}
+        {{ render_field_label(field, label_class) }}
+        {{ field(class_=input_class,**kwargs) | safe }}
+      {%- endif %}
+      {{ render_field_description(field) }}
+    </div>
+  {%- endif %}
+{% endmacro %}
+
+{% macro render_form_fields(form, form_opts=None) %}
+  {% for f in form if f.widget.input_type != 'hidden' %}
+    {% if form_opts %}
+      {% set kwargs = form_opts.widget_args.get(f.short_name, {}) %}
+    {% else %}
+      {% set kwargs = {} %}
+    {% endif %}
+    {{ render_field(f,**kwargs) }}
+  {% endfor %}
+  {% for f in form if f.widget.input_type == 'hidden' %}{{ f }}{% endfor %}
+{% endmacro %}
+
+{% macro render_form(form, action=None, form_opts=None, multipart=False) %}
+  <form method="post" {% if action %}action="{{ action }}"{% endif %} {% if multipart %}enctype="multipart/form-data"{% endif %}>
+    {{ render_form_fields(form, form_opts=form_opts) }}
+    <button type="submit" class="btn btn-primary">{{ gettext("Save") }}</button>
+  </form>
+{% endmacro %}
+
+{% macro render_modal_form(form, action=None, title=None, form_opts=None) %}
+  <form method="post" {% if action %}action="{{ action }}"{% endif %}>
+    <div class="modal-header">
+      <h5 class="modal-title">{{ title }}</h5>
+      <button type="button" class="close" data-dismiss="modal">×</button>
+    </div>
+    <div class="modal-body">{{ render_form_fields(form, form_opts=form_opts) }}</div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ gettext("Cancel") }}</button>
+      <button type="submit" class="btn btn-primary">{{ gettext("Save") }}</button>
+    </div>
+  </form>
+{% endmacro %}
+
+{% macro extra(view) %}
+  {% if view.can_create %}<input name="_add_another" type="submit" class="btn btn-secondary" value="{{ gettext('Save and Add Another') }}" />{% endif %}
+  {% if view.can_edit %}<input name="_continue_editing" type="submit" class="btn btn-secondary" value="{{ gettext('Save and Continue Editing') }}" />{% endif %}
+{% endmacro %}

@@ -1,22 +1,30 @@
 from flask import render_template_string
 
+
 def test_render_nav_item_active(app, client):
-    @app.route('/active')
+    @app.route("/active")
     def foo():
-        return render_template_string('''
+        return render_template_string(
+            """
                 {% from "macro/nav.html" import render_nav_item %}
                 {{ render_nav_item("foo", "Foo") }}
-                ''')
+                """
+        )
 
-    @app.route('/not_active')
+    @app.route("/not_active")
     def bar():
-        return render_template_string('''
+        return render_template_string(
+            """
                 {% from "macro/nav.html" import render_nav_item %}
                 {{ render_nav_item("foo", "Foo") }}
-                ''')
+                """
+        )
 
-    rv = client.get('/active')
+    rv = client.get("/active")
+    assert '<li class="nav-item">' in rv.text
+    
+
     assert '<a class="nav-item nav-link active"' in rv.text
 
-    rv = client.get('/not_active')
+    rv = client.get("/not_active")
     assert '<a class="nav-item nav-link"' in rv.text

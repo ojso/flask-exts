@@ -1,6 +1,0 @@
-{% from "macro/form.html" import render_modal_form %}
-
-{% set title = gettext("Create New Record") %}
-{% set action = url_for('.create_view') %}
-
-{{ render_modal_form(form,action,title,form_opts) }}

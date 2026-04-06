@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% from "macro/menu.html" import render_menu, render_menu_links, render_menu_user %}
+{% from "macro/message.html" import render_messages %}
+{% from "macro/nav.html" import render_nav_item %}
+
+{% do _template.plugin_manager.enable_plugin(["admin"]) %}
+
+{% block body %}
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbar">
+        <ul class="navbar-nav me-auto my-2 my-lg-0">
+          {{ render_nav_item("index.adminindex",admin.name) }}
+          {{ render_menu(admin.menu.menus() ,view) }}
+        </ul>
+        <ul class="navbar-nav navbar-right">
+          {{ render_menu_links(admin.menu.menu_links() ) }}
+        </ul>
+        {% if "user" in admin._views %}{{ render_menu_user(current_user) }}{% endif %}
+      </div>
+    </div>
+  </nav>
+  <div class="container">
+    {% block head %}{% endblock %}
+    {% block messages %}{{ render_messages() }}{% endblock %}
+    {% block main %}{% endblock %}
+  </div>
+{% endblock %}

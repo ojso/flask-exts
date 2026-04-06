@@ -1,0 +1,13 @@
+{% from "macro/form.html" import render_form_fields %}
+
+{% macro add_modal_button(url="", title="", content="", modal_window_id="fa_modal_window", btn_class="btn btn-primary") %}
+  <button type="button" class="{{ btn_class }}" data-target="#{{ modal_window_id }}" title="{{ title }}" data-href="{{ url }}" data-toggle="modal">{{ content|safe }}</button>
+{% endmacro %}
+
+{% macro add_modal_window(modal_window_id="fa_modal_window") %}
+  <div class="modal fade" id="{{ modal_window_id }}" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content"></div>
+    </div>
+  </div>
+{% endmacro %}
