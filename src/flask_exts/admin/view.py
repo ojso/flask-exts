@@ -1,9 +1,32 @@
 import inspect
+from functools import wraps
 from re import sub
 from flask import Blueprint
 from flask import url_for
 from flask import abort
-from .view_meta import ViewMeta
+
+
+def _wrap_view_func_with_access(f):
+    if hasattr(f, "_wrapped_access"):
+        raise
+        return f
+
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if not self._allow_view_fn(f, *args, **kwargs):
+            return self._inaccessible_callback(f, **kwargs)
+        return f(self, *args, **kwargs)
+
+    wrapper._wrapped_access = True
+    return wrapper
+
+
+class ViewMeta(type):
+    def __new__(cls, name, bases, attrs):
+        for key, value in attrs.items():
+            if callable(value) and not key.startswith("__") and hasattr(value, "_urls"):
+                attrs[key] = _wrap_view_func_with_access(value)
+        return super().__new__(cls, name, bases, attrs)
 
 
 class View(metaclass=ViewMeta):
@@ -62,7 +85,7 @@ class View(metaclass=ViewMeta):
                 "Attempted to instantiate admin view %s without default view"
                 % self.__class__.__name__
             )
-        
+
         super().__init__(**kwargs)
 
     def collect_urls(self):
@@ -148,6 +171,20 @@ class View(metaclass=ViewMeta):
         kwargs["view"] = self
 
         return self.admin.render(template, **kwargs)
+
+    def render_string(self, source, **kwargs):
+        """
+        Render source string as template
+
+        :param source:
+            Source string to render as template
+        :param kwargs:
+            Template arguments
+        """
+        # Store self as admin_view
+        kwargs["view"] = self
+
+        return self.admin.render_string(source, **kwargs)
 
     def _prettify_class_name(self, name):
         """

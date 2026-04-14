@@ -32,7 +32,7 @@ Examples
 
 ``python simple.py`` to run a simple example.
 
-.. literalinclude:: ../examples/simple.py
+.. literalinclude:: ../examples/simple/__init__.py
   :language: python
 
 More examples, please click :doc:`examples`.

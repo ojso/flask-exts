@@ -20,6 +20,13 @@ Run the examples
 
 Type the command in the terminal, then go to http://localhost:5000.
 
+simple
+-----------------
+
+.. code-block:: bash
+    
+    $ flask --app simple run
+
 demo
 -----------------
 
@@ -29,39 +36,5 @@ Default admin user is ``admin``, password is ``admin``.
     
     $ flask --app demo run
 
-fileadmin
------------------
 
-.. code-block:: bash
-    
-    $ flask --app fileadmin run
-
-
-rediscli
------------------
-
-Use with mock redis server.
-
-.. code-block:: bash
-    
-    $ python rediscli.py
-
-go to http://localhost:5000/admin/rediscli/
-
-if you want to use real redis server, then do this:
-
-1. First install redis,
-
-.. code-block:: bash
-
-    $ pip install redis
-
-2. Modify code in ``rediscli.py``
-
-.. code-block:: python
-
-    # from flask_exts.views.rediscli.mock_redis import MockRedis as Redis
-    from redis import Redis
-
-3. At last, run  ``python rediscli.py``
 

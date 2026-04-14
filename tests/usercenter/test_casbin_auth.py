@@ -3,8 +3,8 @@ import os
 from flask import request, jsonify
 from casbin.persist.adapters import FileAdapter
 from flask_exts.datastore.sqla import db
-from flask_exts.decorators.auth import auth_required
-from flask_exts.decorators.auth import needs_required
+from flask_exts.usercenter.auth_requires import auth_required
+from flask_exts.usercenter.auth_requires import needs_required
 from flask_exts.security.auth_crypt import jwt_encode
 from flask_exts.proxies import _userstore
 from flask_exts.security.authorizer.casbin_sqlalchemy_adapter import CasbinRule

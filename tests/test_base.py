@@ -9,12 +9,10 @@ def test_extensions(app):
     assert "babel" in app.extensions
     assert "sqlalchemy" in app.extensions
     assert getattr(app, "login_manager", None) is not None
+    
+
+def test_exts(app):
     assert "exts" in app.extensions
-    assert len(app.blueprints) == 3
-    assert "_template" in app.blueprints
-    assert "index" in app.blueprints
-    assert "user" in app.blueprints
-    assert "_template" in app.jinja_env.globals    
     exts = app.extensions["exts"]
     assert exts.usercenter is not None
     assert exts.security is not None
@@ -22,6 +20,15 @@ def test_extensions(app):
     admin = exts.admin
     assert admin.app is not None
     print(app.config.get("NOREPLY_EMAIL_SENDER"))
+
+def test_blueprints(app):
+    assert len(app.blueprints) == 3
+    assert "_template" in app.blueprints
+    assert "index" in app.blueprints
+    assert "user" in app.blueprints
+
+def test_jinja_globals(app):
+    assert "_template" in app.jinja_env.globals
 
 @pytest.mark.skip(reason="not print.")
 def test_prints(app):

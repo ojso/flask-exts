@@ -13,14 +13,16 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbar">
-        <ul class="navbar-nav me-auto my-2 my-lg-0">
+        <ul class="navbar-nav mr-auto my-2 my-lg-0">
           {{ render_nav_item("index.adminindex",admin.name) }}
           {{ render_menu(admin.menu.menus() ,view) }}
-        </ul>
-        <ul class="navbar-nav navbar-right">
           {{ render_menu_links(admin.menu.menu_links() ) }}
         </ul>
-        {% if "user" in admin._views %}{{ render_menu_user(current_user) }}{% endif %}
+        {% if "user" in admin._views %}
+        <ul class="navbar-nav">
+          {{ render_menu_user(current_user) }}
+        </ul>
+        {% endif %}
       </div>
     </div>
   </nav>

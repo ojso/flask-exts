@@ -1,4 +1,4 @@
-from flask import current_app, render_template_string
+from flask import current_app
 from flask import url_for
 from flask import request
 from flask import redirect

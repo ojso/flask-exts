@@ -27,14 +27,12 @@ from .ajax import AjaxModelLoader
 from .view_args import ViewArgs
 from .filter_group import FilterGroup
 from .filter import BaseFilter
-from . import row_action
+from .row_action import ViewRowAction, EditRowAction, DeleteRowAction, ViewPopupRowAction, EditPopupRowAction
 from .. import expose_url
 from ..view import View
 from ..action_mixin import ActionMixin
 from ...template.forms.form.flask_form import FlaskForm as BaseForm
 from ...template.forms.form.form_opts import FormOpts
-
-
 
 class ModelView(View, ActionMixin):
     """
@@ -747,24 +745,23 @@ class ModelView(View, ActionMixin):
 
     def get_list_row_actions(self):
         """
-        Return list of row action objects, each is instance of
-        :class:`~.row_action.BaseRowAction`
+        Return list of row action objects to display in the list view.
         """
         actions = []
 
         if self.details_modal:
-            actions.append(row_action.ViewPopupRowAction())
+            actions.append(ViewPopupRowAction())
         else:
-            actions.append(row_action.ViewRowAction())
+            actions.append(ViewRowAction())
 
         if self.can_edit:
             if self.edit_modal:
-                actions.append(row_action.EditPopupRowAction())
+                actions.append(EditPopupRowAction())
             else:
-                actions.append(row_action.EditRowAction())
+                actions.append(EditRowAction())
 
         if self.can_delete:
-            actions.append(row_action.DeleteRowAction())
+            actions.append(DeleteRowAction())
 
         return actions
 

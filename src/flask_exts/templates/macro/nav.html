@@ -1,13 +1,14 @@
-{% macro render_nav_item(endpoint, text) %}
-  {% set active = True if request.endpoint and request.endpoint == endpoint else False %}
+{% macro render_nav_item(endpoint, text) -%}
+  {% set active = True if request.endpoint and request.endpoint == endpoint else False -%}
+  {% set href = url_for(endpoint, **kwargs) if not active else "#" -%}
   <li class="nav-item">
-    <a class="nav-link {% if active %}active{% endif %}" href="{{ url_for(endpoint, **kwargs) }}">{{ text }}</a>
+    <a class="nav-link{% if active %} active{% endif %}" href="{{ href }}">{{ text }}</a>
   </li>
-{% endmacro %}
+{%- endmacro %}
 
 {% macro render_breadcrumb_item(endpoint, text) %}
   {% set active = True if request.endpoint and request.endpoint == endpoint else False %}
-  <li class="breadcrumb-item {%- if active %}active{%- endif %}">
+  <li class="breadcrumb-item{% if active %} active{% endif %}">
     {% if active %}
       {{ text }}
     {% else %}

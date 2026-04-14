@@ -6,8 +6,8 @@ def test_render_nav_item_active(app, client):
     def foo():
         return render_template_string(
             """
-                {% from "macro/nav.html" import render_nav_item %}
-                {{ render_nav_item("foo", "Foo") }}
+                {%- from "macro/nav.html" import render_nav_item -%}
+                {{ render_nav_item("foo", "Foo") -}}
                 """
         )
 
@@ -15,16 +15,16 @@ def test_render_nav_item_active(app, client):
     def bar():
         return render_template_string(
             """
-                {% from "macro/nav.html" import render_nav_item %}
-                {{ render_nav_item("foo", "Foo") }}
+                {%- from "macro/nav.html" import render_nav_item -%}
+                {{ render_nav_item("foo", "Foo") -}}
                 """
         )
 
     rv = client.get("/active")
+    # print(rv.text)
     assert '<li class="nav-item">' in rv.text
-    
-
-    assert '<a class="nav-item nav-link active"' in rv.text
+    assert '<a class="nav-link active"' in rv.text
 
     rv = client.get("/not_active")
-    assert '<a class="nav-item nav-link"' in rv.text
+    assert '<li class="nav-item">' in rv.text
+    assert '<a class="nav-link"' in rv.text

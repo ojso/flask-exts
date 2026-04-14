@@ -1,4 +1,3 @@
-from .views.my_view import myview
 from .views.user_view import userview
 from .views.keyword_view import keywordview
 from .views.tree_view import treeview
@@ -12,7 +11,6 @@ from flask_exts.admin.menu import MenuLink
 def add_views(app):
     admin = app.extensions["exts"].admin
 
-    admin.add_view(myview)
     admin.add_view(userview)
     admin.add_view(keywordview)
     admin.add_view(authorview)

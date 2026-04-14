@@ -1,4 +1,5 @@
 from flask import render_template
+from flask import render_template_string
 from flask import url_for
 from flask import make_response
 from .menu import Menu
@@ -133,3 +134,19 @@ class Admin:
             return response
         else:
             return render_template(template, **kwargs)
+
+    def render_string(self, source, **kwargs):
+        """
+        Render source string as template
+
+        :param source:
+            Source string to render as template
+        :param kwargs:
+            Template arguments
+        """
+        # Add admin instance to kwargs
+        kwargs["admin"] = self
+        # Add URL generation method to kwargs
+        kwargs["get_url"] = self.get_url
+
+        return render_template_string(source, **kwargs)
