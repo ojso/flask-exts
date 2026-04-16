@@ -1,5 +1,5 @@
-{% macro render_menu_icon(item) %}
-  {% set icon_type = item.get_icon_type() %}
+{% macro render_menu_icon(item) -%}
+  {% set icon_type = item.get_icon_type() -%}
   {% if icon_type %}
     {% set icon_value = item.get_icon_value() %}
     {% if icon_type == 'bi' %}
@@ -10,11 +10,11 @@
       <img src="{{ icon_value }}" alt="menu image" width="24" height="24">
     {% endif %}
   {% endif %}
-{% endmacro %}
+{%- endmacro %}
 
-{% macro render_menu(menu_root,current_view) %}
-  {% for item in menu_root %}
-    {% if item.is_category() %}
+{% macro render_menu(menu_root,current_view) -%}
+  {% for item in menu_root -%}
+    {% if item.is_category() -%}
       {% set children = item.get_children() %}
       {% if children %}
         {% set class_name = item.get_class_name() or '' %}
@@ -38,15 +38,15 @@
           </ul>
         </li>
       {% endif %}
-    {% else %}
-      {% if item.is_accessible() %}
-        {% set nav_link_class = "nav-link" ~ (" " ~ item.get_class_name() if item.get_class_name() else "") ~ (" active" if item.is_active(current_view) else "") %}
+    {% else -%}
+      {% if item.is_accessible() -%}
+        {% set nav_link_class = "nav-link" ~ (" " ~ item.get_class_name() if item.get_class_name() else "") ~ (" active" if item.is_active(current_view) else "") -%}
         <li class="nav-item">
           <a class="{{ nav_link_class }}" href="{{ item.get_url() }}" {% if item.target %}target="{{ item.target }}"{% endif %}>{{ render_menu_icon(item) }}{{ item.name }}</a>
         </li>
       {% endif %}
-    {% endif %}
-  {% endfor %}
+    {%- endif %}
+  {%- endfor %}
 {% endmacro %}
 
 {% macro render_menu_links(links) %}

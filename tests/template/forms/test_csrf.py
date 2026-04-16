@@ -10,6 +10,7 @@ class F(FlaskForm):
 
 
 def test_csrf_form(app):
+    app.config.update(CSRF_ENABLED=True)
     with app.test_request_context():
         assert g.get("csrf_token") is None
         form = F()

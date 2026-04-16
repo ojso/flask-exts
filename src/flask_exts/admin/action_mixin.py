@@ -6,6 +6,16 @@ from .exposer import expose_url
 
 
 class ActionMixin:
+
+    action_disallowed_list = []
+    """
+        Set of disallowed action names. For example, if you want to disable
+        mass model deletion, do something like this:
+
+            class MyView(View):
+                action_disallowed_list = ['delete']
+    """
+
     def __init__(self, *args, **kwargs):
         self._actions = {}
         self._actions_data = []
@@ -15,16 +25,16 @@ class ActionMixin:
                 self._actions[name] = attr
                 self._actions_data.append((name, text, confirmation))
 
+        self._action_form_class = self.get_action_form()
+
         super().__init__(*args, **kwargs)
 
     def is_action_allowed(self, name):
         """
-        Verify if action with `name` is allowed.
-
-        :param name:
-            Action name
+        Override this method to allow or disallow actions based on some condition.
+        The default implementation only checks if the particular action is not in `action_disallowed_list`.
         """
-        return True
+        return name not in self.action_disallowed_list
 
     def get_actions_list(self):
         """
@@ -45,7 +55,7 @@ class ActionMixin:
         class ActionForm(self.form_base_class):
             action = HiddenField()
             url = HiddenField()
-            # rowid = HiddenField() # for multiple ids, process_formdata must be rewritten
+            # rowid = HiddenField() # Not needed since we get selected ids from request.form.getlist('rowid')
 
         return ActionForm
 
@@ -54,15 +64,8 @@ class ActionMixin:
         """
         Mass-model action view.
         """
-        return self.handle_action()
-    
-    def handle_action(self):
-        """
-        Handle action request.
-        """
-        form = self.action_form()
+        form = self._action_form_class()
         if form.validate_on_submit():
-            # using getlist instead of FieldList for backward compatibility
             ids = request.form.getlist("rowid")
             action = form.action.data
             handler = self._actions.get(action)

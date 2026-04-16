@@ -41,9 +41,7 @@ class AuthorView(SqlaModelView):
     edit_modal = True
     page_size = 5
     page_size_options = (5, 10, 15)
-    action_disallowed_list = [
-        "delete",
-    ]
+    action_disallowed_list = ["delete"]
 
     form_choices = {
         "type": AVAILABLE_USER_TYPES,

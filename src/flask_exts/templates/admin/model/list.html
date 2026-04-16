@@ -6,6 +6,10 @@
 
 {% do _template.plugin_manager.enable_plugin(["modal","filters","select2","form","xeditor","daterangepicker","moment"]) %}
 
+{% if actions %}
+  {%- do _template.plugin_manager.enable_plugin(['model_action']) -%}
+{% endif %}
+
 {% macro link(action, url) %}
   <a class="icon" href="{{ url }}" title="{{ action.title or '' }}">{{ render_icon(action.icon) }}</a>
 {% endmacro %}
@@ -38,10 +42,6 @@
     {{ delete_row(action, row_id, row) }}
   {%- endif %}
 {% endmacro %}
-
-{% if actions %}
-  {%- do _template.plugin_manager.enable_plugin(['model_action']) -%}
-{% endif %}
 
 {% block main %}
   <ul class="nav nav-tabs">
@@ -205,7 +205,7 @@
     {% endblock %}
   {% endblock %}
   {% if actions %}
-    <form id="action_form" action="{{ get_url('.action_view') }}" method="post" class="d-none">
+    <form id="action_form" action="{{ url_for('.action_view') }}" method="post" class="d-none">
       {{ action_form.url(value=return_url) }}
       {{ action_form.action() }}
       {{ action_form.csrf_token }}

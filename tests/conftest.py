@@ -16,6 +16,7 @@ def app():
     app.config["BABEL_DEFAULT_TIMEZONE"] = "Asia/Shanghai"
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
     # app.config["SQLALCHEMY_ECHO"] = True
+    app.config["CSRF_ENABLED"] = False
     app.config["JWT_SECRET_KEY"] = "SECRET_KEY"
     app.config["JWT_HASH"] = "HS256"
     app.config.from_pyfile('config_prod.py', silent=True)

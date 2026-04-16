@@ -27,12 +27,18 @@ from .ajax import AjaxModelLoader
 from .view_args import ViewArgs
 from .filter_group import FilterGroup
 from .filter import BaseFilter
-from .row_action import ViewRowAction, EditRowAction, DeleteRowAction, ViewPopupRowAction, EditPopupRowAction
+from .row_action import (
+    ViewRowAction,
+    EditRowAction,
+    DeleteRowAction,
+    ViewPopupRowAction,
+    EditPopupRowAction,
+)
 from .. import expose_url
 from ..view import View
 from ..action_mixin import ActionMixin
-from ...template.forms.form.flask_form import FlaskForm as BaseForm
 from ...template.forms.form.form_opts import FormOpts
+
 
 class ModelView(View, ActionMixin):
     """
@@ -402,23 +408,6 @@ class ModelView(View, ActionMixin):
         If enabled, model interface would not run count query and will only show prev/next pager buttons.
     """
 
-    form_base_class = BaseForm
-    """
-        Base form class. Will be used by form scaffolding function when creating model form.
-
-        Useful if you want to have custom constructor or override some fields.
-
-        Example::
-
-            class MyBaseForm(Form):
-                def do_something(self):
-                    pass
-
-            class MyModelView(BaseModelView):
-                form_base_class = MyBaseForm
-
-    """
-
     form_args = None
     """
         Dictionary of form field arguments. Refer to WTForms documentation for
@@ -546,14 +535,6 @@ class ModelView(View, ActionMixin):
     """
 
     # Actions
-    action_disallowed_list = []
-    """
-        Set of disallowed action names. For example, if you want to disable
-        mass model deletion, do something like this:
-
-            class MyModelView(BaseModelView):
-                action_disallowed_list = ['delete']
-    """
 
     # Export settings
     export_max_rows = 0
@@ -667,8 +648,6 @@ class ModelView(View, ActionMixin):
         if self.column_descriptions is None:
             self.column_descriptions = dict()
 
-
-
     def _init_forms(self):
         self._form_ajax_refs = self._process_ajax_references()
 
@@ -678,7 +657,6 @@ class ModelView(View, ActionMixin):
         self._create_form_class = self.get_create_form()
         self._edit_form_class = self.get_edit_form()
         self._delete_form_class = self.get_delete_form()
-        self._action_form_class = self.get_action_form()
 
         # List View In-Line Editing
         if self.column_editable_list:
@@ -747,23 +725,23 @@ class ModelView(View, ActionMixin):
         """
         Return list of row action objects to display in the list view.
         """
-        actions = []
+        row_actions = []
 
         if self.details_modal:
-            actions.append(ViewPopupRowAction())
+            row_actions.append(ViewPopupRowAction())
         else:
-            actions.append(ViewRowAction())
+            row_actions.append(ViewRowAction())
 
         if self.can_edit:
             if self.edit_modal:
-                actions.append(EditPopupRowAction())
+                row_actions.append(EditPopupRowAction())
             else:
-                actions.append(EditRowAction())
+                row_actions.append(EditRowAction())
 
         if self.can_delete:
-            actions.append(DeleteRowAction())
+            row_actions.append(DeleteRowAction())
 
-        return actions
+        return row_actions
 
     def get_column_names(self, only_columns, excluded_columns):
         """
@@ -1052,8 +1030,6 @@ class ModelView(View, ActionMixin):
 
         return DeleteForm
 
-    
-
     def create_form(self):
         """
         Instantiate model creation form and return it.
@@ -1085,14 +1061,6 @@ class ModelView(View, ActionMixin):
         Override to implement custom behavior.
         """
         return self._list_form_class(obj=obj)
-
-    def action_form(self, obj=None):
-        """
-        Instantiate model action form and return it.
-
-        Override to implement custom behavior.
-        """
-        return self._action_form_class(obj=obj)
 
     def get_save_return_url(self, model, is_created=False):
         """
@@ -1450,17 +1418,6 @@ class ModelView(View, ActionMixin):
 
         return self.get_url(".index_view", **kwargs)
 
-    # Actions
-    def is_action_allowed(self, name):
-        """
-        Override this method to allow or disallow actions based
-        on some condition.
-
-        The default implementation only checks if the particular action
-        is not in `action_disallowed_list`.
-        """
-        return name not in self.action_disallowed_list
-
     def _get_object_attr(self, obj, attr):
         """
         Recursive getattr from the obj
@@ -1657,13 +1614,6 @@ class ModelView(View, ActionMixin):
         def page_size_url(s):
             return self._get_list_url(view_args.clone(page_size=s))
 
-        # Actions
-        actions = self.get_actions_list()
-        if actions:
-            action_form = self.action_form()
-        else:
-            action_form = None
-
         clear_search_url = self._get_list_url(
             view_args.clone(
                 page=0,
@@ -1679,7 +1629,7 @@ class ModelView(View, ActionMixin):
             data=data,
             list_forms=list_forms,
             delete_form=delete_form,
-            action_form=action_form,
+            action_form=self._action_form_class(),
             # List
             list_columns=self._list_columns,
             sortable_columns=self._sortable_columns,
@@ -1709,7 +1659,7 @@ class ModelView(View, ActionMixin):
             active_filters=view_args.filters,
             filter_args=self._get_filters(view_args.filters),
             # Actions
-            actions=actions,
+            actions=self.get_actions_list(),
             # Misc
             enumerate=enumerate,
             get_pk_value=self.get_pk_value,
@@ -1795,8 +1745,6 @@ class ModelView(View, ActionMixin):
                         self.get_url(".edit_view", id=self.get_pk_value(model))
                     )
                 else:
-                    print("update ok")
-                    print(self.get_save_return_url(model, is_created=False))
                     # save button
                     return redirect(self.get_save_return_url(model, is_created=False))
 
@@ -2061,7 +2009,7 @@ class ModelView(View, ActionMixin):
         else:
             for field in form:
                 for error in field.errors:
-                    print(field.name,error)
+                    print(field.name, error)
                     # return validation error to x-editable
                     if isinstance(error, list):
                         return (

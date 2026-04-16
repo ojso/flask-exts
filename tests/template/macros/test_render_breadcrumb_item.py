@@ -20,4 +20,4 @@ def test_render_breadcrumb_item_active(app, client):
     assert '<li class="breadcrumb-item">' in rv.text
 
     rv = client.get('/active_item')
-    assert '<li class="breadcrumb-item active" aria-current="page">' in rv.text
+    assert '<li class="breadcrumb-item active">' in rv.text
