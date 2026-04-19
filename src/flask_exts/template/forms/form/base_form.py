@@ -15,6 +15,9 @@ class BaseForm(Form):
     def __init__(self, formdata=None, **kwargs):
         super().__init__(formdata=formdata, **kwargs)
 
+    def is_submitted(self):
+        return is_submitted()
+    
     def validate_on_submit(self):
         return is_submitted() and self.validate()
 

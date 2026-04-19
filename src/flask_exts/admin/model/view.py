@@ -534,8 +534,6 @@ class ModelView(View, ActionMixin):
         in your `AjaxModelLoader` class.
     """
 
-    # Actions
-
     # Export settings
     export_max_rows = 0
     """
@@ -847,7 +845,6 @@ class ModelView(View, ActionMixin):
         """
         return None
 
-    # Filter helpers
     def scaffold_filters(self, name):
         """
         Generate filter object for the given name
@@ -856,18 +853,6 @@ class ModelView(View, ActionMixin):
             Name of the field
         """
         return None
-
-    def is_valid_filter(self, filter):
-        """
-        Verify that the provided filter object is valid.
-
-        Override in model backend implementation to verify if
-        the provided filter type is allowed.
-
-        :param filter:
-            Filter object to verify.
-        """
-        return isinstance(filter, BaseFilter)
 
     def handle_filter(self, filter):
         """
@@ -881,23 +866,20 @@ class ModelView(View, ActionMixin):
     def get_filters(self):
         """
         Return a list of filter objects.
-
-        If your model backend implementation does not support filters,
-        override this method and return `None`.
         """
         if self.column_filters:
-            collection = []
+            filters = []
 
-            for n in self.column_filters:
-                if self.is_valid_filter(n):
-                    collection.append(self.handle_filter(n))
+            for column_flt in self.column_filters:
+                if isinstance(column_flt, BaseFilter):
+                    filters.append(self.handle_filter(column_flt))
                 else:
-                    flt = self.scaffold_filters(n)
+                    flt = self.scaffold_filters(column_flt)
                     if flt:
-                        collection.extend(flt)
+                        filters.extend(flt)
                     else:
-                        raise Exception("Unsupported filter type %s" % n)
-            return collection
+                        raise Exception("Unsupported filter type %s" % column_flt)
+            return filters
         else:
             return None
 
@@ -1026,7 +1008,6 @@ class ModelView(View, ActionMixin):
 
         class DeleteForm(self.form_base_class):
             id = HiddenField(validators=[InputRequired()])
-            url = HiddenField()
 
         return DeleteForm
 
@@ -1745,7 +1726,6 @@ class ModelView(View, ActionMixin):
                         self.get_url(".edit_view", id=self.get_pk_value(model))
                     )
                 else:
-                    # save button
                     return redirect(self.get_save_return_url(model, is_created=False))
 
         form_opts = FormOpts(widget_args=self.form_widget_args)
@@ -1767,6 +1747,7 @@ class ModelView(View, ActionMixin):
         return_url = self.get_redirect_target()
 
         id = request.args.get("id")
+
         if id is None:
             return redirect(return_url)
 
@@ -1795,23 +1776,15 @@ class ModelView(View, ActionMixin):
         Delete model view. Only POST method is allowed.
         """
         return_url = self.get_redirect_target()
-
         if not self.can_delete:
             return redirect(return_url)
-
         form = self.delete_form()
-
-        if form.validate_on_submit():
-            # id is InputRequired()
+        if form.validate():
             id = form.id.data
-
             model = self.get_one(id)
-
             if model is None:
                 flash(gettext("Record does not exist."), "error")
                 return redirect(return_url)
-
-            # message is flashed from within delete_model if it fails
             if self.delete_model(model):
                 count = 1
                 flash(
@@ -1826,7 +1799,6 @@ class ModelView(View, ActionMixin):
                 return redirect(return_url)
         else:
             form.flash_errors(message="Failed to delete record. %(error)s")
-
         return redirect(return_url)
 
     def _export_data(self):

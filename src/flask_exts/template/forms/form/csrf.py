@@ -15,28 +15,19 @@ CSRF_SALT = "csrf-salt"
 CSRF_TIME_LIMIT = 1800
 
 
-def _get_session_csrf_token(csrf_field_name):
-    """Generate CSRF token of session for the current request."""
-    if csrf_field_name in session:
-        return session[csrf_field_name]
-    
-    csrf_token = hashlib.sha1(os.urandom(64)).hexdigest()
-    session[csrf_field_name] = csrf_token
-    return csrf_token
-
-
-def get_g_csrf_token():
+def get_csrf_token():
     """Generate CSRF token of session and g for the current request."""
     csrf_field_name = current_app.config.get("CSRF_FIELD_NAME", CSRF_FIELD_NAME)
     if csrf_field_name in g:
         return g.get(csrf_field_name)
-    
+    if csrf_field_name not in session:
+        session[csrf_field_name] = hashlib.sha1(os.urandom(64)).hexdigest()
+    session_csrf_token = session[csrf_field_name]
     csrf_secret_key = current_app.config.get("CSRF_SECRET_KEY", current_app.secret_key)
-    session_csrf_token = _get_session_csrf_token(csrf_field_name)
     s = URLSafeTimedSerializer(csrf_secret_key, salt=CSRF_SALT)
-    g_csrf_token = s.dumps(session_csrf_token)
-    setattr(g, csrf_field_name, g_csrf_token)
-    return g_csrf_token
+    csrf_token = s.dumps(session_csrf_token)
+    setattr(g, csrf_field_name, csrf_token)
+    return csrf_token
 
 
 class FlaskFormCSRF(CSRF):
@@ -45,7 +36,7 @@ class FlaskFormCSRF(CSRF):
         return super().setup_form(form)
 
     def generate_csrf_token(self, csrf_token_field):
-        return get_g_csrf_token()
+        return get_csrf_token()
 
     def validate_csrf_token(self, form, field):
         csrf_secret_key = current_app.config.get(

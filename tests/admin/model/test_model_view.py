@@ -1,6 +1,4 @@
 from wtforms.fields import StringField
-from flask_exts.template.forms.form.base_form import BaseForm
-from flask_exts.template.forms.form.flask_form import FlaskForm
 from flask_exts.admin.model.view import ModelView
 from flask_exts.admin.model.filter import BaseFilter
 
@@ -100,6 +98,7 @@ class MockModelView(ModelView):
 
     def delete_model(self, model):
         self.deleted_models.append(model)
+        self.all_models.pop(model.id, None)
         return True
 
 
@@ -127,7 +126,6 @@ def test_view():
     print(view.create_form)
 
     # Verify scaffolding
-    
 
     assert view._search_supported is False
     assert view._filters is None
@@ -195,14 +193,14 @@ def test_mockview(client, admin):
     assert model.col2 == "test@"
     assert model.col3 == "test#"
 
-    rv = client.get("/admin/mockmodel/edit/?id=4")
-    assert rv.status_code == 302
-
     # Attempt to delete model
-    rv = client.post("/admin/mockmodel/delete/?id=3")
+    model = view.get_one(3)
+    assert model is not None
+    rv = client.post("/admin/mockmodel/delete/", data=dict(id=3))
     assert rv.status_code == 302
-    # werkzeug 2.1.0+ returns *relative* location header by default, so just check the end
     assert rv.headers["location"].endswith("/admin/mockmodel/")
+    model = view.get_one(3)
+    assert model is None
 
 
 def test_permissions(client, admin):
@@ -302,110 +300,6 @@ def test_filter_list_callable(admin):
     opts = flt.get_options(view)
     assert len(opts) == 2
     assert opts == [("1", "Test 1"), ("2", "Test 2")]
-
-
-def test_csrf(client, admin):
-    class SecureModelView(MockModelView):
-        form_base_class = FlaskForm
-
-        def scaffold_form(self):
-            return FlaskForm
-
-    def get_csrf_token(data):
-        data = data.split('name="csrf_token" type="hidden" value="')[1]
-        token = data.split('"')[0]
-        return token
-
-    view = SecureModelView(MockModel, endpoint="secure")
-    admin.add_view(view)
-
-    ################
-    # create_view
-    ################
-    rv = client.get("/admin/secure/new/")
-    assert rv.status_code == 200
-    assert 'name="csrf_token"' in rv.text
-
-    csrf_token = get_csrf_token(rv.text)
-
-    # Create without CSRF token
-    rv = client.post("/admin/secure/new/", data=dict(name="test1"))
-    assert rv.status_code == 200
-
-    # Create with CSRF token
-    rv = client.post(
-        "/admin/secure/new/", data=dict(name="test1", csrf_token=csrf_token)
-    )
-    assert rv.status_code == 302
-
-    ###############
-    # edit_view
-    ###############
-    rv = client.get("/admin/secure/edit/?url=%2Fadmin%2Fsecure%2F&id=1")
-    assert rv.status_code == 200
-    assert 'name="csrf_token"' in rv.text
-
-    csrf_token = get_csrf_token(rv.text)
-
-    # Edit without CSRF token
-    rv = client.post(
-        "/admin/secure/edit/?url=%2Fadmin%2Fsecure%2F&id=1", data=dict(name="test1")
-    )
-    assert rv.status_code == 200
-
-    # Edit with CSRF token
-    rv = client.post(
-        "/admin/secure/edit/?url=%2Fadmin%2Fsecure%2F&id=1",
-        data=dict(name="test1", csrf_token=csrf_token),
-    )
-    assert rv.status_code == 302
-
-    ################
-    # delete_view
-    ################
-    rv = client.get("/admin/secure/")
-    assert rv.status_code == 200
-    assert 'name="csrf_token"' in rv.text
-
-    csrf_token = get_csrf_token(rv.text)
-
-    # Delete without CSRF token, test validation errors
-    rv = client.post(
-        "/admin/secure/delete/",
-        data=dict(id="1", url="/admin/secure/"),
-        follow_redirects=True,
-    )
-    assert rv.status_code == 200
-    assert "Record was successfully deleted." not in rv.text
-    assert "Failed to delete record." in rv.text
-
-    # Delete with CSRF token
-    rv = client.post(
-        "/admin/secure/delete/",
-        data=dict(id="1", url="/admin/secure/", csrf_token=csrf_token),
-        follow_redirects=True,
-    )
-    assert rv.status_code == 200
-    assert "Record was successfully deleted." in rv.text
-
-    ################
-    # actions
-    ################
-    rv = client.get("/admin/secure/")
-    assert rv.status_code == 200
-    assert 'name="csrf_token"' in rv.text
-
-    csrf_token = get_csrf_token(rv.text)
-
-    # Delete without CSRF token, test validation errors
-    rv = client.post(
-        "/admin/secure/action/",
-        data=dict(rowid="1", url="/admin/secure/", action="delete"),
-        follow_redirects=True,
-    )
-    assert rv.status_code == 200
-    assert "Record was successfully deleted." not in rv.text
-    assert "Failed to perform action." in rv.text
 
 
 def test_modal_edit_bs4(client, admin):

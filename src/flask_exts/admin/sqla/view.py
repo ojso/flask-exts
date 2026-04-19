@@ -602,8 +602,6 @@ class SqlaModelView(ModelView):
 
         if joins:
             self._filter_joins[key_name] = joins
-        elif need_join(self.model, column.table):
-            self._filter_joins[key_name] = [column.table]
 
         return flt
 

@@ -1,5 +1,5 @@
 from wtforms import HiddenField
-from .forms.form.csrf import get_g_csrf_token
+from .forms.form.csrf import get_csrf_token
 
 
 class Funcs:
@@ -20,4 +20,4 @@ class Funcs:
         return titles
 
     def csrf_token(self):
-        return get_g_csrf_token()
+        return get_csrf_token()

@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 from flask import session
 from flask_exts.datastore.sqla import db
-from flask_exts.template.forms.form.csrf import get_g_csrf_token
+from flask_exts.template.forms.form.csrf import get_csrf_token
 from flask_exts.email.sender import Sender
 from flask_exts.proxies import _security
 from flask_exts.proxies import _userstore
@@ -43,7 +43,7 @@ class TestUserView:
         # generate csrf_token for the current request and set it to session and g, 
         # then pass it to the test client session for later use in form submission.
         with app.test_request_context():
-            self.csrf_token = get_g_csrf_token()
+            self.csrf_token = get_csrf_token()
             session_csrf_token = session.get("csrf_token")
         with client.session_transaction() as sess:
             sess["csrf_token"] = session_csrf_token
