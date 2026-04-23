@@ -297,7 +297,7 @@ def test_filter_list_callable(admin):
     view = MockModelView(MockModel, column_filters=[flt])
     admin.add_view(view)
 
-    opts = flt.get_options(view)
+    opts = flt.get_options()
     assert len(opts) == 2
     assert opts == [("1", "Test 1"), ("2", "Test 2")]
 

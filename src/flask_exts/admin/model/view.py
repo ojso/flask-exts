@@ -624,7 +624,7 @@ class ModelView(View, ActionMixin):
         self._search_supported = self.init_search()
 
         # Filters
-        self._refresh_filters_cache()
+        self._init_filters()
 
         # Column formatters
         if self.column_formatters_export is None:
@@ -662,7 +662,7 @@ class ModelView(View, ActionMixin):
         else:
             self.column_editable_list = {}
 
-    def _refresh_filters_cache(self):
+    def _init_filters(self):
         self._filters = self.get_filters()
 
         if self._filters:
@@ -670,15 +670,14 @@ class ModelView(View, ActionMixin):
             self._filter_args = {}
 
             for i, flt in enumerate(self._filters):
-                key = flt.name
-                if key not in self._filter_groups:
-                    self._filter_groups[key] = FilterGroup(flt.name)
-                self._filter_groups[key].append(
+                if flt.name not in self._filter_groups:
+                    self._filter_groups[flt.name] = FilterGroup(flt.name)
+                self._filter_groups[flt.name].append(
                     {
                         "index": i,
                         "arg": self.get_filter_arg(i, flt),
                         "operation": flt.operation(),
-                        "options": flt.get_options(self) or None,
+                        "options": flt.get_options() or None,
                         "type": flt.data_type,
                     }
                 )
@@ -688,7 +687,6 @@ class ModelView(View, ActionMixin):
             self._filter_groups = None
             self._filter_args = None
 
-    # Primary key
     def get_pk_value(self, obj):
         """
         Return PK value from a model object.
@@ -870,15 +868,15 @@ class ModelView(View, ActionMixin):
         if self.column_filters:
             filters = []
 
-            for column_flt in self.column_filters:
-                if isinstance(column_flt, BaseFilter):
-                    filters.append(self.handle_filter(column_flt))
+            for f in self.column_filters:
+                if isinstance(f, BaseFilter):
+                    filters.append(self.handle_filter(f))
                 else:
-                    flt = self.scaffold_filters(column_flt)
-                    if flt:
-                        filters.extend(flt)
+                    flts = self.scaffold_filters(f)
+                    if flts:
+                        filters.extend(flts)
                     else:
-                        raise Exception("Unsupported filter type %s" % column_flt)
+                        raise Exception("Unsupported filter type %s" % f)
             return filters
         else:
             return None

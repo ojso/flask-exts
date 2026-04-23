@@ -1,4 +1,3 @@
-import logging
 import warnings
 import inspect
 from typing import Optional, Dict, List, Tuple
@@ -28,13 +27,12 @@ from ...datastore.sqla.utils import get_primary_key
 from ...datastore.sqla.utils import get_identity
 from ...datastore.sqla.utils import delete_by_pk_ids
 
-# Set up logger
-log = logging.getLogger("flask-exts.sqla")
 
-from sqlalchemy import inspect
+
 
 
 def need_join(model, table):
+    from sqlalchemy import inspect
     mapper = inspect(model)
     return table not in mapper.tables
 
@@ -548,39 +546,15 @@ class SqlaModelView(ModelView):
         if attr is None:
             raise Exception("Failed to find field for filter: %s" % name)
 
-        # Figure out filters for related column
         if is_relationship(attr):
             raise Exception("Relationship can not be a filter field: %s" % name)
 
         column = attr
 
-        # If filter related to relation column (represented by
-        # relation_name.target_column) we collect here relation name
-        joined_column_name = None
-        if isinstance(name, str) and "." in name:
-            joined_column_name = name.split(".")[0]
-
-        if need_join(self.model, column.table) and name not in self.column_labels:
-            if joined_column_name:
-                visible_name = "%s / %s / %s" % (
-                    joined_column_name,
-                    self.get_column_name(column.table.name),
-                    self.get_column_name(column.name),
-                )
-            else:
-                visible_name = "%s / %s" % (
-                    self.get_column_name(column.table.name),
-                    self.get_column_name(column.name),
-                )
+        if self.column_labels and name in self.column_labels:
+            visible_name = self.column_labels[name]
         else:
-            if not isinstance(name, str):
-                visible_name = self.get_column_name(name.property.key)
-            else:
-                if self.column_labels and name in self.column_labels:
-                    visible_name = self.column_labels[name]
-                else:
-                    visible_name = self.get_column_name(name)
-                    visible_name = visible_name.replace(".", " / ")
+            visible_name = name.replace(".", " / ")
 
         type_name = type(column.type).__name__
 
@@ -591,17 +565,8 @@ class SqlaModelView(ModelView):
             options=self.column_choices.get(name),
         )
 
-        key_name = column
-        # In case of filter related to relation column filter key
-        # must be named with relation name (to prevent following same
-        # target column to replace previous)
-        if joined_column_name:
-            key_name = "{0}.{1}".format(joined_column_name, column)
-            for f in flt:
-                f.key_name = key_name
-
         if joins:
-            self._filter_joins[key_name] = joins
+            self._filter_joins[name] = joins
 
         return flt
 
@@ -609,7 +574,6 @@ class SqlaModelView(ModelView):
         if isinstance(filter, BaseSQLAFilter):
             column = filter.column
 
-            # hybrid_property joins are not supported yet
             if isinstance(column, InstrumentedAttribute) and need_join(
                 self.model, column.table
             ):
@@ -1043,7 +1007,6 @@ class SqlaModelView(ModelView):
                     gettext("Failed to create record. %(error)s", error=str(ex)),
                     "error",
                 )
-                log.exception("Failed to create record.")
 
             self.session.rollback()
 
@@ -1072,7 +1035,6 @@ class SqlaModelView(ModelView):
                     gettext("Failed to update record. %(error)s", error=str(ex)),
                     "error",
                 )
-                log.exception("Failed to update record.")
 
             self.session.rollback()
 
@@ -1100,7 +1062,6 @@ class SqlaModelView(ModelView):
                     gettext("Failed to delete record. %(error)s", error=str(ex)),
                     "error",
                 )
-                log.exception("Failed to delete record.")
 
             self.session.rollback()
 

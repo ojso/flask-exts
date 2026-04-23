@@ -59,13 +59,16 @@ class Model2(db.Model):
     float_field = mapped_column(Float)
     model1_id = mapped_column(ForeignKey("model1.id"))
     model1: Mapped[Model1] = relationship(back_populates="model2")
+    model3_id = mapped_column(ForeignKey("model3.id"))
+    model3: Mapped["Model3"] = relationship(back_populates="model2")
 
 
 class Model3(db.Model):
     __tablename__ = "model3"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    val1: Mapped[str]
+    val: Mapped[str]
+    model2: Mapped["Model2"] = relationship(back_populates="model3")
 
 
 class ModelHybrid(db.Model):

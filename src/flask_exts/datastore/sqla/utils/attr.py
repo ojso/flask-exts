@@ -74,8 +74,7 @@ def get_field_with_path(
             # Step into the underlying relationship
             local_rel = attr.local_attr
             join_path.append(local_rel)
-            remote_attr = attr.remote_attr
-            final_attr = remote_attr
+            final_attr = attr.remote_attr
             break
         else:
             raise ValueError(

@@ -33,7 +33,6 @@ class BaseSQLAFilter(filter.BaseFilter):
         return super().apply(query, value)
 
 
-# Common filters
 class FilterEqual(BaseSQLAFilter):
     def apply(self, query, value, alias=None):
         return query.filter(self.get_column(alias) == value)
@@ -87,9 +86,9 @@ class FilterSmaller(BaseSQLAFilter):
 class FilterEmpty(BaseSQLAFilter, filter.BaseBooleanFilter):
     def apply(self, query, value, alias=None):
         if value == "1":
-            return query.filter(self.get_column(alias) == None)  # noqa: E711
+            return query.filter(self.get_column(alias).is_(None))
         else:
-            return query.filter(self.get_column(alias) != None)  # noqa: E711
+            return query.filter(self.get_column(alias).is_not(None))
 
     def operation(self):
         return lazy_gettext("empty")
@@ -115,7 +114,7 @@ class FilterNotInList(FilterInList):
     def apply(self, query, value, alias=None):
         # NOT IN can exclude NULL values, so "or_ == None" needed to be added
         column = self.get_column(alias)
-        return query.filter(or_(~column.in_(value), column == None))  # noqa: E711
+        return query.filter(or_(~column.in_(value), column.is_(None)))
 
     def operation(self):
         return lazy_gettext("not in list")

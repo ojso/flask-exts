@@ -7,7 +7,7 @@ from flask_exts.template.forms.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.datastore.sqla import db
 from flask_exts.datastore.sqla.orm import InstrumentedAttribute
-from flask_exts.datastore.sqla.utils import get_field_with_path
+
 from flask_exts.datastore.sqla.utils import is_hybrid_property
 from tests.datastore.sqla.models.model1 import EnumChoices
 from tests.datastore.sqla.models.model1 import Model1, Model2, Model3

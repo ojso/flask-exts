@@ -27,7 +27,7 @@ class BaseFilter:
         self.data_type = data_type
         self.key_name = key_name
 
-    def get_options(self, view):
+    def get_options(self):
         """
         Return list of predefined options.
 
@@ -85,7 +85,7 @@ class BaseFilter:
         """
         Return readable operation name.
 
-        For example: u'equals'
+        For example: 'equals'
         """
         raise NotImplementedError()
 
@@ -198,9 +198,6 @@ class BaseDateTimeBetweenFilter(BaseFilter):
             for range in value.split(" - ")
         ]
 
-    def operation(self):
-        return lazy_gettext("between")
-
     def validate(self, value):
         try:
             value = self.clean(value)
@@ -210,6 +207,9 @@ class BaseDateTimeBetweenFilter(BaseFilter):
                 return False
         except ValueError:
             return False
+
+    def operation(self):
+        return lazy_gettext("between")
 
 
 class BaseDateBetweenFilter(BaseDateTimeBetweenFilter):
