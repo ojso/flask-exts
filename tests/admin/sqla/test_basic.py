@@ -1208,23 +1208,6 @@ def test_ajax_fk_multi(app, client, admin):
         assert len(mdl.modelfk1) == 1
 
 
-def test_simple_list_pager(app, admin):
-    with app.app_context():
-        db.reset_all()
-
-        class TestModelView(CustomModelView):
-            simple_list_pager = True
-
-            def get_count_query(self):
-                assert False
-
-        view = TestModelView(Model1)
-        admin.add_view(view)
-
-        count, data = view.get_list(0, None, None, None, None)
-        assert count is None
-
-
 def test_customising_page_size(app, client, admin):
     with app.app_context():
         db.reset_all()
@@ -1344,12 +1327,12 @@ def test_unlimited_page_size(app, admin):
         view = CustomModelView(Model1)
 
         # test 0 as page_size
-        _, data = view.get_list(0, None, None, None, None, execute=True, page_size=0)
+        _, data = view.get_list(0, None, None, None, None, page_size=0)
         assert len(data) == 21
 
         # test False as page_size
         _, data = view.get_list(
-            0, None, None, None, None, execute=True, page_size=False
+            0, None, None, None, None, page_size=False
         )
         assert len(data) == 21
 

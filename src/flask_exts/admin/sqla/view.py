@@ -277,14 +277,12 @@ class SqlaModelView(ModelView):
             static_folder,
         )
 
-        # Primary key
         self._primary_key = get_primary_key(self.model)
 
         if self._primary_key is None:
             raise Exception("Model %s does not have primary key." % self.model.__name__)
 
-        # Configuration
-        self._auto_joins = self.scaffold_auto_joins()
+        self._auto_joins = self._init_auto_joins()
 
     def has_multiple_pks(self):
         return isinstance(self._primary_key, tuple)
@@ -304,7 +302,7 @@ class SqlaModelView(ModelView):
         """
         return get_model_mapper(model).attrs
 
-    def _apply_path_joins(self, query, joins, path, inner_join=True):
+    def _apply_path_joins(self, query, joins, path, isouter=True):
         """
         Apply join path to the query.
 
@@ -314,19 +312,19 @@ class SqlaModelView(ModelView):
             List of current joins. Used to avoid joining on same relationship more than once
         :param path:
             Path to be joined
-        :param fn:
-            Join function
+        :param isouter:
+            if True, generate LEFT OUTER join, otherwise generate INNER JOIN
         """
         last = None
 
         if path:
             for item in path:
-                key = (inner_join, item)
+                key = (isouter, item)
                 alias = joins.get(key)
 
                 if key not in joins:
                     alias = aliased(item.property.mapper.class_)
-                    fn = query.join if inner_join else query.outerjoin
+                    fn = query.join if not isouter else query.outerjoin
 
                     if last is None:
                         query = fn(alias, item)
@@ -556,10 +554,8 @@ class SqlaModelView(ModelView):
         else:
             visible_name = name.replace(".", " / ")
 
-        type_name = type(column.type).__name__
-
         flt = self.filter_converter.convert(
-            type_name,
+            type(column.type).__name__,
             column,
             visible_name,
             options=self.column_choices.get(name),
@@ -645,7 +641,7 @@ class SqlaModelView(ModelView):
             form_class = custom_converter.contribute(self.model, form_class, m)
         return form_class
 
-    def scaffold_auto_joins(self):
+    def _init_auto_joins(self):
         """
         Return a list of joined tables by going through the displayed columns.
         """
@@ -655,12 +651,6 @@ class SqlaModelView(ModelView):
             if hasattr(p, "direction"):
                 # Check if it is pointing to same model
                 if p.mapper.class_ == self.model:
-                    continue
-
-                # Check if it is pointing to a differnet bind
-                source_bind = getattr(self.model, "__bind_key__", None)
-                target_bind = getattr(p.mapper.class_, "__bind_key__", None)
-                if source_bind != target_bind:
                     continue
 
                 if p.direction.name in ["MANYTOONE", "MANYTOMANY"]:
@@ -691,9 +681,6 @@ class SqlaModelView(ModelView):
                 def get_query(self):
                     return super().get_query().filter(User.username == current_user.username)
 
-
-        If you override this method, don't forget to also override `get_count_query`, for displaying the correct
-        item count in the list view, and `get_one`, which is used when retrieving records for the edit view.
         """
         return self.session.query(self.model)
 
@@ -820,7 +807,6 @@ class SqlaModelView(ModelView):
             alias = None
             count_alias = None
 
-            # Figure out joins
             if isinstance(flt, BaseSQLAFilter):
                 # If no key_name is specified, use filter column as filter key
                 filter_key = flt.key_name or flt.column
@@ -835,29 +821,11 @@ class SqlaModelView(ModelView):
                         count_query, count_joins, path, inner_join=False
                     )
 
-            # Clean value .clean() and apply the filter
             clean_value = flt.clean(value)
-
-            try:
-                query = flt.apply(query, clean_value, alias)
-            except TypeError:
-                spec = inspect.getfullargspec(flt.apply)
-
-                if len(spec.args) == 3:
-                    warnings.warn(
-                        "Please update your custom filter %s to "
-                        "include additional `alias` parameter." % repr(flt)
-                    )
-                else:
-                    raise
-
-                query = flt.apply(query, clean_value)
+            query = flt.apply(query, clean_value, alias)
 
             if count_query is not None:
-                try:
-                    count_query = flt.apply(count_query, clean_value, count_alias)
-                except TypeError:
-                    count_query = flt.apply(count_query, clean_value)
+                count_query = flt.apply(count_query, clean_value, count_alias)
 
         return query, count_query, joins, count_joins
 
@@ -880,7 +848,6 @@ class SqlaModelView(ModelView):
         sort_desc,
         search,
         filters,
-        execute=True,
         page_size=None,
     ):
         """
@@ -909,14 +876,7 @@ class SqlaModelView(ModelView):
         count_joins = {}
 
         query = self.get_query()
-        count_query = self.get_count_query() if not self.simple_list_pager else None
-
-        # Ignore eager-loaded relations (prevent unnecessary joins)
-        # TODO: Separate join detection for query and count query?
-        if hasattr(query, "_join_entities"):
-            for entity in query._join_entities:
-                for table in entity.tables:
-                    joins[table] = None
+        count_query = self.get_count_query()
 
         # Apply search criteria
         if self._search_supported and search:
@@ -943,9 +903,7 @@ class SqlaModelView(ModelView):
         # Pagination
         query = self._apply_pagination(query, page, page_size)
 
-        # Execute if needed
-        if execute:
-            query = query.all()
+        query = query.all()
 
         return count, query
 

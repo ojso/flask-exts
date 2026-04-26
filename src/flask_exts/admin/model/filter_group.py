@@ -13,7 +13,6 @@ class FilterGroup:
             options = copy["options"]
             if options:
                 copy["options"] = [(k, v) for k, v in options]
-
             filters.append(copy)
         return self.label, filters
 

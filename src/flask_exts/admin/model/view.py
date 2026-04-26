@@ -402,12 +402,6 @@ class ModelView(View, ActionMixin):
         actions endpoints are accessible.
     """
 
-    simple_list_pager = False
-    """
-        Enable or disable simple list pager.
-        If enabled, model interface would not run count query and will only show prev/next pager buttons.
-    """
-
     form_args = None
     """
         Dictionary of form field arguments. Refer to WTForms documentation for

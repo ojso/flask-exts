@@ -36,15 +36,10 @@ class BaseFilter:
         :param view:
             Associated administrative view class.
         """
-        options = self.options
-
-        if options:
-            if callable(options):
-                options = options()
-
-            return options
-
-        return None
+        if self.options and callable(self.options):
+            return self.options()
+        else:
+            return self.options
 
     def validate(self, value):
         """
