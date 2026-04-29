@@ -1,10 +1,8 @@
-import warnings
-import inspect
 from typing import Optional, Dict, List, Tuple
-from flask import current_app, flash
+from flask import flash
 from flask_babel import gettext, ngettext, lazy_gettext
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy.orm import joinedload, selectinload, aliased
 from sqlalchemy.sql.expression import desc
 from sqlalchemy import Boolean, func, or_
 from sqlalchemy.exc import IntegrityError
@@ -28,11 +26,9 @@ from ...datastore.sqla.utils import get_identity
 from ...datastore.sqla.utils import delete_by_pk_ids
 
 
-
-
-
 def need_join(model, table):
     from sqlalchemy import inspect
+
     mapper = inspect(model)
     return table not in mapper.tables
 
@@ -284,23 +280,54 @@ class SqlaModelView(ModelView):
 
         self._auto_joins = self._init_auto_joins()
 
+        print(self.model)
+        print(self._list_columns)
+        print(
+            [r.key for r in self._auto_joins[0]], [r.key for r in self._auto_joins[1]]
+        )
+
     def has_multiple_pks(self):
         return isinstance(self._primary_key, tuple)
 
-    def delete_pk_ids(self, ids: list):
+    def _init_auto_joins(self):
         """
-        Return a delete statement that deletes all rows with primary key in ids
+        Return a list of joined tables by going through the displayed columns.
         """
-        stmt = delete_by_pk_ids(self.model, ids)
-        result = self.session.execute(stmt)
-        self.session.commit()
-        return result
+        manytoone_relations = set()
+        manytomany_relations = set()
+        list_columns = set()
 
-    def get_model_iterator(self, model):
+        for p in get_model_mapper(self.model).attrs:
+            if hasattr(p, "direction"):
+                if p.direction.name in ["MANYTOONE"]:
+                    manytoone_relations.add(p.key)
+                elif p.direction.name in ["MANYTOMANY", "ONETOMANY"]:
+                    manytomany_relations.add(p.key)
+
+        joinedloads = []
+        selectinloads = []
+
+        for prop, _name in self._list_columns:
+            list_columns.add(prop.split(".", 1)[0])
+
+        for prop in manytoone_relations.intersection(list_columns):
+            joinedloads.append(getattr(self.model, prop))
+
+        for prop in manytomany_relations.intersection(list_columns):
+            selectinloads.append(getattr(self.model, prop))
+
+        return (joinedloads, selectinloads)
+
+    def get_pk_value(self, instance):
         """
-        Return property iterator for the model
+        Return the primary key value from a model object.
+        If there are multiple primary keys, they're encoded into string representation.
         """
-        return get_model_mapper(model).attrs
+        value = get_identity(instance)
+        if isinstance(value, tuple):
+            return ",".join([str(v) for v in value])
+        else:
+            return str(value)
 
     def _apply_path_joins(self, query, joins, path, isouter=True):
         """
@@ -324,7 +351,7 @@ class SqlaModelView(ModelView):
 
                 if key not in joins:
                     alias = aliased(item.property.mapper.class_)
-                    fn = query.join if not isouter else query.outerjoin
+                    fn = query.outerjoin if isouter else query.join
 
                     if last is None:
                         query = fn(alias, item)
@@ -338,16 +365,7 @@ class SqlaModelView(ModelView):
 
         return query, joins, last
 
-    def get_pk_value(self, instance):
-        """
-        Return the primary key value from a model object.
-        If there are multiple primary keys, they're encoded into string representation.
-        """
-        value = get_identity(instance)
-        if isinstance(value, tuple):
-            return ",".join([str(v) for v in value])
-        else:
-            return str(value)
+
 
     def scaffold_list_columns(self):
         """
@@ -355,9 +373,9 @@ class SqlaModelView(ModelView):
         """
         columns = []
 
-        for p in self.get_model_iterator(self.model):
+        for p in get_model_mapper(self.model).attrs:
             if hasattr(p, "direction"):
-                if p.direction.name == "MANYTOONE":
+                if p.direction.name in ["MANYTOONE", "MANYTOMANY"]:
                     columns.append(p.key)
             elif hasattr(p, "columns"):
                 column = p.columns[0]
@@ -374,19 +392,15 @@ class SqlaModelView(ModelView):
         """
         columns = dict()
 
-        for p in self.get_model_iterator(self.model):
+        for p in get_model_mapper(self.model).attrs:
             if hasattr(p, "columns"):
-                # Sanity check
                 if len(p.columns) > 1:
                     # Multi-column properties are not supported
                     continue
-
                 column = p.columns[0]
-
                 # Can't sort on primary or foreign keys by default
                 if column.foreign_keys:
                     continue
-
                 columns[p.key] = column
 
         return columns
@@ -443,24 +457,18 @@ class SqlaModelView(ModelView):
 
             return result
 
-    def get_column_names(self, only_columns, excluded_columns):
+    def get_column_names(self, columns):
         """
         Returns a list of tuples with the model field name and formatted
         field name.
 
         Overridden to handle special columns like InstrumentedAttribute.
 
-        :param only_columns:
-            List of columns to include in the results. If not set,
-            `scaffold_list_columns` will generate the list from the model.
-        :param excluded_columns:
-            List of columns to exclude from the results.
+        :param columns:
+            List of columns to include in the results.
         """
-        if excluded_columns:
-            only_columns = [c for c in only_columns if c not in excluded_columns]
-
         formatted_columns = []
-        for c in only_columns:
+        for c in columns:
             try:
                 column, path = get_field_with_path(self.model, c)
 
@@ -479,7 +487,7 @@ class SqlaModelView(ModelView):
                 # is virtual and there's column formatter for it.
                 column_name = str(c)
 
-            visible_name = self.get_column_name(column_name)
+            visible_name = self.get_column_label(column_name)
 
             # column_name must match column_name in `get_sortable_columns`
             formatted_columns.append((column_name, visible_name))
@@ -641,29 +649,6 @@ class SqlaModelView(ModelView):
             form_class = custom_converter.contribute(self.model, form_class, m)
         return form_class
 
-    def _init_auto_joins(self):
-        """
-        Return a list of joined tables by going through the displayed columns.
-        """
-        relations = set()
-
-        for p in self.get_model_iterator(self.model):
-            if hasattr(p, "direction"):
-                # Check if it is pointing to same model
-                if p.mapper.class_ == self.model:
-                    continue
-
-                if p.direction.name in ["MANYTOONE", "MANYTOMANY"]:
-                    relations.add(p.key)
-
-        joined = []
-
-        for prop, name in self._list_columns:
-            if prop in relations:
-                joined.append(getattr(self.model, prop))
-
-        return joined
-
     # AJAX foreignkey support
     def _create_ajax_loader(self, name, options):
         return create_ajax_loader(self.model, self.session, name, name, options)
@@ -713,7 +698,7 @@ class SqlaModelView(ModelView):
         if sort_field is not None:
             # Handle joins
             query, joins, alias = self._apply_path_joins(
-                query, joins, sort_joins, inner_join=False
+                query, joins, sort_joins, isouter=True
             )
 
             column = sort_field if alias is None else getattr(alias, sort_field.key)
@@ -772,14 +757,14 @@ class SqlaModelView(ModelView):
 
             for field, path in self._search_fields:
                 query, joins, alias = self._apply_path_joins(
-                    query, joins, path, inner_join=False
+                    query, joins, path, isouter=True
                 )
 
                 count_alias = None
 
                 if count_query is not None:
                     count_query, count_joins, count_alias = self._apply_path_joins(
-                        count_query, count_joins, path, inner_join=False
+                        count_query, count_joins, path, isouter=True
                     )
 
                 column = field if alias is None else getattr(alias, field.key)
@@ -813,12 +798,12 @@ class SqlaModelView(ModelView):
                 path = self._filter_joins.get(filter_key, [])
 
                 query, joins, alias = self._apply_path_joins(
-                    query, joins, path, inner_join=False
+                    query, joins, path, isouter=True
                 )
 
                 if count_query is not None:
                     count_query, count_joins, count_alias = self._apply_path_joins(
-                        count_query, count_joins, path, inner_join=False
+                        count_query, count_joins, path, isouter=True
                     )
 
             clean_value = flt.clean(value)
@@ -894,8 +879,10 @@ class SqlaModelView(ModelView):
         count = count_query.scalar() if count_query else None
 
         # Auto join
-        for j in self._auto_joins:
-            query = query.options(joinedload(j))
+        if joinedloads := self._auto_joins[0]:
+            query = query.options(*[joinedload(j) for j in joinedloads])
+        if selectinloads := self._auto_joins[1]:
+            query = query.options(*[selectinload(j) for j in selectinloads])
 
         # Sorting
         query, joins = self._apply_sorting(query, joins, sort_column, sort_desc)
@@ -921,15 +908,7 @@ class SqlaModelView(ModelView):
     # Error handler
     def handle_view_exception(self, exc):
         if isinstance(exc, IntegrityError):
-            if current_app.config.get(
-                "RAISE_ON_INTEGRITY_ERROR",
-                current_app.config.get("RAISE_ON_VIEW_EXCEPTION"),
-            ):
-                raise
-            else:
-                flash(
-                    gettext("Integrity error. %(message)s", message=str(exc)), "error"
-                )
+            flash(gettext("Integrity error. %(message)s", message=str(exc)), "error")
             return True
 
         return super().handle_view_exception(exc)
@@ -1042,11 +1021,12 @@ class SqlaModelView(ModelView):
         lazy_gettext("Delete"),
         lazy_gettext("Are you sure you want to delete selected records?"),
     )
-    def action_delete(self, ids):
+    def action_delete(self, ids:list):
         try:
-            result = self.delete_pk_ids(ids)
+            stmt = delete_by_pk_ids(self.model, ids)
+            result = self.session.execute(stmt)
+            self.session.commit()
             count = result.rowcount
-            # self.session.commit()
 
             flash(
                 ngettext(

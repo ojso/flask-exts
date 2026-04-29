@@ -1,7 +1,7 @@
 import pytest
 from flask_exts.admin import expose_url
 from flask_exts.admin.view import View
-from flask_exts.admin.action_mixin import ActionMixin
+from flask_exts.admin.model.action_mixin import ActionMixin
 
 
 class MockView(View, ActionMixin):

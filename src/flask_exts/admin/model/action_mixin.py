@@ -2,7 +2,7 @@ import inspect
 from wtforms.fields import HiddenField
 from flask import request
 from flask import redirect
-from .exposer import expose_url
+from ..exposer import expose_url
 
 
 class ActionMixin:
@@ -25,7 +25,7 @@ class ActionMixin:
                 self._actions[name] = attr
                 self._actions_data.append((name, text, confirmation))
 
-        self._action_form_class = self.get_action_form()
+        self.actions_form_class = self._get_actions_form()
 
         super().__init__(*args, **kwargs)
 
@@ -47,14 +47,14 @@ class ActionMixin:
                 actions_data.append((name, text, confirmation))
         return actions_data
 
-    def get_action_form(self):
+    def _get_actions_form(self):
         """
         Create form class for a model action.
         """
 
         class ActionForm(self.form_base_class):
             action = HiddenField()
-            url = HiddenField()
+            url = HiddenField() # get_redirect_target() will use the url to redirect after action is performed, 
             # rowid = HiddenField() # Not needed since we get selected ids from request.form.getlist('rowid')
 
         return ActionForm
@@ -64,8 +64,8 @@ class ActionMixin:
         """
         Mass-model action view.
         """
-        form = self._action_form_class()
-        if form.validate_on_submit():
+        form = self.actions_form_class()
+        if form.validate():
             ids = request.form.getlist("rowid")
             action = form.action.data
             handler = self._actions.get(action)

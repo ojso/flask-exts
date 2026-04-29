@@ -7,7 +7,6 @@ from wtforms.validators import ValidationError
 from ....datastore.sqla.utils import get_primary_key
 from .inline import InlineFieldList, InlineModelFormField
 from ..form.base_form import BaseForm
-from ..form.form_opts import FormOpts
 from ..widgets.select import Select2Widget
 from ..widgets.checkbox import CheckboxListInput
 
@@ -275,7 +274,7 @@ class InlineModelFormList(InlineFieldList):
         self._pk = get_primary_key(model)
 
         # Generate inline form field
-        form_opts = FormOpts(widget_args=getattr(inline_view, "form_widget_args", None))
+        form_opts = dict(widget_args=getattr(inline_view, "form_widget_args", None))
 
         form_field = self.form_field_type(form, self._pk, form_opts=form_opts)
 
@@ -324,7 +323,7 @@ class InlineModelOneToOneField(InlineModelFormField):
         self._pk = get_primary_key(model)
 
         # Generate inline form field
-        form_opts = FormOpts(widget_args=getattr(inline_view, "form_widget_args", None))
+        form_opts = dict(widget_args=getattr(inline_view, "form_widget_args", None))
         super().__init__(form, self._pk, form_opts=form_opts, **kwargs)
 
     @staticmethod

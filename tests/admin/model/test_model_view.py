@@ -54,9 +54,6 @@ class MockModelView(ModelView):
     def scaffold_list_columns(self):
         columns = ["col1", "col2", "col3"]
 
-        if self.column_exclude_list:
-            return filter(lambda x: x not in self.column_exclude_list, columns)
-
         return columns
 
     def init_search(self):
@@ -252,15 +249,6 @@ def test_list_columns(client, admin):
     assert "Col2" not in rv.text
 
 
-def test_exclude_columns(client, admin):
-    view = MockModelView(MockModel, column_exclude_list=["col2"])
-    admin.add_view(view)
-    assert view._list_columns == [("col1", "Col1"), ("col3", "Col3")]
-    rv = client.get("/admin/mockmodel/")
-    assert "Col1" in rv.text
-    assert "Col2" not in rv.text
-
-
 def test_sortable_columns(admin):
     view = MockModelView(MockModel, column_sortable_list=["col1", ("col2", "test1")])
     admin.add_view(view)
@@ -388,18 +376,6 @@ def test_export_csv(client, admin):
     )
     admin.add_view(view3)
 
-    # test explicit use of column_export_exclude_list
-    view4 = MockModelView(
-        MockModel,
-        view_data,
-        name="test4",
-        can_export=True,
-        column_list=["col1", "col2"],
-        column_export_exclude_list=["col2"],
-        endpoint="exportexclusion",
-    )
-    admin.add_view(view4)
-
     # test utf8 characters in csv export
     view_data_v2 = {
         **view_data,
@@ -477,8 +453,7 @@ def test_export_csv(client, admin):
     )
     admin.add_view(view9)
 
-    # We should not get an exception if a column_formatter is
-    # using a macro but it is on the column_export_exclude_list
+    # We should not get an exception if a column_formatter is using a macro
     view10 = MockModelView(
         MockModel,
         view_data_v3,
@@ -486,7 +461,6 @@ def test_export_csv(client, admin):
         can_export=True,
         column_list=["col1", "col2"],
         # column_formatters=dict(col1=macro("render_macro")),
-        column_export_exclude_list=["col1"],
         endpoint="macro_exception_exclude_override",
     )
     admin.add_view(view10)

@@ -16,7 +16,7 @@ def create_app():
     app.config.from_pyfile('config_prod.py',silent=True)
     # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
-    # app.config["SQLALCHEMY_ECHO"] = True
+    app.config["SQLALCHEMY_ECHO"] = True
     app.config["DATABASE_FILE"] = get_sqlite_path()
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + app.config["DATABASE_FILE"]
     app.config["ADMIN_ALL_ACCESSED"] = False

@@ -8,7 +8,6 @@ from math import ceil
 from collections import OrderedDict
 from functools import reduce
 import tablib
-from flask import current_app
 from flask import request
 from flask import redirect
 from flask import flash
@@ -36,8 +35,7 @@ from .row_action import (
 )
 from .. import expose_url
 from ..view import View
-from ..action_mixin import ActionMixin
-from ...template.forms.form.form_opts import FormOpts
+from .action_mixin import ActionMixin
 
 
 class ModelView(View, ActionMixin):
@@ -126,36 +124,16 @@ class ModelView(View, ActionMixin):
                 column_list = ('<relationship>.<related column name>',)
     """
 
-    column_exclude_list: Optional[T_COLUMN_LIST] = None
-    """
-        Collection of excluded list column names.
-
-        For example::
-
-            class MyModelView(BaseModelView):
-                column_exclude_list = ('last_name', 'email')
-    """
-
     column_details_list = None
     """
         Collection of the field names included in the details view.
         If set to `None`, will get them from the model.
     """
 
-    column_details_exclude_list = None
-    """
-        Collection of fields excluded from the details view.
-    """
-
     column_export_list = None
     """
         Collection of the field names included in the export.
         If set to `None`, will get them from the model.
-    """
-
-    column_export_exclude_list = None
-    """
-        Collection of fields excluded from the export.
     """
 
     column_formatters = dict()
@@ -587,11 +565,9 @@ class ModelView(View, ActionMixin):
         """
         self.model = model
 
-        # If name not provided, it is model name
         if name is None:
             name = self._prettify_class_name(model.__name__)
 
-        # If endpoint not provided, it is model name in lower case
         if endpoint is None:
             endpoint = self.model.__name__.lower()
 
@@ -602,7 +578,6 @@ class ModelView(View, ActionMixin):
             static_folder,
         )
 
-        # Scaffolding
         self._init_view()
 
     def _init_view(self):
@@ -687,11 +662,9 @@ class ModelView(View, ActionMixin):
         """
         raise NotImplementedError()
 
-    # List view
     def scaffold_list_columns(self):
         """
-        Return list of the model field names. Must be implemented in
-        the child class.
+        Return list of the model field names. Must be implemented in the child class.
 
         Expected return format is list of strings of the field names. For example::
 
@@ -699,98 +672,52 @@ class ModelView(View, ActionMixin):
         """
         raise NotImplementedError("Please implement scaffold_list_columns method")
 
-    def get_column_name(self, field):
+    def get_column_label(self, column_name):
         """
         Return a human-readable column name.
 
-        :param field:
+        :param column_name:
             Model field name.
         """
-        if self.column_labels and field in self.column_labels:
-            return self.column_labels[field]
+        if self.column_labels and column_name in self.column_labels:
+            return self.column_labels[column_name]
         else:
-            return self._prettify_name(field)
+            return self._prettify_name(column_name)
 
-    def get_list_row_actions(self):
-        """
-        Return list of row action objects to display in the list view.
-        """
-        row_actions = []
-
-        if self.details_modal:
-            row_actions.append(ViewPopupRowAction())
-        else:
-            row_actions.append(ViewRowAction())
-
-        if self.can_edit:
-            if self.edit_modal:
-                row_actions.append(EditPopupRowAction())
-            else:
-                row_actions.append(EditRowAction())
-
-        if self.can_delete:
-            row_actions.append(DeleteRowAction())
-
-        return row_actions
-
-    def get_column_names(self, only_columns, excluded_columns):
+    def get_column_names(self, columns):
         """
         Returns a list of tuples with the model field name and formatted
         field name.
 
-        :param only_columns:
-            List of columns to include in the results. If not set,
-            `scaffold_list_columns` will generate the list from the model.
-        :param excluded_columns:
-            List of columns to exclude from the results if `only_columns`
-            is not set.
+        :param columns:
+            List of columns to include in the results.
         """
-        if excluded_columns:
-            only_columns = [c for c in only_columns if c not in excluded_columns]
-
-        return [(c, self.get_column_name(c)) for c in only_columns]
+        return [(c, self.get_column_label(c)) for c in columns]
 
     def get_list_columns(self):
         """
-        Get a list of tuples with the model
-        field name and formatted name for the columns in `column_list`
-        and not in `column_exclude_list`. If `column_list` is not set,
-        the columns from `scaffold_list_columns` will be used.
+        Get a list of tuples with the model field name and formatted name for the columns in `column_list`.
+        If `column_list` is not set, the columns from `scaffold_list_columns` will be used.
         """
-        return self.get_column_names(
-            only_columns=self.column_list or self.scaffold_list_columns(),
-            excluded_columns=self.column_exclude_list,
-        )
+        return self.get_column_names(self.column_list or self.scaffold_list_columns())
 
     def get_details_columns(self):
         """
-        Uses `get_column_names` to get a list of tuples with the model
-        field name and formatted name for the columns in `column_details_list`
-        and not in `column_details_exclude_list`. If `column_details_list`
-        is not set, the columns from `scaffold_list_columns` will be used.
+        Get a list of tuples with the model field name and formatted name for the columns in `column_details_list`.
+        If `column_details_list` is not set, the columns from `scaffold_list_columns` will be used.
         """
-        only_columns = self.column_details_list or self.scaffold_list_columns()
-
         return self.get_column_names(
-            only_columns=only_columns,
-            excluded_columns=self.column_details_exclude_list,
+            self.column_details_list or self.scaffold_list_columns()
         )
 
     def get_export_columns(self):
         """
-        Uses `get_column_names` to get a list of tuples with the model
-        field name and formatted name for the columns in `column_export_list`
-        and not in `column_export_exclude_list`. If `column_export_list` is
-        not set, it will attempt to use the columns from `column_list`
+        Get a list of tuples with the model field name and formatted name for the columns in `column_export_list`.
+        If `column_export_list` is not set, it will attempt to use the columns from `column_list`
         or finally the columns from `scaffold_list_columns` will be used.
         """
-        only_columns = (
-            self.column_export_list or self.column_list or self.scaffold_list_columns()
-        )
-
         return self.get_column_names(
-            only_columns=only_columns,
-            excluded_columns=self.column_export_exclude_list,
+            self.column_export_list or self.column_list or self.scaffold_list_columns()
         )
 
     def scaffold_sortable_columns(self):
@@ -1105,6 +1032,28 @@ class ModelView(View, ActionMixin):
 
         return safe_page_size
 
+    def get_list_row_actions(self):
+        """
+        Return list of row action objects to display in the list view.
+        """
+        row_actions = []
+
+        if self.details_modal:
+            row_actions.append(ViewPopupRowAction())
+        else:
+            row_actions.append(ViewRowAction())
+
+        if self.can_edit:
+            if self.edit_modal:
+                row_actions.append(EditPopupRowAction())
+            else:
+                row_actions.append(EditRowAction())
+
+        if self.can_delete:
+            row_actions.append(DeleteRowAction())
+
+        return row_actions
+
     # Database-related API
     def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
         """
@@ -1146,10 +1095,6 @@ class ModelView(View, ActionMixin):
         if isinstance(exc, ValidationError):
             flash(exc, "error")
             return True
-
-        if current_app.config.get("RAISE_ON_VIEW_EXCEPTION"):
-            raise
-
         return False
 
     # Model event handlers
@@ -1602,7 +1547,6 @@ class ModelView(View, ActionMixin):
             data=data,
             list_forms=list_forms,
             delete_form=delete_form,
-            action_form=self._action_form_class(),
             # List
             list_columns=self._list_columns,
             sortable_columns=self._sortable_columns,
@@ -1631,12 +1575,7 @@ class ModelView(View, ActionMixin):
             filter_groups=self._get_filter_groups(),
             active_filters=view_args.filters,
             filter_args=self._get_filters(view_args.filters),
-            # Actions
-            actions=self.get_actions_list(),
             # Misc
-            enumerate=enumerate,
-            get_pk_value=self.get_pk_value,
-            get_model_value=self.get_list_value,
             return_url=self._get_list_url(view_args),
             # Extras
             extra_args=view_args.extra_args,
@@ -1673,7 +1612,7 @@ class ModelView(View, ActionMixin):
                     # save button
                     return redirect(self.get_save_return_url(model, is_created=True))
 
-        form_opts = FormOpts(widget_args=self.form_widget_args)
+        form_opts = dict(widget_args=self.form_widget_args)
 
         if self.create_modal and request.args.get("modal"):
             template = self.create_modal_template
@@ -1694,7 +1633,6 @@ class ModelView(View, ActionMixin):
         if not self.can_edit:
             return redirect(return_url)
 
-        # TODO: request.args.getlist("id")  # return list for multipk
         id = request.args.get("id")
 
         if id is None:
@@ -1720,7 +1658,7 @@ class ModelView(View, ActionMixin):
                 else:
                     return redirect(self.get_save_return_url(model, is_created=False))
 
-        form_opts = FormOpts(widget_args=self.form_widget_args)
+        form_opts = dict(widget_args=self.form_widget_args)
 
         if self.edit_modal and request.args.get("modal"):
             template = self.edit_modal_template
@@ -1758,7 +1696,6 @@ class ModelView(View, ActionMixin):
             template,
             model=model,
             details_columns=self._details_columns,
-            get_model_value=self.get_detail_value,
             return_url=return_url,
         )
 
@@ -1805,8 +1742,8 @@ class ModelView(View, ActionMixin):
             if func.__name__ == "inner":
                 raise NotImplementedError(
                     "Macros are not implemented in export. Exclude column in"
-                    " column_formatters_export, column_export_list, or "
-                    " column_export_exclude_list. Column: %s" % (col,)
+                    " column_formatters_export, column_export_list "
+                    ". Column: %s" % (col,)
                 )
 
         # Grab parameters from URL

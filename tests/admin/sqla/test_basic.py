@@ -251,37 +251,6 @@ def test_complex_list_columns(app, client, admin):
         assert "model1_val1" in rv.text
 
 
-def test_exclude_columns(app, client, admin):
-    with app.app_context():
-        db.reset_all()
-        view = CustomModelView(
-            Model1,
-            column_exclude_list=[
-                "id",
-                "test2",
-                "test4",
-                "enum_field",
-                "enum_type_field",
-                "date_field",
-                "datetime_field",
-                "time_field",
-            ],
-        )
-        admin.add_view(view)
-
-        assert view._list_columns == [
-            ("test1", "Test1"),
-            ("test3", "Test3"),
-            ("bool_field", "Bool Field"),
-            ("email_field", "Email Field"),
-            ("choice_field", "Choice Field"),
-        ]
-
-        rv = client.get("/admin/model1/")
-        assert "Test1" in rv.text
-        assert "Test2" not in rv.text
-
-
 def test_column_searchable_list(app, client, admin):
     with app.app_context():
         db.reset_all()

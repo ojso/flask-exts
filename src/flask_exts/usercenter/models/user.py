@@ -42,8 +42,8 @@ class User(db.Model, BaseUser):
         default=datetime.now, onupdate=datetime.now
     )
 
-    roles: Mapped[List["Role"]] = relationship(secondary="user_role")  # type: ignore
-    profile: Mapped["UserProfile"] = relationship(back_populates="user", uselist=False)  # type: ignore
+    roles: Mapped[List["Role"]] = relationship(secondary="user_role")
+    profile: Mapped["UserProfile"] = relationship(back_populates="user", uselist=False)
 
     def get_roles(self):
         return [r.name for r in self.roles]

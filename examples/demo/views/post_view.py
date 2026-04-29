@@ -9,6 +9,7 @@ class PostView(SqlaModelView):
     column_list = [
         "id",
         "author",
+        "author.email",
         "title",
         "date",
         "tags",
