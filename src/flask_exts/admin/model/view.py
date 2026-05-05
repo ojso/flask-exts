@@ -20,25 +20,19 @@ from werkzeug.utils import secure_filename
 from wtforms.fields import HiddenField
 from wtforms.validators import ValidationError, InputRequired
 from flask_babel import gettext, ngettext
+from ..view import View
+from .action_mixin import ActionMixin
+from .row_action_mixin import RowActionMixin
+from ..exposer import expose_url
 from .types import T_COLUMN_LIST, T_FORMATTERS
 from .typefmt import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
 from .ajax import AjaxModelLoader
 from .view_args import ViewArgs
 from .filter_group import FilterGroup
 from .filter import BaseFilter
-from .row_action import (
-    ViewRowAction,
-    EditRowAction,
-    DeleteRowAction,
-    ViewPopupRowAction,
-    EditPopupRowAction,
-)
-from .. import expose_url
-from ..view import View
-from .action_mixin import ActionMixin
 
 
-class ModelView(View, ActionMixin):
+class ModelView(View, ActionMixin, RowActionMixin):
     """
     Model view.
 
@@ -364,20 +358,6 @@ class ModelView(View, ActionMixin):
         False by default so as to be robust across translations.
 
         Changing this parameter will break any existing URLs that have filters.
-    """
-
-    column_display_actions = True
-    """
-        Controls the display of the row actions (edit, delete, details, etc.)
-        column in the list view.
-
-        Useful for preventing a blank column from displaying if your view does
-        not use any build-in or custom row actions.
-
-        This column is not hidden automatically due to backwards compatibility.
-
-        Note: This only affects display and does not control whether the row
-        actions endpoints are accessible.
     """
 
     form_args = None
@@ -930,37 +910,37 @@ class ModelView(View, ActionMixin):
 
         return DeleteForm
 
-    def create_form(self):
+    def create_form(self, *args, **kwargs):
         """
         Instantiate model creation form and return it.
 
         Override to implement custom behavior.
         """
-        return self._create_form_class()
+        return self._create_form_class(*args, **kwargs)
 
-    def edit_form(self, obj=None):
+    def edit_form(self, *args, **kwargs):
         """
         Instantiate model editing form and return it.
 
         Override to implement custom behavior.
         """
-        return self._edit_form_class(obj=obj)
+        return self._edit_form_class(*args, **kwargs)
 
-    def delete_form(self):
+    def delete_form(self, *args, **kwargs):
         """
         Instantiate model delete form and return it.
 
         Override to implement custom behavior.
         """
-        return self._delete_form_class()
+        return self._delete_form_class(*args, **kwargs)
 
-    def list_form(self, obj=None):
+    def list_form(self, *args, **kwargs):
         """
         Instantiate model editing form for list view and return it.
 
         Override to implement custom behavior.
         """
-        return self._list_form_class(obj=obj)
+        return self._list_form_class(*args, **kwargs)
 
     def get_save_return_url(self, model, is_created=False):
         """
@@ -1032,29 +1012,6 @@ class ModelView(View, ActionMixin):
 
         return safe_page_size
 
-    def get_list_row_actions(self):
-        """
-        Return list of row action objects to display in the list view.
-        """
-        row_actions = []
-
-        if self.details_modal:
-            row_actions.append(ViewPopupRowAction())
-        else:
-            row_actions.append(ViewRowAction())
-
-        if self.can_edit:
-            if self.edit_modal:
-                row_actions.append(EditPopupRowAction())
-            else:
-                row_actions.append(EditRowAction())
-
-        if self.can_delete:
-            row_actions.append(DeleteRowAction())
-
-        return row_actions
-
-    # Database-related API
     def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
         """
         Return a tuple of a count of results and a paginated and sorted list of models from the data source.
@@ -1154,32 +1111,6 @@ class ModelView(View, ActionMixin):
         """
         pass
 
-    def on_model_delete(self, model):
-        """
-        Perform some actions before a model is deleted.
-
-        Called from delete_model in the same transaction
-        (if it has any meaning for a store backend).
-
-        By default do nothing.
-        """
-        pass
-
-    def after_model_delete(self, model):
-        """
-        Perform some actions after a model was deleted and
-        committed to the database.
-
-        Called from delete_model after successful database commit
-        (if it has any meaning for a store backend).
-
-        By default does nothing.
-
-        :param model:
-            Model that was deleted
-        """
-        pass
-
     def create_model(self, form):
         """
         Create model from the form.
@@ -1220,8 +1151,6 @@ class ModelView(View, ActionMixin):
             Model instance
         """
         raise NotImplementedError()
-
-    # Various helpers
 
     def get_empty_list_message(self):
         return gettext("There are no items in the table.")
@@ -1336,19 +1265,14 @@ class ModelView(View, ActionMixin):
 
         return self.get_url(".index_view", **kwargs)
 
-    def _get_object_attr(self, obj, attr):
+    def _get_object_attr(self, obj, name):
         """
-        Recursive getattr from the obj
-        Recursive getattr.
+        Recursive getattr from the obj by the name. Name can be a dot-delimited string to get nested attributes.
 
-        :param attr:
-            Dot delimited attribute name
-
-        Example::
-
-            rec_getattr(obj, 'a.b.c')
+        :param name:
+            Dot delimited attribute name, for example 'user.username' to get obj.user.username.
         """
-        return reduce(getattr, attr.split("."), obj)
+        return reduce(getattr, name.split("."), obj)
 
     def _get_format_value(self, model, name, column_formatters, column_type_formatters):
         """
@@ -1474,6 +1398,21 @@ class ModelView(View, ActionMixin):
     def get_redirect_target(self, param_name="url", endpoint=".index_view"):
         return request.values.get(param_name) or self.get_url(endpoint)
 
+    def delete_models_by_pk_ids(self, ids: list):
+        """
+        Delete models by their IDs.
+
+        :param ids:
+            List of model IDs to delete
+        """
+
+        raise NotImplementedError()
+
+    def is_action_allowed(self, name):
+        if name == "delete" and not self.can_delete:
+            return False
+        return super().is_action_allowed(name)
+
     @expose_url("/")
     def index_view(self):
         if self.can_delete:
@@ -1501,11 +1440,6 @@ class ModelView(View, ActionMixin):
             view_args.filters,
             page_size=page_size,
         )
-
-        list_forms = {}
-        if self.column_editable_list:
-            for row in data:
-                list_forms[self.get_pk_value(row)] = self.list_form(obj=row)
 
         # Calculate number of pages
         if count is not None and page_size:
@@ -1545,13 +1479,10 @@ class ModelView(View, ActionMixin):
         return self.render(
             self.list_template,
             data=data,
-            list_forms=list_forms,
-            delete_form=delete_form,
             # List
             list_columns=self._list_columns,
             sortable_columns=self._sortable_columns,
             editable_columns=self.column_editable_list,
-            list_row_actions=self.get_list_row_actions(),
             # Pagination
             count=count,
             pager_url=pager_url,
@@ -1644,7 +1575,7 @@ class ModelView(View, ActionMixin):
             flash(gettext("Record does not exist."), "error")
             return redirect(return_url)
 
-        form = self.edit_form(obj=model)
+        form = self._edit_form_class(obj=model)
 
         if form.validate_on_submit():
             if self.update_model(form, model):
@@ -1867,9 +1798,7 @@ class ModelView(View, ActionMixin):
         query = request.args.get("query")
         offset = request.args.get("offset", type=int)
         limit = request.args.get("limit", 10, type=int)
-
         loader = self._form_ajax_refs.get(name)
-
         if not loader:
             abort(404)
 
@@ -1910,8 +1839,6 @@ class ModelView(View, ActionMixin):
         else:
             for field in form:
                 for error in field.errors:
-                    print(field.name, error)
-                    # return validation error to x-editable
                     if isinstance(error, list):
                         return (
                             gettext(

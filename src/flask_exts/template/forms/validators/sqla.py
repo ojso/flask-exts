@@ -1,5 +1,5 @@
 from flask_babel import lazy_gettext
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import select
 from wtforms import ValidationError
 from wtforms.validators import InputRequired
 
@@ -13,34 +13,29 @@ class Unique:
         The model to check unicity against.
     :param column:
         The unique column.
-    :param message:
-        The error message.
     """
 
     field_flags = {"unique": True}
 
-    def __init__(self, db_session, model, column, message=None):
-        self.db_session = db_session
+    def __init__(self, session, model, column):
+        self.session = session
         self.model = model
         self.column = column
-        self.message = message or lazy_gettext("Already exists.")
 
     def __call__(self, form, field):
         # databases allow multiple NULL values for unique columns
         if field.data is None:
             return
 
-        try:
-            obj = (
-                self.db_session.query(self.model)
-                .filter(self.column == field.data)
-                .one()
-            )
-
-            if not hasattr(form, "_obj") or not form._obj == obj:
-                raise ValidationError(str(self.message))
-        except NoResultFound:
-            pass
+        stmt = select(self.model).where(self.column == field.data)
+        obj = self.session.execute(stmt).scalar_one_or_none()
+        # if obj is None, the value is unique, and we can stop here. Otherwise, we need to check if it's the same object as the one being edited (if any).
+        if obj is None:
+            return
+        
+        # form._obj is the object being edited, if any. We should allow it to have the same value as itself.
+        if not hasattr(form, "_obj") or not form._obj == obj:
+            raise ValidationError(lazy_gettext("Already exists."))
 
 
 class ItemsRequired(InputRequired):

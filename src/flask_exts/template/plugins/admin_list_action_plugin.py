@@ -4,7 +4,7 @@ from .base_plugin import PluginBase
 
 class AdminListActionPlugin(PluginBase):
     def __init__(self):
-        super().__init__("model_action")
+        super().__init__("list_action")
 
     def js(self):
-        return url_for("_template.static", filename="js/model_action.js")
+        return url_for("_template.static", filename="js/list_action.js")

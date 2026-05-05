@@ -12,12 +12,14 @@ class BaseForm(Form):
     prevent this.
     """
 
-    def __init__(self, formdata=None, **kwargs):
-        super().__init__(formdata=formdata, **kwargs)
+    def __init__(self, formdata=None, obj=None, **kwargs):
+        if obj is not None:
+            self._obj = obj
+        super().__init__(formdata=formdata, obj=obj, **kwargs)
 
     def is_submitted(self):
         return is_submitted()
-    
+
     def validate_on_submit(self):
         return is_submitted() and self.validate()
 

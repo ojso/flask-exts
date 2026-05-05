@@ -4,7 +4,7 @@ from sqlalchemy import delete
 from sqlalchemy import tuple_
 
 
-def select_pk_values(model):
+def stmt_select_pk_values(model):
     """
     Return a select statement that selects all primary key values from a model
     """
@@ -13,7 +13,7 @@ def select_pk_values(model):
     return stmt
 
 
-def clear(model):
+def stmt_clear(model):
     """
     Return a delete statement that deletes all rows of the model
     """
@@ -21,7 +21,7 @@ def clear(model):
     return stmt
 
 
-def delete_by_pk_ids(model, ids: list):
+def stmt_delete_by_pk_ids(model, ids: list):
     """
     Return a delete statement that deletes all rows with primary key in ids
     """

@@ -1,29 +1,28 @@
 {% extends "admin/master.html" %}
+{% from "macro/icon.html" import render_icon %}
 {% from "macro/pagination.html" import render_pager, render_simple_pager %}
 {% from "macro/layout.html" import filter_options, page_size_form, export_options %}
-{% from "macro/icon.html" import render_icon %}
 {% from "macro/modal.html" import add_modal_button,add_modal_window %}
 {% from "macro/form.html" import render_form_fields %}
 
 {% do _template.plugin_manager.enable_plugin(["modal","filters","select2","form","xeditor","daterangepicker","moment"]) %}
 
-{% set actions = view.get_actions_list() %}
+{% set actions = view.get_list_actions() %}
+{% set row_actions = view.get_row_actions() %}
 
 {% if actions %}
-  {%- do _template.plugin_manager.enable_plugin(['model_action']) -%}
+  {%- do _template.plugin_manager.enable_plugin(['list_action']) -%}
 {% endif %}
 
 {% macro link(action, url) %}
-  <a class="icon" href="{{ url }}" title="{{ action.title or '' }}">{{ render_icon(action.icon) }}</a>
+  <a class="icon" href="{{ url }}" title="{{ action.title }}">{{ render_icon(action.icon) }}</a>
 {% endmacro %}
 
 {% macro delete_row(action, row_id, row) %}
   <form class="icon" method="post" action="{{ url_for('.delete_view') }}">
-    {{ delete_form.id(value=view.get_pk_value(row) ) }}
-    {% if delete_form.csrf_token %}
-      {{ delete_form.csrf_token }}
-    {% endif %}
-    <button onclick="return confirm('{{ action.confirm }}');" title="{{ gettext('Delete Record') }}">{{ render_icon(action.icon) }}</button>
+    {% set delete_form = view.delete_form(id=view.get_pk_value(row)) %}
+    {{ render_form_fields(delete_form) }}
+    <button onclick="return confirm('{{ action.confirm }}');" title="{{ action.title }}">{{ render_icon(action.icon) }}</button>
   </form>
 {% endmacro %}
 
@@ -67,7 +66,7 @@
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">{{ gettext("With selected") }}</a>
         <div class="dropdown-menu">
-          {% for p in actions %}<a class="dropdown-item" href="#" onclick="return modelActions.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
+          {% for p in actions %}<a class="dropdown-item" href="#" onclick="return listAction.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
         </div>
       </li>
     {% endif %}
@@ -128,7 +127,7 @@
                   <input type="checkbox" name="rowtoggle" class="action-rowtoggle" title="{{ gettext('Select all records') }}" />
                 </th>
               {% endif %}
-              {% if view.column_display_actions %}<th>Operates</th>{% endif %}
+              {% if row_actions %}<th>Operates</th>{% endif %}
               {% for c, name in list_columns %}
                 {% set column = loop.index0 %}
                 <th class="column-header col-{{ c }}">
@@ -164,24 +163,23 @@
                   <input type="checkbox" name="rowid" class="action-checkbox" value="{{ view.get_pk_value(row) }}" title="{{ gettext('Select record') }}" />
                 </td>
               {% endif %}
-              {% if view.column_display_actions %}
+              {% if row_actions %}
                 <td class="list-buttons-column">
-                  {% for action in list_row_actions %}{{ render_row_action(action, view.get_pk_value(row) , row) }}{% endfor %}
+                  {% for rowaction in row_actions %}{{ render_row_action(rowaction, view.get_pk_value(row) , row) }}{% endfor %}
                 </td>
               {%- endif -%}
+              {% set list_form = view.list_form(obj=row) if view.column_editable_list else None %}
               {% for c, name in list_columns %}
                 <td class="col-{{ c }}">
+                  {% set display_value = view.get_list_value(row, c) %}
                   {% if view.is_editable(c) %}
-                    {% set form = list_forms[view.get_pk_value(row)] %}
-                    {% if form.csrf_token %}
-                      {{ form[c](pk=view.get_pk_value(row) , display_value=view.get_list_value(row, c), csrf=form.csrf_token._value()) }}
-                    {% elif _template.funcs.csrf_token %}
-                      {{ form[c](pk=view.get_pk_value(row) , display_value=view.get_list_value(row, c), csrf=_template.funcs.csrf_token()) }}
+                    {% if list_form.csrf_token %}
+                      {{ list_form[c](pk=view.get_pk_value(row) , display_value=display_value, csrf=list_form.csrf_token._value()) }}
                     {% else %}
-                      {{ form[c](pk=view.get_pk_value(row) , display_value=view.get_list_value(row, c)) }}
+                      {{ list_form[c](pk=view.get_pk_value(row) , display_value=display_value) }}
                     {% endif %}
                   {% else %}
-                    {{ view.get_list_value(row, c) }}
+                    {{ display_value }}
                   {% endif %}
                 </td>
               {% endfor %}
@@ -205,7 +203,7 @@
     {% endblock %}
   {% endblock %}
   {% if actions %}
-    {% set action_form = view.actions_form_class(url=return_url) %}
+    {% set action_form = view.action_form(url=return_url) %}
     <form id="action_form" action="{{ url_for('.action_view') }}" method="post" class="d-none">
       {{ render_form_fields(action_form) }}
     </form>
@@ -222,10 +220,10 @@
   {% if actions %}
     <script>
       const actionErrorMessage = "{{ _('Please select at least one record.') }}";
-      const actionsData = {{ actions|tojson }};
-      let modelActions;
+      const actionsData = {{ actions | tojson }};
+      let listAction;
       document.addEventListener("DOMContentLoaded",()=>{
-          modelActions = new ModelAction(actionErrorMessage, actionsData);
+          listAction = new ListAction(actionErrorMessage, actionsData);
       });
     </script>
   {% endif %}

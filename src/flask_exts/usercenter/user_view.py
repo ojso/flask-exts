@@ -59,8 +59,8 @@ class UserView(View):
     def get_login_form_class(self):
         return LoginForm
 
-    def get_register_form_class(self):
-        return RegisterForm
+    def register_form(self, *args, **kwargs):
+        return RegisterForm(*args, **kwargs)
 
     @login_required
     @expose_url("/index/")
@@ -100,7 +100,7 @@ class UserView(View):
     def register(self):
         if current_user.is_authenticated:
             return redirect(url_for(".index"))
-        form = self.get_register_form_class()()
+        form = self.register_form()
         if form.validate_on_submit():
             status, user = _userstore.create_user(
                 username=form.username.data,

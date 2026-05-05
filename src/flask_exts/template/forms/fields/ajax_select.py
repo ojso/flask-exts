@@ -27,20 +27,21 @@ class AjaxSelectField(SelectFieldBase):
         self.allow_blank = allow_blank
         self.blank_text = blank_text
 
-    def _get_data(self):
+    @property
+    def data(self):
         if self._formdata:
             model = self.loader.get_one(self._formdata)
-
             if model is not None:
-                self._set_data(model)
+                self._data = model
+                self._formdata = None
 
         return self._data
-
-    def _set_data(self, data):
-        self._data = data
+    
+    @data.setter
+    def data(self, value):
+        self._data = value
         self._formdata = None
 
-    data = property(_get_data, _set_data)
 
     def _format_item(self, item):
         value = self.loader.format(self.data)
@@ -73,7 +74,8 @@ class AjaxSelectMultipleField(AjaxSelectField):
         super().__init__(loader, label, validators, default=default, **kwargs)
         self._invalid_formdata = False
 
-    def _get_data(self):
+    @property
+    def data(self):
         formdata = self._formdata
         if formdata:
             data = []
@@ -81,21 +83,20 @@ class AjaxSelectMultipleField(AjaxSelectField):
             # TODO: Optimize?
             for item in formdata:
                 model = self.loader.get_one(item) if item else None
-
                 if model:
                     data.append(model)
                 else:
                     self._invalid_formdata = True
-
-            self._set_data(data)
+            self._data = data
+            self._formdata = None
 
         return self._data
 
-    def _set_data(self, data):
-        self._data = data
+    @data.setter
+    def data(self, value):
+        self._data = value
         self._formdata = None
 
-    data = property(_get_data, _set_data)
 
     def process_formdata(self, valuelist):
         self._formdata = set()

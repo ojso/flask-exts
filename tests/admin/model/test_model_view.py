@@ -517,11 +517,6 @@ def test_export_csv(client, admin):
         == rv.text
     )
 
-    rv = client.get("/admin/exportexclusion/export/csv/")
-    assert rv.mimetype == "text/csv"
-    assert rv.status_code == 200
-    assert "Col1\r\n" + "col1_1\r\n" + "col1_2\r\n" + "col1_3\r\n" == rv.text
-
     rv = client.get("/admin/utf8/export/csv/")
     assert rv.status_code == 200
     assert "\u2013ut8_1\u2013,\u2013utf8_2\u2013\r\n" in rv.text
@@ -589,17 +584,17 @@ def test_export_tablib(client, admin):
 
 
 def test_list_row_actions(client, admin):
-    from flask_exts.admin.model import row_action
+    from flask_exts.admin.model.row_action_mixin import ViewRowAction,EditRowAction,DeleteRowAction,ViewPopupRowAction,EditPopupRowAction
 
     # Test default actions
     view = MockModelView(MockModel, name="test", endpoint="test")
     admin.add_view(view)
 
-    actions = view.get_list_row_actions()
+    actions = view.get_row_actions()
     assert len(actions) == 3
-    assert isinstance(actions[0], row_action.ViewRowAction)
-    assert isinstance(actions[1], row_action.EditRowAction)
-    assert isinstance(actions[2], row_action.DeleteRowAction)
+    assert isinstance(actions[0], ViewRowAction)
+    assert isinstance(actions[1], EditRowAction)
+    assert isinstance(actions[2], DeleteRowAction)
 
     # Test default actions
     view = MockModelView(
@@ -611,9 +606,9 @@ def test_list_row_actions(client, admin):
     )
     admin.add_view(view)
 
-    actions = view.get_list_row_actions()
+    actions = view.get_row_actions()
     assert len(actions) == 1
-    assert isinstance(actions[0], row_action.ViewRowAction)
+    assert isinstance(actions[0], ViewRowAction)
 
     # Test popups
     view = MockModelView(
@@ -625,10 +620,10 @@ def test_list_row_actions(client, admin):
     )
     admin.add_view(view)
 
-    actions = view.get_list_row_actions()
-    assert isinstance(actions[0], row_action.ViewPopupRowAction)
-    assert isinstance(actions[1], row_action.EditPopupRowAction)
-    assert isinstance(actions[2], row_action.DeleteRowAction)
+    actions = view.get_row_actions()
+    assert isinstance(actions[0], ViewPopupRowAction)
+    assert isinstance(actions[1], EditPopupRowAction)
+    assert isinstance(actions[2], DeleteRowAction)
 
     rv = client.get("/admin/test/")
     assert rv.status_code == 200

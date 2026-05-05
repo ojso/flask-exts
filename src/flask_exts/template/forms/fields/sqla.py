@@ -1,12 +1,9 @@
 import operator
-from flask_babel import lazy_gettext
 from sqlalchemy.orm.util import identity_key
 from wtforms.fields import SelectFieldBase, StringField
-from wtforms.utils import unset_value
 from wtforms.validators import ValidationError
 from ....datastore.sqla.utils import get_primary_key
 from .inline import InlineFieldList, InlineModelFormField
-from ..form.base_form import BaseForm
 from ..widgets.select import Select2Widget
 from ..widgets.checkbox import CheckboxListInput
 
@@ -75,19 +72,20 @@ class QuerySelectField(SelectFieldBase):
         self.query = None
         self._object_list = None
 
-    def _get_data(self):
+    @property
+    def data(self):
         if self._formdata is not None:
             for pk, obj in self._get_object_list():
                 if pk == self._formdata:
-                    self._set_data(obj)
+                    self._data = obj
+                    self._formdata = None
                     break
         return self._data
 
-    def _set_data(self, data):
-        self._data = data
+    @data.setter
+    def data(self, value):
+        self._data = value
         self._formdata = None
-
-    data = property(_get_data, _set_data)
 
     def _get_object_list(self):
         if self._object_list is None:
@@ -138,7 +136,8 @@ class QuerySelectMultipleField(QuerySelectField):
         super().__init__(label, validators, default=default, **kwargs)
         self._invalid_formdata = False
 
-    def _get_data(self):
+    @property
+    def data(self):
         formdata = self._formdata
         if formdata is not None:
             data = []
@@ -150,14 +149,14 @@ class QuerySelectMultipleField(QuerySelectField):
                     data.append(obj)
             if formdata:
                 self._invalid_formdata = True
-            self._set_data(data)
+            self._data = data
+            self._formdata = None
         return self._data
 
-    def _set_data(self, data):
-        self._data = data
+    @data.setter
+    def data(self, value):
+        self._data = value
         self._formdata = None
-
-    data = property(_get_data, _set_data)
 
     def iter_choices(self):
         for pk, obj in self._get_object_list():
@@ -196,48 +195,6 @@ class CheckboxListField(QuerySelectMultipleField):
     """
 
     widget = CheckboxListInput()
-
-
-class HstoreForm(BaseForm):
-    """Form used in InlineFormField/InlineHstoreList for HSTORE columns"""
-
-    key = StringField(lazy_gettext("Key"))
-    value = StringField(lazy_gettext("Value"))
-
-
-class KeyValue:
-    """Used by InlineHstoreList to simulate a key and a value field instead of
-    the single HSTORE column."""
-
-    def __init__(self, key=None, value=None):
-        self.key = key
-        self.value = value
-
-
-class InlineHstoreList(InlineFieldList):
-    """Version of InlineFieldList for use with Postgres HSTORE columns"""
-
-    def process(self, formdata, data=unset_value, extra_filters=None):
-        """SQLAlchemy returns a dict for HSTORE columns, but WTForms cannot
-        process a dict. This overrides `process` to convert the dict
-        returned by SQLAlchemy to a list of classes before processing."""
-        if isinstance(data, dict):
-            data = [KeyValue(k, v) for k, v in data.items()]
-        super().process(formdata, data, extra_filters)
-
-    def populate_obj(self, obj, name):
-        """Combines each FormField key/value into a dictionary for storage"""
-        _fake = type(str("_fake"), (object,), {})
-
-        output = {}
-        for form_field in self.entries:
-            if not self.should_delete(form_field):
-                fake_obj = _fake()
-                fake_obj.data = KeyValue()
-                form_field.populate_obj(fake_obj, "data")
-                output[fake_obj.data.key] = fake_obj.data.value
-
-        setattr(obj, name, output)
 
 
 class InlineModelFormList(InlineFieldList):

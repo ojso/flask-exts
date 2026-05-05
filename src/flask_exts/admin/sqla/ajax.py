@@ -1,10 +1,10 @@
+from sqlalchemy.sql import select
 from sqlalchemy import or_, and_, cast, text
 from sqlalchemy.types import String
 from ...datastore.sqla import db
 from ..model.ajax import AjaxModelLoader, DEFAULT_PAGE_SIZE
 from ...datastore.sqla.utils import get_primary_key
 from ...datastore.sqla.utils import has_multiple_pks
-from ...datastore.sqla.utils import is_association_proxy
 from ...datastore.sqla.utils import is_relationship
 
 
@@ -21,8 +21,8 @@ class QueryAjaxModelLoader(AjaxModelLoader):
         super().__init__(name, options)
 
         # set db.session as default session
-        self.session = session if session is not None else db.session
-        
+        self.session = session if session else db.session
+
         self.model = model
         self.fields = options.get("fields")
         self.order_by = options.get("order_by")
@@ -34,7 +34,7 @@ class QueryAjaxModelLoader(AjaxModelLoader):
                 % (model, self.name)
             )
 
-        self._cached_fields = self._process_fields()
+        self.search_fields = self._process_fields()
 
         if has_multiple_pks(model):
             raise NotImplementedError(
@@ -45,19 +45,14 @@ class QueryAjaxModelLoader(AjaxModelLoader):
 
     def _process_fields(self):
         remote_fields = []
-
         for field in self.fields:
             if isinstance(field, str):
                 attr = getattr(self.model, field, None)
-
-                if not attr:
+                if attr is None:
                     raise ValueError("%s.%s does not exist." % (self.model, field))
-
                 remote_fields.append(attr)
             else:
-                # TODO: Figure out if it is valid SQLAlchemy property?
                 remote_fields.append(field)
-
         return remote_fields
 
     def format(self, model):
@@ -66,44 +61,27 @@ class QueryAjaxModelLoader(AjaxModelLoader):
 
         return getattr(model, self.pk), str(model)
 
-    def get_query(self):
-        return self.session.query(self.model)
-
     def get_one(self, pk):
         return self.session.get(self.model, pk)
 
     def get_list(self, term, offset=0, limit=DEFAULT_PAGE_SIZE):
-        query = self.get_query()
+        query = select(self.model)
 
-        # debug
-        # for field in self._cached_fields:
-        #     if is_association_proxy(field):
-        #         a = field.ilike(u'%%%s%%' % term)
-        #     else:
-        #         a = cast(field, String).ilike(u'%%%s%%' % term)
         if term:
-            # no type casting to string if a ColumnAssociationProxyInstance is given
-            filters = (
-                (
-                    field.ilike("%%%s%%" % term)
-                    if is_association_proxy(field)
-                    else cast(field, String).ilike("%%%s%%" % term)
-                )
-                for field in self._cached_fields
-            )
-            query = query.filter(or_(*filters))
+            term_filters = [
+                field.cast(String).ilike(f"%{term}%") for field in self.search_fields
+            ]
+            query = query.filter(or_(*term_filters))
 
         if self.filters:
-            filters = [
-                text("%s.%s" % (self.model.__tablename__.lower(), value))
-                for value in self.filters
-            ]
-            query = query.filter(and_(*filters))
+            query = query.filter(and_(*self.filters))
 
         if self.order_by:
             query = query.order_by(self.order_by)
 
-        return query.offset(offset).limit(limit).all()
+        query = query.offset(offset).limit(limit)
+
+        return self.session.execute(query).scalars().all()
 
 
 def create_ajax_loader(model, session, name, field_name, options):
@@ -112,11 +90,8 @@ def create_ajax_loader(model, session, name, field_name, options):
     if attr is None:
         raise ValueError("Model %s does not have field %s." % (model, field_name))
 
-    if not is_relationship(attr) and not is_association_proxy(model, field_name):
+    if not is_relationship(attr):
         raise ValueError("%s.%s is not a relation." % (model, field_name))
-
-    if is_association_proxy(model, field_name):
-        attr = attr.remote_attr
 
     remote_model = attr.prop.mapper.class_
     return QueryAjaxModelLoader(name, remote_model, session, **options)

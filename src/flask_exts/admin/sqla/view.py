@@ -1,6 +1,7 @@
 from typing import Optional, Dict, List, Tuple
 from flask import flash
 from flask_babel import gettext, ngettext, lazy_gettext
+from sqlalchemy.sql import select
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm import joinedload, selectinload, aliased
 from sqlalchemy.sql.expression import desc
@@ -14,7 +15,6 @@ from ...datastore.sqla.utils import get_field_with_path
 from ...datastore.sqla.utils import parse_like_term
 from ..model.view import ModelView
 from ..model.form import create_editable_list_form
-from ..exposer import expose_action
 from . import form
 from .filter import BaseSQLAFilter
 from .filter import FilterConverter
@@ -23,7 +23,7 @@ from .typefmt import DEFAULT_FORMATTERS
 from ...datastore.sqla.utils import get_model_mapper
 from ...datastore.sqla.utils import get_primary_key
 from ...datastore.sqla.utils import get_identity
-from ...datastore.sqla.utils import delete_by_pk_ids
+from ...datastore.sqla.stmt import stmt_delete_by_pk_ids
 
 
 def need_join(model, table):
@@ -274,20 +274,26 @@ class SqlaModelView(ModelView):
         )
 
         self._primary_key = get_primary_key(self.model)
+        self._is_multiple_pk = isinstance(self._primary_key, tuple)
 
         if self._primary_key is None:
             raise Exception("Model %s does not have primary key." % self.model.__name__)
 
         self._auto_joins = self._init_auto_joins()
 
-        print(self.model)
-        print(self._list_columns)
-        print(
-            [r.key for r in self._auto_joins[0]], [r.key for r in self._auto_joins[1]]
-        )
+        # print(self.model)
+        # print(self._list_columns)
+        # print(
+        #     [r.key for r in self._auto_joins[0]], [r.key for r in self._auto_joins[1]]
+        # )
 
-    def has_multiple_pks(self):
-        return isinstance(self._primary_key, tuple)
+    # Error handler
+    def handle_view_exception(self, exc):
+        if isinstance(exc, IntegrityError):
+            flash(gettext("Integrity error. %(message)s", message=str(exc)), "error")
+            return True
+
+        return super().handle_view_exception(exc)
 
     def _init_auto_joins(self):
         """
@@ -364,8 +370,6 @@ class SqlaModelView(ModelView):
                 last = alias
 
         return query, joins, last
-
-
 
     def scaffold_list_columns(self):
         """
@@ -653,33 +657,6 @@ class SqlaModelView(ModelView):
     def _create_ajax_loader(self, name, options):
         return create_ajax_loader(self.model, self.session, name, name, options)
 
-    # Database-related API
-    def get_query(self):
-        """
-        Return a query for the model type.
-
-        This method can be used to set a "persistent filter" on an index_view.
-
-        Example::
-
-            class MyView(ModelView):
-                def get_query(self):
-                    return super().get_query().filter(User.username == current_user.username)
-
-        """
-        return self.session.query(self.model)
-
-    def get_count_query(self):
-        """
-        Return a the count query for the model type
-
-        A ``query(self.model).count()`` approach produces an excessive
-        subquery, so ``query(func.count('*'))`` should be used instead.
-
-        See commit ``#45a2723`` for details.
-        """
-        return self.session.query(func.count("*")).select_from(self.model)
-
     def _order_by(self, query, joins, sort_joins, sort_field, sort_desc):
         """
         Apply order_by to the query
@@ -696,10 +673,7 @@ class SqlaModelView(ModelView):
             Ascending or descending
         """
         if sort_field is not None:
-            # Handle joins
-            query, joins, alias = self._apply_path_joins(
-                query, joins, sort_joins, isouter=True
-            )
+            query, joins, alias = self._apply_path_joins(query, joins, sort_joins)
 
             column = sort_field if alias is None else getattr(alias, sort_field.key)
 
@@ -756,15 +730,12 @@ class SqlaModelView(ModelView):
             count_filter_stmt = []
 
             for field, path in self._search_fields:
-                query, joins, alias = self._apply_path_joins(
-                    query, joins, path, isouter=True
-                )
-
+                query, joins, alias = self._apply_path_joins(query, joins, path)
                 count_alias = None
 
                 if count_query is not None:
                     count_query, count_joins, count_alias = self._apply_path_joins(
-                        count_query, count_joins, path, isouter=True
+                        count_query, count_joins, path
                     )
 
                 column = field if alias is None else getattr(alias, field.key)
@@ -797,13 +768,11 @@ class SqlaModelView(ModelView):
                 filter_key = flt.key_name or flt.column
                 path = self._filter_joins.get(filter_key, [])
 
-                query, joins, alias = self._apply_path_joins(
-                    query, joins, path, isouter=True
-                )
+                query, joins, alias = self._apply_path_joins(query, joins, path)
 
                 if count_query is not None:
                     count_query, count_joins, count_alias = self._apply_path_joins(
-                        count_query, count_joins, path, isouter=True
+                        count_query, count_joins, path
                     )
 
             clean_value = flt.clean(value)
@@ -860,8 +829,8 @@ class SqlaModelView(ModelView):
         joins = {}
         count_joins = {}
 
-        query = self.get_query()
-        count_query = self.get_count_query()
+        query = select(self.model)
+        count_query = select(func.count()).select_from(self.model)
 
         # Apply search criteria
         if self._search_supported and search:
@@ -876,7 +845,7 @@ class SqlaModelView(ModelView):
             )
 
         # Calculate number of rows if necessary
-        count = count_query.scalar() if count_query else None
+        count = self.session.execute(count_query).scalar()
 
         # Auto join
         if joinedloads := self._auto_joins[0]:
@@ -890,9 +859,9 @@ class SqlaModelView(ModelView):
         # Pagination
         query = self._apply_pagination(query, page, page_size)
 
-        query = query.all()
+        result = self.session.execute(query).scalars().all()
 
-        return count, query
+        return count, result
 
     def get_one(self, id):
         """
@@ -901,28 +870,9 @@ class SqlaModelView(ModelView):
         :param id:
             Model id
         """
-        if self.has_multiple_pks():
+        if self._is_multiple_pk:
             id = tuple(id.split(","))
         return self.session.get(self.model, id)
-
-    # Error handler
-    def handle_view_exception(self, exc):
-        if isinstance(exc, IntegrityError):
-            flash(gettext("Integrity error. %(message)s", message=str(exc)), "error")
-            return True
-
-        return super().handle_view_exception(exc)
-
-    def edit_form(self, obj=None):
-        """
-        Instantiate model editing form and return it.
-
-        Override to implement custom behavior.
-        """
-        form = super().edit_form(obj)
-        # preserve obj in form for Unique
-        form._obj = obj
-        return form
 
     # Model handlers
     def create_model(self, form):
@@ -982,17 +932,10 @@ class SqlaModelView(ModelView):
         return True
 
     def delete_model(self, model):
-        """
-        Delete model.
-
-        :param model:
-            Model to delete
-        """
         try:
-            self.on_model_delete(model)
-            self.session.flush()
             self.session.delete(model)
             self.session.commit()
+            return True
         except Exception as ex:
             if not self.handle_view_exception(ex):
                 flash(
@@ -1001,46 +944,14 @@ class SqlaModelView(ModelView):
                 )
 
             self.session.rollback()
-
-            return False
-        else:
-            self.after_model_delete(model)
-
-        return True
-
-    # Default model actions
-    def is_action_allowed(self, name):
-        # Check delete action permission
-        if name == "delete" and not self.can_delete:
             return False
 
-        return super().is_action_allowed(name)
-
-    @expose_action(
-        "delete",
-        lazy_gettext("Delete"),
-        lazy_gettext("Are you sure you want to delete selected records?"),
-    )
-    def action_delete(self, ids:list):
+    def delete_models_by_pk_ids(self, ids: list):
         try:
-            stmt = delete_by_pk_ids(self.model, ids)
+            stmt = stmt_delete_by_pk_ids(self.model, ids)
             result = self.session.execute(stmt)
             self.session.commit()
-            count = result.rowcount
-
-            flash(
-                ngettext(
-                    "Record was successfully deleted.",
-                    "%(count)s records were successfully deleted.",
-                    count,
-                    count=count,
-                ),
-                "success",
-            )
+            return result.rowcount
         except Exception as ex:
-            if not self.handle_view_exception(ex):
-                raise
-
-            flash(
-                gettext("Failed to delete records. %(error)s", error=str(ex)), "error"
-            )
+            self.session.rollback()
+            raise ex

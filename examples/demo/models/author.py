@@ -1,4 +1,4 @@
-from . import db
+from typing import TYPE_CHECKING
 from typing import Optional
 from typing import List
 import enum
@@ -8,6 +8,10 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.ext.hybrid import hybrid_property
+from . import db
+
+if TYPE_CHECKING:
+    from .post import Post
 
 AVAILABLE_USER_TYPES = [
     ("admin", "Admin"),
@@ -43,7 +47,7 @@ class Author(db.Model):
 
     dialling_code: Mapped[Optional[int]]
     local_phone_number: Mapped[Optional[str]]
-    posts: Mapped[List["Post"]] = relationship(
+    posts: Mapped[List["Post"]] = relationship(  # noqa: F821
         foreign_keys="[Post.author_id]",
         back_populates="author",
         cascade="all, delete-orphan",

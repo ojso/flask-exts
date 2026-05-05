@@ -1,7 +1,9 @@
 from enum import Enum
 from wtforms import fields, validators
+from sqlalchemy import select
 from sqlalchemy import Boolean, Column
 from wtforms.fields import DateTimeLocalField as DateTimeField
+
 # from wtforms.fields import TimeField
 from ...template.forms.fields import TimeField
 from ...template.forms.fields import Select2Field
@@ -12,8 +14,6 @@ from ...template.forms.fields.ajax_select import AjaxSelectMultipleField
 from ...template.forms.fields.sqla import QuerySelectField
 from ...template.forms.fields.sqla import QuerySelectMultipleField
 from ...template.forms.fields.sqla import InlineModelFormList
-from ...template.forms.fields.sqla import InlineHstoreList
-from ...template.forms.fields.sqla import HstoreForm
 from ...template.forms.fields.sqla import InlineModelOneToOneField
 from ...template.forms.fields.inline import InlineFormField
 from ...template.forms.widgets import DatePickerWidget
@@ -84,7 +84,9 @@ class AdminModelConverter(ModelConverterBase):
                 return AjaxSelectField(loader, **kwargs)
 
         if "query_factory" not in kwargs:
-            kwargs["query_factory"] = lambda: self.session.query(remote_model)
+            kwargs["query_factory"] = (
+                lambda: self.session.execute(select(remote_model)).scalars().all()
+            )
 
         if multiple:
             return QuerySelectMultipleField(**kwargs)
@@ -113,9 +115,7 @@ class AdminModelConverter(ModelConverterBase):
         requirement_validator_specified = any(
             isinstance(v, requirement_options) for v in kwargs["validators"]
         )
-        if (column.nullable
-            or prop.direction.name != "MANYTOONE"
-        ):
+        if column.nullable or prop.direction.name != "MANYTOONE":
             kwargs["allow_blank"] = True
             if not requirement_validator_specified:
                 kwargs["validators"].append(validators.Optional())
@@ -130,7 +130,7 @@ class AdminModelConverter(ModelConverterBase):
     def convert(self, model, mapper, name, prop, field_args, hidden_pk):
         # Properly handle forced fields
         if isinstance(prop, FieldPlaceholder):
-            unbound= prop.field
+            unbound = prop.field
             return unbound.field_class(*unbound.args, **unbound.kwargs)
 
         kwargs = {"validators": [], "filters": []}
@@ -144,9 +144,7 @@ class AdminModelConverter(ModelConverterBase):
 
         # Check if it is relation or property
         if hasattr(prop, "direction"):
-            return self._convert_relation(
-                name, prop, kwargs
-            )
+            return self._convert_relation(name, prop, kwargs)
         elif hasattr(prop, "columns"):
             column = prop.columns[0]
             form_columns = getattr(self.view, "form_columns", None) or ()
@@ -336,41 +334,6 @@ class AdminModelConverter(ModelConverterBase):
         field_args.setdefault("places", None)
         return fields.DecimalField(**field_args)
 
-    @converts("sqlalchemy.dialects.postgresql.base.INET")
-    def conv_PGInet(self, field_args, **extra):
-        field_args.setdefault("label", "IP Address")
-        field_args["validators"].append(validators.IPAddress())
-        return fields.StringField(**field_args)
-
-    @converts("sqlalchemy.dialects.postgresql.base.MACADDR")
-    def conv_PGMacaddr(self, field_args, **extra):
-        field_args.setdefault("label", "MAC Address")
-        field_args["validators"].append(validators.MacAddress())
-        return fields.StringField(**field_args)
-
-    @converts(
-        "sqlalchemy.dialects.postgresql.base.UUID",
-        "sqlalchemy_utils.types.uuid.UUIDType",
-    )
-    def conv_PGUuid(self, field_args, **extra):
-        field_args.setdefault("label", "UUID")
-        field_args["validators"].append(validators.UUID())
-        field_args["filters"] = [
-            avoid_empty_strings
-        ]  # don't accept empty strings, or whitespace
-        return fields.StringField(**field_args)
-
-    @converts(
-        "sqlalchemy.dialects.postgresql.base.ARRAY", "sqlalchemy.sql.sqltypes.ARRAY"
-    )
-    def conv_ARRAY(self, field_args, **extra):
-        return Select2TagsField(save_as_list=True, **field_args)
-
-    @converts("HSTORE")
-    def conv_HSTORE(self, field_args, **extra):
-        inner_form = field_args.pop("form", HstoreForm)
-        return InlineHstoreList(InlineFormField(inner_form), **field_args)
-
     @converts("JSON")
     def convert_JSON(self, field_args, **extra):
         return JSONField(**field_args)
@@ -465,7 +428,7 @@ def get_form(
     # Contribute extra fields
     if not only and extra_fields:
         for name, field in extra_fields.items():
-            unbound = field            
+            unbound = field
             field_dict[name] = unbound.field_class(*unbound.args, **unbound.kwargs)
 
     return type(model.__name__ + "Form", (base_class,), field_dict)

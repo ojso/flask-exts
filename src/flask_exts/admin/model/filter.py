@@ -1,14 +1,9 @@
 import time
 import datetime
-import uuid
 from flask_babel import lazy_gettext
 
 
 class BaseFilter:
-    """
-    Base filter class.
-    """
-
     def __init__(self, name, options=None, data_type=None, key_name=None):
         """
         Constructor.
@@ -231,27 +226,6 @@ class BaseTimeBetweenFilter(BaseDateTimeBetweenFilter):
             for timetuple in timetuples
         ]
 
-
-class BaseUuidFilter(BaseFilter):
-    """
-    Base uuid filter
-    """
-
-    def __init__(self, name, options=None, data_type=None):
-        super().__init__(name, options, data_type="uuid")
-
-    def clean(self, value):
-        value = uuid.UUID(value)
-        return str(value)
-
-
-class BaseUuidListFilter(BaseFilter):
-    """
-    Base uuid list filter
-    """
-
-    def clean(self, value):
-        return [str(uuid.UUID(v.strip())) for v in value.split(",") if v.strip()]
 
 
 def convert(*args):

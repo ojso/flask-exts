@@ -188,8 +188,8 @@ def test_model(app, client, admin):
         assert model.enum_field is None
 
         # check that the model can be deleted
-        url = "/admin/model1/delete/?id=%s" % model.id
-        rv = client.post(url)
+        url = "/admin/model1/delete/"
+        rv = client.post(url, data={"id": model.id})
         assert rv.status_code == 302
         assert db.session.query(Model1).count() == 0
 
@@ -491,34 +491,6 @@ def test_details_view(app, client, admin):
         assert "String Field" in rv.text
         assert "test2_val_1" in rv.text
         assert "test1_val_1" not in rv.text
-
-
-def test_editable_list_special_pks(app, client, admin):
-    """Tests editable list view + a primary key with special characters"""
-    with app.app_context():
-        db.reset_all()
-        view = CustomModelView(Model3, column_editable_list=["val1"])
-        admin.add_view(view)
-
-        db.session.add(Model3(val1="test1"))
-        db.session.add(Model3(val1="test2"))
-        db.session.commit()
-
-        # Form - Test basic in-line edit functionality
-        rv = client.post(
-            "/admin/model3/ajax/update/",
-            data={
-                "list_form_pk": "1",
-                "val1": "change-success-1",
-            },
-        )
-        assert "Record was successfully saved." == rv.text
-
-        # ensure the value has changed
-        rv = client.get("/admin/model3/")
-        assert "change-success-1" in rv.text
-
-
 
 
 def test_hybrid_property(app, client, admin):

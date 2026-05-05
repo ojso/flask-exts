@@ -7,9 +7,6 @@ class TestBase:
         # theme
         theme = template.theme
         assert theme is not None
-        # funcs
-        funcs = template.funcs
-        assert funcs is not None
         # plugins
         plugin_manager = template.plugin_manager
         assert plugin_manager is not None
@@ -17,23 +14,14 @@ class TestBase:
         # print("init plugins:", [k for k in plugin_manager.enabled_plugins])
         assert len(plugin_manager.enabled_plugins) == 0
         assert len(plugin_manager.plugins) >= 9
-        for p in ['bootstrap4', 'bootstrap5', 'clipboard', 'copybutton', 'detail_filter', 'jquery', 'model_action', 'qrcode', 'rediscli', 'sphinx_copybutton']:
+        for p in ['bootstrap4', 'bootstrap5', 'clipboard', 'copybutton', 'detail_filter', 'jquery', 'list_action', 'qrcode', 'rediscli', 'sphinx_copybutton']:
             assert p in plugin_manager.plugins
 
     def test_theme(self, app):
         with app.test_request_context():
             theme = _template.theme
             assert theme.icon_size == "1em"
-
-    def test_funcs(self, app):
-        with app.test_request_context():
-            funcs = _template.funcs
-            csrf_token = funcs.csrf_token()
-            # print("csrf_token:", csrf_token)
-            assert csrf_token is not None
-            assert csrf_token == g.get("csrf_token")
-
-            
+         
     def test_plugins(self, app):
         with app.test_request_context():
             _template.plugin_manager.enable_plugin(['jquery', 'bootstrap4'])

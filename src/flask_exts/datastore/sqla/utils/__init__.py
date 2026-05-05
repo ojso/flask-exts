@@ -7,5 +7,4 @@ from .attr import is_association_proxy
 from .attr import get_field_with_path
 from .instance import get_identity
 from .expression import parse_like_term
-from .stmt import delete_by_pk_ids
-from .stmt import select_pk_values
+

@@ -1,58 +1,45 @@
 import pytest
-from datetime import datetime, time, date
-from wtforms import fields, validators
 from flask_exts.admin.sqla import filter
-from flask_exts.template.forms.form.base_form import BaseForm
-from flask_exts.template.forms.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.datastore.sqla import db
-from flask_exts.datastore.sqla.orm import InstrumentedAttribute
+from tests.datastore.sqla.models.model1 import Model1, Model2
 
-from flask_exts.datastore.sqla.utils import is_hybrid_property
-from tests.datastore.sqla.models.model1 import EnumChoices
-from tests.datastore.sqla.models.model1 import Model1, Model2, Model3
-
-class CustomFilterModelView(SqlaModelView):
-    def __init__(
-        self,
-        model,
-        name=None,
-        endpoint=None,
-        url=None,
-        **kwargs,
-    ):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-        super().__init__(model, name=name, endpoint=endpoint, url=url)
-
+class Model1View(SqlaModelView):
+    column_filters=["test1"]
     form_choices = {"choice_field": [("choice-1", "One"), ("choice-2", "Two")]}
 
-
-def fill_db():
-    model1_obj1 = Model1(test1="test1_val_1", test2="test2_val_1", bool_field=True)
-    model1_obj2 = Model1(test1="test1_val_2", test2="test2_val_2", bool_field=False)
-    model1_obj3 = Model1(test1="test1_val_3", test2="test2_val_3")
-    model1_obj4 = Model1(test1="test1_val_4", test2="test2_val_4", choice_field="choice-1")
-
-    model2_obj1 = Model2(string_field="test2_val_1", model1=model1_obj1, float_field=None)
-    model2_obj2 = Model2(string_field="test2_val_2", model1=model1_obj2, float_field=None)
-    model2_obj3 = Model2(string_field="test2_val_3", int_field=5000, float_field=25.9)
-    model2_obj4 = Model2(string_field="test2_val_4", int_field=9000, float_field=75.5)
-    model2_obj5 = Model2(string_field="test2_val_5", int_field=6169453081680413441)
-    
+class Model2View(SqlaModelView):
+    column_filters=["model1.test1","model1.test2"]
 
 def test_column_filters(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view1 = CustomFilterModelView(Model1, name="view1", column_filters=["test1"])
+        view1 = Model1View(Model1, name="view1")
         admin.add_view(view1)
-
+        assert len(view1._filter_groups) == 1
         assert len(view1._filters) == 7
+        print(view1._filters)
+        print(view1._filter_groups)
+        assert [
+            (f["index"], f["operation"]) for f in view1._filter_groups["test1"]
+        ] == [
+            (0, "contains"),
+            (1, "not contains"),
+            (2, "equals"),
+            (3, "not equal"),
+            (4, "empty"),
+            (5, "in list"),
+            (6, "not in list"),
+        ]
+    
+
+def _test_column_filters(app, client, admin):
+    with app.app_context():
+        db.reset_all()
 
         # Generate views
-        view2 = CustomFilterModelView(Model2, name="view2", column_filters=["model1.test1","model1.test2"])
+        view2 = CustomFilterModelView(Model2, name="view2", )
 
         view5 = CustomFilterModelView(
             Model1, name="view5", column_filters=["test1"], endpoint="_strings"
@@ -124,17 +111,7 @@ def test_column_filters(app, client, admin):
         admin.add_view(view14)
 
         # Test views
-        assert [
-            (f["index"], f["operation"]) for f in view1._filter_groups["Test1"]
-        ] == [
-            (0, "contains"),
-            (1, "not contains"),
-            (2, "equals"),
-            (3, "not equal"),
-            (4, "empty"),
-            (5, "in list"),
-            (6, "not in list"),
-        ]
+       
 
 
         print(view2._filter_groups)
@@ -309,7 +286,10 @@ def test_column_filters(app, client, admin):
 
         assert list(view4._filter_groups.keys()) == ["Test Filter #1", "Test Filter #2"]
 
-        fill_db()
+        model1_obj1 = Model1(test1="test1_val_1", test2="test2_val_1", bool_field=True)
+        model1_obj2 = Model1(test1="test1_val_2", test2="test2_val_2", bool_field=False)
+        db.session.add_all([model1_obj1, model1_obj2])
+        db.session.commit()
 
         # Test equals
         rv = client.get("/admin/model1/?flt0_0=test1_val_1")

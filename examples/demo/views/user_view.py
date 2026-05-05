@@ -10,6 +10,7 @@ class UserView(SqlaModelView):
     column_filters = ("id", "username")
     # form_columns = ("username", "keywords")
     form_columns = ("username",)
+    can_delete = False
 
 
 userview = UserView(MyUser, name="Users", endpoint="users")

@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from . import db
 from datetime import datetime
 from typing import List
@@ -7,6 +8,9 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from .tag import Tag
 from .post_tag import post_tag_table
+
+if TYPE_CHECKING:
+    from .author import Author
 
 
 class Post(db.Model):

@@ -1,4 +1,4 @@
-class ModelAction {
+class ListAction {
     constructor(actionErrorMessage, actionsData) {
         this.actionErrorMessage = actionErrorMessage;
         this.actionsData = actionsData;

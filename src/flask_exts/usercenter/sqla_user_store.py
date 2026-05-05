@@ -27,12 +27,12 @@ class SqlaUserStore(BaseUserStore):
             stmt_filter_username = select(self.user_class).filter_by(username=username)
             user_exist_username = db.session.execute(stmt_filter_username).scalar()
             if user_exist_username is not None:
-                return ("invalid username", None)
+                return ("username already exists", None)
         if email:
             stmt_filter_email = select(self.user_class).filter_by(email=email)
             user_exist_email = db.session.execute(stmt_filter_email).scalar()
             if user_exist_email is not None:
-                return ("invalid email", None)
+                return ("email already exists", None)
         user = self.user_class()
         if username:
             user.username = username

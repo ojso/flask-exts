@@ -1,6 +1,6 @@
 import os.path as op
 from flask import Blueprint
-from .funcs import Funcs
+from .funcs import init_template_funcs
 from .plugins.plugin_manager import PluginManager
 from .theme import Theme
 
@@ -33,7 +33,7 @@ class Template:
         app.register_blueprint(blueprint)
 
     def init_funcs(self, app):
-        self.funcs = Funcs()
+        init_template_funcs(app)
 
     def init_plugins(self, app):
         self.plugin_manager = PluginManager()

@@ -4,6 +4,7 @@ from sqlalchemy.sql import not_, or_
 from ..model import filter
 from ...datastore.sqla.utils import parse_like_term
 
+
 class BaseSQLAFilter(filter.BaseFilter):
     """
     Base SQLAlchemy filter.
@@ -96,9 +97,7 @@ class FilterEmpty(BaseSQLAFilter, filter.BaseBooleanFilter):
 
 class FilterInList(BaseSQLAFilter):
     def __init__(self, column, name, options=None, data_type=None):
-        super().__init__(
-            column, name, options, data_type="select2-tags"
-        )
+        super().__init__(column, name, options, data_type="select2-tags")
 
     def clean(self, value):
         return [v.strip() for v in value.split(",") if v.strip()]
@@ -195,9 +194,7 @@ class DateSmallerFilter(FilterSmaller, filter.BaseDateFilter):
 
 class DateBetweenFilter(BaseSQLAFilter, filter.BaseDateBetweenFilter):
     def __init__(self, column, name, options=None, data_type=None):
-        super().__init__(
-            column, name, options, data_type="daterangepicker"
-        )
+        super().__init__(column, name, options, data_type="daterangepicker")
 
     def apply(self, query, value, alias=None):
         start, end = value
@@ -231,9 +228,7 @@ class DateTimeSmallerFilter(FilterSmaller, filter.BaseDateTimeFilter):
 
 class DateTimeBetweenFilter(BaseSQLAFilter, filter.BaseDateTimeBetweenFilter):
     def __init__(self, column, name, options=None, data_type=None):
-        super().__init__(
-            column, name, options, data_type="datetimerangepicker"
-        )
+        super().__init__(column, name, options, data_type="datetimerangepicker")
 
     def apply(self, query, value, alias=None):
         start, end = value
@@ -267,9 +262,7 @@ class TimeSmallerFilter(FilterSmaller, filter.BaseTimeFilter):
 
 class TimeBetweenFilter(BaseSQLAFilter, filter.BaseTimeBetweenFilter):
     def __init__(self, column, name, options=None, data_type=None):
-        super().__init__(
-            column, name, options, data_type="timerangepicker"
-        )
+        super().__init__(column, name, options, data_type="timerangepicker")
 
     def apply(self, query, value, alias=None):
         start, end = value
@@ -437,22 +430,6 @@ class ChoiceTypeNotLikeFilter(FilterNotLike):
             return query
 
 
-class UuidFilterEqual(FilterEqual, filter.BaseUuidFilter):
-    pass
-
-
-class UuidFilterNotEqual(FilterNotEqual, filter.BaseUuidFilter):
-    pass
-
-
-class UuidFilterInList(filter.BaseUuidListFilter, FilterInList):
-    pass
-
-
-class UuidFilterNotInList(filter.BaseUuidListFilter, FilterNotInList):
-    pass
-
-
 # Base SQLA filter field converter
 class FilterConverter(filter.BaseFilterConverter):
     strings = (
@@ -531,13 +508,7 @@ class FilterConverter(filter.BaseFilterConverter):
         ChoiceTypeNotLikeFilter,
         FilterEmpty,
     )
-    uuid_filters = (
-        UuidFilterEqual,
-        UuidFilterNotEqual,
-        FilterEmpty,
-        UuidFilterInList,
-        UuidFilterNotInList,
-    )
+
     arrow_type_filters = (DateTimeGreaterFilter, DateTimeSmallerFilter, FilterEmpty)
 
     def convert(self, type_name, column, name, **kwargs):
@@ -569,7 +540,7 @@ class FilterConverter(filter.BaseFilterConverter):
     def conv_string(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.strings]
 
-    @filter.convert("UUIDType", "ColorType", "TimezoneType", "CurrencyType")
+    @filter.convert("ColorType", "TimezoneType", "CurrencyType")
     def conv_string_keys(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.string_key_filters]
 
@@ -589,9 +560,7 @@ class FilterConverter(filter.BaseFilterConverter):
     def conv_int(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.int_filters]
 
-    @filter.convert(
-        "float", "real", "decimal", "numeric", "double_precision", "double"
-    )
+    @filter.convert("float", "real", "decimal", "numeric", "double_precision", "double")
     def conv_float(self, column, name, **kwargs):
         return [f(column, name, **kwargs) for f in self.float_filters]
 
@@ -617,7 +586,3 @@ class FilterConverter(filter.BaseFilterConverter):
             options = [(v, v) for v in column.type.enums]
 
         return [f(column, name, options, **kwargs) for f in self.enum]
-
-    @filter.convert("uuid")
-    def conv_uuid(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.uuid_filters]

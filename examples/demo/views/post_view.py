@@ -28,7 +28,7 @@ class PostView(SqlaModelView):
     ]
     column_default_sort = ("date", True)
     create_modal = True
-    edit_modal = True
+    # edit_modal = True
     # details_modal = True
 
     column_sortable_list = [
