@@ -1,12 +1,12 @@
 from typing import Optional, Dict, List, Tuple
 from flask import flash
 from flask_babel import gettext, ngettext, lazy_gettext
+from sqlalchemy.orm import class_mapper
 from sqlalchemy.sql import select
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm import joinedload, selectinload, aliased
 from sqlalchemy.sql.expression import desc
 from sqlalchemy import Boolean, func, or_
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.expression import cast
 from sqlalchemy import Unicode
 from ...datastore.sqla import db
@@ -24,13 +24,7 @@ from ...datastore.sqla.utils import get_model_mapper
 from ...datastore.sqla.utils import get_primary_key
 from ...datastore.sqla.utils import get_identity
 from ...datastore.sqla.stmt import stmt_delete_by_pk_ids
-
-
-def need_join(model, table):
-    from sqlalchemy import inspect
-
-    mapper = inspect(model)
-    return table not in mapper.tables
+from .query import Query
 
 
 class SqlaModelView(ModelView):
@@ -67,49 +61,6 @@ class SqlaModelView(ModelView):
 
         - If you prefix your search term with ``=``, it will perform an exact match.
           For example, if you entered ``=ZZZ``, the statement ``ILIKE 'ZZZ'`` will be used.
-    """
-
-    column_filters = None
-    """
-        Collection of the column filters.
-
-        Can contain either field names or instances of
-        :class:`.sqla.filters.BaseSQLAFilter` classes.
-
-        Filters will be grouped by name when displayed in the drop-down.
-
-        For example::
-
-            class MyModelView(BaseModelView):
-                column_filters = ('user', 'email')
-
-        or::
-
-            from .sqla.filters import BooleanEqualFilter
-
-            class MyModelView(BaseModelView):
-                column_filters = (BooleanEqualFilter(column=User.name, name='Name'),)
-
-        or::
-
-            from .sqla.filters import BaseSQLAFilter
-
-            class FilterLastNameBrown(BaseSQLAFilter):
-                def apply(self, query, value, alias=None):
-                    if value == '1':
-                        return query.filter(self.column == "Brown")
-                    else:
-                        return query.filter(self.column != "Brown")
-
-                def operation(self):
-                    return 'is Brown'
-
-            class MyModelView(BaseModelView):
-                column_filters = [
-                    FilterLastNameBrown(
-                        User.last_name, 'Last Name', options=(('1', 'Yes'), ('0', 'No'))
-                    )
-                ]
     """
 
     model_form_converter = form.AdminModelConverter
@@ -287,13 +238,6 @@ class SqlaModelView(ModelView):
         #     [r.key for r in self._auto_joins[0]], [r.key for r in self._auto_joins[1]]
         # )
 
-    # Error handler
-    def handle_view_exception(self, exc):
-        if isinstance(exc, IntegrityError):
-            flash(gettext("Integrity error. %(message)s", message=str(exc)), "error")
-            return True
-
-        return super().handle_view_exception(exc)
 
     def _init_auto_joins(self):
         """
@@ -569,7 +513,7 @@ class SqlaModelView(ModelView):
         flt = self.filter_converter.convert(
             type(column.type).__name__,
             column,
-            visible_name,
+            name,
             options=self.column_choices.get(name),
         )
 
@@ -577,17 +521,6 @@ class SqlaModelView(ModelView):
             self._filter_joins[name] = joins
 
         return flt
-
-    def handle_filter(self, filter):
-        if isinstance(filter, BaseSQLAFilter):
-            column = filter.column
-
-            if isinstance(column, InstrumentedAttribute) and need_join(
-                self.model, column.table
-            ):
-                self._filter_joins[column] = [column.table]
-
-        return filter
 
     def scaffold_form(self):
         """
@@ -757,6 +690,9 @@ class SqlaModelView(ModelView):
         return query, count_query, joins, count_joins
 
     def _apply_filters(self, query, count_query, joins, count_joins, filters):
+        # print(self._filters)
+        print(self._filter_joins)
+        # print(filters)
         for idx, flt_name, value in filters:
             flt = self._filters[idx]
 
@@ -764,8 +700,7 @@ class SqlaModelView(ModelView):
             count_alias = None
 
             if isinstance(flt, BaseSQLAFilter):
-                # If no key_name is specified, use filter column as filter key
-                filter_key = flt.key_name or flt.column
+                filter_key = flt.name
                 path = self._filter_joins.get(filter_key, [])
 
                 query, joins, alias = self._apply_path_joins(query, joins, path)
@@ -780,7 +715,6 @@ class SqlaModelView(ModelView):
 
             if count_query is not None:
                 count_query = flt.apply(count_query, clean_value, count_alias)
-
         return query, count_query, joins, count_joins
 
     def _apply_pagination(self, query, page, page_size):
@@ -845,7 +779,9 @@ class SqlaModelView(ModelView):
             )
 
         # Calculate number of rows if necessary
+        print(count_query)
         count = self.session.execute(count_query).scalar()
+        print(count)
 
         # Auto join
         if joinedloads := self._auto_joins[0]:
@@ -858,7 +794,7 @@ class SqlaModelView(ModelView):
 
         # Pagination
         query = self._apply_pagination(query, page, page_size)
-
+        # result = self.session.execute(query).unique().scalars().all()
         result = self.session.execute(query).scalars().all()
 
         return count, result
@@ -874,7 +810,6 @@ class SqlaModelView(ModelView):
             id = tuple(id.split(","))
         return self.session.get(self.model, id)
 
-    # Model handlers
     def create_model(self, form):
         """
         Create model from form.
@@ -886,21 +821,14 @@ class SqlaModelView(ModelView):
             instance = self.model()
             form.populate_obj(instance)
             self.session.add(instance)
-            self._on_model_change(form, instance, True)
             self.session.commit()
         except Exception as ex:
-            if not self.handle_view_exception(ex):
-                flash(
-                    gettext("Failed to create record. %(error)s", error=str(ex)),
-                    "error",
-                )
-
             self.session.rollback()
-
-            return False
-        else:
-            self.after_model_change(form, instance, True)
-
+            flash(
+                gettext("Failed to create record. %(error)s", error=str(ex)),
+                "error",
+            )            
+            return None
         return instance
 
     def update_model(self, form, model):
@@ -914,21 +842,14 @@ class SqlaModelView(ModelView):
         """
         try:
             form.populate_obj(model)
-            self._on_model_change(form, model, False)
             self.session.commit()
         except Exception as ex:
-            if not self.handle_view_exception(ex):
-                flash(
-                    gettext("Failed to update record. %(error)s", error=str(ex)),
-                    "error",
-                )
-
             self.session.rollback()
-
+            flash(
+                gettext("Failed to update record. %(error)s", error=str(ex)),
+                "error",
+            )            
             return False
-        else:
-            self.after_model_change(form, model, False)
-
         return True
 
     def delete_model(self, model):
@@ -937,12 +858,10 @@ class SqlaModelView(ModelView):
             self.session.commit()
             return True
         except Exception as ex:
-            if not self.handle_view_exception(ex):
-                flash(
-                    gettext("Failed to delete record. %(error)s", error=str(ex)),
-                    "error",
-                )
-
+            flash(
+                gettext("Failed to delete record. %(error)s", error=str(ex)),
+                "error",
+            )
             self.session.rollback()
             return False
 

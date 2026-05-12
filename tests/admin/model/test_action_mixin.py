@@ -1,10 +1,10 @@
 import pytest
 from flask_exts.admin import expose_url
 from flask_exts.admin.view import View
-from flask_exts.admin.model.action_mixin import ActionMixin
+from flask_exts.admin.model.actions import ActionsMixin
 
 
-class MockView(View, ActionMixin):
+class MockView(View, ActionsMixin):
     @expose_url("/")
     def index(self):
         return "Success!"

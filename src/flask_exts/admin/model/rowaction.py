@@ -11,7 +11,9 @@ class BaseRowAction:
 
 class ViewRowAction(BaseRowAction):
     def __init__(self):
-        super().__init__(type="view_row", title=lazy_gettext("View Record"), icon="view")
+        super().__init__(
+            type="view_row", title=lazy_gettext("View Record"), icon="view"
+        )
 
 
 class ViewPopupRowAction(BaseRowAction):
@@ -70,35 +72,33 @@ class EndpointLinkRowAction(BaseRowAction):
         return url
 
 
-
 class RowActionMixin:
     def __init__(self, *args, **kwargs):
-        self.init_row_actions()
+        self._row_actions = []
         super().__init__(*args, **kwargs)
+
+    def init_row_actions(self):
+        """
+        Return list of row action objects to display in the list view.
+        """
+
+        if self.details_modal:
+            self._row_actions.append(ViewPopupRowAction())
+        else:
+            self._row_actions.append(ViewRowAction())
+
+        if self.can_edit:
+            if self.edit_modal:
+                self._row_actions.append(EditPopupRowAction())
+            else:
+                self._row_actions.append(EditRowAction())
+
+        if self.can_delete:
+            self._row_actions.append(DeleteRowAction())
 
     def get_row_actions(self):
         """
         Return a list of row actions.
         Override this method to provide custom row actions.
         """
-        return self.row_actions
-
-    def init_row_actions(self):
-        """
-        Return list of row action objects to display in the list view.
-        """
-        self.row_actions = []
-
-        if self.details_modal:
-            self.row_actions.append(ViewPopupRowAction())
-        else:
-            self.row_actions.append(ViewRowAction())
-
-        if self.can_edit:
-            if self.edit_modal:
-                self.row_actions.append(EditPopupRowAction())
-            else:
-                self.row_actions.append(EditRowAction())
-
-        if self.can_delete:
-            self.row_actions.append(DeleteRowAction())
+        return self._row_actions

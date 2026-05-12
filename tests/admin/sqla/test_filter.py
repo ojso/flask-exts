@@ -72,15 +72,6 @@ def _test_column_filters(app, client, admin):
         )
         admin.add_view(view9)
 
-        view10 = CustomFilterModelView(
-            Model1,
-            name="view10",
-            column_filters=["test1"],
-            endpoint="_model3",
-            named_filter_urls=True,
-        )
-        admin.add_view(view10)
-
         view11 = CustomFilterModelView(
             Model1,
             name="view11",

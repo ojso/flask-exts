@@ -1,11 +1,9 @@
 import warnings
-import re
 import csv
 import mimetypes
 import time
 from typing import Optional
 from math import ceil
-from collections import OrderedDict
 from functools import reduce
 import tablib
 from flask import request
@@ -21,18 +19,60 @@ from wtforms.fields import HiddenField
 from wtforms.validators import ValidationError, InputRequired
 from flask_babel import gettext, ngettext
 from ..view import View
-from .action_mixin import ActionMixin
-from .row_action_mixin import RowActionMixin
+from .actions import ActionsMixin
+from .rowaction import RowActionMixin
+from .filter_mixin import FilterMixin
 from ..exposer import expose_url
 from .types import T_COLUMN_LIST, T_FORMATTERS
 from .typefmt import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
 from .ajax import AjaxModelLoader
-from .view_args import ViewArgs
-from .filter_group import FilterGroup
-from .filter import BaseFilter
+
+class ViewArgs:
+    """
+    List view arguments.
+    """
+
+    def __init__(
+        self,
+        page=None,
+        page_size=None,
+        sort=None,
+        sort_desc=None,
+        search=None,
+        filters=None,
+        extra_args=None,
+    ):
+        self.page = page
+        self.page_size = page_size
+        self.sort = sort
+        self.sort_desc = bool(sort_desc)
+        self.search = search
+        self.filters = filters
+
+        if not self.search:
+            self.search = None
+
+        self.extra_args = extra_args or dict()
+
+    def clone(self, **kwargs):
+        if self.filters:
+            flt = list(self.filters)
+        else:
+            flt = None
+
+        kwargs.setdefault("page", self.page)
+        kwargs.setdefault("page_size", self.page_size)
+        kwargs.setdefault("sort", self.sort)
+        kwargs.setdefault("sort_desc", self.sort_desc)
+        kwargs.setdefault("search", self.search)
+        kwargs.setdefault("filters", flt)
+        kwargs.setdefault("extra_args", dict(self.extra_args))
+
+        return ViewArgs(**kwargs)
 
 
-class ModelView(View, ActionMixin, RowActionMixin):
+
+class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
     """
     Model view.
 
@@ -339,27 +379,6 @@ class ModelView(View, ActionMixin, RowActionMixin):
                 }
     """
 
-    column_filters = None
-    """
-        Collection of the column filters.
-
-        Can contain either field names or instances of :class:`~.model.filters.BaseFilter` classes.
-
-        Example::
-
-            class MyModelView(BaseModelView):
-                column_filters = ('user', 'email')
-    """
-
-    named_filter_urls = False
-    """
-        Set to True to use human-readable names for filters in URL parameters.
-
-        False by default so as to be robust across translations.
-
-        Changing this parameter will break any existing URLs that have filters.
-    """
-
     form_args = None
     """
         Dictionary of form field arguments. Refer to WTForms documentation for
@@ -519,10 +538,6 @@ class ModelView(View, ActionMixin, RowActionMixin):
         Sets the page size options available, if `can_set_page_size` is True
     """
 
-    # Used to generate filter query string name
-    filter_char_re = re.compile("[^a-z0-9 ]")
-    filter_compact_re = re.compile(" +")
-
     def __init__(
         self,
         model,
@@ -561,6 +576,13 @@ class ModelView(View, ActionMixin, RowActionMixin):
         self._init_view()
 
     def _init_view(self):
+        # ActionMixin
+        self.init_actions()
+
+        # RowActionMixin
+        self.init_row_actions()
+
+        #
         self._list_columns = self.get_list_columns()
         self._sortable_columns = self.get_sortable_columns()
         self._details_columns = self.get_details_columns()
@@ -573,7 +595,7 @@ class ModelView(View, ActionMixin, RowActionMixin):
         self._search_supported = self.init_search()
 
         # Filters
-        self._init_filters()
+        self.init_filters()
 
         # Column formatters
         if self.column_formatters_export is None:
@@ -610,31 +632,6 @@ class ModelView(View, ActionMixin, RowActionMixin):
             self._list_form_class = self.get_list_form()
         else:
             self.column_editable_list = {}
-
-    def _init_filters(self):
-        self._filters = self.get_filters()
-
-        if self._filters:
-            self._filter_groups = OrderedDict()
-            self._filter_args = {}
-
-            for i, flt in enumerate(self._filters):
-                if flt.name not in self._filter_groups:
-                    self._filter_groups[flt.name] = FilterGroup(flt.name)
-                self._filter_groups[flt.name].append(
-                    {
-                        "index": i,
-                        "arg": self.get_filter_arg(i, flt),
-                        "operation": flt.operation(),
-                        "options": flt.get_options() or None,
-                        "type": flt.data_type,
-                    }
-                )
-
-                self._filter_args[self.get_filter_arg(i, flt)] = (i, flt)
-        else:
-            self._filter_groups = None
-            self._filter_args = None
 
     def get_pk_value(self, obj):
         """
@@ -742,86 +739,6 @@ class ModelView(View, ActionMixin, RowActionMixin):
         """
         Return search placeholder text.
         """
-        return None
-
-    def scaffold_filters(self, name):
-        """
-        Generate filter object for the given name
-
-        :param name:
-            Name of the field
-        """
-        return None
-
-    def handle_filter(self, filter):
-        """
-        Postprocess (add joins, etc) for a filter.
-
-        :param filter:
-            Filter object to postprocess
-        """
-        return filter
-
-    def get_filters(self):
-        """
-        Return a list of filter objects.
-        """
-        if self.column_filters:
-            filters = []
-
-            for f in self.column_filters:
-                if isinstance(f, BaseFilter):
-                    filters.append(self.handle_filter(f))
-                else:
-                    flts = self.scaffold_filters(f)
-                    if flts:
-                        filters.extend(flts)
-                    else:
-                        raise Exception("Unsupported filter type %s" % f)
-            return filters
-        else:
-            return None
-
-    def get_filter_arg(self, index, flt):
-        """
-        Given a filter `flt`, return a unique name for that filter in this view.
-
-        Does not include the `flt[n]_` portion of the filter name.
-
-        :param index:
-            Filter index in _filters array
-        :param flt:
-            Filter instance
-        """
-        if self.named_filter_urls:
-            operation = flt.operation()
-
-            try:
-                # get lazy string original value
-                operation = operation._args[0]
-            except AttributeError:
-                pass
-
-            name = ("%s %s" % (flt.name, operation)).lower()
-            name = self.filter_char_re.sub("", name)
-            name = self.filter_compact_re.sub("_", name)
-            return name
-        else:
-            return str(index)
-
-    def _get_filter_groups(self):
-        """
-        Returns non-lazy version of filter strings
-        """
-        if self._filter_groups:
-            results = OrderedDict()
-
-            for group in self._filter_groups.values():
-                key, items = group.non_lazy()
-                results[key] = items
-
-            return results
-
         return None
 
     # Form helpers
@@ -1047,70 +964,6 @@ class ModelView(View, ActionMixin, RowActionMixin):
         """
         raise NotImplementedError("Please implement get_one method")
 
-    # Exception handler
-    def handle_view_exception(self, exc):
-        if isinstance(exc, ValidationError):
-            flash(exc, "error")
-            return True
-        return False
-
-    # Model event handlers
-    def on_model_change(self, form, model, is_created):
-        """
-        Perform some actions before a model is created or updated.
-
-        Called from create_model and update_model in the same transaction
-        (if it has any meaning for a store backend).
-
-        By default does nothing.
-
-        :param form:
-            Form used to create/update model
-        :param model:
-            Model that will be created/updated
-        :param is_created:
-            Will be set to True if model was created and to False if edited
-        """
-        pass
-
-    def _on_model_change(self, form, model, is_created):
-        """
-        Compatibility helper.
-        """
-        try:
-            self.on_model_change(form, model, is_created)
-        except TypeError as e:
-            if re.match(
-                r"on_model_change\(\) takes .* 3 .* arguments .* 4 .* given .*", str(e)
-            ):
-                msg = (
-                    "%s.on_model_change() now accepts third "
-                    + "parameter is_created. Please update your code"
-                ) % self.model
-                warnings.warn(msg)
-
-                self.on_model_change(form, model)
-            else:
-                raise
-
-    def after_model_change(self, form, model, is_created):
-        """
-        Perform some actions after a model was created or updated and
-        committed to the database.
-
-        Called from create_model after successful database commit.
-
-        By default does nothing.
-
-        :param form:
-            Form used to create/update model
-        :param model:
-            Model that was created/updated
-        :param is_created:
-            True if model was created, False if model was updated
-        """
-        pass
-
     def create_model(self, form):
         """
         Create model from the form.
@@ -1152,48 +1005,6 @@ class ModelView(View, ActionMixin, RowActionMixin):
         """
         raise NotImplementedError()
 
-    def get_empty_list_message(self):
-        return gettext("There are no items in the table.")
-
-    def get_invalid_value_msg(self, value, filter):
-        """
-        Returns message, which should be printed in case of failed validation.
-        :param value: Invalid value
-        :param filter: Filter
-        :return: string
-        """
-        return gettext("Invalid Filter Value: %(value)s", value=value)
-
-    # URL generation helpers
-    def _get_list_filter_args(self):
-        if self._filters:
-            filters = []
-
-            for arg in request.args:
-                if not arg.startswith("flt"):
-                    continue
-
-                if "_" not in arg:
-                    continue
-
-                pos, key = arg[3:].split("_", 1)
-
-                if key in self._filter_args:
-                    idx, flt = self._filter_args[key]
-
-                    value = request.args[arg]
-
-                    if flt.validate(value):
-                        data = (pos, (idx, flt.name, value))
-                        filters.append(data)
-                    else:
-                        flash(self.get_invalid_value_msg(value, flt), "error")
-
-            # Sort filters
-            return [v[1] for v in sorted(filters, key=lambda n: n[0])]
-
-        return None
-
     def _get_list_extra_args(self):
         """
         Return arguments from query string.
@@ -1221,24 +1032,6 @@ class ModelView(View, ActionMixin, RowActionMixin):
                 ]
             ),
         )
-
-    def _get_filters(self, filters):
-        """
-        Get active filters as dictionary of URL arguments and values
-
-        :param filters:
-            List of filters from ViewArgs object
-        """
-        kwargs = {}
-
-        if filters:
-            for i, pair in enumerate(filters):
-                idx, flt_name, value = pair
-
-                key = "flt%d_%s" % (i, self.get_filter_arg(idx, self._filters[idx]))
-                kwargs[key] = value
-
-        return kwargs
 
     # URL generation helpers
     def _get_list_url(self, view_args):
@@ -1397,16 +1190,6 @@ class ModelView(View, ActionMixin, RowActionMixin):
 
     def get_redirect_target(self, param_name="url", endpoint=".index_view"):
         return request.values.get(param_name) or self.get_url(endpoint)
-
-    def delete_models_by_pk_ids(self, ids: list):
-        """
-        Delete models by their IDs.
-
-        :param ids:
-            List of model IDs to delete
-        """
-
-        raise NotImplementedError()
 
     def is_action_allowed(self, name):
         if name == "delete" and not self.can_delete:

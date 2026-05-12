@@ -2,15 +2,22 @@ import enum
 from flask_babel import lazy_gettext
 from sqlalchemy.sql import not_, or_
 from ..model import filter
+from ..model.filter import BaseFilter
+from ..model.filter import BaseBooleanFilter
+from ..model.filter import BaseIntFilter
+from ..model.filter import BaseFloatFilter
+from ..model.filter import BaseDateFilter
+from ..model.filter import BaseDateTimeFilter
+from ..model.filter import BaseTimeFilter
 from ...datastore.sqla.utils import parse_like_term
+from .query import Query
 
-
-class BaseSQLAFilter(filter.BaseFilter):
+class BaseSQLAFilter(BaseFilter):
     """
     Base SQLAlchemy filter.
     """
 
-    def __init__(self, column, name, options=None, data_type=None):
+    def __init__(self, column: str, name, options=None, data_type=None):
         """
         Constructor.
 
@@ -30,7 +37,7 @@ class BaseSQLAFilter(filter.BaseFilter):
     def get_column(self, alias):
         return self.column if alias is None else getattr(alias, self.column.key)
 
-    def apply(self, query, value, alias=None):
+    def apply(self, query:Query, value, alias=None):
         return super().apply(query, value)
 
 
@@ -84,7 +91,7 @@ class FilterSmaller(BaseSQLAFilter):
         return lazy_gettext("smaller than")
 
 
-class FilterEmpty(BaseSQLAFilter, filter.BaseBooleanFilter):
+class FilterEmpty(BaseSQLAFilter, BaseBooleanFilter):
     def apply(self, query, value, alias=None):
         if value == "1":
             return query.filter(self.get_column(alias).is_(None))
@@ -120,27 +127,27 @@ class FilterNotInList(FilterInList):
 
 
 # Customized type filters
-class BooleanEqualFilter(FilterEqual, filter.BaseBooleanFilter):
+class BooleanEqualFilter(FilterEqual, BaseBooleanFilter):
     pass
 
 
-class BooleanNotEqualFilter(FilterNotEqual, filter.BaseBooleanFilter):
+class BooleanNotEqualFilter(FilterNotEqual, BaseBooleanFilter):
     pass
 
 
-class IntEqualFilter(FilterEqual, filter.BaseIntFilter):
+class IntEqualFilter(FilterEqual, BaseIntFilter):
     pass
 
 
-class IntNotEqualFilter(FilterNotEqual, filter.BaseIntFilter):
+class IntNotEqualFilter(FilterNotEqual, BaseIntFilter):
     pass
 
 
-class IntGreaterFilter(FilterGreater, filter.BaseIntFilter):
+class IntGreaterFilter(FilterGreater, BaseIntFilter):
     pass
 
 
-class IntSmallerFilter(FilterSmaller, filter.BaseIntFilter):
+class IntSmallerFilter(FilterSmaller, BaseIntFilter):
     pass
 
 

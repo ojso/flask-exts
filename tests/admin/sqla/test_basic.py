@@ -733,36 +733,6 @@ def test_relations():
     pass
 
 
-def test_on_model_change_delete(app, client, admin):
-    with app.app_context():
-        db.reset_all()
-
-        class ModelView(CustomModelView):
-            def on_model_change(self, form, model, is_created):
-                model.test1 = model.test1.upper()
-
-            def on_model_delete(self, model):
-                self.deleted = True
-
-        view = ModelView(Model1)
-        admin.add_view(view)
-
-        client.post("/admin/model1/new/", data=dict(test1="test1large", test2="test2"))
-
-        model = db.session.query(Model1).first()
-        assert model.test1 == "TEST1LARGE"
-
-        url = "/admin/model1/edit/?id=%s" % model.id
-        client.post(url, data=dict(test1="test1small", test2="test2large"))
-
-        model = db.session.query(Model1).first()
-        assert model.test1 == "TEST1SMALL"
-
-        url = "/admin/model1/delete/?id=%s" % model.id
-        client.post(url)
-        assert view.deleted
-
-
 def test_multiple_delete(app, client, admin):
     with app.app_context():
         db.reset_all()

@@ -266,8 +266,6 @@ class InlineModelFormList(InlineFieldList):
 
             field.populate_obj(model, None)
 
-            self.inline_view._on_model_change(field, model, is_created)
-
 
 class InlineModelOneToOneField(InlineModelFormField):
     def __init__(self, form, session, model, prop, inline_view, **kwargs):

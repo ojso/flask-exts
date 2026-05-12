@@ -8,7 +8,7 @@ from ..exposer import expose_url
 from ..exposer import expose_action
 
 
-class ActionMixin:
+class ActionsMixin:
     """
     Mixin to add mass-model actions to a view. To create an action, define a method and decorate it with `@expose_action` decorator. For example:
         class MyView(View):
@@ -30,15 +30,28 @@ class ActionMixin:
     def __init__(self, *args, **kwargs):
         self._actions = {}
         self._actions_data = []
+        self._action_form_class = self.init_action_form_class()
+        super().__init__(*args, **kwargs)
+
+    def init_actions(self):
         for name, attr in inspect.getmembers(self, predicate=inspect.ismethod):
             if callable(attr) and hasattr(attr, "_action"):
                 name, text, confirmation = attr._action
                 self._actions[name] = attr
                 self._actions_data.append((name, text, confirmation))
 
-        self._action_form_class = self.get_action_form()
+    def init_action_form_class(self):
+        """
+        Create form class for a model action.
+        """
 
-        super().__init__(*args, **kwargs)
+        class ActionForm(self.form_base_class):
+            action = HiddenField()
+            # get_redirect_target() will use url to redirect after action is performed.
+            url = HiddenField()
+            # rowid = HiddenField() # Not needed since we get selected ids from request.form.getlist('rowid')
+
+        return ActionForm
 
     def is_action_allowed(self, name):
         """
@@ -58,20 +71,6 @@ class ActionMixin:
                 actions_data.append((name, text, confirmation))
         return actions_data
 
-    def get_action_form(self):
-        """
-        Create form class for a model action.
-        """
-
-        class ActionForm(self.form_base_class):
-            action = HiddenField()
-            url = (
-                HiddenField()
-            )  # get_redirect_target() will use the url to redirect after action is performed,
-            # rowid = HiddenField() # Not needed since we get selected ids from request.form.getlist('rowid')
-
-        return ActionForm
-
     def action_form(self, *args, **kwargs):
         """
         Instantiate model action form and return it.
@@ -79,6 +78,16 @@ class ActionMixin:
         Override to implement custom behavior.
         """
         return self._action_form_class(*args, **kwargs)
+
+    def delete_models_by_pk_ids(self, ids: list):
+        """
+        Delete models by their IDs.
+
+        :param ids:
+            List of model IDs to delete
+        """
+
+        raise NotImplementedError()
 
     @expose_url("/action/", methods=("POST",))
     def action_view(self):
@@ -106,22 +115,13 @@ class ActionMixin:
         lazy_gettext("Are you sure you want to delete selected records?"),
     )
     def action_delete(self, ids: list):
-        try:
-            count = self.delete_models_by_pk_ids(ids)
-
-            flash(
-                ngettext(
-                    "Record was successfully deleted.",
-                    "%(count)s records were successfully deleted.",
-                    count,
-                    count=count,
-                ),
-                "success",
-            )
-        except Exception as ex:
-            if not self.handle_view_exception(ex):
-                raise
-
-            flash(
-                gettext("Failed to delete records. %(error)s", error=str(ex)), "error"
-            )
+        count = self.delete_models_by_pk_ids(ids)
+        flash(
+            ngettext(
+                "Record was successfully deleted.",
+                "%(count)s records were successfully deleted.",
+                count,
+                count=count,
+            ),
+            "success",
+        )

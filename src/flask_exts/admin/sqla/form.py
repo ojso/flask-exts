@@ -63,7 +63,7 @@ class AdminModelConverter(ModelConverterBase):
             return column_labels.get(name)
 
         return name.replace("_", " ").title()
-        return self.view._prettify_name(name)
+
 
     def _get_description(self, name, field_args):
         if "description" in field_args:

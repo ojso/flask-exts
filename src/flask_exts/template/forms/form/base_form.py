@@ -5,12 +5,7 @@ from .utils import is_submitted
 
 
 class BaseForm(Form):
-    """Flask-specific subclass of WTForms :class:`~wtforms.form.Form`.
-
-    If ``formdata`` is not specified, this will use :attr:`flask.request.form`
-    and :attr:`flask.request.files`.  Explicitly pass ``formdata=None`` to
-    prevent this.
-    """
+    """Subclass of WTForms :class:`~wtforms.form.Form`."""
 
     def __init__(self, formdata=None, obj=None, **kwargs):
         if obj is not None:

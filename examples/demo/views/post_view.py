@@ -1,10 +1,22 @@
 from wtforms import validators
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla.filter import FilterLike
+from flask_exts.admin.sqla.filter import BaseSQLAFilter
 from ..models.post import Post
 from ..models.author import Author
 
 
+# Custom filter class
+class FilterLastNameBrown(BaseSQLAFilter):
+    def apply(self, query, value, alias=None):
+        if value == "1":
+            return query.filter(self.column == "Brown")
+        else:
+            return query.filter(self.column != "Brown")
+
+    def operation(self):
+        return "is Brown"
+    
 class PostView(SqlaModelView):
     column_list = [
         "id",
@@ -51,6 +63,11 @@ class PostView(SqlaModelView):
         "id",
         "author.first_name",
         "author.id",
+        FilterLastNameBrown(
+            column=Author.last_name,
+            name="Last Name",
+            options=(("1", "Yes"), ("0", "No")),
+        ),
         "color",
         "created_at",
         "title",

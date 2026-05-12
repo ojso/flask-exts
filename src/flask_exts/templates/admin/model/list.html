@@ -188,7 +188,7 @@
         {% else %}
           <tr>
             <td colspan="999">
-              {% block empty_list_message %}<div class="text-center">{{ view.get_empty_list_message() }}</div>{% endblock %}
+              {% block empty_list_message %}<div class="text-center">{{ gettext("There are no items in the table.") }}</div>{% endblock %}
             </td>
           </tr>
         {% endfor %}

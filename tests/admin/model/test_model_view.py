@@ -584,7 +584,7 @@ def test_export_tablib(client, admin):
 
 
 def test_list_row_actions(client, admin):
-    from flask_exts.admin.model.row_action_mixin import ViewRowAction,EditRowAction,DeleteRowAction,ViewPopupRowAction,EditPopupRowAction
+    from flask_exts.admin.model.rowaction import ViewRowAction,EditRowAction,DeleteRowAction,ViewPopupRowAction,EditPopupRowAction
 
     # Test default actions
     view = MockModelView(MockModel, name="test", endpoint="test")
