@@ -12,6 +12,7 @@ from ..model.filter import BaseTimeFilter
 from ...datastore.sqla.utils import parse_like_term
 from .query import Query
 
+
 class BaseSQLAFilter(BaseFilter):
     """
     Base SQLAlchemy filter.
@@ -34,16 +35,13 @@ class BaseSQLAFilter(BaseFilter):
 
         self.column = column
 
-    def get_column(self, alias):
-        return self.column if alias is None else getattr(alias, self.column.key)
-
-    def apply(self, query:Query, value, alias=None):
+    def apply(self, query: Query, value):
         return super().apply(query, value)
 
 
 class FilterEqual(BaseSQLAFilter):
-    def apply(self, query, value, alias=None):
-        return query.filter(self.get_column(alias) == value)
+    def apply(self, query: Query, value):
+        return query.add_filter(self.column, value, "==")
 
     def operation(self):
         return lazy_gettext("equals")

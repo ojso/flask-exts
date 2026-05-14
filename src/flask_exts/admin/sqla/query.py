@@ -1,16 +1,18 @@
-from typing import Dict, Tuple, Optional
-from sqlalchemy.orm import class_mapper
+from typing import Any
+from sqlalchemy import inspect
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import select, and_, or_, desc, func
 from sqlalchemy.orm import joinedload, selectinload
 import operator
 
+AliasedClass = Any
+
 
 class Query:
     def __init__(self, root_model):
         self.root_model = root_model
-        self.path_to_alias: Dict[Tuple[str, ...], aliased] = {}
-        self.alias_to_model: Dict[aliased, type] = {}
+        self._path_to_alias: dict[tuple[str, ...], AliasedClass] = {}
+        self._alias_to_model: dict[AliasedClass, type] = {}
         self._joins = []
         self._conditions = []
         self._order_by = []
@@ -21,15 +23,15 @@ class Query:
         self._is_join_many = False
 
     def _find_reusable_path(
-        self, path: Tuple[str, ...]
-    ) -> Optional[Tuple[Tuple[str, ...], aliased]]:
+        self, path: tuple[str, ...]
+    ) -> tuple[str, tuple[str, ...], AliasedClass] | None:
         # 1. Exact match
-        if path in self.path_to_alias:
-            return ("match", path, self.path_to_alias[path])
+        if path in self._path_to_alias:
+            return ("match", path, self._path_to_alias[path])
         # 2. Find the longest prefix match
         best_match = None
         best_length = 0
-        for existing_path, alias in self.path_to_alias.items():
+        for existing_path, alias in self._path_to_alias.items():
             if (
                 len(existing_path) < len(path)
                 and path[: len(existing_path)] == existing_path
@@ -40,7 +42,7 @@ class Query:
 
         return best_match
 
-    def join_path(self, path: str | Tuple[str, ...], is_outer=True) -> aliased:
+    def join_path(self, path: str | tuple[str, ...], is_outer=True) -> AliasedClass:
         """
         Executes a JOIN operation, automatically reusing existing paths.
 
@@ -56,12 +58,13 @@ class Query:
 
         if reusable:
             _find, existing_path, existing_alias = reusable
+
             if _find == "match":
                 return existing_alias
             else:
                 # Continue joining from the end of the reused path
                 current_alias = existing_alias
-                current_model = self.alias_to_model[current_alias]
+                current_model = self._alias_to_model[current_alias]
                 remaining_parts = path[len(existing_path) :]
         else:
             # new path
@@ -70,7 +73,7 @@ class Query:
             remaining_parts = path
 
         for i, part in enumerate(remaining_parts):
-            mapper = class_mapper(current_model)
+            mapper = inspect(current_model)
 
             if part not in mapper.relationships:
                 raise ValueError(
@@ -89,21 +92,21 @@ class Query:
                 self._joins.append((alias, getattr(current_alias, part), is_outer))
 
             full_path = path[: len(path) - len(remaining_parts) + i + 1]
-            self.path_to_alias[full_path] = alias
-            self.alias_to_model[alias] = target_class
+            self._path_to_alias[full_path] = alias
+            self._alias_to_model[alias] = target_class
 
             current_alias = alias
             current_model = target_class
 
         return current_alias
 
-    def get_path_alias(self, path: str | Tuple[str, ...]) -> aliased:
+    def get_path_alias(self, path: str | tuple[str, ...]) -> AliasedClass | None:
         """Retrieves the alias for a given path."""
         if isinstance(path, str):
             path = tuple(path.split(".")) if "." in path else (path,)
-        return self.path_to_alias[path]
+        return self._path_to_alias.get(path, None)
 
-    def get_column(self, column_path: str | Tuple[str, ...]):
+    def get_column(self, column_path: str | tuple[str, ...]):
         """
         Retrieves a column reference based on the path.
         Supports formats like "field", "relation.field", or ("relation", "field").
@@ -117,7 +120,17 @@ class Query:
             return getattr(self.root_model, column_path[0])
         # Otherwise, get the alias for the path excluding the last element (the column name)
         else:
-            return getattr(self.get_path_alias(column_path[:-1]), column_path[-1])
+            alias = self.get_path_alias(column_path[:-1])
+            return getattr(alias, column_path[-1])
+
+    def add_filter(self, column_path: str, value, operator):
+        if "." in column_path:
+            relation_path = column_path.rsplit(".", 1)[0]
+            self.join_path(relation_path)
+        self.add_condition(column_path, value, operator)
+
+    def add_search(self, search):
+        pass
 
     def add_condition(self, column_path, value, operator):
         """Dynamically adds a filter condition to the query.
@@ -129,12 +142,15 @@ class Query:
         """
         self._conditions.append((column_path, value, operator))
 
-    def add_order_by(self, column_path: str | Tuple[str, ...], is_desc: bool = False):
+    def add_order_by(self, column_path: str | tuple[str, ...], is_desc: bool = False):
         """
         Adds an order by clause.
         :param column_path: The path to the column.
         :param is_desc: If True, sorts in descending order.
         """
+        if "." in column_path:
+            relation_path = column_path.rsplit(".", 1)[0]
+            self.join_path(relation_path)
         column = self.get_column(column_path)
         if is_desc:
             self._order_by.append(desc(column))
@@ -151,31 +167,11 @@ class Query:
         self._offset = offset_val
         return self
 
-    def add_eager_load(self, paths = []):
-        list_columns = set()
-
-        for p in paths:
-            list_columns.add(p.split(".", 1)[0])
-
-        mapper = class_mapper(self.root_model)
-
-        if not list_columns:
-            for p in mapper.relationships:
-                if p.direction.name in ["MANYTOONE"]:
-                    self._joinedloads.append(p.key)
-                else:
-                    self._selectinloads.append(p.key)
-        else:
-            for p in mapper.relationships:
-                if p.key not in list_columns:
-                    continue
-                if p.direction.name in ["MANYTOONE"]:
-                    self._joinedloads.append(p.key)
-                else:
-                    self._selectinloads.append(p.key)
-
-            
-
+    def add_eager_loads(self, joinedloads=None, selectinloads=None):
+        if joinedloads:
+            self._joinedloads.extend(joinedloads)
+        if selectinloads:
+            self._selectinloads.extend(selectinloads)
 
     def _apply(self, stmt):
         # 1. Apply JOIN operations
@@ -229,13 +225,6 @@ class Query:
             # Combine all conditions with AND and apply them to the statement
             stmt = stmt.where(and_(*conditions))
 
-        # 3. Apply Eager Loading Options
-        if self._joinedloads:
-            stmt = stmt.options(*[joinedload(j) for j in self._joinedloads])
-
-        if self._selectinloads:
-            stmt = stmt.options(*[selectinload(j) for j in self._selectinloads])
-
         return stmt
 
     def build(self):
@@ -250,6 +239,13 @@ class Query:
         """
         stmt = select(self.root_model)
         stmt = self._apply(stmt)
+
+        # Apply Eager Loading Options
+        if self._joinedloads:
+            stmt = stmt.options(*[joinedload(j) for j in self._joinedloads])
+
+        if self._selectinloads:
+            stmt = stmt.options(*[selectinload(j) for j in self._selectinloads])
 
         # Apply ORDER BY
         if self._order_by:

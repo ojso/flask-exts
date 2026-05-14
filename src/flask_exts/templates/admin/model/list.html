@@ -61,7 +61,7 @@
     {% if view.can_export %}{{ export_options(view.export_types) }}{% endif %}
     {% block model_menu_bar_before_filters %}{% endblock %}
     {% if filters %}<li class="nav-item">{{ filter_options(filter_groups) }}</li>{% endif %}
-    {% if can_set_page_size %}<li class="nav-item">{{ page_size_form(page_size_url, page_size, view.page_size_options) }}</li>{% endif %}
+    {% if view.can_set_page_size %}<li class="nav-item">{{ page_size_form(page_size_url, page_size, view.page_size_options) }}</li>{% endif %}
     {% if actions %}
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">{{ gettext("With selected") }}</a>
@@ -78,22 +78,17 @@
           {% for arg_name, arg_value in extra_args.items() %}<input type="hidden" name="{{ arg_name }}" value="{{ arg_value }}">{% endfor %}
           {% if sort_column is not none %}<input type="hidden" name="sort" value="{{ sort_column }}">{% endif %}
           {% if sort_desc %}<input type="hidden" name="desc" value="1">{% endif %}
-          {% if search %}
-            <div class="input-group">
-              <input class="form-control" size="30" type="text" name="search" value="{{ search }}" placeholder="{{ gettext('%(placeholder)s', placeholder=search_placeholder) }}">
-              <div class="input-group-append">
+          <div class="input-group">
+            <input class="form-control" type="text" name="search" value="{{ search | default('',true) }}" placeholder="{{ gettext('%(placeholder)s', placeholder=search_placeholder) }}">
+            <div class="input-group-append">
+              {% if search %}
                 <span class="input-group-text">
-                  <a href="{{ clear_search_url }}" class="align-middle"><span>X</span></a>
+                  <a href="{{ clear_search_url }}" class="align-middle"><span>x</span></a>
                 </span>
-              </div>
-              <button class="btn btn-secondary my-2 my-sm-0 ml-2" type="submit">{{ gettext("Search") }}</button>
+              {% endif %}
+              <button class="btn btn-outline-secondary" type="submit">{{ render_icon('search') }}</button>
             </div>
-          {% else %}
-            <div class="d-flex flex-wrap align-items-center my-2 my-lg-0">
-              <input class="form-control" size="30" type="text" name="search" value="" placeholder="{{ gettext('%(placeholder)s', placeholder=search_placeholder) }}">
-              <button class="btn btn-secondary my-2 my-sm-0 ml-2" type="submit">{{ gettext("Search") }}</button>
-            </div>
-          {% endif %}
+          </div>
         </form>
       </li>
     {% endif %}
@@ -116,7 +111,7 @@
     </form>
   {% endif %}
 
-  {% block model_list_table %}
+  {% block list_table %}
     <div class="table-responsive">
       <table class="table table-striped table-bordered table-hover model-list">
         <thead>

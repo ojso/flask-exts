@@ -1,4 +1,4 @@
 {% macro render_icon(name) -%}
-  {% set icons = {"view": "👁️", "edit": "✏️", "delete": "❌", "trash": "🗑️"} -%}
+  {% set icons = {"view": "👁️", "edit": "✏️", "delete": "❌", "trash": "🗑️", "search": "🔍"} -%}
   <span class="icon">{{ icons.get(name, name) }}</span>
 {%- endmacro %}

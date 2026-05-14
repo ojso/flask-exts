@@ -1,5 +1,6 @@
 from enum import Enum
 from wtforms import fields, validators
+from sqlalchemy import inspect
 from sqlalchemy import select
 from sqlalchemy import Boolean, Column
 from wtforms.fields import DateTimeLocalField as DateTimeField
@@ -27,7 +28,6 @@ from ..model.form import (
     FieldPlaceholder,
 )
 
-from ...datastore.sqla.utils import get_model_mapper
 from ...datastore.sqla.utils import has_multiple_pks
 from ...datastore.sqla.utils import is_relationship
 from ...datastore.sqla.utils import get_field_with_path
@@ -381,7 +381,7 @@ def get_form(
     :param hidden_pk:
         Generate hidden field with model primary key or not
     """
-    mapper = get_model_mapper(model)
+    mapper = inspect(model)
     field_args = field_args or {}
 
     properties = ((p.key, p) for p in mapper.attrs)
@@ -531,11 +531,11 @@ class InlineModelConverter(InlineModelConverterBase):
         :return:
             A dict of forward property key and reverse property key
         """
-        mapper = get_model_mapper(model)
+        mapper = inspect(model)
 
         # Find property from target model to current model
         # Use the base mapper to support inheritance
-        target_mapper = get_model_mapper(info.model).base_mapper
+        target_mapper = inspect(info.model).base_mapper
         reverse_props = []
         forward_reverse_props_keys = dict()
         for prop in target_mapper.iterate_properties:
@@ -665,8 +665,8 @@ class InlineOneToOneModelConverter(InlineModelConverter):
 
     def _calculate_mapping_key_pair(self, model, info):
 
-        mapper = get_model_mapper(info.model).base_mapper
-        target_mapper = get_model_mapper(info.model)
+        mapper = inspect(info.model).base_mapper
+        target_mapper = inspect(info.model)
 
         inline_relationship = dict()
 

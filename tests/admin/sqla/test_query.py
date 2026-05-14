@@ -54,7 +54,7 @@ def test_eager_load():
     Base.metadata.create_all(engine)
     session = Session(engine)
     query = Query(ModelB)
-    query.add_eager_load(["a_first","x"])
+    query.add_eager_loads(["a_first","x"])
     print(query._joinedloads)
     print(query._selectinloads)
 

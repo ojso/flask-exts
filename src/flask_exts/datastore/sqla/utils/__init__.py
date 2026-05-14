@@ -1,4 +1,3 @@
-from .model import get_model_mapper
 from .model import get_primary_key
 from .model import has_multiple_pks
 from .attr import is_relationship

@@ -27,6 +27,7 @@ from .types import T_COLUMN_LIST, T_FORMATTERS
 from .typefmt import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
 from .ajax import AjaxModelLoader
 
+
 class ViewArgs:
     """
     List view arguments.
@@ -46,19 +47,12 @@ class ViewArgs:
         self.page_size = page_size
         self.sort = sort
         self.sort_desc = bool(sort_desc)
-        self.search = search
+        self.search = search or None
         self.filters = filters
-
-        if not self.search:
-            self.search = None
-
         self.extra_args = extra_args or dict()
 
     def clone(self, **kwargs):
-        if self.filters:
-            flt = list(self.filters)
-        else:
-            flt = None
+        flt = list(self.filters) if self.filters else None
 
         kwargs.setdefault("page", self.page)
         kwargs.setdefault("page_size", self.page_size)
@@ -69,7 +63,6 @@ class ViewArgs:
         kwargs.setdefault("extra_args", dict(self.extra_args))
 
         return ViewArgs(**kwargs)
-
 
 
 class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
@@ -528,12 +521,12 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
         Default page size for pagination.
     """
 
-    can_set_page_size = False
+    can_set_page_size = True
     """
         Allows to select page size via dropdown list
     """
 
-    page_size_options: tuple = (20, 50, 100)
+    page_size_options: tuple = (5, 10, 20, 50, 100)
     """
         Sets the page size options available, if `can_set_page_size` is True
     """
@@ -922,12 +915,10 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
         return None
 
     def get_safe_page_size(self, page_size):
-        safe_page_size = self.page_size
-
         if self.can_set_page_size and page_size in self.page_size_options:
-            safe_page_size = page_size
-
-        return safe_page_size
+            return page_size
+        else:
+            return self.page_size
 
     def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
         """
@@ -1005,7 +996,7 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
         """
         raise NotImplementedError()
 
-    def _get_list_extra_args(self):
+    def _get_list_args(self):
         """
         Return arguments from query string.
         """
@@ -1204,7 +1195,7 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
             delete_form = None
 
         # Grab parameters from URL
-        view_args = self._get_list_extra_args()
+        view_args = self._get_list_args()
 
         # Map column index to column name
         sort_column = self._get_column_by_idx(view_args.sort)
@@ -1270,7 +1261,6 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
             count=count,
             pager_url=pager_url,
             num_pages=num_pages,
-            can_set_page_size=self.can_set_page_size,
             page_size_url=page_size_url,
             page=view_args.page,
             page_size=page_size,
@@ -1461,7 +1451,7 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
                 )
 
         # Grab parameters from URL
-        view_args = self._get_list_extra_args()
+        view_args = self._get_list_args()
 
         # Map column index to column name
         sort_column = self._get_column_by_idx(view_args.sort)

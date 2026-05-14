@@ -1,7 +1,7 @@
 from typing import Optional, Dict, List, Tuple
 from flask import flash
 from flask_babel import gettext, ngettext, lazy_gettext
-from sqlalchemy.orm import class_mapper
+from sqlalchemy import inspect
 from sqlalchemy.sql import select
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm import joinedload, selectinload, aliased
@@ -20,7 +20,6 @@ from .filter import BaseSQLAFilter
 from .filter import FilterConverter
 from .ajax import create_ajax_loader
 from .typefmt import DEFAULT_FORMATTERS
-from ...datastore.sqla.utils import get_model_mapper
 from ...datastore.sqla.utils import get_primary_key
 from ...datastore.sqla.utils import get_identity
 from ...datastore.sqla.stmt import stmt_delete_by_pk_ids
@@ -232,12 +231,6 @@ class SqlaModelView(ModelView):
 
         self._auto_joins = self._init_auto_joins()
 
-        # print(self.model)
-        # print(self._list_columns)
-        # print(
-        #     [r.key for r in self._auto_joins[0]], [r.key for r in self._auto_joins[1]]
-        # )
-
 
     def _init_auto_joins(self):
         """
@@ -247,7 +240,8 @@ class SqlaModelView(ModelView):
         manytomany_relations = set()
         list_columns = set()
 
-        for p in get_model_mapper(self.model).attrs:
+        mapper = inspect(self.model)
+        for p in mapper.attrs:
             if hasattr(p, "direction"):
                 if p.direction.name in ["MANYTOONE"]:
                     manytoone_relations.add(p.key)
@@ -321,7 +315,8 @@ class SqlaModelView(ModelView):
         """
         columns = []
 
-        for p in get_model_mapper(self.model).attrs:
+        mapper = inspect(self.model)
+        for p in mapper.attrs:
             if hasattr(p, "direction"):
                 if p.direction.name in ["MANYTOONE", "MANYTOMANY"]:
                     columns.append(p.key)
@@ -339,8 +334,8 @@ class SqlaModelView(ModelView):
         Key is column name, value is sort column/field.
         """
         columns = dict()
-
-        for p in get_model_mapper(self.model).attrs:
+        mapper = inspect(self.model)
+        for p in mapper.column_attrs:
             if hasattr(p, "columns"):
                 if len(p.columns) > 1:
                     # Multi-column properties are not supported
@@ -349,98 +344,9 @@ class SqlaModelView(ModelView):
                 # Can't sort on primary or foreign keys by default
                 if column.foreign_keys:
                     continue
-                columns[p.key] = column
+                columns[p.key] = p.key
 
         return columns
-
-    def get_sortable_columns(self):
-        """
-        Returns a dictionary of the sortable columns. Key is a model
-        field name and value is sort column (for example - attribute).
-
-        If `column_sortable_list` is set, will use it. Otherwise, will call
-        `scaffold_sortable_columns` to get them from the model.
-        """
-        self._sortable_joins = dict()
-
-        if self.column_sortable_list is None:
-            return self.scaffold_sortable_columns()
-        else:
-            result = dict()
-
-            for c in self.column_sortable_list:
-                if isinstance(c, tuple):
-                    if isinstance(c[1], tuple):
-                        column, path = [], []
-                        for item in c[1]:
-                            column_item, path_item = get_field_with_path(
-                                self.model, item
-                            )
-                            column.append(column_item)
-                            path.append(path_item)
-                        column_name = c[0]
-                    else:
-                        column, path = get_field_with_path(self.model, c[1])
-                        column_name = c[0]
-                else:
-                    column, path = get_field_with_path(self.model, c)
-                    column_name = str(c)
-
-                if path and (hasattr(path[0], "property") or isinstance(path[0], list)):
-                    self._sortable_joins[column_name] = path
-                elif path:
-                    raise Exception(
-                        "For sorting columns in a related table, "
-                        "column_sortable_list requires a string "
-                        "like '<relation name>.<column name>'. "
-                        "Failed on: {0}".format(c)
-                    )
-                else:
-                    # column is in same table, use only model attribute name
-                    if getattr(column, "key", None) is not None:
-                        column_name = column.key
-
-                # column_name must match column_name used in `get_list_columns`
-                result[column_name] = column
-
-            return result
-
-    def get_column_names(self, columns):
-        """
-        Returns a list of tuples with the model field name and formatted
-        field name.
-
-        Overridden to handle special columns like InstrumentedAttribute.
-
-        :param columns:
-            List of columns to include in the results.
-        """
-        formatted_columns = []
-        for c in columns:
-            try:
-                column, path = get_field_with_path(self.model, c)
-
-                if path:
-                    # column is a relation (InstrumentedAttribute), use full path
-                    column_name = str(c)
-                else:
-                    # column is in same table, use only model attribute name
-                    if getattr(column, "key", None) is not None:
-                        column_name = column.key
-                    else:
-                        column_name = str(c)
-            except AttributeError:
-                # TODO: See ticket #1299 - allow virtual columns. Probably figure out
-                # better way to handle it. For now just assume if column was not found - it
-                # is virtual and there's column formatter for it.
-                column_name = str(c)
-
-            visible_name = self.get_column_label(column_name)
-
-            # column_name must match column_name in `get_sortable_columns`
-            formatted_columns.append((column_name, visible_name))
-
-        return formatted_columns
 
     def init_search(self):
         """
@@ -590,62 +496,7 @@ class SqlaModelView(ModelView):
     def _create_ajax_loader(self, name, options):
         return create_ajax_loader(self.model, self.session, name, name, options)
 
-    def _order_by(self, query, joins, sort_joins, sort_field, sort_desc):
-        """
-        Apply order_by to the query
 
-        :param query:
-            Query
-        :pram joins:
-            Current joins
-        :param sort_joins:
-            Sort joins (properties or tables)
-        :param sort_field:
-            Sort field
-        :param sort_desc:
-            Ascending or descending
-        """
-        if sort_field is not None:
-            query, joins, alias = self._apply_path_joins(query, joins, sort_joins)
-
-            column = sort_field if alias is None else getattr(alias, sort_field.key)
-
-            if sort_desc:
-                query = query.order_by(desc(column))
-            else:
-                query = query.order_by(column)
-
-        return query, joins
-
-    def _get_default_order(self):
-        order = super()._get_default_order()
-        for field, direction in order or []:
-            attr, joins = get_field_with_path(self.model, field)
-            yield attr, joins, direction
-
-    def _apply_sorting(self, query, joins, sort_column, sort_desc):
-        if sort_column is not None:
-            if sort_column in self._sortable_columns:
-                sort_field = self._sortable_columns[sort_column]
-                sort_joins = self._sortable_joins.get(sort_column)
-
-                if isinstance(sort_field, list):
-                    for field_item, join_item in zip(sort_field, sort_joins):
-                        query, joins = self._order_by(
-                            query, joins, join_item, field_item, sort_desc
-                        )
-                else:
-                    query, joins = self._order_by(
-                        query, joins, sort_joins, sort_field, sort_desc
-                    )
-        else:
-            order = self._get_default_order()
-            for sort_field, sort_joins, sort_desc in order:
-                query, joins = self._order_by(
-                    query, joins, sort_joins, sort_field, sort_desc
-                )
-
-        return query, joins
 
     def _apply_search(self, query, count_query, joins, count_joins, search):
         """
@@ -717,17 +568,27 @@ class SqlaModelView(ModelView):
                 count_query = flt.apply(count_query, clean_value, count_alias)
         return query, count_query, joins, count_joins
 
-    def _apply_pagination(self, query, page, page_size):
+    def _apply_sorting(self, query:Query, sort_column, sort_desc):
+        if sort_column is not None:
+            if sort_column in self._sortable_columns:
+                sort_field = self._sortable_columns[sort_column]
+                if isinstance(sort_field, list):
+                    for field_item in sort_field:
+                        query.add_order_by(field_item, sort_desc)
+                else:
+                    query.add_order_by(sort_field, sort_desc)
+        else:
+            if default_order := self._get_default_order():
+                for sort_field, sort_desc in default_order:
+                    query.add_order_by(sort_field, sort_desc)
+
+    def _apply_pagination(self, query:Query, page, page_size):
         if page_size is None:
             page_size = self.page_size
-
         if page_size:
-            query = query.limit(page_size)
-
+            query.limit(page_size)
         if page and page_size:
-            query = query.offset(page * page_size)
-
-        return query
+            query.offset(page * page_size)
 
     def get_list(
         self,
@@ -759,6 +620,26 @@ class SqlaModelView(ModelView):
             limit requires setting page_size to 0 or False.
         """
 
+        query = Query(self.model)
+
+        # Auto join
+        query.add_eager_loads(*self._auto_joins)
+
+        # get count
+        stmt_count = query.build_count()
+        count = self.session.scalar(stmt_count)
+
+        # Pagination
+        self._apply_pagination(query, page, page_size)
+
+        self._apply_sorting(query, sort_column, sort_desc)
+
+        stmt = query.build()
+        result = self.session.execute(stmt).scalars().all()
+
+        return count, result
+    
+
         # Will contain join paths with optional aliased object
         joins = {}
         count_joins = {}
@@ -783,17 +664,12 @@ class SqlaModelView(ModelView):
         count = self.session.execute(count_query).scalar()
         print(count)
 
-        # Auto join
-        if joinedloads := self._auto_joins[0]:
-            query = query.options(*[joinedload(j) for j in joinedloads])
-        if selectinloads := self._auto_joins[1]:
-            query = query.options(*[selectinload(j) for j in selectinloads])
+        
 
         # Sorting
         query, joins = self._apply_sorting(query, joins, sort_column, sort_desc)
 
-        # Pagination
-        query = self._apply_pagination(query, page, page_size)
+        
         # result = self.session.execute(query).unique().scalars().all()
         result = self.session.execute(query).scalars().all()
 
