@@ -56,9 +56,6 @@ class MockModelView(ModelView):
 
         return columns
 
-    def init_search(self):
-        return bool(self.column_searchable_list)
-
     def scaffold_filters(self, name):
         return [SimpleFilter(name)]
 
@@ -124,7 +121,6 @@ def test_view():
 
     # Verify scaffolding
 
-    assert view._search_supported is False
     assert view._filters is None
 
     # for url in view._urls:

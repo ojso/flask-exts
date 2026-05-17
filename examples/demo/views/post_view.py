@@ -54,7 +54,6 @@ class PostView(SqlaModelView):
     ]
     column_searchable_list = [
         "title",
-        "tags.name",
         "author.first_name",
         "author.last_name",
     ]

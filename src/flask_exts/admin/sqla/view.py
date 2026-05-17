@@ -2,17 +2,10 @@ from typing import Optional, Dict, List, Tuple
 from flask import flash
 from flask_babel import gettext, ngettext, lazy_gettext
 from sqlalchemy import inspect
-from sqlalchemy.sql import select
-from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy.orm import joinedload, selectinload, aliased
-from sqlalchemy.sql.expression import desc
-from sqlalchemy import Boolean, func, or_
-from sqlalchemy.sql.expression import cast
-from sqlalchemy import Unicode
+from sqlalchemy import Boolean
 from ...datastore.sqla import db
 from ...datastore.sqla.utils import is_relationship
 from ...datastore.sqla.utils import get_field_with_path
-from ...datastore.sqla.utils import parse_like_term
 from ..model.view import ModelView
 from ..model.form import create_editable_list_form
 from . import form
@@ -40,26 +33,11 @@ class SqlaModelView(ModelView):
             class MyModelView(ModelView):
                 column_searchable_list = ('name', 'email')
 
-        You can also pass columns::
+        You can also pass relation.column::
 
             class MyModelView(ModelView):
-                column_searchable_list = (User.name, User.email)
+                column_searchable_list = (user.name, user.email)
 
-        The following search rules apply:
-
-        - If you enter ``ZZZ`` in the UI search field, it will generate ``ILIKE '%ZZZ%'``
-          statement against searchable columns.
-
-        - If you enter multiple words, each word will be searched separately, but
-          only rows that contain all words will be displayed. For example, searching
-          for ``abc def`` will find all rows that contain ``abc`` and ``def`` in one or
-          more columns.
-
-        - If you prefix your search term with ``^``, it will find all rows
-          that start with ``^``. So, if you entered ``^ZZZ`` then ``ILIKE 'ZZZ%'`` will be used.
-
-        - If you prefix your search term with ``=``, it will perform an exact match.
-          For example, if you entered ``=ZZZ``, the statement ``ILIKE 'ZZZ'`` will be used.
     """
 
     model_form_converter = form.AdminModelConverter
@@ -208,13 +186,6 @@ class SqlaModelView(ModelView):
         # set db.session as default session
         self.session = session if session is not None else db.session
 
-        self._search_fields = None
-        self._filter_joins = dict()
-        self._sortable_joins = dict()
-
-        if self.form_choices is None:
-            self.form_choices = {}
-
         super().__init__(
             model,
             name,
@@ -223,6 +194,9 @@ class SqlaModelView(ModelView):
             static_folder,
         )
 
+        if self.form_choices is None:
+            self.form_choices = {}
+
         self._primary_key = get_primary_key(self.model)
         self._is_multiple_pk = isinstance(self._primary_key, tuple)
 
@@ -230,7 +204,6 @@ class SqlaModelView(ModelView):
             raise Exception("Model %s does not have primary key." % self.model.__name__)
 
         self._auto_joins = self._init_auto_joins()
-
 
     def _init_auto_joins(self):
         """
@@ -273,42 +246,6 @@ class SqlaModelView(ModelView):
         else:
             return str(value)
 
-    def _apply_path_joins(self, query, joins, path, isouter=True):
-        """
-        Apply join path to the query.
-
-        :param query:
-            Query to add joins to
-        :param joins:
-            List of current joins. Used to avoid joining on same relationship more than once
-        :param path:
-            Path to be joined
-        :param isouter:
-            if True, generate LEFT OUTER join, otherwise generate INNER JOIN
-        """
-        last = None
-
-        if path:
-            for item in path:
-                key = (isouter, item)
-                alias = joins.get(key)
-
-                if key not in joins:
-                    alias = aliased(item.property.mapper.class_)
-                    fn = query.outerjoin if isouter else query.join
-
-                    if last is None:
-                        query = fn(alias, item)
-                    else:
-                        prop = getattr(last, item.key)
-                        query = fn(alias, prop)
-
-                    joins[key] = alias
-
-                last = alias
-
-        return query, joins, last
-
     def scaffold_list_columns(self):
         """
         Return a list of columns from the model.
@@ -341,33 +278,12 @@ class SqlaModelView(ModelView):
                     # Multi-column properties are not supported
                     continue
                 column = p.columns[0]
-                # Can't sort on primary or foreign keys by default
+                # skip foreign keys
                 if column.foreign_keys:
                     continue
                 columns[p.key] = p.key
 
         return columns
-
-    def init_search(self):
-        """
-        Initialize search. Returns `True` if search is supported for this
-        view.
-
-        For SQLAlchemy, this will initialize internal fields: list of
-        column objects used for filtering, etc.
-        """
-        if self.column_searchable_list:
-            self._search_fields = []
-
-            for name in self.column_searchable_list:
-                attr, joins = get_field_with_path(self.model, name)
-
-                if not attr:
-                    raise Exception("Failed to find field for search field: %s" % name)
-
-                self._search_fields.append((attr, joins))
-
-        return bool(self.column_searchable_list)
 
     def search_placeholder(self):
         """
@@ -384,49 +300,40 @@ class SqlaModelView(ModelView):
         if not self.column_searchable_list:
             return None
 
-        placeholders = []
-
-        for searchable in self.column_searchable_list:
-            if isinstance(searchable, InstrumentedAttribute):
-                placeholders.append(
-                    str(self.column_labels.get(searchable.key, searchable.key))
-                )
-            else:
-                placeholders.append(str(self.column_labels.get(searchable, searchable)))
+        placeholders = [
+            self.column_labels.get(searchable, searchable)
+            for searchable in self.column_searchable_list
+        ]
 
         return ", ".join(placeholders)
 
-    def scaffold_filters(self, name):
+    def scaffold_filters(self, filter_column_path):
         """
         Return list of enabled filters
         """
 
-        attr, joins = get_field_with_path(self.model, name)
+        attr, joins = get_field_with_path(self.model, filter_column_path)
 
         if attr is None:
-            raise Exception("Failed to find field for filter: %s" % name)
+            raise Exception("Failed to find field for filter: %s" % filter_column_path)
 
         if is_relationship(attr):
-            raise Exception("Relationship can not be a filter field: %s" % name)
+            raise Exception(
+                "Relationship can not be a filter field: %s" % filter_column_path
+            )
 
-        column = attr
-
-        if self.column_labels and name in self.column_labels:
-            visible_name = self.column_labels[name]
+        if self.column_labels and filter_column_path in self.column_labels:
+            visible_name = self.column_labels[filter_column_path]
         else:
-            visible_name = name.replace(".", " / ")
+            visible_name = filter_column_path
 
-        flt = self.filter_converter.convert(
-            type(column.type).__name__,
-            column,
-            name,
-            options=self.column_choices.get(name),
+        flts = self.filter_converter.get_filters(
+            type(attr.type).__name__,
+            filter_column_path,
+            visible_name,
+            options=self.column_choices.get(filter_column_path),
         )
-
-        if joins:
-            self._filter_joins[name] = joins
-
-        return flt
+        return flts
 
     def scaffold_form(self):
         """
@@ -496,83 +403,20 @@ class SqlaModelView(ModelView):
     def _create_ajax_loader(self, name, options):
         return create_ajax_loader(self.model, self.session, name, name, options)
 
+    def _apply_search(self, query: Query, search):
+        query.add_search_term(search, self.column_searchable_list)
 
-
-    def _apply_search(self, query, count_query, joins, count_joins, search):
-        """
-        Apply search to a query.
-        """
-        terms = search.split(" ")
-
-        for term in terms:
-            if not term:
-                continue
-
-            stmt = parse_like_term(term)
-
-            filter_stmt = []
-            count_filter_stmt = []
-
-            for field, path in self._search_fields:
-                query, joins, alias = self._apply_path_joins(query, joins, path)
-                count_alias = None
-
-                if count_query is not None:
-                    count_query, count_joins, count_alias = self._apply_path_joins(
-                        count_query, count_joins, path
-                    )
-
-                column = field if alias is None else getattr(alias, field.key)
-                filter_stmt.append(cast(column, Unicode).ilike(stmt))
-
-                if count_filter_stmt is not None:
-                    column = (
-                        field
-                        if count_alias is None
-                        else getattr(count_alias, field.key)
-                    )
-                    count_filter_stmt.append(cast(column, Unicode).ilike(stmt))
-
-            query = query.filter(or_(*filter_stmt))
-
-            if count_query is not None:
-                count_query = count_query.filter(or_(*count_filter_stmt))
-
-        return query, count_query, joins, count_joins
-
-    def _apply_filters(self, query, count_query, joins, count_joins, filters):
-        # print(self._filters)
-        print(self._filter_joins)
-        # print(filters)
+    def _apply_filters(self, query: Query, filters):
         for idx, flt_name, value in filters:
             flt = self._filters[idx]
-
-            alias = None
-            count_alias = None
-
-            if isinstance(flt, BaseSQLAFilter):
-                filter_key = flt.name
-                path = self._filter_joins.get(filter_key, [])
-
-                query, joins, alias = self._apply_path_joins(query, joins, path)
-
-                if count_query is not None:
-                    count_query, count_joins, count_alias = self._apply_path_joins(
-                        count_query, count_joins, path
-                    )
-
             clean_value = flt.clean(value)
-            query = flt.apply(query, clean_value, alias)
+            flt.apply(query, clean_value)
 
-            if count_query is not None:
-                count_query = flt.apply(count_query, clean_value, count_alias)
-        return query, count_query, joins, count_joins
-
-    def _apply_sorting(self, query:Query, sort_column, sort_desc):
+    def _apply_sorting(self, query: Query, sort_column, sort_desc):
         if sort_column is not None:
             if sort_column in self._sortable_columns:
                 sort_field = self._sortable_columns[sort_column]
-                if isinstance(sort_field, list):
+                if isinstance(sort_field, (list, tuple)):
                     for field_item in sort_field:
                         query.add_order_by(field_item, sort_desc)
                 else:
@@ -582,13 +426,17 @@ class SqlaModelView(ModelView):
                 for sort_field, sort_desc in default_order:
                     query.add_order_by(sort_field, sort_desc)
 
-    def _apply_pagination(self, query:Query, page, page_size):
+    def _apply_pagination(self, query: Query, page, page_size):
         if page_size is None:
             page_size = self.page_size
         if page_size:
             query.limit(page_size)
         if page and page_size:
             query.offset(page * page_size)
+
+    def _apply_auto_joins(self, query: Query):
+        joinedloads, selectinloads = self._auto_joins
+        query.add_eager_loads(joinedloads, selectinloads)
 
     def get_list(
         self,
@@ -622,8 +470,16 @@ class SqlaModelView(ModelView):
 
         query = Query(self.model)
 
+        # Apply search criteria
+        if search:
+            self._apply_search(query, search)
+
+        # Apply filters
+        if filters:
+            self._apply_filters(query, filters)
+
         # Auto join
-        query.add_eager_loads(*self._auto_joins)
+        self._apply_auto_joins(query)
 
         # get count
         stmt_count = query.build_count()
@@ -636,42 +492,6 @@ class SqlaModelView(ModelView):
 
         stmt = query.build()
         result = self.session.execute(stmt).scalars().all()
-
-        return count, result
-    
-
-        # Will contain join paths with optional aliased object
-        joins = {}
-        count_joins = {}
-
-        query = select(self.model)
-        count_query = select(func.count()).select_from(self.model)
-
-        # Apply search criteria
-        if self._search_supported and search:
-            query, count_query, joins, count_joins = self._apply_search(
-                query, count_query, joins, count_joins, search
-            )
-
-        # Apply filters
-        if filters and self._filters:
-            query, count_query, joins, count_joins = self._apply_filters(
-                query, count_query, joins, count_joins, filters
-            )
-
-        # Calculate number of rows if necessary
-        print(count_query)
-        count = self.session.execute(count_query).scalar()
-        print(count)
-
-        
-
-        # Sorting
-        query, joins = self._apply_sorting(query, joins, sort_column, sort_desc)
-
-        
-        # result = self.session.execute(query).unique().scalars().all()
-        result = self.session.execute(query).scalars().all()
 
         return count, result
 
@@ -703,7 +523,7 @@ class SqlaModelView(ModelView):
             flash(
                 gettext("Failed to create record. %(error)s", error=str(ex)),
                 "error",
-            )            
+            )
             return None
         return instance
 
@@ -724,7 +544,7 @@ class SqlaModelView(ModelView):
             flash(
                 gettext("Failed to update record. %(error)s", error=str(ex)),
                 "error",
-            )            
+            )
             return False
         return True
 

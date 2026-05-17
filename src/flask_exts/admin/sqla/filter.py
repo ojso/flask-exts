@@ -35,9 +35,6 @@ class BaseSQLAFilter(BaseFilter):
 
         self.column = column
 
-    def apply(self, query: Query, value):
-        return super().apply(query, value)
-
 
 class FilterEqual(BaseSQLAFilter):
     def apply(self, query: Query, value):
@@ -435,9 +432,8 @@ class ChoiceTypeNotLikeFilter(FilterNotLike):
             return query
 
 
-# Base SQLA filter field converter
-class FilterConverter(filter.BaseFilterConverter):
-    strings = (
+class FilterConverter:
+    string_filters = (
         FilterLike,
         FilterNotLike,
         FilterEqual,
@@ -472,7 +468,7 @@ class FilterConverter(filter.BaseFilterConverter):
         FloatNotInListFilter,
     )
     bool_filters = (BooleanEqualFilter, BooleanNotEqualFilter)
-    enum = (
+    enum_filters = (
         EnumEqualFilter,
         EnumFilterNotEqual,
         EnumFilterEmpty,
@@ -516,78 +512,64 @@ class FilterConverter(filter.BaseFilterConverter):
 
     arrow_type_filters = (DateTimeGreaterFilter, DateTimeSmallerFilter, FilterEmpty)
 
-    def convert(self, type_name, column, name, **kwargs):
-        filter_name = type_name.lower()
+    TYPE_MAPPING = {
+        "string_filters": [
+            "string",
+            "char",
+            "unicode",
+            "varchar",
+            "tinytext",
+            "text",
+            "mediumtext",
+            "longtext",
+            "unicodetext",
+            "nchar",
+            "nvarchar",
+            "ntext",
+            "citext",
+            "emailtype",
+            "URLType",
+            "IPAddressType",
+        ],
+        "string_key_filters": ["ColorType", "TimezoneType", "CurrencyType"],
+        "bool_filters": ["boolean", "tinyint"],
+        "int_filters": [
+            "int",
+            "integer",
+            "smallinteger",
+            "smallint",
+            "biginteger",
+            "bigint",
+            "mediumint",
+        ],
+        "float_filters": [
+            "float",
+            "real",
+            "decimal",
+            "numeric",
+            "double_precision",
+            "double",
+        ],
+        "date_filters": ["date"],
+        "datetime_filters": ["datetime", "datetime2", "timestamp", "smalldatetime"],
+        "time_filters": ["time"],
+        "choice_type_filters": ["ChoiceType"],
+        "enum_filters": ["enum"],
+    }
 
-        if filter_name in self.converters:
-            return self.converters[filter_name](column, name, **kwargs)
+    def __init__(self):
+        self._converters = {}
+        for filter_attr_name, db_types in self.TYPE_MAPPING.items():
+            filters = getattr(self, filter_attr_name, None)
+            if filters:
+                for t in db_types:
+                    self._converters[t.lower()] = filters
 
-        return None
-
-    @filter.convert(
-        "string",
-        "char",
-        "unicode",
-        "varchar",
-        "tinytext",
-        "text",
-        "mediumtext",
-        "longtext",
-        "unicodetext",
-        "nchar",
-        "nvarchar",
-        "ntext",
-        "citext",
-        "emailtype",
-        "URLType",
-        "IPAddressType",
-    )
-    def conv_string(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.strings]
-
-    @filter.convert("ColorType", "TimezoneType", "CurrencyType")
-    def conv_string_keys(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.string_key_filters]
-
-    @filter.convert("boolean", "tinyint")
-    def conv_bool(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.bool_filters]
-
-    @filter.convert(
-        "int",
-        "integer",
-        "smallinteger",
-        "smallint",
-        "biginteger",
-        "bigint",
-        "mediumint",
-    )
-    def conv_int(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.int_filters]
-
-    @filter.convert("float", "real", "decimal", "numeric", "double_precision", "double")
-    def conv_float(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.float_filters]
-
-    @filter.convert("date")
-    def conv_date(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.date_filters]
-
-    @filter.convert("datetime", "datetime2", "timestamp", "smalldatetime")
-    def conv_datetime(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.datetime_filters]
-
-    @filter.convert("time")
-    def conv_time(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.time_filters]
-
-    @filter.convert("ChoiceType")
-    def conv_sqla_utils_choice(self, column, name, **kwargs):
-        return [f(column, name, **kwargs) for f in self.choice_type_filters]
-
-    @filter.convert("enum")
-    def conv_enum(self, column, name, options=None, **kwargs):
-        if not options:
+    def get_filters(self, column_type, column, name, **kwargs):
+        column_type_name = column_type.lower()
+        filters = self._converters.get(column_type_name, None)
+        if column_type_name == "enum":
             options = [(v, v) for v in column.type.enums]
-
-        return [f(column, name, options, **kwargs) for f in self.enum]
+            kwargs["options"] = options
+        if filters:
+            return [f(column, name, **kwargs) for f in filters]

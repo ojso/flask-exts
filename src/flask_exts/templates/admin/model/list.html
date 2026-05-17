@@ -70,7 +70,7 @@
         </div>
       </li>
     {% endif %}
-    {% if search_supported %}
+    {% if view.column_searchable_list %}
       <li class="nav-item ml-2">
         <form method="get" action="{{ return_url }}" class="d-flex flex-wrap align-items-center my-2 my-lg-0">
           {% for flt_name, flt_value in filter_args.items() %}<input type="hidden" name="{{ flt_name }}" value="{{ flt_value }}">{% endfor %}
@@ -79,7 +79,7 @@
           {% if sort_column is not none %}<input type="hidden" name="sort" value="{{ sort_column }}">{% endif %}
           {% if sort_desc %}<input type="hidden" name="desc" value="1">{% endif %}
           <div class="input-group">
-            <input class="form-control" type="text" name="search" value="{{ search | default('',true) }}" placeholder="{{ gettext('%(placeholder)s', placeholder=search_placeholder) }}">
+            <input class="form-control" type="text" name="search" value="{{ search | default('',true) }}" placeholder="{{ view.search_placeholder() }}">
             <div class="input-group-append">
               {% if search %}
                 <span class="input-group-text">

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from warnings import filters
 from flask import request
 from flask import flash
 from flask_babel import gettext
@@ -44,18 +45,18 @@ class FilterMixin:
             from .sqla.filters import BooleanEqualFilter
 
             class MyModelView(BaseModelView):
-                column_filters = (BooleanEqualFilter(column=User.name, name='Name'),)
+                column_filters = (BooleanEqualFilter(column="user.name", name='Name'),)
 
         or::
 
             from .sqla.filters import BaseSQLAFilter
 
             class FilterLastNameBrown(BaseSQLAFilter):
-                def apply(self, query, value, alias=None):
+                def apply(self, query, value):
                     if value == '1':
-                        return query.filter(self.column == "Brown")
+                        return query.add_filter(self.column, "Brown", "==")
                     else:
-                        return query.filter(self.column != "Brown")
+                        return query.add_filter(self.column, "Brown", "!=")
 
                 def operation(self):
                     return 'is Brown'
@@ -63,7 +64,7 @@ class FilterMixin:
             class MyModelView(BaseModelView):
                 column_filters = [
                     FilterLastNameBrown(
-                        User.last_name, 'Last Name', options=(('1', 'Yes'), ('0', 'No'))
+                        "user.last_name", 'Last Name', options=(('1', 'Yes'), ('0', 'No'))
                     )
                 ]
     """
@@ -71,7 +72,18 @@ class FilterMixin:
         super().__init__(*args, **kwargs)
 
     def init_filters(self):
-        self._filters = self.get_filters()
+        self._filters = []
+
+        if not self.column_filters:
+            return
+        
+        for f in self.column_filters:
+            if isinstance(f, BaseFilter):
+                self._filters.append(f)
+            else:
+                flts = self.scaffold_filters(f)
+                if flts:
+                    self._filters.extend(flts)
 
         if self._filters:
             self._filter_groups = OrderedDict()
@@ -94,26 +106,6 @@ class FilterMixin:
         else:
             self._filter_groups = None
             self._filter_args = None
-
-    def get_filters(self):
-        """
-        Return a list of filter objects.
-        """
-        if self.column_filters:
-            filters = []
-
-            for f in self.column_filters:
-                if isinstance(f, BaseFilter):
-                    filters.append(f)
-                else:
-                    flts = self.scaffold_filters(f)
-                    if flts:
-                        filters.extend(flts)
-                    else:
-                        raise Exception("Unsupported filter type %s" % f)
-            return filters
-        else:
-            return None
 
     def scaffold_filters(self, name):
         """

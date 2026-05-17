@@ -77,7 +77,7 @@ class BaseFilter:
         raise NotImplementedError()
 
     def __repr__(self):
-        return self.name
+        return f"filter<{self.name}:{self.operation()}>"
 
 
 class BaseBooleanFilter(BaseFilter):
@@ -222,36 +222,3 @@ class BaseTimeBetweenFilter(BaseDateTimeBetweenFilter):
             datetime.time(timetuple.tm_hour, timetuple.tm_min, timetuple.tm_sec)
             for timetuple in timetuples
         ]
-
-
-
-def convert(*args):
-    """
-    Decorator for field to filter conversion routine.
-
-    See :mod:`.sqla.filters` for usage example.
-    """
-
-    def _inner(func):
-        func._converter_for = list(map(lambda x: x.lower(), args))
-        return func
-
-    return _inner
-
-
-class BaseFilterConverter:
-    """
-    Base filter converter.
-
-    Derive from this class to implement custom field to filter conversion logic.
-    """
-
-    def __init__(self):
-        self.converters = dict()
-
-        for p in dir(self):
-            attr = getattr(self, p)
-
-            if hasattr(attr, "_converter_for"):
-                for p in attr._converter_for:
-                    self.converters[p] = attr

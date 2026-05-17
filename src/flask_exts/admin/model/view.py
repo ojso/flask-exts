@@ -575,7 +575,6 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
         # RowActionMixin
         self.init_row_actions()
 
-        #
         self._list_columns = self.get_list_columns()
         self._sortable_columns = self.get_sortable_columns()
         self._details_columns = self.get_details_columns()
@@ -583,9 +582,6 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
 
         # Forms
         self._init_forms()
-
-        # Search
-        self._search_supported = self.init_search()
 
         # Filters
         self.init_filters()
@@ -720,13 +716,6 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
                     result[c] = c
 
             return result
-
-    def init_search(self):
-        """
-        Initialize search. If data provider does not support search,
-        `init_search` will return `False`.
-        """
-        return False
 
     def search_placeholder(self):
         """
@@ -1189,11 +1178,6 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
 
     @expose_url("/")
     def index_view(self):
-        if self.can_delete:
-            delete_form = self.delete_form()
-        else:
-            delete_form = None
-
         # Grab parameters from URL
         view_args = self._get_list_args()
 
@@ -1270,10 +1254,8 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
             sort_desc=view_args.sort_desc,
             sort_url=sort_url,
             # Search
-            search_supported=self._search_supported,
             clear_search_url=clear_search_url,
             search=view_args.search,
-            search_placeholder=self.search_placeholder(),
             # Filters
             filters=self._filters,
             filter_groups=self._get_filter_groups(),

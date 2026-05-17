@@ -3,6 +3,7 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import select, and_, or_, desc, func
 from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.sql.elements import ColumnElement
 import operator
 
 AliasedClass = Any
@@ -14,7 +15,8 @@ class Query:
         self._path_to_alias: dict[tuple[str, ...], AliasedClass] = {}
         self._alias_to_model: dict[AliasedClass, type] = {}
         self._joins = []
-        self._conditions = []
+        self._filter_conditions = []
+        self._search_conditions = []
         self._order_by = []
         self._limit = None
         self._offset = None
@@ -100,6 +102,11 @@ class Query:
 
         return current_alias
 
+    def _join_attr(self, attr_path: str):
+        if "." in attr_path:
+            relation_path = attr_path.rsplit(".", 1)[0]
+            self.join_path(relation_path)
+
     def get_path_alias(self, path: str | tuple[str, ...]) -> AliasedClass | None:
         """Retrieves the alias for a given path."""
         if isinstance(path, str):
@@ -124,23 +131,19 @@ class Query:
             return getattr(alias, column_path[-1])
 
     def add_filter(self, column_path: str, value, operator):
-        if "." in column_path:
-            relation_path = column_path.rsplit(".", 1)[0]
-            self.join_path(relation_path)
-        self.add_condition(column_path, value, operator)
+        self._join_attr(column_path)
+        self._filter_conditions.append((column_path, value, operator))
 
-    def add_search(self, search):
-        pass
-
-    def add_condition(self, column_path, value, operator):
-        """Dynamically adds a filter condition to the query.
-
-        :param column_path: The path to the column (e.g., "name" or "first_b.type").
-        :param value: The value to filter by.
-        :param operator: The comparison operator as a string.
-                         Supports "==", "!=", ">", "<", ">=", "<=", "like", "in", etc.
-        """
-        self._conditions.append((column_path, value, operator))
+    def add_search_term(self, search: str, column_list: list[str]):
+        terms = search.split(" ")
+        for term in terms:
+            if not term:
+                continue
+            self._search_conditions.append([])
+            search_term = self._search_conditions[-1]
+            for column_path in column_list:
+                self._join_attr(column_path)
+                search_term.append((column_path, term))
 
     def add_order_by(self, column_path: str | tuple[str, ...], is_desc: bool = False):
         """
@@ -173,6 +176,16 @@ class Query:
         if selectinloads:
             self._selectinloads.extend(selectinloads)
 
+    def _like_pattern(self, column_attr, pattern: str) -> ColumnElement:
+        if pattern.startswith("="):
+            return column_attr == pattern[1:]
+        elif pattern.startswith("^"):
+            return column_attr.ilike(f"{pattern[1:]}%")
+        elif pattern.endswith("$"):
+            return column_attr.ilike(f"%{pattern[:-1]}")
+        else:
+            return column_attr.like(f"%{pattern}%")
+
     def _apply(self, stmt):
         # 1. Apply JOIN operations
         for alias, attr, is_outer in self._joins:
@@ -181,8 +194,20 @@ class Query:
             else:
                 stmt = stmt.join(alias, attr)
 
-        # 2. Apply WHERE conditions
-        if self._conditions:
+        # 2. Apply search conditions
+        if self._search_conditions:
+            search_clauses = []
+            for search_term in self._search_conditions:
+                term_clauses = []
+                for column_path, term in search_term:
+                    term_clauses.append(
+                        self._like_pattern(self.get_column(column_path), term)
+                    )
+                search_clauses.append(or_(*term_clauses))
+            stmt = stmt.where(and_(*search_clauses))
+
+        # 3. Apply WHERE conditions
+        if self._filter_conditions:
             conditions = []
             # Map string operators to their corresponding Python/SQLAlchemy functions
             op_map = {
@@ -194,9 +219,8 @@ class Query:
                 "<=": operator.le,
             }
 
-            for column_path, value, op_str in self._conditions:
+            for column_path, value, op_str in self._filter_conditions:
                 column = self.get_column(column_path)
-
                 # Handle special operators like 'like' and 'in'
                 if op_str == "like":
                     if "%" in value:
