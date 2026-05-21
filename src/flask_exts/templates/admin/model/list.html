@@ -9,6 +9,7 @@
 
 {% set actions = view.get_list_actions() %}
 {% set row_actions = view.get_row_actions() %}
+{% set filter_groups = view.get_filter_groups() %}
 
 {% if actions %}
   {%- do _template.plugin_manager.enable_plugin(['list_action']) -%}
@@ -60,7 +61,7 @@
     {% endif %}
     {% if view.can_export %}{{ export_options(view.export_types) }}{% endif %}
     {% block model_menu_bar_before_filters %}{% endblock %}
-    {% if filters %}<li class="nav-item">{{ filter_options(filter_groups) }}</li>{% endif %}
+    {% if filter_groups %}<li class="nav-item">{{ filter_options(filter_groups) }}</li>{% endif %}
     {% if view.can_set_page_size %}<li class="nav-item">{{ page_size_form(page_size_url, page_size, view.page_size_options) }}</li>{% endif %}
     {% if actions %}
       <li class="nav-item dropdown">

@@ -2,21 +2,28 @@ from wtforms import validators
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla.filter import FilterLike
 from flask_exts.admin.sqla.filter import BaseSQLAFilter
+from flask_exts.admin.sqla.query import Query
 from ..models.post import Post
 from ..models.author import Author
 
 
 # Custom filter class
-class FilterLastNameBrown(BaseSQLAFilter):
-    def apply(self, query, value, alias=None):
+class FilterNameBrown(BaseSQLAFilter):
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(
+            column_type, column, name, data_type, options=(("1", "Yes"), ("0", "No"))
+        )
+
+    def apply(self, query, value):
         if value == "1":
-            return query.filter(self.column == "Brown")
+            return query.add_filter(self.column, "==", "Brown")
         else:
-            return query.filter(self.column != "Brown")
+            return query.add_filter(self.column, "!=", "Brown")
 
     def operation(self):
         return "is Brown"
-    
+
+
 class PostView(SqlaModelView):
     column_list = [
         "id",
@@ -39,7 +46,7 @@ class PostView(SqlaModelView):
         "color",
     ]
     column_default_sort = ("date", True)
-    create_modal = True
+    # create_modal = True
     # edit_modal = True
     # details_modal = True
 
@@ -62,10 +69,10 @@ class PostView(SqlaModelView):
         "id",
         "author.first_name",
         "author.id",
-        FilterLastNameBrown(
-            column=Author.last_name,
+        FilterNameBrown(
+            column_type=Query.get_model_column_type(Author, "last_name"),
+            column="author.last_name",
             name="Last Name",
-            options=(("1", "Yes"), ("0", "No")),
         ),
         "color",
         "created_at",
@@ -73,8 +80,9 @@ class PostView(SqlaModelView):
         "date",
         "tags.name",
         FilterLike(
-            Post.title,
-            "Fixed Title",
+            column_type=Query.get_model_column_type(Post, "title"),
+            column="title",
+            name="Fixed Title",
             options=(("test1", "Test 1"), ("test2", "Test 2")),
         ),
     ]
@@ -88,21 +96,16 @@ class PostView(SqlaModelView):
     form_widget_args = {"text": {"rows": 10}}
 
     form_ajax_refs = {
-        "author": {"fields": (Author.first_name, Author.last_name)},
+        "author": {"fields": ("first_name", "last_name")},
         # "tags": {
-        #     "fields": (Tag.name,),
+        #     "fields": ("name",),
         #     "minimum_input_length": 0,  # show suggestions, even before any author input
         #     "placeholder": "Please select",
         #     "page_size": 5,
         # },
     }
 
-    column_descriptions = dict(
-        color='favorite color'
-        )
-
-
-# Add views
+    column_descriptions = dict(color="favorite color")
 
 
 postview = PostView(Post)

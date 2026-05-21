@@ -14,13 +14,12 @@ from ...template.forms.fields.ajax_select import AjaxSelectField
 from ...template.forms.fields.ajax_select import AjaxSelectMultipleField
 from ...template.forms.fields.sqla import QuerySelectField
 from ...template.forms.fields.sqla import QuerySelectMultipleField
-from ...template.forms.fields.sqla import InlineModelFormList
+from ...template.forms.fields.sqla import InlineModelFormListField
 from ...template.forms.fields.sqla import InlineModelOneToOneField
 from ...template.forms.fields.inline import InlineFormField
 from ...template.forms.widgets import DatePickerWidget
 from ...template.forms.form.base_form import BaseForm
 from ...template.forms.validators.sqla import Unique
-from ...template.forms.validators.sqla import TimeZoneValidator
 from ..model.form import (
     converts,
     ModelConverterBase,
@@ -31,7 +30,6 @@ from ..model.form import (
 from ...datastore.sqla.utils import has_multiple_pks
 from ...datastore.sqla.utils import is_relationship
 from ...datastore.sqla.utils import get_field_with_path
-
 from .ajax import create_ajax_loader
 
 
@@ -178,11 +176,9 @@ class AdminModelConverter(ModelConverterBase):
             if column.unique and not unique:
                 kwargs["validators"].append(Unique(self.session, model, column))
 
-            optional_types = getattr(self.view, "form_optional_types", (Boolean,))
-
             if (
                 not column.nullable
-                and not isinstance(column.type, optional_types)
+                and not isinstance(column.type, (Boolean,))
                 and not column.default
                 and not column.server_default
             ):
@@ -251,7 +247,7 @@ class AdminModelConverter(ModelConverterBase):
             field_args["validators"].append(validators.Length(max=column.type.length))
         cls._nullable_common(column, field_args)
 
-    @converts("String")  # includes VARCHAR, CHAR, and Unicode
+    @converts("String")
     def conv_String(self, column, field_args, **extra):
         self._string_common(column=column, field_args=field_args, **extra)
         return fields.StringField(**field_args)
@@ -294,33 +290,6 @@ class AdminModelConverter(ModelConverterBase):
     def convert_time(self, field_args, **extra):
         return TimeField(**field_args)
 
-    @converts("sqlalchemy_utils.types.email.EmailType")
-    def convert_email(self, field_args, column=None, **extra):
-        self._nullable_common(column, field_args)
-        field_args["validators"].append(validators.Email())
-        return fields.StringField(**field_args)
-
-    @converts("sqlalchemy_utils.types.url.URLType")
-    def convert_url(self, field_args, **extra):
-        field_args["validators"].append(validators.URL())
-        field_args["filters"] = [
-            avoid_empty_strings
-        ]  # don't accept empty strings, or whitespace
-        return fields.StringField(**field_args)
-
-    @converts("sqlalchemy_utils.types.ip_address.IPAddressType")
-    def convert_ip_address(self, field_args, **extra):
-        field_args["validators"].append(validators.IPAddress())
-        return fields.StringField(**field_args)
-
-    @converts("sqlalchemy_utils.types.timezone.TimezoneType")
-    def convert_timezone(self, column, field_args, **extra):
-
-        field_args["validators"].append(
-            TimeZoneValidator(coerce_function=column.type._coerce)
-        )
-        return fields.StringField(**field_args)
-
     @converts("Integer")  # includes BigInteger and SmallInteger
     def handle_integer_types(self, column, field_args, **extra):
         unsigned = getattr(column.type, "unsigned", False)
@@ -339,17 +308,7 @@ class AdminModelConverter(ModelConverterBase):
         return JSONField(**field_args)
 
 
-def avoid_empty_strings(value):
-    """
-    Return None if the incoming value is an empty string or whitespace.
-    """
-    if value:
-        try:
-            value = value.strip()
-        except AttributeError:
-            # values are not always strings
-            pass
-    return value if value else None
+
 
 
 # Get list of fields and generate form
@@ -439,7 +398,7 @@ class InlineModelConverter(InlineModelConverterBase):
     Inline model form helper.
     """
 
-    inline_field_list_type = InlineModelFormList
+    inline_field_list_type = InlineModelFormListField
     """
         Used field list type.
 
@@ -661,7 +620,7 @@ class InlineModelConverter(InlineModelConverterBase):
 
 
 class InlineOneToOneModelConverter(InlineModelConverter):
-    inline_field_list_type = InlineModelOneToOneField  # type: ignore[assignment]
+    inline_field_list_type = InlineModelOneToOneField
 
     def _calculate_mapping_key_pair(self, model, info):
 

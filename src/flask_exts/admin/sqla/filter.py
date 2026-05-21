@@ -1,7 +1,6 @@
 import enum
 from flask_babel import lazy_gettext
 from sqlalchemy.sql import not_, or_
-from ..model import filter
 from ..model.filter import BaseFilter
 from ..model.filter import BaseBooleanFilter
 from ..model.filter import BaseIntFilter
@@ -9,8 +8,11 @@ from ..model.filter import BaseFloatFilter
 from ..model.filter import BaseDateFilter
 from ..model.filter import BaseDateTimeFilter
 from ..model.filter import BaseTimeFilter
-from ...datastore.sqla.utils import parse_like_term
-from .query import Query
+from ..model.filter import BaseIntListFilter
+from ..model.filter import BaseFloatListFilter
+from ..model.filter import BaseDateBetweenFilter
+from ..model.filter import BaseDateTimeBetweenFilter
+from ..model.filter import BaseTimeBetweenFilter
 
 
 class BaseSQLAFilter(BaseFilter):
@@ -18,7 +20,7 @@ class BaseSQLAFilter(BaseFilter):
     Base SQLAlchemy filter.
     """
 
-    def __init__(self, column: str, name, options=None, data_type=None):
+    def __init__(self, column_type, column: str, name, data_type=None, options=None):
         """
         Constructor.
 
@@ -31,97 +33,92 @@ class BaseSQLAFilter(BaseFilter):
         :param data_type:
             Client data type
         """
-        super().__init__(name, options, data_type)
-
+        super().__init__(name, data_type, options)
+        self.column_type = column_type
         self.column = column
 
 
 class FilterEqual(BaseSQLAFilter):
-    def apply(self, query: Query, value):
-        return query.add_filter(self.column, value, "==")
-
     def operation(self):
         return lazy_gettext("equals")
 
+    def apply(self, query, value):
+        return query.add_filter(self.column, "==", value)
+
 
 class FilterNotEqual(BaseSQLAFilter):
-    def apply(self, query, value, alias=None):
-        return query.filter(self.get_column(alias) != value)
-
     def operation(self):
         return lazy_gettext("not equal")
 
-
-class FilterLike(BaseSQLAFilter):
-    def apply(self, query, value, alias=None):
-        stmt = parse_like_term(value)
-        return query.filter(self.get_column(alias).ilike(stmt))
-
-    def operation(self):
-        return lazy_gettext("contains")
-
-
-class FilterNotLike(BaseSQLAFilter):
-    def apply(self, query, value, alias=None):
-        stmt = parse_like_term(value)
-        return query.filter(~self.get_column(alias).ilike(stmt))
-
-    def operation(self):
-        return lazy_gettext("not contains")
+    def apply(self, query, value):
+        return query.add_filter(self.column, "!=", value)
 
 
 class FilterGreater(BaseSQLAFilter):
-    def apply(self, query, value, alias=None):
-        return query.filter(self.get_column(alias) > value)
-
     def operation(self):
         return lazy_gettext("greater than")
 
+    def apply(self, query, value):
+        return query.add_filter(self.column, ">", value)
+
 
 class FilterSmaller(BaseSQLAFilter):
-    def apply(self, query, value, alias=None):
-        return query.filter(self.get_column(alias) < value)
-
     def operation(self):
         return lazy_gettext("smaller than")
 
+    def apply(self, query, value):
+        return query.add_filter(self.column, "<", value)
+
+
+class FilterLike(BaseSQLAFilter):
+    def operation(self):
+        return lazy_gettext("contains")
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "ilike", value)
+
+
+class FilterNotLike(BaseSQLAFilter):
+    def operation(self):
+        return lazy_gettext("not contains")
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "not_ilike", value)
+
 
 class FilterEmpty(BaseSQLAFilter, BaseBooleanFilter):
-    def apply(self, query, value, alias=None):
-        if value == "1":
-            return query.filter(self.get_column(alias).is_(None))
-        else:
-            return query.filter(self.get_column(alias).is_not(None))
-
     def operation(self):
         return lazy_gettext("empty")
 
+    def apply(self, query, value):
+        if value == "1":
+            return query.add_filter(self.column, "is_null", None)
+        else:
+            return query.add_filter(self.column, "isnot_null", None)
+
 
 class FilterInList(BaseSQLAFilter):
-    def __init__(self, column, name, options=None, data_type=None):
-        super().__init__(column, name, options, data_type="select2-tags")
-
-    def clean(self, value):
-        return [v.strip() for v in value.split(",") if v.strip()]
-
-    def apply(self, query, value, alias=None):
-        return query.filter(self.get_column(alias).in_(value))
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, "select2-tags", options)
 
     def operation(self):
         return lazy_gettext("in list")
 
+    def clean(self, value):
+        return [v.strip() for v in value.split(",") if v.strip()]
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "in", value)
+
 
 class FilterNotInList(FilterInList):
-    def apply(self, query, value, alias=None):
-        # NOT IN can exclude NULL values, so "or_ == None" needed to be added
-        column = self.get_column(alias)
-        return query.filter(or_(~column.in_(value), column.is_(None)))
-
     def operation(self):
         return lazy_gettext("not in list")
 
+    def apply(self, query, value):
+        return query.add_filter(self.column, "not_in", value)
 
-# Customized type filters
+
 class BooleanEqualFilter(FilterEqual, BaseBooleanFilter):
     pass
 
@@ -146,290 +143,254 @@ class IntSmallerFilter(FilterSmaller, BaseIntFilter):
     pass
 
 
-class IntInListFilter(filter.BaseIntListFilter, FilterInList):
+class IntInListFilter(FilterInList, BaseIntListFilter):
     pass
 
 
-class IntNotInListFilter(filter.BaseIntListFilter, FilterNotInList):
+class IntNotInListFilter(FilterNotInList, BaseIntListFilter):
     pass
 
 
-class FloatEqualFilter(FilterEqual, filter.BaseFloatFilter):
+class FloatEqualFilter(FilterEqual, BaseFloatFilter):
     pass
 
 
-class FloatNotEqualFilter(FilterNotEqual, filter.BaseFloatFilter):
+class FloatNotEqualFilter(FilterNotEqual, BaseFloatFilter):
     pass
 
 
-class FloatGreaterFilter(FilterGreater, filter.BaseFloatFilter):
+class FloatGreaterFilter(FilterGreater, BaseFloatFilter):
     pass
 
 
-class FloatSmallerFilter(FilterSmaller, filter.BaseFloatFilter):
+class FloatSmallerFilter(FilterSmaller, BaseFloatFilter):
     pass
 
 
-class FloatInListFilter(filter.BaseFloatListFilter, FilterInList):
+class FloatInListFilter(FilterInList, BaseFloatListFilter):
     pass
 
 
-class FloatNotInListFilter(filter.BaseFloatListFilter, FilterNotInList):
+class FloatNotInListFilter(FilterNotInList, BaseFloatListFilter):
     pass
 
 
-class DateEqualFilter(FilterEqual, filter.BaseDateFilter):
+class DateEqualFilter(FilterEqual, BaseDateFilter):
     pass
 
 
-class DateNotEqualFilter(FilterNotEqual, filter.BaseDateFilter):
+class DateNotEqualFilter(FilterNotEqual, BaseDateFilter):
     pass
 
 
-class DateGreaterFilter(FilterGreater, filter.BaseDateFilter):
+class DateGreaterFilter(FilterGreater, BaseDateFilter):
     pass
 
 
-class DateSmallerFilter(FilterSmaller, filter.BaseDateFilter):
+class DateSmallerFilter(FilterSmaller, BaseDateFilter):
     pass
 
 
-class DateBetweenFilter(BaseSQLAFilter, filter.BaseDateBetweenFilter):
-    def __init__(self, column, name, options=None, data_type=None):
-        super().__init__(column, name, options, data_type="daterangepicker")
+class DateBetweenFilter(BaseSQLAFilter, BaseDateBetweenFilter):
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, "daterangepicker", options)
 
-    def apply(self, query, value, alias=None):
-        start, end = value
-        return query.filter(self.get_column(alias).between(start, end))
+    def apply(self, query, value):
+        return query.add_filter(self.column, "between", value)
 
 
 class DateNotBetweenFilter(DateBetweenFilter):
-    def apply(self, query, value, alias=None):
-        start, end = value
-        return query.filter(not_(self.get_column(alias).between(start, end)))
-
     def operation(self):
         return lazy_gettext("not between")
 
+    def apply(self, query, value):
+        return query.add_filter(self.column, "not_between", value)
 
-class DateTimeEqualFilter(FilterEqual, filter.BaseDateTimeFilter):
+
+class DateTimeEqualFilter(FilterEqual, BaseDateTimeFilter):
     pass
 
 
-class DateTimeNotEqualFilter(FilterNotEqual, filter.BaseDateTimeFilter):
+class DateTimeNotEqualFilter(FilterNotEqual, BaseDateTimeFilter):
     pass
 
 
-class DateTimeGreaterFilter(FilterGreater, filter.BaseDateTimeFilter):
+class DateTimeGreaterFilter(FilterGreater, BaseDateTimeFilter):
     pass
 
 
-class DateTimeSmallerFilter(FilterSmaller, filter.BaseDateTimeFilter):
+class DateTimeSmallerFilter(FilterSmaller, BaseDateTimeFilter):
     pass
 
 
-class DateTimeBetweenFilter(BaseSQLAFilter, filter.BaseDateTimeBetweenFilter):
-    def __init__(self, column, name, options=None, data_type=None):
-        super().__init__(column, name, options, data_type="datetimerangepicker")
+class DateTimeBetweenFilter(BaseSQLAFilter, BaseDateTimeBetweenFilter):
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, "datetimerangepicker", options)
 
-    def apply(self, query, value, alias=None):
-        start, end = value
-        return query.filter(self.get_column(alias).between(start, end))
+    def apply(self, query, value):
+        return query.add_filter(self.column, "between", value)
 
 
 class DateTimeNotBetweenFilter(DateTimeBetweenFilter):
-    def apply(self, query, value, alias=None):
-        start, end = value
-        return query.filter(not_(self.get_column(alias).between(start, end)))
-
     def operation(self):
         return lazy_gettext("not between")
 
+    def apply(self, query, value):
+        return query.add_filter(self.column, "not_between", value)
 
-class TimeEqualFilter(FilterEqual, filter.BaseTimeFilter):
+
+class TimeEqualFilter(FilterEqual, BaseTimeFilter):
     pass
 
 
-class TimeNotEqualFilter(FilterNotEqual, filter.BaseTimeFilter):
+class TimeNotEqualFilter(FilterNotEqual, BaseTimeFilter):
     pass
 
 
-class TimeGreaterFilter(FilterGreater, filter.BaseTimeFilter):
+class TimeGreaterFilter(FilterGreater, BaseTimeFilter):
     pass
 
 
-class TimeSmallerFilter(FilterSmaller, filter.BaseTimeFilter):
+class TimeSmallerFilter(FilterSmaller, BaseTimeFilter):
     pass
 
 
-class TimeBetweenFilter(BaseSQLAFilter, filter.BaseTimeBetweenFilter):
-    def __init__(self, column, name, options=None, data_type=None):
-        super().__init__(column, name, options, data_type="timerangepicker")
+class TimeBetweenFilter(BaseSQLAFilter, BaseTimeBetweenFilter):
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, "timerangepicker", options)
 
-    def apply(self, query, value, alias=None):
-        start, end = value
-        return query.filter(self.get_column(alias).between(start, end))
+    def apply(self, query, value):
+        return query.add_filter(self.column, "between", value)
 
 
 class TimeNotBetweenFilter(TimeBetweenFilter):
-    def apply(self, query, value, alias=None):
-        start, end = value
-        return query.filter(not_(self.get_column(alias).between(start, end)))
-
     def operation(self):
         return lazy_gettext("not between")
 
+    def apply(self, query, value):
+        return query.add_filter(self.column, "not_between", value)
+
 
 class EnumEqualFilter(FilterEqual):
-    def __init__(self, column, name, options=None, **kwargs):
-        self.enum_class = column.type.enum_class
-        super().__init__(column, name, options, **kwargs)
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        self.enum_class = column_type.enum_class
 
     def clean(self, value):
-        if self.enum_class is None:
-            return super().clean(value)
         return self.enum_class[value]
 
 
 class EnumFilterNotEqual(FilterNotEqual):
-    def __init__(self, column, name, options=None, **kwargs):
-        self.enum_class = column.type.enum_class
-        super().__init__(column, name, options, **kwargs)
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        self.enum_class = column_type.enum_class
 
     def clean(self, value):
-        if self.enum_class is None:
-            return super().clean(value)
         return self.enum_class[value]
 
 
 class EnumFilterEmpty(FilterEmpty):
-    def __init__(self, column, name, options=None, **kwargs):
-        self.enum_class = column.type.enum_class
-        super().__init__(column, name, options, **kwargs)
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        self.enum_class = column_type.enum_class
 
 
 class EnumFilterInList(FilterInList):
-    def __init__(self, column, name, options=None, **kwargs):
-        self.enum_class = column.type.enum_class
-        super().__init__(column, name, options, **kwargs)
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        self.enum_class = column_type.enum_class
 
     def clean(self, value):
         values = super().clean(value)
-        if self.enum_class is not None:
-            values = [self.enum_class[val] for val in values]
+        values = [self.enum_class[val] for val in values]
         return values
 
 
 class EnumFilterNotInList(FilterNotInList):
-    def __init__(self, column, name, options=None, **kwargs):
-        self.enum_class = column.type.enum_class
-        super().__init__(column, name, options, **kwargs)
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        self.enum_class = column_type.enum_class
 
     def clean(self, value):
         values = super().clean(value)
-        if self.enum_class is not None:
-            values = [self.enum_class[val] for val in values]
+        values = [self.enum_class[val] for val in values]
         return values
 
 
 class ChoiceTypeEqualFilter(FilterEqual):
-    def __init__(self, column, name, options=None, **kwargs):
-        super().__init__(column, name, options, **kwargs)
-
-    def apply(self, query, user_query, alias=None):
-        column = self.get_column(alias)
+    def apply(self, query, value):
         choice_type = None
-        # loop through choice 'values' to try and find an exact match
-        if isinstance(column.type.choices, enum.EnumMeta):
-            for choice in column.type.choices:
-                if choice.name == user_query:
+        if isinstance(self.column_type.choices, enum.EnumMeta):
+            for choice in self.column_type.choices:
+                if choice.name == value:
                     choice_type = choice.value
                     break
         else:
-            for type, value in column.type.choices:
-                if value == user_query:
+            for type, value in self.column_type.choices:
+                if value == value:
                     choice_type = type
                     break
         if choice_type:
-            return query.filter(column == choice_type)
+            return query.add_filter(self.column,"==",choice_type)
         else:
-            return query.filter(column.in_([]))
+            return query.add_filter(self.column,"==",value)
 
 
 class ChoiceTypeNotEqualFilter(FilterNotEqual):
-    def __init__(self, column, name, options=None, **kwargs):
-        super().__init__(column, name, options, **kwargs)
-
-    def apply(self, query, user_query, alias=None):
-        column = self.get_column(alias)
+    def apply(self, query, value):
         choice_type = None
-        # loop through choice 'values' to try and find an exact match
-        if isinstance(column.type.choices, enum.EnumMeta):
-            for choice in column.type.choices:
-                if choice.name == user_query:
+        if isinstance(self.column_type.choices, enum.EnumMeta):
+            for choice in self.column_type.choices:
+                if choice.name == value:
                     choice_type = choice.value
                     break
         else:
-            for type, value in column.type.choices:
-                if value == user_query:
+            for type, value in self.column_type.choices:
+                if value == value:
                     choice_type = type
                     break
         if choice_type:
-            # != can exclude NULL values, so "or_ == None" needed to be added
-            return query.filter(
-                or_(column != choice_type, column == None)
-            )  # noqa: E711
+            return query.add_filter(self.column,"!=",choice_type)
         else:
-            return query
+            return query.add_filter(self.column,"!=",value)
 
 
 class ChoiceTypeLikeFilter(FilterLike):
-    def __init__(self, column, name, options=None, **kwargs):
-        super().__init__(column, name, options, **kwargs)
-
-    def apply(self, query, user_query, alias=None):
-        column = self.get_column(alias)
-        choice_types = []
-        if user_query:
-            # loop through choice 'values' looking for matches
-            if isinstance(column.type.choices, enum.EnumMeta):
-                for choice in column.type.choices:
-                    if user_query.lower() in choice.name.lower():
-                        choice_types.append(choice.value)
-            else:
-                for type, value in column.type.choices:
-                    if user_query.lower() in value.lower():
-                        choice_types.append(type)
-        if choice_types:
-            return query.filter(column.in_(choice_types))
+    def apply(self, query, value):
+        choice_type = None
+        if isinstance(self.column_type.choices, enum.EnumMeta):
+            for choice in self.column_type.choices:
+                if choice.name == value:
+                    choice_type = choice.value
+                    break
         else:
-            return query
+            for type, value in self.column_type.choices:
+                if value == value:
+                    choice_type = type
+                    break
+        if choice_type:
+            return query.add_filter(self.column,"like",choice_type)
+        else:
+            return query.add_filter(self.column,"like",value)
 
 
 class ChoiceTypeNotLikeFilter(FilterNotLike):
-    def __init__(self, column, name, options=None, **kwargs):
-        super().__init__(column, name, options, **kwargs)
-
-    def apply(self, query, user_query, alias=None):
-        column = self.get_column(alias)
-        choice_types = []
-        if user_query:
-            # loop through choice 'values' looking for matches
-            if isinstance(column.type.choices, enum.EnumMeta):
-                for choice in column.type.choices:
-                    if user_query.lower() in choice.name.lower():
-                        choice_types.append(choice.value)
-            else:
-                for type, value in column.type.choices:
-                    if user_query.lower() in value.lower():
-                        choice_types.append(type)
-        if choice_types:
-            # != can exclude NULL values, so "or_ == None" needed to be added
-            return query.filter(
-                or_(column.notin_(choice_types), column == None)
-            )  # noqa: E711
+    def apply(self, query, value):
+        choice_type = None
+        if isinstance(self.column_type.choices, enum.EnumMeta):
+            for choice in self.column_type.choices:
+                if choice.name == value:
+                    choice_type = choice.value
+                    break
         else:
-            return query
+            for type, value in self.column_type.choices:
+                if value == value:
+                    choice_type = type
+                    break
+        if choice_type:
+            return query.add_filter(self.column,"not_like",choice_type)
+        else:
+            return query.add_filter(self.column,"not_like",value)
 
 
 class FilterConverter:
@@ -565,11 +526,8 @@ class FilterConverter:
                 for t in db_types:
                     self._converters[t.lower()] = filters
 
-    def get_filters(self, column_type, column, name, **kwargs):
-        column_type_name = column_type.lower()
+    def get_column_filters(self, column_type, column, name, **kwargs):
+        column_type_name = column_type.__class__.__name__.lower()
         filters = self._converters.get(column_type_name, None)
-        if column_type_name == "enum":
-            options = [(v, v) for v in column.type.enums]
-            kwargs["options"] = options
         if filters:
-            return [f(column, name, **kwargs) for f in filters]
+            return [f(column_type, column, name, **kwargs) for f in filters]

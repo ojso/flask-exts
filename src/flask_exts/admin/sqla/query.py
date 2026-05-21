@@ -1,7 +1,9 @@
 from typing import Any
+from functools import reduce
 from sqlalchemy import inspect
 from sqlalchemy.orm import aliased
-from sqlalchemy.sql import select, and_, or_, desc, func
+from sqlalchemy.sql import select, delete
+from sqlalchemy.sql import and_, or_, tuple_, desc, func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.elements import ColumnElement
 import operator
@@ -10,6 +12,66 @@ AliasedClass = Any
 
 
 class Query:
+    @staticmethod
+    def get_model_primary_key(model):
+        """
+        Return primary key name from a model. If the primary key consists of multiple columns,
+        return the corresponding tuple
+        """
+        mapper = inspect(model)
+        pks = [col.name for col in mapper.primary_key]
+        if len(pks) == 1:
+            return pks[0]
+        elif len(pks) > 1:
+            return tuple(pks)
+        else:
+            return None
+
+    @staticmethod
+    def get_model_column(model, column_path: str):
+        pass
+
+    @staticmethod
+    def get_model_column_type(model, column_path: str):
+        if "." in column_path:
+            parts = column_path.split(".")
+            last_model = reduce(
+                lambda a, b: getattr(a, b).property.mapper.class_, parts[:-1], model
+            )
+            last_key = parts[-1]
+        else:
+            last_model = model
+            last_key = column_path
+
+        inspector = inspect(last_model)
+        column = inspector.columns.get(last_key, None)
+        return column.type if column is not None else None
+
+    @staticmethod
+    def get_instance_identity(instance):
+        """
+        Return primary key values from an instance.
+        """
+        identity = inspect(instance).identity
+        if len(identity) == 1:
+            return identity[0]
+        else:
+            return identity
+
+    @staticmethod
+    def delete_by_pk_ids(model, ids: list):
+        """
+        Return a delete statement that deletes all rows with primary key in ids
+        """
+        mapper = inspect(model)
+        primary_key = mapper.primary_key
+        if len(primary_key) == 1:
+            pk_col = primary_key[0]
+            stmt = delete(model).where(pk_col.in_(ids))
+        else:
+            stmt = delete(model).where(tuple_(*primary_key).in_(ids))
+        return stmt
+
     def __init__(self, root_model):
         self.root_model = root_model
         self._path_to_alias: dict[tuple[str, ...], AliasedClass] = {}
@@ -130,9 +192,9 @@ class Query:
             alias = self.get_path_alias(column_path[:-1])
             return getattr(alias, column_path[-1])
 
-    def add_filter(self, column_path: str, value, operator):
+    def add_filter(self, column_path: str, operator, value):
         self._join_attr(column_path)
-        self._filter_conditions.append((column_path, value, operator))
+        self._filter_conditions.append((column_path, operator, value))
 
     def add_search_term(self, search: str, column_list: list[str]):
         terms = search.split(" ")
@@ -219,32 +281,59 @@ class Query:
                 "<=": operator.le,
             }
 
-            for column_path, value, op_str in self._filter_conditions:
+            for column_path, op_str, value in self._filter_conditions:
                 column = self.get_column(column_path)
-                # Handle special operators like 'like' and 'in'
-                if op_str == "like":
-                    if "%" in value:
-                        pattern = value
-                    elif value.startswith("^"):
-                        pattern = f"{value[1:]}%"
-                    else:
-                        pattern = f"%{value}%"
-                    conditions.append(column.like(pattern))
-                elif op_str == "ilike":
-                    #  case insensitive LIKE
-                    if "%" in value:
-                        pattern = value
-                    elif value.startswith("^"):
-                        pattern = f"{value[1:]}%"
-                    else:
-                        pattern = f"%{value}%"
-                    conditions.append(column.ilike(pattern))
-                elif op_str == "in":
-                    conditions.append(column.in_(value))
-                else:
-                    # Handle standard comparison operators
-                    op_func = op_map.get(op_str, operator.eq)
-                    conditions.append(op_func(column, value))
+                match op_str:
+                    case "like":
+                        if "%" in value:
+                            pattern = value
+                        elif value.startswith("^"):
+                            pattern = f"{value[1:]}%"
+                        else:
+                            pattern = f"%{value}%"
+                        conditions.append(column.like(pattern))
+                    case "not_like":
+                        if "%" in value:
+                            pattern = value
+                        elif value.startswith("^"):
+                            pattern = f"{value[1:]}%"
+                        else:
+                            pattern = f"%{value}%"
+                        conditions.append(~column.like(pattern))
+                    case "ilike":
+                        if "%" in value:
+                            pattern = value
+                        elif value.startswith("^"):
+                            pattern = f"{value[1:]}%"
+                        else:
+                            pattern = f"%{value}%"
+                        conditions.append(column.ilike(pattern))
+                    case "not_ilike":
+                        #  case insensitive LIKE
+                        if "%" in value:
+                            pattern = value
+                        elif value.startswith("^"):
+                            pattern = f"{value[1:]}%"
+                        else:
+                            pattern = f"%{value}%"
+                        conditions.append(~column.ilike(pattern))
+                    case "is_null":
+                        conditions.append(column.is_(None))
+                    case "isnot_null":
+                        conditions.append(column.isnot(None))
+                    case "in":
+                        conditions.append(column.in_(value))
+                    case "not_in":
+                        conditions.append(~column.in_(value))
+                    case "between":
+                        start, end = value
+                        conditions.append(column.between(start, end))
+                    case "not_between":
+                        start, end = value
+                        conditions.append(~column.between(start, end))
+                    case _:
+                        op_func = op_map.get(op_str)
+                        conditions.append(op_func(column, value))
 
             # Combine all conditions with AND and apply them to the statement
             stmt = stmt.where(and_(*conditions))
@@ -276,10 +365,11 @@ class Query:
             stmt = stmt.order_by(*self._order_by)
 
         # Apply LIMIT and OFFSET
-        if self._limit is not None:
-            stmt = stmt.limit(self._limit)
         if self._offset is not None:
             stmt = stmt.offset(self._offset)
+
+        if self._limit is not None:
+            stmt = stmt.limit(self._limit)        
 
         return stmt
 

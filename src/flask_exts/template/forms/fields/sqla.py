@@ -197,7 +197,7 @@ class CheckboxListField(QuerySelectMultipleField):
     widget = CheckboxListInput()
 
 
-class InlineModelFormList(InlineFieldList):
+class InlineModelFormListField(InlineFieldList):
     """
     Customized inline model form list field.
     """

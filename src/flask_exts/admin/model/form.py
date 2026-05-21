@@ -1,5 +1,4 @@
 import inspect
-import warnings
 from wtforms.fields import HiddenField
 from wtforms.fields.core import UnboundField
 from wtforms.validators import InputRequired
@@ -37,12 +36,10 @@ def create_editable_list_form(form_base_class, form_class, widget=None):
     class ListForm(form_base_class):
         list_form_pk = HiddenField(validators=[InputRequired()])
 
-    # iterate FormMeta to get unbound fields, replace widget, copy to ListForm
     for name, obj in form_class.__dict__.items():
         if isinstance(obj, UnboundField):
             obj.kwargs["widget"] = widget
             setattr(ListForm, name, obj)
-
             if name == "list_form_pk":
                 raise Exception("Form already has a list_form_pk column.")
 

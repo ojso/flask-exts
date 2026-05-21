@@ -4,7 +4,7 @@ from flask_babel import lazy_gettext
 
 
 class BaseFilter:
-    def __init__(self, name, options=None, data_type=None):
+    def __init__(self, name, data_type=None, options=None):
         """
         Constructor.
 
@@ -16,14 +16,20 @@ class BaseFilter:
             Client-side widget type to use.
         """
         self.name = name
-        self.options = options
         self.data_type = data_type
+        self.options = options
+
+    def operation(self):
+        """
+        Return readable operation name.
+
+        For example: 'equals'
+        """
+        raise NotImplementedError()
 
     def get_options(self):
         """
         Return list of predefined options.
-
-        Override to customize behavior.
 
         :param view:
             Associated administrative view class.
@@ -32,6 +38,15 @@ class BaseFilter:
             return self.options()
         else:
             return self.options
+
+    def clean(self, value):
+        """
+        Parse value into python format. Occurs before .apply()
+
+        :param value:
+            Value to parse
+        """
+        return value
 
     def validate(self, value):
         """
@@ -48,15 +63,6 @@ class BaseFilter:
         except ValueError:
             return False
 
-    def clean(self, value):
-        """
-        Parse value into python format. Occurs before .apply()
-
-        :param value:
-            Value to parse
-        """
-        return value
-
     def apply(self, query, value):
         """
         Apply search criteria to the query and return new query.
@@ -65,14 +71,6 @@ class BaseFilter:
             Query
         :param value:
             Search criteria
-        """
-        raise NotImplementedError()
-
-    def operation(self):
-        """
-        Return readable operation name.
-
-        For example: 'equals'
         """
         raise NotImplementedError()
 
@@ -85,9 +83,9 @@ class BaseBooleanFilter(BaseFilter):
     Base boolean filter, uses fixed list of options.
     """
 
-    def __init__(self, name, options=None, data_type=None):
+    def __init__(self, name, data_type=None, options=None):
         super().__init__(
-            name, (("1", lazy_gettext("Yes")), ("0", lazy_gettext("No"))), data_type
+            name, data_type, (("1", lazy_gettext("Yes")), ("0", lazy_gettext("No")))
         )
 
     def validate(self, value):
@@ -97,9 +95,6 @@ class BaseBooleanFilter(BaseFilter):
 class BaseIntFilter(BaseFilter):
     """
     Base Int filter. Adds validation and changes value to python int.
-
-    Avoid using int(float(value)) to also allow using decimals, because it
-    causes precision issues with large numbers.
     """
 
     def clean(self, value):
@@ -141,8 +136,8 @@ class BaseDateTimeFilter(BaseFilter):
     Base DateTime filter. Uses client-side date time picker control.
     """
 
-    def __init__(self, name, options=None, data_type=None):
-        super().__init__(name, options, data_type="datetimepicker")
+    def __init__(self, name, data_type=None, options=None):
+        super().__init__(name, "datetimepicker", options)
 
     def clean(self, value):
         return datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
@@ -153,8 +148,8 @@ class BaseDateFilter(BaseFilter):
     Base Date filter. Uses client-side date picker control.
     """
 
-    def __init__(self, name, options=None, data_type=None):
-        super().__init__(name, options, data_type="datepicker")
+    def __init__(self, name, data_type=None, options=None):
+        super().__init__(name, "datepicker", options)
 
     def clean(self, value):
         return datetime.datetime.strptime(value, "%Y-%m-%d").date()
@@ -165,8 +160,8 @@ class BaseTimeFilter(BaseFilter):
     Base Time filter. Uses client-side time picker control.
     """
 
-    def __init__(self, name, options=None, data_type=None):
-        super().__init__(name, options, data_type="timepicker")
+    def __init__(self, name, data_type=None, options=None):
+        super().__init__(name, "timepicker", options)
 
     def clean(self, value):
         timetuple = time.strptime(value, "%H:%M:%S")
@@ -178,6 +173,9 @@ class BaseDateTimeBetweenFilter(BaseFilter):
     Base DateTime Between filter. Consolidates logic for validation and clean.
     Apply method is different for each back-end.
     """
+
+    def operation(self):
+        return lazy_gettext("between")
 
     def clean(self, value):
         return [
@@ -194,9 +192,6 @@ class BaseDateTimeBetweenFilter(BaseFilter):
                 return False
         except ValueError:
             return False
-
-    def operation(self):
-        return lazy_gettext("between")
 
 
 class BaseDateBetweenFilter(BaseDateTimeBetweenFilter):

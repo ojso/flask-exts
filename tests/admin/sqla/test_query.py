@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, Session, relationship
 from flask_exts.admin.sqla.query import Query
+from tests.datastore.sqla.models.model1 import Model1
 
 Base = declarative_base()
 
@@ -49,12 +50,13 @@ class ModelA(Base):
         "ModelB", foreign_keys=[b_second_id], back_populates="a_second"
     )
 
+
 def test_eager_load():
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     session = Session(engine)
     query = Query(ModelB)
-    query.add_eager_loads(["a_first","x"])
+    query.add_eager_loads(["a_first", "x"])
     print(query._joinedloads)
     print(query._selectinloads)
 
@@ -120,7 +122,6 @@ def test_query():
     print("\n" + "=" * 50)
     print("场景3: 前缀复用")
 
-
     manager3 = Query(ModelA)
 
     # 先 JOIN 部分路径
@@ -143,7 +144,7 @@ def test_query():
 
     print(f"\n最终 SQL: {stmt}")
 
-    # 场景3-2: 
+    # 场景3-2:
     print("\n" + "=" * 50)
     print("场景3-2: 前缀复用")
 
@@ -182,4 +183,25 @@ def test_query():
     print(f"复杂查询 SQL:\n{stmt}")
 
 
-
+def test_column_type():
+    for key in [
+        "id",
+        "test1",
+        "test2",
+        "test3",
+        "test4",
+        "bool_field",
+        "date_field",
+        "time_field",
+        "datetime_field",
+        "email_field",
+        "enum_field",
+        "enum_type_field",
+    ]:
+        column_type = Query.get_model_column_type(Model1, key)
+        column_type_name = column_type.__class__.__name__
+        print(f"Model1.{key} column type: {column_type_name}")
+        if column_type_name == "Enum":
+            print(f"  Model1.{key} is an Enum with values: {column_type.enums}")
+            print(f"  Model1.{key} Enum class: {column_type.enum_class}")
+        

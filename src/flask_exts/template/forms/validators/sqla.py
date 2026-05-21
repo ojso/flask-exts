@@ -32,7 +32,7 @@ class Unique:
         # if obj is None, the value is unique, and we can stop here. Otherwise, we need to check if it's the same object as the one being edited (if any).
         if obj is None:
             return
-        
+
         # form._obj is the object being edited, if any. We should allow it to have the same value as itself.
         if not hasattr(form, "_obj") or not form._obj == obj:
             raise ValidationError(lazy_gettext("Already exists."))
@@ -61,19 +61,3 @@ class ItemsRequired(InputRequired):
                 message = self.message
 
             raise ValidationError(message)
-
-
-class TimeZoneValidator:
-    """
-    Tries to coerce a TimZone object from input data
-    """
-
-    def __init__(self, coerce_function):
-        self.coerce_function = coerce_function
-
-    def __call__(self, form, field):
-        try:
-            self.coerce_function(str(field.data))
-        except Exception:
-            msg = 'Not a valid timezone (e.g. "America/New_York", "Africa/Johannesburg", "Asia/Singapore").'
-            raise ValidationError(field.gettext(msg))

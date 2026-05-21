@@ -2,23 +2,9 @@ from markupsafe import Markup
 from wtforms import validators
 from flask_babel import gettext
 from sqlalchemy import select
-from flask_exts.admin.sqla.filter import BaseSQLAFilter
-from flask_exts.admin.sqla.filter import FilterEqual
 from flask_exts.admin.sqla.view import SqlaModelView
 from ..models.author import Author, AVAILABLE_USER_TYPES
 from ..models.post import Post
-
-
-# Custom filter class
-class FilterLastNameBrown(BaseSQLAFilter):
-    def apply(self, query, value, alias=None):
-        if value == "1":
-            return query.filter(self.column == "Brown")
-        else:
-            return query.filter(self.column != "Brown")
-
-    def operation(self):
-        return "is Brown"
 
 
 # Customized User model admin
@@ -38,7 +24,7 @@ def is_numberic_validator(form, field):
 class AuthorView(SqlaModelView):
     can_set_page_size = False
     can_export = True
-    edit_modal = True
+    # edit_modal = True
     page_size = 5
     page_size_options = (5, 10, 15)
     action_disallowed_list = ["delete"]
@@ -55,6 +41,7 @@ class AuthorView(SqlaModelView):
     }
     form_widget_args = {"id": {"readonly": True}}
     column_list = [
+        "id",
         "type",
         "first_name",
         "last_name",
@@ -63,6 +50,7 @@ class AuthorView(SqlaModelView):
         "currency",
         "timezone",
         # "phone_number",
+        "enum_choice_field",
     ]
     column_searchable_list = [
         "first_name",
@@ -98,17 +86,13 @@ class AuthorView(SqlaModelView):
     # filters with the same name will appear as operations under the same filter
     column_filters = [
         "first_name",
-        FilterEqual(column=Author.last_name, name="Last Name"),
-        FilterLastNameBrown(
-            column=Author.last_name,
-            name="Last Name",
-            options=(("1", "Yes"), ("0", "No")),
-        ),
+        "last_name",
         # "phone_number",
         "email",
         "ip_address",
         "currency",
         "timezone",
+        "enum_choice_field",
     ]
     # column_formatters = {"phone_number": phone_number_formatter}
 

@@ -2,42 +2,19 @@ from typing import Optional, Dict, List, Tuple
 from flask import flash
 from flask_babel import gettext, ngettext, lazy_gettext
 from sqlalchemy import inspect
-from sqlalchemy import Boolean
 from ...datastore.sqla import db
-from ...datastore.sqla.utils import is_relationship
-from ...datastore.sqla.utils import get_field_with_path
 from ..model.view import ModelView
 from ..model.form import create_editable_list_form
 from . import form
-from .filter import BaseSQLAFilter
 from .filter import FilterConverter
 from .ajax import create_ajax_loader
 from .typefmt import DEFAULT_FORMATTERS
-from ...datastore.sqla.utils import get_primary_key
-from ...datastore.sqla.utils import get_identity
-from ...datastore.sqla.stmt import stmt_delete_by_pk_ids
 from .query import Query
 
 
 class SqlaModelView(ModelView):
     """
     SQLAlchemy model view
-    """
-
-    column_searchable_list = None
-    """
-        Collection of the searchable columns.
-
-        Example::
-
-            class MyModelView(ModelView):
-                column_searchable_list = ('name', 'email')
-
-        You can also pass relation.column::
-
-            class MyModelView(ModelView):
-                column_searchable_list = (user.name, user.email)
-
     """
 
     model_form_converter = form.AdminModelConverter
@@ -48,8 +25,7 @@ class SqlaModelView(ModelView):
 
             class MyModelConverter(AdminModelConverter):
                 pass
-
-
+                
             class MyAdminView(ModelView):
                 model_form_converter = MyModelConverter
     """
@@ -66,13 +42,6 @@ class SqlaModelView(ModelView):
 
             class MyAdminView(ModelView):
                 inline_model_form_converter = MyInlineModelConverter
-    """
-
-    filter_converter = FilterConverter()
-    """
-        Field to filter converter.
-
-        Override this attribute to use non-default converter.
     """
 
     inline_models = None
@@ -150,16 +119,6 @@ class SqlaModelView(ModelView):
                 ]}
     """
 
-    form_optional_types = (Boolean,)
-    """
-        List of field types that should be optional if column is not nullable.
-
-        Example::
-
-            class MyModelView(BaseModelView):
-                form_optional_types = (Boolean, Unicode)
-    """
-
     def __init__(
         self,
         model,
@@ -185,6 +144,7 @@ class SqlaModelView(ModelView):
         """
         # set db.session as default session
         self.session = session if session is not None else db.session
+        self.filter_converter = FilterConverter()
 
         super().__init__(
             model,
@@ -197,7 +157,7 @@ class SqlaModelView(ModelView):
         if self.form_choices is None:
             self.form_choices = {}
 
-        self._primary_key = get_primary_key(self.model)
+        self._primary_key = Query.get_model_primary_key(self.model)
         self._is_multiple_pk = isinstance(self._primary_key, tuple)
 
         if self._primary_key is None:
@@ -240,7 +200,7 @@ class SqlaModelView(ModelView):
         Return the primary key value from a model object.
         If there are multiple primary keys, they're encoded into string representation.
         """
-        value = get_identity(instance)
+        value = Query.get_instance_identity(instance)
         if isinstance(value, tuple):
             return ",".join([str(v) for v in value])
         else:
@@ -285,53 +245,23 @@ class SqlaModelView(ModelView):
 
         return columns
 
-    def search_placeholder(self):
-        """
-        Return search placeholder.
-
-        For example, if set column_labels and column_searchable_list:
-
-        class MyModelView(BaseModelView):
-            column_labels = dict(name='Name', last_name='Last Name')
-            column_searchable_list = ('name', 'last_name')
-
-        placeholder is: "Name, Last Name"
-        """
-        if not self.column_searchable_list:
-            return None
-
-        placeholders = [
-            self.column_labels.get(searchable, searchable)
-            for searchable in self.column_searchable_list
-        ]
-
-        return ", ".join(placeholders)
-
-    def scaffold_filters(self, filter_column_path):
+    def scaffold_column_filter(self, column_path):
         """
         Return list of enabled filters
         """
 
-        attr, joins = get_field_with_path(self.model, filter_column_path)
+        column_type = Query.get_model_column_type(self.model, column_path)
 
-        if attr is None:
-            raise Exception("Failed to find field for filter: %s" % filter_column_path)
-
-        if is_relationship(attr):
-            raise Exception(
-                "Relationship can not be a filter field: %s" % filter_column_path
-            )
-
-        if self.column_labels and filter_column_path in self.column_labels:
-            visible_name = self.column_labels[filter_column_path]
+        if self.column_labels and column_path in self.column_labels:
+            visible_name = self.column_labels[column_path]
         else:
-            visible_name = filter_column_path
+            visible_name = column_path
 
-        flts = self.filter_converter.get_filters(
-            type(attr.type).__name__,
-            filter_column_path,
+        flts = self.filter_converter.get_column_filters(
+            column_type,
+            column_path,
             visible_name,
-            options=self.column_choices.get(filter_column_path),
+            options=self.column_choices.get(column_path),
         )
         return flts
 
@@ -399,7 +329,6 @@ class SqlaModelView(ModelView):
             form_class = custom_converter.contribute(self.model, form_class, m)
         return form_class
 
-    # AJAX foreignkey support
     def _create_ajax_loader(self, name, options):
         return create_ajax_loader(self.model, self.session, name, name, options)
 
@@ -563,7 +492,7 @@ class SqlaModelView(ModelView):
 
     def delete_models_by_pk_ids(self, ids: list):
         try:
-            stmt = stmt_delete_by_pk_ids(self.model, ids)
+            stmt = Query.delete_by_pk_ids(self.model, ids)
             result = self.session.execute(stmt)
             self.session.commit()
             return result.rowcount

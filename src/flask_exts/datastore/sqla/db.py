@@ -1,10 +1,10 @@
-from flask import Flask
-from flask import current_app
-from flask import g
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import DeclarativeBase
+from flask import Flask
+from flask import current_app
+from flask import g
 
 
 class Db:
@@ -42,7 +42,6 @@ class Db:
             raise RuntimeError("A 'SQLAlchemy' instance has already been registered.")
         app.extensions["sqlalchemy"] = self
 
-        # engine
         engine_options = {
             "url": app.config.get("SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:")
         }
@@ -50,7 +49,6 @@ class Db:
             engine_options["echo"] = True
         self.engine = self._make_engine(engine_options)
 
-        # session
         session_options = {"bind": self.engine}
         self.session = self._make_scoped_session(session_options)
         app.teardown_appcontext(self._remove_session)

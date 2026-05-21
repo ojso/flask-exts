@@ -130,7 +130,6 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
     details_modal = False
     """Setting this to true will display the details_view as a modal dialog."""
 
-    # Customizations
     column_list: Optional[T_COLUMN_LIST] = None
     """
         Collection of the model field names for the list view.
@@ -343,8 +342,14 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
 
         Example::
 
-            class MyModelView(BaseModelView):
+            class MyModelView(ModelView):
                 column_searchable_list = ('name', 'email')
+
+        You can also pass relation.column::
+
+            class MyModelView(ModelView):
+                column_searchable_list = (user.name, user.email)
+
     """
 
     column_editable_list = None
@@ -493,9 +498,6 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
                 form_ajax_refs = {
                     'user': QueryAjaxModelLoader('user', User, self.session, fields=['email'], page_size=10)
                 }
-
-        If you need custom loading functionality, you can implement your custom loading behavior
-        in your `AjaxModelLoader` class.
     """
 
     # Export settings
@@ -719,9 +721,25 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
 
     def search_placeholder(self):
         """
-        Return search placeholder text.
+        Return search placeholder.
+
+        For example, if set column_labels and column_searchable_list:
+
+        class MyModelView(BaseModelView):
+            column_labels = dict(name='Name', last_name='Last Name')
+            column_searchable_list = ('name', 'last_name')
+
+        placeholder is: "Name, Last Name"
         """
-        return None
+        if not self.column_searchable_list:
+            return None
+
+        placeholders = [
+            self.column_labels.get(searchable, searchable)
+            for searchable in self.column_searchable_list
+        ]
+
+        return ", ".join(placeholders)
 
     # Form helpers
     def scaffold_form(self):
@@ -995,7 +1013,7 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
             sort=request.args.get("sort", None, type=int),
             sort_desc=request.args.get("desc", None, type=int),
             search=request.args.get("search", None),
-            filters=self._get_list_filter_args(),
+            filters=self.get_list_actived_filters(),
             extra_args=dict(
                 [
                     (k, v)
@@ -1034,7 +1052,7 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
 
         kwargs["page_size"] = self.get_safe_page_size(view_args.page_size)
 
-        kwargs.update(self._get_filters(view_args.filters))
+        kwargs.update(self.get_actived_filters_kwargs(view_args.filters))
 
         return self.get_url(".index_view", **kwargs)
 
@@ -1150,16 +1168,10 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
 
         if self.form_ajax_refs:
             for name, options in self.form_ajax_refs.items():
-                if isinstance(options, dict):
-                    result[name] = self._create_ajax_loader(name, options)
-                elif isinstance(options, AjaxModelLoader):
+                if isinstance(options, AjaxModelLoader):
                     result[name] = options
                 else:
-                    raise ValueError(
-                        "%s.form_ajax_refs can not handle %s types"
-                        % (self, type(options))
-                    )
-
+                    result[name] = self._create_ajax_loader(name, options)
         return result
 
     def _create_ajax_loader(self, name, options):
@@ -1257,10 +1269,8 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
             clear_search_url=clear_search_url,
             search=view_args.search,
             # Filters
-            filters=self._filters,
-            filter_groups=self._get_filter_groups(),
             active_filters=view_args.filters,
-            filter_args=self._get_filters(view_args.filters),
+            filter_args=self.get_actived_filters_kwargs(view_args.filters),
             # Misc
             return_url=self._get_list_url(view_args),
             # Extras
