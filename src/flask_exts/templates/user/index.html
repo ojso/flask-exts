@@ -1,23 +1,53 @@
 {% extends "admin/master.html" %}
 
 {% block main %}
-    <div>id: {{ current_user.id }}</div>
-    <div>username: {{ current_user.username }}</div>
-    <div>email: {{ current_user.email }}</div>
-    <div>tfa_enabled: {{ current_user.tfa_enabled }}</div>
-    <div>tfa_verified: {{ session.get('tfa_verified', false) }}</div>
-    {%- if current_user.tfa_enabled and not session.get('tfa_verified', false) %}
-        <div>
-            {{ _("Verify 2FA. Click") }} <a href="{{ url_for('.verify_tfa') }}">{{ _("here") }}</a> {{ _("to proceed.") }}
-        </div>
-    {%- endif %}
-    <div>
-        {{ _("Want to change password? Click") }} <a href="{{ url_for('.change_password') }}">{{ _("here") }}</a> {{ _("to proceed.") }}
+<div class="container mt-5">
+    <div class="col-md-8 mx-auto card shadow-sm p-3">
+        
+        <!-- User basic information display area -->
+        <table class="table table-bordered mb-4">
+            <tbody>
+                <tr><td class="text-muted w-25">{{ _("User ID") }}</td><td>{{ current_user.id }}</td></tr>
+                <tr><td class="text-muted w-25">{{ _("Account Name") }}</td><td>{{ current_user.username }}</td></tr>
+                <tr><td class="text-muted w-25">{{ _("Email Address") }}</td><td>{{ current_user.email }}</td></tr>
+                <tr>
+                    <td class="text-muted w-25">{{ _("Security Status") }}</td>
+                    <td>{{ _("Verified") if session.get('tfa_verified') else _("Pending Verification") }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Account security and operation settings area -->
+        <table class="table table-bordered">
+            <tbody>
+                {# Urgent alert: Displayed when 2FA is enabled but not yet verified #}
+                {%- if current_user.tfa_enabled and not session.get('tfa_verified', false) %}
+                <tr class="table-warning">
+                    <td class="w-25">{{ _("Action Required") }}</td>
+                    <td><a href="{{ url_for('.verify_tfa') }}" class="btn btn-sm btn-warning">{{ _("Verify Now") }}</a></td>
+                </tr>
+                {%- endif %}
+
+                <!-- Password management action -->
+                <tr>
+                    <td class="text-muted w-25">{{ _("Password Management") }}</td>
+                    <td><a href="{{ url_for('.change_password') }}" class="btn btn-sm btn-outline-primary">{{ _("Change Password") }}</a></td>
+                </tr>
+
+                <!-- Two-Factor Authentication setup -->
+                <tr>
+                    <td class="text-muted w-25">{{ _("Two-Factor Auth") }}</td>
+                    <td><a href="{{ url_for('.setup_tfa') }}" class="btn btn-sm btn-outline-info">{{ _("Set Up 2FA") }}</a></td>
+                </tr>
+
+                <!-- Session control action -->
+                <tr>
+                    <td class="text-muted w-25">{{ _("Session Control") }}</td>
+                    <td><a href="{{ url_for('.logout') }}" class="btn btn-sm btn-outline-danger">{{ _("Log Out") }}</a></td>
+                </tr>
+            </tbody>
+        </table>
+
     </div>
-    <div>
-        {{ _("Set up 2FA? Click") }} <a href="{{ url_for('.setup_tfa') }}">{{ _("here") }}</a> {{ _("to begin.") }}
-    </div>
-    <div>
-        {{ _("Want to logout? Click") }} <a href="{{ url_for('.logout') }}">{{ _("here") }}</a> {{ _("to proceed.") }}
-    </div>
+</div>
 {% endblock %}

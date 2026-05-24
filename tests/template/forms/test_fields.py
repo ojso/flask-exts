@@ -1,6 +1,7 @@
 from wtforms.form import Form
 from wtforms.fields import StringField
 from wtforms.fields import FieldList
+from wtforms.fields.core import UnboundField
 from flask_exts.template.forms.fields import JSONField
 from flask_exts.template.forms.fields import DateTimePickerField
 
@@ -12,6 +13,21 @@ class DummyPostData(dict):
             v = [v]
         return v
 
+def test_form_fields():
+    class F(Form):
+        name = StringField()
+        json_field = JSONField()
+        datetime_field = DateTimePickerField()
+        txt = FieldList(StringField())
+
+    # for name, obj in F.__dict__.items():
+    #     if not name.startswith('_') and isinstance(obj, UnboundField):
+    #         print(f"field: {name}, type: {obj.field_class.__name__}")
+    
+    assert F.name.field_class == StringField
+    assert F.json_field.field_class == JSONField
+    assert F.datetime_field.field_class == DateTimePickerField
+    assert F.txt.field_class == FieldList
 
 def test_json_field():
     class F(Form):

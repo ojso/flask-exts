@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
 from flask import session
-from flask_babel import get_locale
+from flask_babel import get_locale, ngettext
 from flask_babel import get_timezone
 from flask_babel import format_datetime
 from flask_babel import refresh
@@ -38,14 +38,46 @@ def test_locale(app):
 
 
 def test_translation(app):
-    text = "Name"
-    text_en = "Name"
-    text_zh = "名称"
     with app.test_request_context():
-        assert gettext(text) == text_en
+        assert gettext("Name") == "Name"
+        count = 1
+        s1 = ngettext(
+                "one apple",
+                "%(count)d apples",
+                count,
+                count=count,
+            )
+        assert s1 == "one apple"
+        count = 2
+        s2 = ngettext(
+                "one apple",
+                "%(count)d apples",
+                count,
+                count=count,
+            )
+        assert s2 == "2 apples"
+        # print(s1,s2)
+
         session["lang"] = "zh"
         refresh()
-        assert gettext(text) == text_zh
+        assert gettext("Name") == "名称"
+        count = 1
+        s1 = ngettext(
+                "one apple",
+                "%(count)d apples",
+                count,
+                count=count,
+            )
+        assert s1 == "1 个苹果"
+        count = 2
+        s2 = ngettext(
+                "one apple",
+                "%(count)d apples",
+                count,
+                count=count,
+            )
+        assert s2 == "2 个苹果"
+        # print(s1,s2)
 
 
 def test_translation_form(app):

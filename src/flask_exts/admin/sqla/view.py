@@ -1,6 +1,6 @@
 from typing import Optional, Dict, List, Tuple
 from flask import flash
-from flask_babel import gettext, ngettext, lazy_gettext
+from flask_babel import gettext
 from sqlalchemy import inspect
 from ...datastore.sqla import db
 from ..model.view import ModelView

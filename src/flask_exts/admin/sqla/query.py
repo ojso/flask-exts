@@ -5,10 +5,11 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.sql import select, delete
 from sqlalchemy.sql import and_, or_, tuple_, desc, func
 from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql.elements import ColumnElement
 import operator
 
-AliasedClass = Any
+
 
 
 class Query:
@@ -22,14 +23,8 @@ class Query:
         pks = [col.name for col in mapper.primary_key]
         if len(pks) == 1:
             return pks[0]
-        elif len(pks) > 1:
-            return tuple(pks)
         else:
-            return None
-
-    @staticmethod
-    def get_model_column(model, column_path: str):
-        pass
+            return tuple(pks)
 
     @staticmethod
     def get_model_column_type(model, column_path: str):
@@ -369,7 +364,7 @@ class Query:
             stmt = stmt.offset(self._offset)
 
         if self._limit is not None:
-            stmt = stmt.limit(self._limit)        
+            stmt = stmt.limit(self._limit)
 
         return stmt
 

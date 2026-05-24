@@ -37,11 +37,11 @@ def create_editable_list_form(form_base_class, form_class, widget=None):
         list_form_pk = HiddenField(validators=[InputRequired()])
 
     for name, obj in form_class.__dict__.items():
-        if isinstance(obj, UnboundField):
-            obj.kwargs["widget"] = widget
-            setattr(ListForm, name, obj)
+        if not name.startswith('_') and isinstance(obj, UnboundField):
             if name == "list_form_pk":
                 raise Exception("Form already has a list_form_pk column.")
+            obj.kwargs["widget"] = widget
+            setattr(ListForm, name, obj)           
 
     return ListForm
 

@@ -17,10 +17,8 @@ def get_primary_key(model):
     pks = [col.name for col in mapper.primary_key]
     if len(pks) == 1:
         return pks[0]
-    elif len(pks) > 1:
-        return tuple(pks)
     else:
-        return None
+        return tuple(pks)
 
 
 def has_multiple_pks(model):
@@ -29,11 +27,3 @@ def has_multiple_pks(model):
     """
     mapper = inspect(model)
     return len(mapper.primary_key) > 1
-
-
-def get_model_tables(model):
-    """
-    Return a set of table names that the model is mapped to
-    """
-    mapper = inspect(model)
-    return mapper.tables

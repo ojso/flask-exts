@@ -1,5 +1,5 @@
 # extract messages from source files and generate a POT file
-pybabel extract -F babel/babel.cfg -k lazy_gettext -o babel/messages.pot --project Flask-Exts src/flask_exts/ tests/
+pybabel extract -F babel/babel.cfg -k lazy_gettext -o babel/messages.pot --project Flask-Exts src/flask_exts/
 
 # update PO files from a POT file
 pybabel update -i babel/messages.pot -d src/flask_exts/translations -D messages
