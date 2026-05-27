@@ -2,10 +2,9 @@ from flask_babel import gettext
 from flask_babel import force_locale
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.datastore.sqla import db
-from flask_exts.datastore.sqla.orm import Mapped
-from flask_exts.datastore.sqla.orm import mapped_column
-from tests.datastore.sqla.models.model1 import Model1
-from .test_basic import CustomModelView
+from tests.admin.sqla.models.model1 import Model1
+from tests.admin.sqla.models.unique import UniqueModel
+from .test_basic import CustomSqlaModelView
 
 
 def test_column_label_translation(app, client, admin):
@@ -15,7 +14,7 @@ def test_column_label_translation(app, client, admin):
         with force_locale("zh"):
             label = gettext("Name")
 
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Model1,
             column_list=["test1", "test3"],
             column_labels=dict(test1=label),
@@ -25,34 +24,26 @@ def test_column_label_translation(app, client, admin):
 
         rv = client.get("/admin/model1/?flt1_0=test")
         assert rv.status_code == 200
-        # assert '{"Nombre":' in rv.text
         assert "名称" in rv.text
 
 
 def test_unique_validator_translation_is_dynamic(app, client, admin):
     with app.app_context():
-
-        class UniqueTable(db.Model):
-            __tablename__="unique_table"
-            id: Mapped[int] = mapped_column(primary_key=True)
-            value: Mapped[str] = mapped_column(unique=True)
-
         db.create_all()
-
-        view = SqlaModelView(UniqueTable)
+        view = SqlaModelView(UniqueModel)
         view.can_create = True
         admin.add_view(view)
 
         rv = client.post(
-            "/admin/uniquetable/new",
-            data=dict(id="1", value="hello"),
+            "/admin/uniquemodel/new",
+            data=dict(id="1", name="test", value="hello"),
             follow_redirects=True,
         )
         assert rv.status_code == 200
 
         rv = client.post(
-            "/admin/uniquetable/new",
-            data=dict(id="1", value="hello"),
+            "/admin/uniquemodel/new",
+            data=dict(id="1", name="test", value="world"),
             follow_redirects=True,
         )
         assert rv.status_code == 200
@@ -60,8 +51,8 @@ def test_unique_validator_translation_is_dynamic(app, client, admin):
 
         with force_locale("zh"):
             rv = client.post(
-                "/admin/uniquetable/new",
-                data=dict(id="1", value="hello"),
+                "/admin/uniquemodel/new",
+                data=dict(id="1", name="test", value="world"),
                 follow_redirects=True,
             )
             assert rv.status_code == 200

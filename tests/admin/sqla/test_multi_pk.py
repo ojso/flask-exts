@@ -1,18 +1,16 @@
 from flask_exts.datastore.sqla import db
-from tests.datastore.sqla.models.multpk import Multpk
+from tests.admin.sqla.models.multpk import Multpk
 from flask_exts.admin.sqla.view import SqlaModelView
+from .custom_sqla_model_view import CustomSqlaModelView
 
-
-class CustomModelView(SqlaModelView):
-    form_columns=["id", "id2", "data"],
 
 def test_multiple_pk(app, client, admin):
-    # Test multiple primary keys - mix int and string together
     with app.app_context():
         db.reset_all()
-        view = CustomModelView(
-            model=Multpk,            
+        view = CustomSqlaModelView(
+            model=Multpk,
             endpoint="model",
+            form_columns=["id", "id2", "data"],
         )
         admin.add_view(view)
 
@@ -30,7 +28,12 @@ def test_multiple_pk(app, client, admin):
         assert rv.status_code == 200
         assert "test_multi" in rv.text
 
-        # Correct order is mandatory -> fail here
-        rv = client.get("/admin/model/edit/?id=2,1")
+        rv = client.post(
+            "/admin/model/edit/?id=1,2",
+            data=dict(id=1, id2=2, data="test_multi_edited"),
+        )
         assert rv.status_code == 302
 
+        rv = client.get("/admin/model/details/?id=1,2")
+        assert rv.status_code == 200
+        assert "test_multi_edited" in rv.text

@@ -1,7 +1,7 @@
-from ...datastore.sqla import db
-from ...datastore.sqla.orm import ForeignKey
-from ...datastore.sqla.orm import Table
-from ...datastore.sqla.orm import Column
+from sqlalchemy import Column
+from sqlalchemy import Table
+from sqlalchemy import ForeignKey
+from . import db
 
 user_role_table = Table(
     "user_role",

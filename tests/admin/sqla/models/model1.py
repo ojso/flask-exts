@@ -1,20 +1,20 @@
 import enum
 from datetime import datetime, date, time
 from typing import Optional
-from .. import db
-from .. import Mapped
-from .. import mapped_column
-from .. import ForeignKey
-from .. import relationship
-from .. import hybrid_property
-from .. import cast
-from .. import Integer
-from .. import Boolean
-from .. import String
-from .. import TEXT
-from .. import Enum
-from .. import Float
-from .. import DateTime
+from . import db
+from . import Mapped
+from . import mapped_column
+from . import ForeignKey
+from . import relationship
+from . import hybrid_property
+from . import cast
+from . import Integer
+from . import Boolean
+from . import String
+from . import TEXT
+from . import Enum
+from . import Float
+from . import DateTime
 
 
 class EnumChoices(enum.Enum):
@@ -26,24 +26,21 @@ class Model1(db.Model):
     __tablename__ = "model1"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    test1: Mapped[str]
-    test2: Mapped[Optional[str]]
-    test3: Mapped[Optional[str]] = mapped_column(TEXT)
-    test4: Mapped[Optional[str]] = mapped_column(TEXT)
+    string_field_required: Mapped[str]
+    string_field_optional: Mapped[Optional[str]]
+    string_field_limit: Mapped[Optional[str]] = mapped_column(String(20))
+    text_field: Mapped[Optional[str]] = mapped_column(TEXT)
     bool_field: Mapped[Optional[bool]]
     date_field: Mapped[Optional[date]]
     time_field: Mapped[Optional[time]]
     datetime_field: Mapped[Optional[datetime]]
     email_field: Mapped[Optional[str]]
-    enum_field: Mapped[str] = mapped_column(
-        Enum("model1_v1", "model1_v2"), nullable=True
-    )
-    enum_type_field = mapped_column(Enum(EnumChoices), nullable=True)
+    enum_field: Mapped[Optional[EnumChoices]]
     choice_field: Mapped[Optional[str]]
     model2: Mapped["Model2"] = relationship(back_populates="model1")
 
     def __str__(self):
-        return str(self.test1)
+        return str(self.string_field_required)
 
 
 class Model2(db.Model):
@@ -109,11 +106,7 @@ class ModelHybrid2(db.Model):
     owner: Mapped[ModelHybrid] = relationship(back_populates="tiles", uselist=False)
 
 
-class ModelNoint(db.Model):
-    __tablename__ = "model_noint"
 
-    id: Mapped[str] = mapped_column(primary_key=True)
-    test: Mapped[str]
 
 
 class ModelForm(db.Model):

@@ -1,10 +1,10 @@
-from datetime import datetime
 from typing import Optional
-from ...datastore.sqla import db
-from ...datastore.sqla.orm import Mapped
-from ...datastore.sqla.orm import mapped_column
-from ...datastore.sqla.orm import relationship
-from ...datastore.sqla.orm import ForeignKey
+from datetime import datetime
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey
+from . import db
 
 
 class UserProfile(db.Model):

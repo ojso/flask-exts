@@ -1,9 +1,9 @@
 from typing import Optional
-from .. import db
-from .. import ForeignKey
-from .. import relationship
-from .. import Mapped
-from .. import mapped_column
+from . import db
+from . import ForeignKey
+from . import relationship
+from . import Mapped
+from . import mapped_column
 
 
 class Tree(db.Model):

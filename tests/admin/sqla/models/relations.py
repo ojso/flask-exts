@@ -1,13 +1,13 @@
 from typing import List
 from typing import Set
-from .. import db
-from .. import Mapped
-from .. import mapped_column
-from .. import ForeignKey
-from .. import relationship
-from .. import Table
-from .. import Column
-from .. import Integer
+from . import db
+from . import Mapped
+from . import mapped_column
+from . import ForeignKey
+from . import relationship
+from . import Table
+from . import Column
+from . import Integer
 
 
 class TrainModel1(db.Model):
@@ -65,6 +65,7 @@ class OneToOneParent(db.Model):
 class OneToOneChild(db.Model):
     __tablename__ = "one_to_one_child"
     id: Mapped[int] = mapped_column(primary_key=True)
+    test: Mapped[str]
     parent_id: Mapped[int] = mapped_column(ForeignKey("one_to_one_parent.id"))
     parent: Mapped["OneToOneParent"] = relationship(back_populates="child")
 
@@ -90,4 +91,49 @@ class ManyToManyRight(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     lefts: Mapped[List["ManyToManyLeft"]] = relationship(
         secondary=association_table, back_populates="rights"
+    )
+
+
+class ModelC(db.Model):
+    __tablename__ = "model_c"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    value: Mapped[int]
+    b_id: Mapped[int] = mapped_column(ForeignKey("model_b.id"))
+
+    b = relationship("ModelB", back_populates="c_items")
+
+
+class ModelB(db.Model):
+    __tablename__ = "model_b"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    type: Mapped[str]
+
+    # A 通过多个路径关联到 B
+    a_first = relationship(
+        "ModelA", foreign_keys="ModelA.b_first_id", back_populates="first_b"
+    )
+    a_second = relationship(
+        "ModelA", foreign_keys="ModelA.b_second_id", back_populates="second_b"
+    )
+
+    c_items = relationship("ModelC", back_populates="b")
+
+
+class ModelA(db.Model):
+    __tablename__ = "model_a"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+
+    b_first_id: Mapped[int] = mapped_column(ForeignKey("model_b.id"))
+    b_second_id: Mapped[int] = mapped_column(ForeignKey("model_b.id"))
+
+    # A.a 指向 B
+    first_b = relationship(
+        "ModelB", foreign_keys=[b_first_id], back_populates="a_first"
+    )
+    # A.b 也指向 B
+    second_b = relationship(
+        "ModelB", foreign_keys=[b_second_id], back_populates="a_second"
     )

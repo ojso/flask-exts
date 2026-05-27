@@ -1,60 +1,47 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
-from sqlalchemy.orm import declarative_base, Session, relationship
+import pytest
 from flask_exts.admin.sqla.query import Query
-from tests.datastore.sqla.models.model1 import Model1
-
-Base = declarative_base()
-
-
-class ModelC(Base):
-    __tablename__ = "model_c"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    value = Column(Integer)
-    b_id = Column(Integer, ForeignKey("model_b.id"))
-
-    b = relationship("ModelB", back_populates="c_items")
+from tests.admin.sqla.models.model1 import Model1
+from tests.admin.sqla.models.relations import ModelA, ModelB, ModelC
 
 
-class ModelB(Base):
-    __tablename__ = "model_b"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    type = Column(String)
-
-    # A 通过多个路径关联到 B
-    a_first = relationship(
-        "ModelA", foreign_keys="ModelA.b_first_id", back_populates="first_b"
-    )
-    a_second = relationship(
-        "ModelA", foreign_keys="ModelA.b_second_id", back_populates="second_b"
-    )
-
-    c_items = relationship("ModelC", back_populates="b")
 
 
-class ModelA(Base):
-    __tablename__ = "model_a"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
+def test_get_field_with_path():
 
-    b_first_id = Column(Integer, ForeignKey("model_b.id"))
-    b_second_id = Column(Integer, ForeignKey("model_b.id"))
+    # Test simple column access
+    attr, joins = Query.get_field_with_path(Model1, "test1")
+    # print(attr, [str(join) for join in joins])
+    assert attr.key == "test1"
+    assert len(joins) == 0
 
-    # A.a 指向 B
-    first_b = relationship(
-        "ModelB", foreign_keys=[b_first_id], back_populates="a_first"
-    )
-    # A.b 也指向 B
-    second_b = relationship(
-        "ModelB", foreign_keys=[b_second_id], back_populates="a_second"
-    )
+    # Test relationship access
+    attr, joins = Query.get_field_with_path(Model1, "model2")
+    # print(attr, [str(join) for join in joins])
+    assert attr.key == "model2"
+    assert len(joins) == 1
+    assert joins[0].key == "model2"
+
+    # Test nested relationship access
+    attr, joins = Query.get_field_with_path(Model1, "model2.string_field")
+    # print(attr, [str(join) for join in joins])
+    assert attr.key == "string_field"
+    assert len(joins) == 1
+    assert joins[0].key == "model2"
+
+    attr, joins = Query.get_field_with_path(Model1, "model2.model3.val")
+    # print(attr, [str(join) for join in joins])
+    assert attr.key == "val"
+    assert len(joins) == 2
+    assert joins[0].key == "model2"
+    assert joins[1].key == "model3"
+
+    # Test invalid path
+    with pytest.raises(AttributeError, match="has no attribute"):
+        Query.get_field_with_path(Model1, "name.invalid")
+
 
 
 def test_eager_load():
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    session = Session(engine)
     query = Query(ModelB)
     query.add_eager_loads(["a_first", "x"])
     print(query._joinedloads)
@@ -62,9 +49,6 @@ def test_eager_load():
 
 
 def test_count_query():
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    session = Session(engine)
     manager = Query(ModelA)
     alias_b1 = manager.join_path("first_b")
     stmt = manager.build()
@@ -75,10 +59,6 @@ def test_count_query():
 
 # 使用示例
 def test_query():
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    session = Session(engine)
-
     # 场景1: [A.a, B.b] 和 [A.b, B.b] 指向同一个 B 的不同实例
     print("=" * 50)
     print("场景1: 多个路径指向同一张表")

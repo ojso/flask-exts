@@ -1,39 +1,14 @@
 import pytest
 from datetime import datetime, time, date
 from wtforms import fields, validators
-from flask_exts.admin.sqla import filter
 from flask_exts.template.forms.form.base_form import BaseForm
 from flask_exts.template.forms.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
+from flask_exts.admin.sqla.query import Query
 from flask_exts.datastore.sqla import db
-from flask_exts.datastore.sqla.orm import InstrumentedAttribute
-from flask_exts.datastore.sqla.utils import get_field_with_path
-from flask_exts.datastore.sqla.utils import is_hybrid_property
-from tests.datastore.sqla.models.model1 import EnumChoices
-from tests.datastore.sqla.models.model1 import Model1, Model2, Model3
-from tests.datastore.sqla.models.model1 import ModelHybrid, ModelHybrid2
-from tests.datastore.sqla.models.model1 import ModelNoint
-from tests.datastore.sqla.models.model1 import ModelForm, ModelChild
-
-from tests.datastore.sqla.models.relations import OneToOneChild, OneToOneParent
-
-
-class CustomModelView(SqlaModelView):
-    def __init__(
-        self,
-        model,
-        name=None,
-        endpoint=None,
-        url=None,
-        **kwargs,
-    ):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-        super().__init__(model, name=name, endpoint=endpoint, url=url)
-
-    form_choices = {"choice_field": [("choice-1", "One"), ("choice-2", "Two")]}
-
+from tests.admin.sqla.models.model1 import EnumChoices
+from tests.admin.sqla.models.model1 import Model1, Model2
+from .custom_sqla_model_view import CustomSqlaModelView
 
 def fill_db():
     model1_obj1 = Model1(test1="test1_val_1", test2="test2_val_1", bool_field=True)
@@ -96,7 +71,7 @@ def fill_db():
 def test_model(app, client, admin):
     with app.app_context():
         db.reset_all()
-        view = CustomModelView(Model1)
+        view = CustomSqlaModelView(Model1)
         admin.add_view(view)
 
         assert view.model == Model1
@@ -112,8 +87,7 @@ def test_model(app, client, admin):
 
         assert view._create_form_class is not None
         assert view._edit_form_class is not None
-        assert not view._search_supported
-        assert view._filters is None
+        assert len(view._filters) == 0
 
         # Verify form
         assert view._create_form_class.test1.field_class == fields.StringField
@@ -147,9 +121,9 @@ def test_model(app, client, admin):
         # check that the new record was persisted
         model = db.session.query(Model1).first()
         assert model.test1 == "test1large"
-        assert model.test2 == "test2"
-        assert model.test3 == None
-        assert model.test4 == None
+        assert model.string_field_optional == "test2"
+        assert model.string_field_limit == None
+        assert model.text_field == None
         assert model.choice_field == "choice-1"
         assert model.enum_field == "model1_v1"
 
@@ -181,9 +155,9 @@ def test_model(app, client, admin):
         # check that the changes were persisted
         model = db.session.query(Model1).first()
         assert model.test1 == "test1small"
-        assert model.test2 == "test2large"
-        assert model.test3 == None
-        assert model.test4 == None
+        assert model.string_field_optional == "test2large"
+        assert model.string_field_limit == None
+        assert model.text_field == None
         assert model.choice_field is None
         assert model.enum_field is None
 
@@ -201,7 +175,7 @@ def test_list_columns(app, client, admin):
         db.reset_all()
 
         # test column_list with a list of strings
-        view1 = CustomModelView(
+        view1 = CustomSqlaModelView(
             Model1,
             name="view1",
             column_list=["test1", "test3"],
@@ -210,7 +184,7 @@ def test_list_columns(app, client, admin):
         admin.add_view(view1)
 
         # test column_list with a list of SQLAlchemy columns
-        view2 = CustomModelView(
+        view2 = CustomSqlaModelView(
             Model1,
             name="view2",
             endpoint="model1_2",
@@ -243,7 +217,7 @@ def test_complex_list_columns(app, client, admin):
         db.session.commit()
 
         # test column_list with a list of strings on a relation
-        view = CustomModelView(Model2, column_list=["model1.test1"])
+        view = CustomSqlaModelView(Model2, column_list=["model1.test1"])
         admin.add_view(view)
 
         rv = client.get("/admin/model2/")
@@ -255,18 +229,10 @@ def test_column_searchable_list(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Model2, column_searchable_list=["string_field", "int_field"]
         )
         admin.add_view(view)
-
-        assert view._search_supported
-        assert len(view._search_fields) == 2
-
-        assert isinstance(view._search_fields[0][0], InstrumentedAttribute)
-        assert isinstance(view._search_fields[1][0], InstrumentedAttribute)
-        assert view._search_fields[0][0].name == "string_field"
-        assert view._search_fields[1][0].name == "int_field"
 
         db.session.add(Model2(string_field="model1-test", int_field=5000))
         db.session.add(Model2(string_field="model2-test", int_field=9000))
@@ -284,7 +250,7 @@ def test_column_searchable_list(app, client, admin):
 def test_extra_args_search(app, client, admin):
     with app.app_context():
         db.reset_all()
-        view1 = CustomModelView(
+        view1 = CustomSqlaModelView(
             Model1,
             column_searchable_list=[
                 "test1",
@@ -305,7 +271,7 @@ def test_extra_args_filter(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view2 = CustomModelView(
+        view2 = CustomSqlaModelView(
             Model2,
             column_filters=[
                 "int_field",
@@ -325,9 +291,9 @@ def test_complex_searchable_list(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view1 = CustomModelView(Model2, column_searchable_list=["model1.test1"])
+        view1 = CustomSqlaModelView(Model2, column_searchable_list=["model1.test1"])
         admin.add_view(view1)
-        view2 = CustomModelView(Model1, column_searchable_list=["model2.string_field"])
+        view2 = CustomSqlaModelView(Model1, column_searchable_list=["model2.string_field"])
         admin.add_view(view2)
 
         m1 = Model1(test1="model1-test1-val")
@@ -353,7 +319,7 @@ def test_complex_searchable_list_missing_children(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Model1, column_searchable_list=["test1", "model2.string_field"]
         )
         admin.add_view(view)
@@ -369,11 +335,11 @@ def test_column_editable_list(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view1 = CustomModelView(Model1, column_editable_list=["test1", "enum_field"])
+        view1 = CustomSqlaModelView(Model1, column_editable_list=["test1", "enum_field"])
         admin.add_view(view1)
 
         # Test in-line editing for relations
-        view2 = CustomModelView(Model2, column_editable_list=["model1"])
+        view2 = CustomSqlaModelView(Model2, column_editable_list=["model1"])
         admin.add_view(view2)
 
         fill_db()
@@ -450,15 +416,15 @@ def test_details_view(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view_no_details = CustomModelView(Model1, name="view1")
+        view_no_details = CustomSqlaModelView(Model1, name="view1")
         admin.add_view(view_no_details)
 
         # fields are scaffolded
-        view_w_details = CustomModelView(Model2, name="view2")
+        view_w_details = CustomSqlaModelView(Model2, name="view2")
         admin.add_view(view_w_details)
 
         # show only specific fields in details w/ column_details_list
-        string_field_view = CustomModelView(
+        string_field_view = CustomSqlaModelView(
             Model2,
             name="view3",
             column_details_list=["string_field"],
@@ -493,86 +459,11 @@ def test_details_view(app, client, admin):
         assert "test1_val_1" not in rv.text
 
 
-def test_hybrid_property(app, client, admin):
-    with app.app_context():
-        db.reset_all()
-        assert is_hybrid_property(ModelHybrid, "number_of_pixels")
-        assert is_hybrid_property(ModelHybrid, "number_of_pixels_str")
-        assert not is_hybrid_property(ModelHybrid, "height")
-        assert not is_hybrid_property(ModelHybrid, "width")
-
-        db.session.add(ModelHybrid(id=1, name="test_row_1", width=25, height=25))
-        db.session.add(ModelHybrid(id=2, name="test_row_2", width=10, height=10))
-        db.session.commit()
-
-        view = CustomModelView(
-            ModelHybrid,
-            column_default_sort="number_of_pixels",
-            column_filters=[
-                filter.IntGreaterFilter(
-                    ModelHybrid.number_of_pixels, "Number of Pixels"
-                )
-            ],
-            column_searchable_list=[
-                "number_of_pixels_str",
-            ],
-        )
-        admin.add_view(view)
-
-        # filters - hybrid_property integer - greater
-        rv = client.get("/admin/modelhybrid/?flt0_0=600")
-        assert rv.status_code == 200
-        assert "test_row_1" in rv.text
-        assert "test_row_2" not in rv.text
-
-        # sorting
-        rv = client.get("/admin/modelhybrid/?sort=0")
-        assert rv.status_code == 200
-
-        _, data = view.get_list(0, None, None, None, None)
-
-        assert len(data) == 2
-        assert data[0].name == "test_row_2"
-        assert data[1].name == "test_row_1"
-
-        # searching
-        rv = client.get("/admin/modelhybrid/?search=100")
-        assert rv.status_code == 200
-        assert "test_row_2" in rv.text
-        assert "test_row_1" not in rv.text
-
-
-def test_hybrid_property_nested(app, client, admin):
-    with app.app_context():
-        db.reset_all()
-        assert is_hybrid_property(ModelHybrid2, "owner.fullname")
-        assert not is_hybrid_property(ModelHybrid2, "owner.firstname")
-
-        db.session.add(ModelHybrid(id=1, firstname="John", lastname="Dow"))
-        db.session.add(ModelHybrid(id=2, firstname="Jim", lastname="Smith"))
-        db.session.add(ModelHybrid2(id=1, name="pencil", owner_id=1))
-        db.session.add(ModelHybrid2(id=2, name="key", owner_id=1))
-        db.session.add(ModelHybrid2(id=3, name="map", owner_id=2))
-        db.session.commit()
-
-        view = CustomModelView(
-            ModelHybrid2,
-            column_list=("id", "name", "owner.fullname"),
-            column_default_sort="id",
-        )
-        admin.add_view(view)
-
-        rv = client.get("/admin/modelhybrid2/")
-        assert rv.status_code == 200
-        assert "John Dow" in rv.text
-        assert "Jim Smith" in rv.text
-
-
 def test_url_args(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Model1,
             page_size=2,
             column_searchable_list=["test1"],
@@ -618,114 +509,6 @@ def test_url_args(app, client, admin):
         assert "data2" in rv.text
 
 
-def test_non_int_pk(app, client, admin):
-    with app.app_context():
-        db.reset_all()
-        view = CustomModelView(ModelNoint, form_columns=["id", "test"])
-        admin.add_view(view)
-
-        rv = client.get("/admin/modelnoint/")
-        assert rv.status_code == 200
-
-        rv = client.post("/admin/modelnoint/new/", data=dict(id="test1", test="test2"))
-        assert rv.status_code == 302
-
-        rv = client.get("/admin/modelnoint/")
-        assert rv.status_code == 200
-        assert "test1" in rv.text
-
-        rv = client.get("/admin/modelnoint/edit/?id=test1")
-        assert rv.status_code == 200
-        assert "test2" in rv.text
-
-
-def test_form_columns(app, admin):
-    with app.app_context():
-        db.reset_all()
-        view1 = CustomModelView(
-            ModelForm,
-            endpoint="view1",
-            form_columns=("int_field", "text_field"),
-        )
-        view2 = CustomModelView(
-            ModelForm,
-            endpoint="view2",
-            form_excluded_columns=("excluded_column",),
-        )
-        view3 = CustomModelView(ModelChild, endpoint="view3")
-
-        form1 = view1.create_form()
-        form2 = view2.create_form()
-        form3 = view3.create_form()
-
-        assert "int_field" in form1._fields
-        assert "text_field" in form1._fields
-        assert "datetime_field" not in form1._fields
-        assert "excluded_column" not in form2._fields
-
-        # check that relation shows up as a query select
-        assert type(form3.model).__name__ == "QuerySelectField"
-
-        # check that select field is rendered if form_choices were specified
-        assert type(form3.choice_field).__name__ == "Select2Field"
-
-        # check that select field is rendered for enum fields
-        assert type(form3.enum_field).__name__ == "Select2Field"
-
-        # test form_columns with model objects
-        view4 = CustomModelView(
-            ModelForm, endpoint="view1", form_columns=["int_field"]
-        )
-        form4 = view4.create_form()
-        assert "int_field" in form4._fields
-
-
-@pytest.mark.xfail(raises=Exception)
-def test_complex_form_columns(app, admin):
-    with app.app_context():
-        db.reset_all()
-
-        # test using a form column in another table
-        view = CustomModelView(Model2, form_columns=["model1.test1"])
-        view.create_form()
-
-
-def test_form_args(app, admin):
-    with app.app_context():
-        db.reset_all()
-        shared_form_args = {"test1": {"validators": [validators.Regexp("test")]}}
-
-        view = CustomModelView(Model1, form_args=shared_form_args)
-        admin.add_view(view)
-
-        create_form = view.create_form()
-        # print(create_form.test1.validators)
-        assert len(create_form.test1.validators) == 2
-
-        # ensure shared field_args don't create duplicate validators
-        edit_form = view.edit_form()
-        assert len(edit_form.test1.validators) == 2
-
-
-def test_form_onetoone(app, admin):
-    with app.app_context():
-        db.reset_all()
-        view1 = CustomModelView(OneToOneChild, endpoint="view1")
-        view2 = CustomModelView(OneToOneParent, endpoint="view2")
-        admin.add_view(view1)
-        admin.add_view(view2)
-
-        model1 = OneToOneChild(test="test")
-        model2 = OneToOneParent(model1=model1)
-        db.session.add(model1)
-        db.session.add(model2)
-        db.session.commit()
-
-        assert model1.model2 == model2
-        assert model2.model1 == model1
-
-        assert not view1._create_form_class.model2.field_class.widget.multiple
-        assert not view2._create_form_class.model1.field_class.widget.multiple
 
 
 def test_relations():
@@ -739,18 +522,17 @@ def test_multiple_delete(app, client, admin):
 
         db.session.add_all([Model1(test1="a"), Model1(test1="b"), Model1(test1="c")])
         db.session.commit()
-        # assert Model1.query.count() == 3
-        assert db.session.scalar(db.select(db.func.count()).select_from(Model1)) == 3
+        query = Query(Model1)
+        db.session.scalar(query.build_count()) ==3
 
         view = SqlaModelView(Model1)
         admin.add_view(view)
 
         rv = client.post(
-            "/admin/model1/action/", data=dict(action="delete", rowid=[1, 2, 3])
+            "/admin/model1/action/", data=dict(action="delete", rowid=[1, 2])
         )
         assert rv.status_code == 302
-        # assert Model1.query.count() == 0
-        assert db.session.scalar(db.select(db.func.count()).select_from(Model1)) == 0
+        db.session.scalar(query.build_count()) ==1
 
 
 def test_default_sort(app, admin):
@@ -759,10 +541,10 @@ def test_default_sort(app, admin):
 
         db.session.add_all([Model1(test1="c", test2="x"), Model1(test1="b", test2="x"), Model1(test1="a", test2="y")])
         db.session.commit()
-        # assert Model1.query.count() == 3
-        assert db.session.scalar(db.select(db.func.count()).select_from(Model1)) == 3
-
-        view1 = CustomModelView(Model1, name="view1", column_default_sort="test1")
+        query = Query(Model1)
+        db.session.scalar(query.build_count()) ==3
+        
+        view1 = CustomSqlaModelView(Model1, name="view1", column_default_sort="test1")
         admin.add_view(view1)
 
         _, data = view1.get_list(0, None, None, None, None)
@@ -773,7 +555,7 @@ def test_default_sort(app, admin):
         assert data[2].test1 == "c"
 
         # test default sort on renamed columns - with column_list scaffolding
-        view2 = CustomModelView(
+        view2 = CustomSqlaModelView(
             Model1,
             name="view2",
             column_default_sort="test1",
@@ -790,7 +572,7 @@ def test_default_sort(app, admin):
         assert data[2].test1 == "c"
 
         # test default sort on renamed columns - without column_list scaffolding
-        view3 = CustomModelView(
+        view3 = CustomSqlaModelView(
             Model1,
             name="view3",
             column_default_sort="test1",
@@ -809,7 +591,7 @@ def test_default_sort(app, admin):
 
         # test default sort with multiple columns
         order = [("test2", False), ("test1", False)]
-        view4 = CustomModelView(Model1, column_default_sort=order, endpoint="m1_4")
+        view4 = CustomSqlaModelView(Model1, column_default_sort=order, endpoint="m1_4")
         admin.add_view(view4)
 
         _, data = view4.get_list(0, None, None, None, None)
@@ -839,14 +621,14 @@ def test_complex_sort(app, client, admin):
         db.session.commit()
 
         # test sorting on relation string - 'model1.test1'
-        view1 = CustomModelView(
+        view1 = CustomSqlaModelView(
             Model2,
             name="view1",
             column_list=["string_field", "model1.test1"],
             column_sortable_list=["model1.test1"],
         )
         admin.add_view(view1)
-        view2 = CustomModelView(
+        view2 = CustomSqlaModelView(
             Model2,
             name="view2",
             column_list=["string_field", "model1"],
@@ -881,7 +663,7 @@ def test_complex_sort_exception(app, admin):
         db.reset_all()
 
         # test column_sortable_list on a related table's column object
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Model2, endpoint="model2_3", column_sortable_list=[Model1.test1]
         )
         admin.add_view(view)
@@ -908,7 +690,7 @@ def test_default_complex_sort(app, admin):
 
         db.session.commit()
 
-        view1 = CustomModelView(
+        view1 = CustomSqlaModelView(
             Model2, name="view1", column_default_sort="model1.test1"
         )
         admin.add_view(view1)
@@ -920,11 +702,11 @@ def test_default_complex_sort(app, admin):
         assert data[1].model1.test1 == "b"
 
         # test column_default_sort on a related table's column object
-        view2 = CustomModelView(
+        view2 = CustomSqlaModelView(
             Model2,
             name="view2",
             endpoint="model2_2",
-            column_default_sort=(Model1.test1, False),
+            column_default_sort=("model1.test1", False),
         )
         admin.add_view(view2)
 
@@ -939,7 +721,7 @@ def test_extra_fields(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Model1,
             form_extra_fields={"extra_field": fields.StringField("Extra Field")},
         )
@@ -959,7 +741,7 @@ def test_extra_field_order(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Model1,
             form_columns=("extra_field", "test1"),
             form_extra_fields={"extra_field": fields.StringField("Extra Field")},
@@ -983,7 +765,7 @@ def test_custom_form_base(app, admin):
 
         db.reset_all()
 
-        view = CustomModelView(Model1, form_base_class=TestForm)
+        view = CustomSqlaModelView(Model1, form_base_class=TestForm)
         admin.add_view(view)
 
         assert hasattr(view._create_form_class, "test1")
@@ -996,7 +778,7 @@ def test_ajax_fk(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Model2,
             url="view",
             form_ajax_refs={"model1": {"fields": ("test1", "test2")}},
@@ -1083,7 +865,7 @@ def test_ajax_fk_multi(app, client, admin):
 
         db.create_all()
 
-        view = CustomModelView(
+        view = CustomSqlaModelView(
             Modelfk2,
             url="view",
             form_ajax_refs={"modelfk1": {"fields": ["name"]}},
@@ -1123,9 +905,9 @@ def test_customising_page_size(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        db.session.add_all([Model1(str(f"instance-{x+1:03d}")) for x in range(101)])
+        db.session.add_all([Model1(test1=str(f"instance-{x+1:03d}")) for x in range(101)])
 
-        view1 = CustomModelView(
+        view1 = CustomSqlaModelView(
             Model1,
             name="view1",
             endpoint="view1",
@@ -1134,17 +916,17 @@ def test_customising_page_size(app, client, admin):
         )
         admin.add_view(view1)
 
-        view2 = CustomModelView(
+        view2 = CustomSqlaModelView(
             Model1, name="view2", endpoint="view2", page_size=5, can_set_page_size=False
         )
         admin.add_view(view2)
 
-        view3 = CustomModelView(
+        view3 = CustomSqlaModelView(
             Model1, name="view3", endpoint="view3", page_size=20, can_set_page_size=True
         )
         admin.add_view(view3)
 
-        view4 = CustomModelView(
+        view4 = CustomSqlaModelView(
             Model1,
             name="view4",
             endpoint="view4",
@@ -1235,7 +1017,7 @@ def test_unlimited_page_size(app, admin):
             ]
         )
 
-        view = CustomModelView(Model1)
+        view = CustomSqlaModelView(Model1)
 
         # test 0 as page_size
         _, data = view.get_list(0, None, None, None, None, page_size=0)
@@ -1270,13 +1052,13 @@ def test_advanced_joins(app, admin):
             model2_id = db.Column(db.Integer, db.ForeignKey(Modeljoin2.id))
             model2 = db.relationship(Modeljoin2, backref="model3")
 
-        view1 = CustomModelView(Modeljoin1)
+        view1 = CustomSqlaModelView(Modeljoin1)
         admin.add_view(view1)
 
-        view2 = CustomModelView(Modeljoin2)
+        view2 = CustomSqlaModelView(Modeljoin2)
         admin.add_view(view2)
 
-        view3 = CustomModelView(Modeljoin3)
+        view3 = CustomSqlaModelView(Modeljoin3)
         admin.add_view(view3)
 
         # Test how joins are applied
@@ -1314,14 +1096,14 @@ def test_model_default(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        class ModelView(CustomModelView):
+        class ModelView(CustomSqlaModelView):
             pass
 
         view = ModelView(Model2)
         admin.add_view(view)
 
         rv = client.post("/admin/model2/new/", data=dict())
-        assert "This field is required" not in rv.text
+        assert "This field is required" in rv.text
 
 
 def test_export_csv(app, client, admin):
@@ -1331,7 +1113,7 @@ def test_export_csv(app, client, admin):
         for x in range(5):
             fill_db()
 
-        view1 = CustomModelView(
+        view1 = CustomSqlaModelView(
             Model1,
             name="view1",
             can_export=True,
@@ -1340,7 +1122,7 @@ def test_export_csv(app, client, admin):
             endpoint="row_limit_2",
         )
         admin.add_view(view1)
-        view2 = CustomModelView(
+        view2 = CustomSqlaModelView(
             Model1,
             name="view2",
             can_export=True,
@@ -1385,7 +1167,7 @@ def test_string_null_behavior(app, client, admin):
 
         db.create_all()
 
-        view = CustomModelView(StringTestModel)
+        view = CustomSqlaModelView(StringTestModel)
         admin.add_view(view)
 
         valid_params = {

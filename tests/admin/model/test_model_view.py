@@ -1,6 +1,8 @@
 from wtforms.fields import StringField
 from flask_exts.admin.model.view import ModelView
 from flask_exts.admin.model.filter import BaseFilter
+from flask_exts.admin.model.rowaction import ViewRowAction,EditRowAction,DeleteRowAction
+from flask_exts.admin.model.rowaction import ViewPopupRowAction,EditPopupRowAction
 
 
 class MockModel:
@@ -121,7 +123,7 @@ def test_view():
 
     # Verify scaffolding
 
-    assert view._filters is None
+    assert len(view._filters) == 0
 
     # for url in view._urls:
     #     print(url)
@@ -254,7 +256,7 @@ def test_sortable_columns(admin):
 def test_column_searchable_list(admin):
     view = MockModelView(MockModel, column_searchable_list=["col1", "col2"])
     admin.add_view(view)
-    assert view._search_supported is True
+    assert len(view.column_searchable_list) == 2
 
 
 def test_column_filters(admin):
@@ -580,7 +582,7 @@ def test_export_tablib(client, admin):
 
 
 def test_list_row_actions(client, admin):
-    from flask_exts.admin.model.rowaction import ViewRowAction,EditRowAction,DeleteRowAction,ViewPopupRowAction,EditPopupRowAction
+    
 
     # Test default actions
     view = MockModelView(MockModel, name="test", endpoint="test")

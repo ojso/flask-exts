@@ -96,7 +96,7 @@
     {% block model_menu_bar_after_filters %}{% endblock %}
   </ul>
 
-  {% if filters %}
+  {% if filter_groups %}
     <form id="filter_form" method="get" action="{{ return_url }}">
       {% for arg_name, arg_value in extra_args.items() %}<input type="hidden" name="{{ arg_name }}" value="{{ arg_value }}">{% endfor %}
       {% if sort_column is not none %}<input type="hidden" name="sort" value="{{ sort_column }}">{% endif %}

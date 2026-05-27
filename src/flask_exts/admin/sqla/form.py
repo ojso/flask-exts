@@ -1,12 +1,14 @@
 from enum import Enum
-from wtforms import fields, validators
+from wtforms import validators
 from sqlalchemy import inspect
 from sqlalchemy import select
 from sqlalchemy import Boolean, Column
-from wtforms.fields import DateTimeLocalField as DateTimeField
-
+from wtforms.fields import HiddenField
+from wtforms.fields import StringField, TextAreaField, IntegerField, DecimalField,BooleanField
+from wtforms.fields import DateField
 # from wtforms.fields import TimeField
 from ...template.forms.fields import TimeField
+from wtforms.fields import DateTimeLocalField as DateTimeField
 from ...template.forms.fields import Select2Field
 from ...template.forms.fields import Select2TagsField
 from ...template.forms.fields import JSONField
@@ -21,15 +23,12 @@ from ...template.forms.widgets import DatePickerWidget
 from ...template.forms.form.base_form import BaseForm
 from ...template.forms.validators.sqla import Unique
 from ..model.form import (
-    converts,
     ModelConverterBase,
     InlineModelConverterBase,
     FieldPlaceholder,
 )
 
-from ...datastore.sqla.utils import has_multiple_pks
-from ...datastore.sqla.utils import is_relationship
-from ...datastore.sqla.utils import get_field_with_path
+from .query import Query
 from .ajax import create_ajax_loader
 
 
@@ -37,6 +36,84 @@ class AdminModelConverter(ModelConverterBase):
     """
     SQLAlchemy model to form converter
     """
+
+    def _nullable_common(self, column, field_args, **extra):
+        if column.nullable:
+            filters = field_args.get("filters", [])
+            filters.append(lambda x: x or None)
+            field_args["filters"] = filters
+
+    def _string_common(self, column, field_args, **extra):
+        if (
+            hasattr(column.type, "length")
+            and isinstance(column.type.length, int)
+            and column.type.length
+        ):
+            field_args["validators"].append(validators.Length(max=column.type.length))
+        self._nullable_common(column, field_args, **extra)
+
+    def conv_string(self, column, field_args, **extra):
+        self._string_common(column=column, field_args=field_args, **extra)
+        return StringField(**field_args)
+
+    def conv_text(self, field_args, **extra):
+        self._string_common(field_args=field_args, **extra)
+        return TextAreaField(**field_args)
+
+    def conv_boolean(self, field_args, **extra):
+        return BooleanField(**field_args)
+
+    def convert_integer(self, column, field_args, **extra):
+        unsigned = getattr(column.type, "unsigned", False)
+        if unsigned:
+            field_args["validators"].append(validators.NumberRange(min=0))
+        return IntegerField(**field_args)
+
+    def convert_decimal(self, column, field_args, **extra):
+        # override default decimal places limit, use database defaults instead
+        field_args.setdefault("places", None)
+        return DecimalField(**field_args)
+
+    def convert_date(self, field_args, **extra):
+        field_args["widget"] = DatePickerWidget()
+        return DateField(**field_args)
+
+    def convert_time(self, field_args, **extra):
+        return TimeField(**field_args)
+
+    def convert_datetime(self, field_args, **extra):
+        return DateTimeField(**field_args)
+
+    def convert_enum(self, column, field_args, **extra):
+        available_choices = [(f, f) for f in column.type.enums]
+        accepted_values = [choice[0] for choice in available_choices]
+
+        if column.nullable:
+            field_args["allow_blank"] = column.nullable
+            accepted_values.append(None)
+
+        self._nullable_common(column, field_args)
+
+        field_args["choices"] = available_choices
+        field_args["validators"].append(validators.AnyOf(accepted_values))
+        field_args["coerce"] = lambda v: v.name if isinstance(v, Enum) else str(v)
+        return Select2Field(**field_args)
+
+    def convert_json(self, field_args, **extra):
+        return JSONField(**field_args)
+
+    TYPE_MAPPING = {
+        "conv_string": ["String"],
+        "conv_text": ["Text"],
+        "conv_boolean": ["Boolean"],
+        "conv_integer": ["Integer", "BigInteger", "SmallInteger"],
+        "conv_decimal": ["Numeric", "DECIMAL", "Float", "REAL", "DOUBLE"],
+        "conv_date": ["Date"],
+        "conv_time": ["Time"],
+        "conv_datetime": ["DateTime"],
+        "conv_enum": ["sqlalchemy.sql.sqltypes.Enum"],
+        "conv_json": ["JSON"],
+    }
 
     def __init__(self, session, view):
         super().__init__()
@@ -61,7 +138,6 @@ class AdminModelConverter(ModelConverterBase):
             return column_labels.get(name)
 
         return name.replace("_", " ").title()
-
 
     def _get_description(self, name, field_args):
         if "description" in field_args:
@@ -160,7 +236,7 @@ class AdminModelConverter(ModelConverterBase):
             if column.primary_key:
                 if hidden_pk:
                     # If requested to add hidden field, show it
-                    return fields.HiddenField()
+                    return HiddenField()
                 else:
                     # By default, don't show primary keys either
                     # If PK is not explicitly allowed, ignore it
@@ -168,7 +244,7 @@ class AdminModelConverter(ModelConverterBase):
                         return None
 
                     # Current Unique Validator does not work with multicolumns-pks
-                    if not has_multiple_pks(model):
+                    if not Query.has_multiple_pks(model):
                         kwargs["validators"].append(Unique(self.session, model, column))
                         unique = True
 
@@ -230,86 +306,6 @@ class AdminModelConverter(ModelConverterBase):
             )
         return None
 
-    @classmethod
-    def _nullable_common(cls, column, field_args):
-        if column.nullable:
-            filters = field_args.get("filters", [])
-            filters.append(lambda x: x or None)
-            field_args["filters"] = filters
-
-    @classmethod
-    def _string_common(cls, column, field_args, **extra):
-        if (
-            hasattr(column.type, "length")
-            and isinstance(column.type.length, int)
-            and column.type.length
-        ):
-            field_args["validators"].append(validators.Length(max=column.type.length))
-        cls._nullable_common(column, field_args)
-
-    @converts("String")
-    def conv_String(self, column, field_args, **extra):
-        self._string_common(column=column, field_args=field_args, **extra)
-        return fields.StringField(**field_args)
-
-    @converts("sqlalchemy.sql.sqltypes.Enum")
-    def convert_enum(self, column, field_args, **extra):
-        available_choices = [(f, f) for f in column.type.enums]
-        accepted_values = [choice[0] for choice in available_choices]
-
-        if column.nullable:
-            field_args["allow_blank"] = column.nullable
-            accepted_values.append(None)
-
-        self._nullable_common(column, field_args)
-
-        field_args["choices"] = available_choices
-        field_args["validators"].append(validators.AnyOf(accepted_values))
-        field_args["coerce"] = lambda v: v.name if isinstance(v, Enum) else str(v)
-        return Select2Field(**field_args)
-
-    @converts("Text", "LargeBinary", "Binary", "CIText")  # includes UnicodeText
-    def conv_Text(self, field_args, **extra):
-        self._string_common(field_args=field_args, **extra)
-        return fields.TextAreaField(**field_args)
-
-    @converts("Boolean", "sqlalchemy.dialects.mssql.base.BIT")
-    def conv_Boolean(self, field_args, **extra):
-        return fields.BooleanField(**field_args)
-
-    @converts("Date")
-    def convert_date(self, field_args, **extra):
-        field_args["widget"] = DatePickerWidget()
-        return fields.DateField(**field_args)
-
-    @converts("DateTime")
-    def convert_datetime(self, field_args, **extra):
-        return DateTimeField(**field_args)
-
-    @converts("Time")
-    def convert_time(self, field_args, **extra):
-        return TimeField(**field_args)
-
-    @converts("Integer")  # includes BigInteger and SmallInteger
-    def handle_integer_types(self, column, field_args, **extra):
-        unsigned = getattr(column.type, "unsigned", False)
-        if unsigned:
-            field_args["validators"].append(validators.NumberRange(min=0))
-        return fields.IntegerField(**field_args)
-
-    @converts("Numeric")  # includes DECIMAL, Float/FLOAT, REAL, and DOUBLE
-    def handle_decimal_types(self, column, field_args, **extra):
-        # override default decimal places limit, use database defaults instead
-        field_args.setdefault("places", None)
-        return fields.DecimalField(**field_args)
-
-    @converts("JSON")
-    def convert_JSON(self, field_args, **extra):
-        return JSONField(**field_args)
-
-
-
-
 
 # Get list of fields and generate form
 def get_form(
@@ -343,7 +339,7 @@ def get_form(
     mapper = inspect(model)
     field_args = field_args or {}
 
-    properties = ((p.key, p) for p in mapper.attrs)
+    properties = [(p.key, p) for p in mapper.attrs]
 
     if only:
 
@@ -351,15 +347,7 @@ def get_form(
             # If field is in extra_fields, it has higher priority
             if extra_fields and name in extra_fields:
                 return name, FieldPlaceholder(extra_fields[name])
-
-            column, path = get_field_with_path(model, name)
-
-            if path and not (is_relationship(column)):
-                raise Exception(
-                    "form column is located in another table and "
-                    "requires inline_models: {0}".format(name)
-                )
-
+            column, path = Query.get_field_with_path(model, name)
             relation_name = column.key
 
             if column is not None and hasattr(column, "property"):
@@ -368,9 +356,9 @@ def get_form(
             raise ValueError("Invalid model property name %s.%s" % (model, name))
 
         # Filter properties while maintaining property order in 'only' list
-        properties = (find(x) for x in only)
+        properties = [find(x) for x in only]
     elif exclude:
-        properties = (x for x in properties if x[0] not in exclude)
+        properties = [x for x in properties if x[0] not in exclude]
 
     field_dict = {}
     for name, p in properties:

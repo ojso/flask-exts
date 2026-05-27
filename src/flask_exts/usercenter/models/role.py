@@ -1,8 +1,8 @@
-from datetime import datetime
 from typing import Optional
-from ...datastore.sqla import db
-from ...datastore.sqla.orm import Mapped
-from ...datastore.sqla.orm import mapped_column
+from datetime import datetime
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from . import db
 
 
 class Role(db.Model):

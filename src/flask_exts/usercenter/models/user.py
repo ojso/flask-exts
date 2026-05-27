@@ -1,18 +1,16 @@
 from datetime import datetime
 from typing import Optional
-from typing import List
 import uuid
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+from sqlalchemy.types import JSON
+from sqlalchemy.ext.mutable import MutableList
+from . import db
 from ..base_user import BaseUser
 from .user_profile import UserProfile
 from .role import Role
 from .user_role import user_role_table
-from ...datastore.sqla import db
-from ...datastore.sqla.orm import Mapped
-from ...datastore.sqla.orm import mapped_column
-from ...datastore.sqla.orm import relationship
-from ...datastore.sqla.orm import MutableList
-from ...datastore.sqla.orm import JSON
-
 
 
 class User(db.Model, BaseUser):
@@ -42,7 +40,7 @@ class User(db.Model, BaseUser):
         default=datetime.now, onupdate=datetime.now
     )
 
-    roles: Mapped[List["Role"]] = relationship(secondary="user_role")
+    roles: Mapped[list["Role"]] = relationship(secondary="user_role")
     profile: Mapped["UserProfile"] = relationship(back_populates="user", uselist=False)
 
     def get_roles(self):
@@ -55,11 +53,3 @@ class User(db.Model, BaseUser):
     @property
     def is_authenticated(self):
         return True
-
-
-# from sqlalchemy import event
-# @event.listens_for(User, "before_insert")
-# def receive_before_insert(mapper, connection, target):
-#     "listen for the 'before_insert' event"
-#     if target.uuid is None:
-#         target.uuid = str(uuid.uuid4())

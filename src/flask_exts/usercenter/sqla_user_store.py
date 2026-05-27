@@ -1,6 +1,6 @@
+from sqlalchemy.sql import select
 from .base_user_store import BaseUserStore
 from ..datastore.sqla import db
-from ..datastore.sqla.orm import select
 from .models.user import User
 from .models.role import Role
 from .models.user_profile import UserProfile

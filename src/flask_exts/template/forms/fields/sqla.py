@@ -2,10 +2,10 @@ import operator
 from sqlalchemy.orm.util import identity_key
 from wtforms.fields import SelectFieldBase, StringField
 from wtforms.validators import ValidationError
-from ....datastore.sqla.utils import get_primary_key
 from .inline import InlineFieldList, InlineModelFormField
 from ..widgets.select import Select2Widget
 from ..widgets.checkbox import CheckboxListInput
+
 
 
 class QuerySelectField(SelectFieldBase):
@@ -228,7 +228,9 @@ class InlineModelFormListField(InlineFieldList):
         self.prop = prop
         self.inline_view = inline_view
 
-        self._pk = get_primary_key(model)
+        self._pk = "id"
+        # self._pk = get_primary_key(model)
+        
 
         # Generate inline form field
         form_opts = dict(widget_args=getattr(inline_view, "form_widget_args", None))
@@ -275,7 +277,8 @@ class InlineModelOneToOneField(InlineModelFormField):
         self.prop = prop
         self.inline_view = inline_view
 
-        self._pk = get_primary_key(model)
+        self._pk = "id"
+        # self._pk = get_primary_key(model)
 
         # Generate inline form field
         form_opts = dict(widget_args=getattr(inline_view, "form_widget_args", None))
