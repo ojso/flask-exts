@@ -257,7 +257,7 @@ class SqlaModelView(ModelView):
         else:
             visible_name = column_path
 
-        flts = self.filter_converter.get_column_filters(
+        flts = self.filter_converter.get_filters(
             column_type,
             column_path,
             visible_name,

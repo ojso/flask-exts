@@ -22,15 +22,19 @@ from ...template.forms.fields.inline import InlineFormField
 from ...template.forms.widgets import DatePickerWidget
 from ...template.forms.form.base_form import BaseForm
 from ...template.forms.validators.sqla import Unique
-from ..model.form import (
-    ModelConverterBase,
-    InlineModelConverterBase,
-    FieldPlaceholder,
-)
-
+from ..model.form import convert_type
+from ..model.form import ModelConverterBase
+from ..model.form import    InlineModelConverterBase
 from .query import Query
 from .ajax import create_ajax_loader
 
+class FieldPlaceholder:
+    """
+    Field placeholder for model convertors.
+    """
+
+    def __init__(self, field):
+        self.field = field
 
 class AdminModelConverter(ModelConverterBase):
     """
@@ -52,38 +56,47 @@ class AdminModelConverter(ModelConverterBase):
             field_args["validators"].append(validators.Length(max=column.type.length))
         self._nullable_common(column, field_args, **extra)
 
+    @convert_type("String")
     def conv_string(self, column, field_args, **extra):
         self._string_common(column=column, field_args=field_args, **extra)
         return StringField(**field_args)
 
+    @convert_type("Text")
     def conv_text(self, field_args, **extra):
         self._string_common(field_args=field_args, **extra)
         return TextAreaField(**field_args)
 
+    @convert_type("Boolean")
     def conv_boolean(self, field_args, **extra):
         return BooleanField(**field_args)
 
+    @convert_type("Integer", "BigInteger", "SmallInteger")
     def convert_integer(self, column, field_args, **extra):
         unsigned = getattr(column.type, "unsigned", False)
         if unsigned:
             field_args["validators"].append(validators.NumberRange(min=0))
         return IntegerField(**field_args)
 
+    @convert_type("Numeric", "DECIMAL", "Float", "REAL", "DOUBLE")
     def convert_decimal(self, column, field_args, **extra):
         # override default decimal places limit, use database defaults instead
         field_args.setdefault("places", None)
         return DecimalField(**field_args)
 
+    @convert_type("Date")
     def convert_date(self, field_args, **extra):
         field_args["widget"] = DatePickerWidget()
         return DateField(**field_args)
 
+    @convert_type("Time")
     def convert_time(self, field_args, **extra):
         return TimeField(**field_args)
 
+    @convert_type("DateTime")
     def convert_datetime(self, field_args, **extra):
         return DateTimeField(**field_args)
 
+    @convert_type("sqlalchemy.sql.sqltypes.Enum")
     def convert_enum(self, column, field_args, **extra):
         available_choices = [(f, f) for f in column.type.enums]
         accepted_values = [choice[0] for choice in available_choices]
@@ -99,21 +112,10 @@ class AdminModelConverter(ModelConverterBase):
         field_args["coerce"] = lambda v: v.name if isinstance(v, Enum) else str(v)
         return Select2Field(**field_args)
 
+    @convert_type("JSON")
     def convert_json(self, field_args, **extra):
         return JSONField(**field_args)
 
-    TYPE_MAPPING = {
-        "conv_string": ["String"],
-        "conv_text": ["Text"],
-        "conv_boolean": ["Boolean"],
-        "conv_integer": ["Integer", "BigInteger", "SmallInteger"],
-        "conv_decimal": ["Numeric", "DECIMAL", "Float", "REAL", "DOUBLE"],
-        "conv_date": ["Date"],
-        "conv_time": ["Time"],
-        "conv_datetime": ["DateTime"],
-        "conv_enum": ["sqlalchemy.sql.sqltypes.Enum"],
-        "conv_json": ["JSON"],
-    }
 
     def __init__(self, session, view):
         super().__init__()

@@ -1,6 +1,8 @@
 import enum
 from flask_babel import lazy_gettext
 from sqlalchemy.sql import not_, or_
+from ..model.filter import BaseFilterConverter
+from ..model.filter import convert_type
 from ..model.filter import BaseFilter
 from ..model.filter import BaseBooleanFilter
 from ..model.filter import BaseIntFilter
@@ -273,7 +275,9 @@ class TimeNotBetweenFilter(TimeBetweenFilter):
 
 class EnumEqualFilter(FilterEqual):
     def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        super().__init__(
+            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
+        )
         self.enum_class = column_type.enum_class
 
     def clean(self, value):
@@ -282,7 +286,9 @@ class EnumEqualFilter(FilterEqual):
 
 class EnumFilterNotEqual(FilterNotEqual):
     def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        super().__init__(
+            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
+        )
         self.enum_class = column_type.enum_class
 
     def clean(self, value):
@@ -291,13 +297,17 @@ class EnumFilterNotEqual(FilterNotEqual):
 
 class EnumFilterEmpty(FilterEmpty):
     def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        super().__init__(
+            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
+        )
         self.enum_class = column_type.enum_class
 
 
 class EnumFilterInList(FilterInList):
     def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        super().__init__(
+            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
+        )
         self.enum_class = column_type.enum_class
 
     def clean(self, value):
@@ -308,7 +318,9 @@ class EnumFilterInList(FilterInList):
 
 class EnumFilterNotInList(FilterNotInList):
     def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(column_type, column, name, data_type, [(v, v) for v in column_type.enums])
+        super().__init__(
+            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
+        )
         self.enum_class = column_type.enum_class
 
     def clean(self, value):
@@ -331,9 +343,9 @@ class ChoiceTypeEqualFilter(FilterEqual):
                     choice_type = type
                     break
         if choice_type:
-            return query.add_filter(self.column,"==",choice_type)
+            return query.add_filter(self.column, "==", choice_type)
         else:
-            return query.add_filter(self.column,"==",value)
+            return query.add_filter(self.column, "==", value)
 
 
 class ChoiceTypeNotEqualFilter(FilterNotEqual):
@@ -350,9 +362,9 @@ class ChoiceTypeNotEqualFilter(FilterNotEqual):
                     choice_type = type
                     break
         if choice_type:
-            return query.add_filter(self.column,"!=",choice_type)
+            return query.add_filter(self.column, "!=", choice_type)
         else:
-            return query.add_filter(self.column,"!=",value)
+            return query.add_filter(self.column, "!=", value)
 
 
 class ChoiceTypeLikeFilter(FilterLike):
@@ -369,9 +381,9 @@ class ChoiceTypeLikeFilter(FilterLike):
                     choice_type = type
                     break
         if choice_type:
-            return query.add_filter(self.column,"like",choice_type)
+            return query.add_filter(self.column, "like", choice_type)
         else:
-            return query.add_filter(self.column,"like",value)
+            return query.add_filter(self.column, "like", value)
 
 
 class ChoiceTypeNotLikeFilter(FilterNotLike):
@@ -388,12 +400,12 @@ class ChoiceTypeNotLikeFilter(FilterNotLike):
                     choice_type = type
                     break
         if choice_type:
-            return query.add_filter(self.column,"not_like",choice_type)
+            return query.add_filter(self.column, "not_like", choice_type)
         else:
-            return query.add_filter(self.column,"not_like",value)
+            return query.add_filter(self.column, "not_like", value)
 
 
-class FilterConverter:
+class FilterConverter(BaseFilterConverter):
     string_filters = (
         FilterLike,
         FilterNotLike,
@@ -471,63 +483,69 @@ class FilterConverter:
         FilterEmpty,
     )
 
-    arrow_type_filters = (DateTimeGreaterFilter, DateTimeSmallerFilter, FilterEmpty)
+    @convert_type(
+        "string",
+        "char",
+        "unicode",
+        "varchar",
+        "tinytext",
+        "text",
+        "mediumtext",
+        "longtext",
+        "unicodetext",
+        "nchar",
+        "nvarchar",
+        "ntext",
+        "citext",
+        "emailtype",
+        "URLType",
+        "IPAddressType",
+    )
+    def convert_string(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.string_filters]
 
-    TYPE_MAPPING = {
-        "string_filters": [
-            "string",
-            "char",
-            "unicode",
-            "varchar",
-            "tinytext",
-            "text",
-            "mediumtext",
-            "longtext",
-            "unicodetext",
-            "nchar",
-            "nvarchar",
-            "ntext",
-            "citext",
-            "emailtype",
-            "URLType",
-            "IPAddressType",
-        ],
-        "string_key_filters": ["ColorType", "TimezoneType", "CurrencyType"],
-        "bool_filters": ["boolean", "tinyint"],
-        "int_filters": [
-            "int",
-            "integer",
-            "smallinteger",
-            "smallint",
-            "biginteger",
-            "bigint",
-            "mediumint",
-        ],
-        "float_filters": [
-            "float",
-            "real",
-            "decimal",
-            "numeric",
-            "double_precision",
-            "double",
-        ],
-        "date_filters": ["date"],
-        "datetime_filters": ["datetime", "datetime2", "timestamp", "smalldatetime"],
-        "time_filters": ["time"],
-        "choice_type_filters": ["ChoiceType"],
-        "enum_filters": ["enum"],
-    }
+    @convert_type("ColorType", "TimezoneType", "CurrencyType")
+    def convert_string_key(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.string_key_filters]
 
-    def __init__(self):
-        self._converters = {}
-        for filter_attr_name, db_types in self.TYPE_MAPPING.items():
-            filters = getattr(self, filter_attr_name, None)
-            if filters:
-                for t in db_types:
-                    self._converters[t.lower()] = filters
+    @convert_type("boolean", "tinyint")
+    def convert_bool(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.bool_filters]
 
-    def get_column_filters(self, column_type, column, name, **kwargs):
-        column_type_name = column_type.__class__.__name__.lower()
-        filters = self._converters.get(column_type_name, None)
-        if filters:
-            return [f(column_type, column, name, **kwargs) for f in filters]
+    @convert_type(
+        "int",
+        "integer",
+        "smallinteger",
+        "smallint",
+        "biginteger",
+        "bigint",
+        "mediumint",
+    )
+    def convert_int(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.int_filters]
+
+    @convert_type("float", "real", "decimal", "numeric", "double_precision", "double")
+    def convert_float(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.float_filters]
+
+    @convert_type("date")
+    def convert_date(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.date_filters]
+
+    @convert_type("datetime", "datetime2", "timestamp", "smalldatetime")
+    def convert_datetime(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.datetime_filters]
+
+    @convert_type("time")
+    def convert_time(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.time_filters]
+
+    @convert_type("ChoiceType")
+    def convert_choice_type(self, column_type, column, name, **kwargs):
+        return [
+            f(column_type, column, name, **kwargs) for f in self.choice_type_filters
+        ]
+
+    @convert_type("enum")
+    def convert_enum(self, column_type, column, name, **kwargs):
+        return [f(column_type, column, name, **kwargs) for f in self.enum_filters]

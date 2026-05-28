@@ -1,6 +1,41 @@
+import types
 import time
 import datetime
 from flask_babel import lazy_gettext
+
+
+def convert_type(*args):
+    """Decorator for field to filter conversion routine."""
+
+    def decorator(func):
+        func._converter_for = list(map(lambda x: x.lower(), args))
+        return func
+
+    return decorator
+
+
+class BaseFilterConverter:
+    """Base filter converter."""
+
+    _converters = dict()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        converters = {}
+        for base in cls.__bases__:
+            base_map = getattr(base, "_converters", {})
+            converters.update(base_map)
+        for name, method in cls.__dict__.items():
+            if callable(method) and hasattr(method, "_converter_for"):
+                for type_name in method._converter_for:
+                    converters[type_name] = method
+        cls._converters = converters
+
+    def get_filters(self, column_type, column, name, **kwargs):
+        column_type_name = column_type.__class__.__name__.lower()
+        filters = self._converters.get(column_type_name, None)
+        if filters:
+            return types.MethodType(filters, self)(column_type, column, name, **kwargs)
 
 
 class BaseFilter:

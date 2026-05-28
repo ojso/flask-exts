@@ -1,4 +1,4 @@
-import inspect
+import types
 from wtforms.fields import HiddenField
 from wtforms.fields.core import UnboundField
 from wtforms.validators import InputRequired
@@ -6,12 +6,59 @@ from ...template.forms.widgets import XEditableWidget
 from ...template.forms.form.base_form import BaseForm
 
 
-def converts(*args):
-    def _inner(func):
-        func._converter_for = frozenset(args)
+def convert_type(*args):
+    def decorator(func):
+        func._converter_for = args
         return func
 
-    return _inner
+    return decorator
+
+class ModelConverterBase:
+    _converters = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        converters = {}
+        for base in cls.__bases__:
+            base_map = getattr(base, "_converters", {})
+            converters.update(base_map)
+        for name, method in cls.__dict__.items():
+            if callable(method) and hasattr(method, "_converter_for"):
+                for type_name in method._converter_for:
+                    converters[type_name] = method
+        cls._converters = converters
+
+    def __init__(self, use_mro=True):
+        self.use_mro = use_mro
+
+    def get_converter(self, column):
+        col_type = type(column.type)
+        if self.use_mro:
+            types_list = col_type.__mro__
+        else:
+            types_list = (col_type,)
+
+        # Search by module + name
+        for t in types_list:
+            full_name = f"{t.__module__}.{t.__name__}"
+            if full_name in self._converters:
+                func = self._converters[full_name]
+                return types.MethodType(func, self)
+
+        # Search by name
+        for t in types_list:
+            short_name = t.__name__
+            if short_name in self._converters:
+                func = self._converters[short_name]
+                return types.MethodType(func, self)
+
+        return None
+
+    def get_form(
+        self, model, base_class=BaseForm, only=None, exclude=None, field_args=None
+    ):
+        raise NotImplementedError()
+
 
 
 def create_editable_list_form(form_base_class, form_class, widget=None):
@@ -37,11 +84,11 @@ def create_editable_list_form(form_base_class, form_class, widget=None):
         list_form_pk = HiddenField(validators=[InputRequired()])
 
     for name, obj in form_class.__dict__.items():
-        if not name.startswith('_') and isinstance(obj, UnboundField):
+        if not name.startswith("_") and isinstance(obj, UnboundField):
             if name == "list_form_pk":
                 raise Exception("Form already has a list_form_pk column.")
             obj.kwargs["widget"] = widget
-            setattr(ListForm, name, obj)           
+            setattr(ListForm, name, obj)
 
     return ListForm
 
@@ -121,45 +168,7 @@ class InlineFormAdmin(InlineBaseFormAdmin):
         super().__init__(**kwargs)
 
 
-class ModelConverterBase:
-    def __init__(self, converters=None, use_mro=True):
-        self.use_mro = use_mro
 
-        if not converters:
-            converters = {}
-
-        for name in dir(self):
-            obj = getattr(self, name)
-            if hasattr(obj, "_converter_for"):
-                for classname in obj._converter_for:
-                    converters[classname] = obj
-
-        self.converters = converters
-
-    def get_converter(self, column):
-        if self.use_mro:
-            types = inspect.getmro(type(column.type))
-        else:
-            types = [type(column.type)]
-
-        # Search by module + name
-        for col_type in types:
-            type_string = "%s.%s" % (col_type.__module__, col_type.__name__)
-
-            if type_string in self.converters:
-                return self.converters[type_string]
-
-        # Search by name
-        for col_type in types:
-            if col_type.__name__ in self.converters:
-                return self.converters[col_type.__name__]
-
-        return None
-
-    def get_form(
-        self, model, base_class=BaseForm, only=None, exclude=None, field_args=None
-    ):
-        raise NotImplementedError()
 
 
 class InlineModelConverterBase:
@@ -214,10 +223,4 @@ class InlineModelConverterBase:
         return None
 
 
-class FieldPlaceholder:
-    """
-    Field placeholder for model convertors.
-    """
 
-    def __init__(self, field):
-        self.field = field
