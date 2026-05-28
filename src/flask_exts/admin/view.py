@@ -4,7 +4,7 @@ from re import sub
 from flask import Blueprint
 from flask import url_for
 from flask import abort
-from ..template.forms.form.flask_form import FlaskForm
+
 
 def _wrap_view_func_with_access(f):
     if hasattr(f, "_wrapped_access"):
@@ -30,10 +30,9 @@ class ViewMeta(type):
 
 
 class View(metaclass=ViewMeta):
-    form_base_class = FlaskForm
     """
-        Base form class. Will be used by form scaffolding function when creating model form.
-        Useful if you want to have custom constructor or override some fields.
+    Base form class. Will be used by form scaffolding function when creating model form.
+    Useful if you want to have custom constructor or override some fields.
     """
 
     def __init__(

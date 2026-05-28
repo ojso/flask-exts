@@ -4,7 +4,11 @@ from sqlalchemy import inspect
 from sqlalchemy import select
 from sqlalchemy import Boolean, Column
 from wtforms.fields import HiddenField
-from wtforms.fields import StringField, TextAreaField, IntegerField, DecimalField,BooleanField
+from wtforms.fields import StringField
+from wtforms.fields import TextAreaField
+from wtforms.fields import IntegerField
+from wtforms.fields import DecimalField
+from wtforms.fields import BooleanField
 from wtforms.fields import DateField
 # from wtforms.fields import TimeField
 from ...template.forms.fields import TimeField
@@ -22,11 +26,12 @@ from ...template.forms.fields.inline import InlineFormField
 from ...template.forms.widgets import DatePickerWidget
 from ...template.forms.form.base_form import BaseForm
 from ...template.forms.validators.sqla import Unique
-from ..model.form import convert_type
-from ..model.form import ModelConverterBase
-from ..model.form import    InlineModelConverterBase
+from ..model.form import convert_formfield
+from ..model.form import BaseFormFieldConverter
+from ..model.form import InlineModelConverterBase
 from .query import Query
 from .ajax import create_ajax_loader
+
 
 class FieldPlaceholder:
     """
@@ -36,7 +41,8 @@ class FieldPlaceholder:
     def __init__(self, field):
         self.field = field
 
-class AdminModelConverter(ModelConverterBase):
+
+class FormConverter(BaseFormFieldConverter):
     """
     SQLAlchemy model to form converter
     """
@@ -56,47 +62,47 @@ class AdminModelConverter(ModelConverterBase):
             field_args["validators"].append(validators.Length(max=column.type.length))
         self._nullable_common(column, field_args, **extra)
 
-    @convert_type("String")
+    @convert_formfield("String")
     def conv_string(self, column, field_args, **extra):
         self._string_common(column=column, field_args=field_args, **extra)
         return StringField(**field_args)
 
-    @convert_type("Text")
+    @convert_formfield("Text")
     def conv_text(self, field_args, **extra):
         self._string_common(field_args=field_args, **extra)
         return TextAreaField(**field_args)
 
-    @convert_type("Boolean")
+    @convert_formfield("Boolean")
     def conv_boolean(self, field_args, **extra):
         return BooleanField(**field_args)
 
-    @convert_type("Integer", "BigInteger", "SmallInteger")
+    @convert_formfield("Integer", "BigInteger", "SmallInteger")
     def convert_integer(self, column, field_args, **extra):
         unsigned = getattr(column.type, "unsigned", False)
         if unsigned:
             field_args["validators"].append(validators.NumberRange(min=0))
         return IntegerField(**field_args)
 
-    @convert_type("Numeric", "DECIMAL", "Float", "REAL", "DOUBLE")
+    @convert_formfield("Numeric", "DECIMAL", "Float", "REAL", "DOUBLE")
     def convert_decimal(self, column, field_args, **extra):
         # override default decimal places limit, use database defaults instead
         field_args.setdefault("places", None)
         return DecimalField(**field_args)
 
-    @convert_type("Date")
+    @convert_formfield("Date")
     def convert_date(self, field_args, **extra):
         field_args["widget"] = DatePickerWidget()
         return DateField(**field_args)
 
-    @convert_type("Time")
+    @convert_formfield("Time")
     def convert_time(self, field_args, **extra):
         return TimeField(**field_args)
 
-    @convert_type("DateTime")
+    @convert_formfield("DateTime")
     def convert_datetime(self, field_args, **extra):
         return DateTimeField(**field_args)
 
-    @convert_type("sqlalchemy.sql.sqltypes.Enum")
+    @convert_formfield("sqlalchemy.sql.sqltypes.Enum")
     def convert_enum(self, column, field_args, **extra):
         available_choices = [(f, f) for f in column.type.enums]
         accepted_values = [choice[0] for choice in available_choices]
@@ -112,10 +118,9 @@ class AdminModelConverter(ModelConverterBase):
         field_args["coerce"] = lambda v: v.name if isinstance(v, Enum) else str(v)
         return Select2Field(**field_args)
 
-    @convert_type("JSON")
+    @convert_formfield("JSON")
     def convert_json(self, field_args, **extra):
         return JSONField(**field_args)
-
 
     def __init__(self, session, view):
         super().__init__()

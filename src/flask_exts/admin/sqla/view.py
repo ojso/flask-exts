@@ -4,7 +4,6 @@ from flask_babel import gettext
 from sqlalchemy import inspect
 from ...datastore.sqla import db
 from ..model.view import ModelView
-from ..model.form import create_editable_list_form
 from . import form
 from .filter import FilterConverter
 from .ajax import create_ajax_loader
@@ -17,7 +16,7 @@ class SqlaModelView(ModelView):
     SQLAlchemy model view
     """
 
-    model_form_converter = form.AdminModelConverter
+    model_form_converter = form.FormConverter
     """
         Model form conversion class. Use this to implement custom field conversion logic.
 
@@ -245,7 +244,7 @@ class SqlaModelView(ModelView):
 
         return columns
 
-    def scaffold_column_filter(self, column_path):
+    def scaffold_filter(self, column_path):
         """
         Return list of enabled filters
         """
@@ -305,7 +304,7 @@ class SqlaModelView(ModelView):
             field_args=validators,
         )
 
-        return create_editable_list_form(self.form_base_class, form_class, widget)
+        return self.create_editable_list_form(form_class, widget)
 
     def scaffold_inline_form_models(self, form_class):
         """

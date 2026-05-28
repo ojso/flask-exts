@@ -4,11 +4,11 @@ import datetime
 from flask_babel import lazy_gettext
 
 
-def convert_type(*args):
+def convert_filter(*args):
     """Decorator for field to filter conversion routine."""
 
     def decorator(func):
-        func._converter_for = list(map(lambda x: x.lower(), args))
+        func._converter_for_filter = list(map(lambda x: x.lower(), args))
         return func
 
     return decorator
@@ -26,8 +26,8 @@ class BaseFilterConverter:
             base_map = getattr(base, "_converters", {})
             converters.update(base_map)
         for name, method in cls.__dict__.items():
-            if callable(method) and hasattr(method, "_converter_for"):
-                for type_name in method._converter_for:
+            if callable(method) and hasattr(method, "_converter_for_filter"):
+                for type_name in method._converter_for_filter:
                     converters[type_name] = method
         cls._converters = converters
 
@@ -45,10 +45,10 @@ class BaseFilter:
 
         :param name:
             Displayed name
-        :param options:
-            List of fixed options. If provided, will use drop down instead of textbox.
         :param data_type:
             Client-side widget type to use.
+        :param options:
+            List of fixed options. If provided, will use drop down instead of textbox.
         """
         self.name = name
         self.data_type = data_type

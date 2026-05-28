@@ -58,7 +58,7 @@ class MockModelView(ModelView):
 
         return columns
 
-    def scaffold_column_filter(self, name):
+    def scaffold_filter(self, name):
         return [SimpleFilter(name)]
 
     def scaffold_sortable_columns(self):

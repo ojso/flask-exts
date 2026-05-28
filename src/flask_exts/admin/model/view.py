@@ -1,11 +1,10 @@
-import warnings
-import csv
-import mimetypes
-import time
 from typing import Optional
-from math import ceil
 from functools import reduce
+from math import ceil
+import time
+import mimetypes
 import tablib
+import csv
 from flask import request
 from flask import redirect
 from flask import flash
@@ -22,6 +21,7 @@ from ..view import View
 from .actions import ActionsMixin
 from .rowaction import RowActionMixin
 from .filter_mixin import FilterMixin
+from .form_mixin import FormMixin
 from ..exposer import expose_url
 from .types import T_COLUMN_LIST, T_FORMATTERS
 from .typefmt import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
@@ -65,7 +65,7 @@ class ViewArgs:
         return ViewArgs(**kwargs)
 
 
-class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
+class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin, FormMixin):
     """
     Model view.
 
@@ -571,22 +571,24 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
         self._init_view()
 
     def _init_view(self):
-        # ActionMixin
-        self.init_actions()
-
-        # RowActionMixin
-        self.init_row_actions()
-
         self._list_columns = self.get_list_columns()
         self._sortable_columns = self.get_sortable_columns()
         self._details_columns = self.get_details_columns()
         self._export_columns = self.get_export_columns()
 
+        # ActionMixin
+        self.init_actions()
+
+        # RowActionMixin
+        self.init_row_actions()        
+
+        # FilterMixin
+        self.init_filters()
+
         # Forms
         self._init_forms()
 
-        # Filters
-        self.init_filters()
+
 
         # Column formatters
         if self.column_formatters_export is None:
@@ -1013,7 +1015,7 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin):
             sort=request.args.get("sort", None, type=int),
             sort_desc=request.args.get("desc", None, type=int),
             search=request.args.get("search", None),
-            filters=self.get_list_actived_filters(),
+            filters=self.get_actived_filters(),
             extra_args=dict(
                 [
                     (k, v)

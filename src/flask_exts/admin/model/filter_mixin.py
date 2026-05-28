@@ -4,6 +4,7 @@ from flask import flash
 from flask_babel import gettext
 from .filter import BaseFilter
 
+
 class FilterGroup:
     def __init__(self, label):
         self.label = label
@@ -32,7 +33,7 @@ class FilterMixin:
         Collection of the column filters.
 
         Can contain either field names or instances of :class:`~.model.filters.BaseFilter` classes.
-        Can contain either field names or instances of :class:`.sqla.filters.BaseSQLAFilter` classes.
+        Can contain either field names or instances of :class:`~.sqla.filters.BaseSQLAFilter` classes.
 
         Example::
 
@@ -73,6 +74,7 @@ class FilterMixin:
                     ),
                 ]
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -83,12 +85,12 @@ class FilterMixin:
 
         if not self.column_filters:
             return
-        
+
         for f in self.column_filters:
             if isinstance(f, BaseFilter):
                 self._filters.append(f)
             else:
-                flts = self.scaffold_column_filter(f)
+                flts = self.scaffold_filter(f)
                 if flts:
                     self._filters.extend(flts)
 
@@ -100,15 +102,15 @@ class FilterMixin:
                     {
                         "index": i,
                         "arg": self._get_filter_arg(i, flt),
-                        "operation": flt.operation(),
-                        "options": flt.get_options(),
                         "type": flt.data_type,
+                        "options": flt.get_options(),
+                        "operation": flt.operation(),
                     }
                 )
 
                 self._filter_args[self._get_filter_arg(i, flt)] = (i, flt)
 
-    def scaffold_column_filter(self, name):
+    def scaffold_filter(self, name):
         """
         Generate filter object for the given name
 
@@ -116,7 +118,7 @@ class FilterMixin:
             Name of the field
         """
         return None
-    
+
     def _get_filter_arg(self, index, flt):
         """
         Given a filter `flt`, return a unique name for that filter in this view.
@@ -130,7 +132,7 @@ class FilterMixin:
         """
 
         return str(index)
-        
+
     def get_actived_filters_kwargs(self, actived_filters):
         """
         Get active filters as dictionary of URL arguments and values
@@ -147,7 +149,7 @@ class FilterMixin:
                 kwargs[key] = value
 
         return kwargs
-    
+
     def get_filter_groups(self):
         """
         Returns non-lazy version of filter strings
@@ -162,8 +164,8 @@ class FilterMixin:
             return results
 
         return None
-    
-    def get_list_actived_filters(self)->list[tuple[int, str, str]]:
+
+    def get_actived_filters(self) -> list[tuple[int, str, str]]:
         if self._filters:
             filters = []
             for arg in request.args:
@@ -179,10 +181,10 @@ class FilterMixin:
                         data = (pos, (idx, flt.name, value))
                         filters.append(data)
                     else:
-                        flash(gettext("Invalid Filter Value: %(value)s", value=value), "error")
-
+                        flash(
+                            gettext("Invalid Filter Value: %(value)s", value=value),
+                            "error",
+                        )
             # Sort filters by position in URL and return list of filter data
             return [v[1] for v in sorted(filters, key=lambda n: n[0])]
         return None
-
-    

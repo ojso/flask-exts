@@ -2,7 +2,7 @@ import enum
 from flask_babel import lazy_gettext
 from sqlalchemy.sql import not_, or_
 from ..model.filter import BaseFilterConverter
-from ..model.filter import convert_type
+from ..model.filter import convert_filter
 from ..model.filter import BaseFilter
 from ..model.filter import BaseBooleanFilter
 from ..model.filter import BaseIntFilter
@@ -483,7 +483,7 @@ class FilterConverter(BaseFilterConverter):
         FilterEmpty,
     )
 
-    @convert_type(
+    @convert_filter(
         "string",
         "char",
         "unicode",
@@ -504,15 +504,15 @@ class FilterConverter(BaseFilterConverter):
     def convert_string(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.string_filters]
 
-    @convert_type("ColorType", "TimezoneType", "CurrencyType")
+    @convert_filter("ColorType", "TimezoneType", "CurrencyType")
     def convert_string_key(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.string_key_filters]
 
-    @convert_type("boolean", "tinyint")
+    @convert_filter("boolean", "tinyint")
     def convert_bool(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.bool_filters]
 
-    @convert_type(
+    @convert_filter(
         "int",
         "integer",
         "smallinteger",
@@ -524,28 +524,28 @@ class FilterConverter(BaseFilterConverter):
     def convert_int(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.int_filters]
 
-    @convert_type("float", "real", "decimal", "numeric", "double_precision", "double")
+    @convert_filter("float", "real", "decimal", "numeric", "double_precision", "double")
     def convert_float(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.float_filters]
 
-    @convert_type("date")
+    @convert_filter("date")
     def convert_date(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.date_filters]
 
-    @convert_type("datetime", "datetime2", "timestamp", "smalldatetime")
+    @convert_filter("datetime", "datetime2", "timestamp", "smalldatetime")
     def convert_datetime(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.datetime_filters]
 
-    @convert_type("time")
+    @convert_filter("time")
     def convert_time(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.time_filters]
 
-    @convert_type("ChoiceType")
+    @convert_filter("ChoiceType")
     def convert_choice_type(self, column_type, column, name, **kwargs):
         return [
             f(column_type, column, name, **kwargs) for f in self.choice_type_filters
         ]
 
-    @convert_type("enum")
+    @convert_filter("enum")
     def convert_enum(self, column_type, column, name, **kwargs):
         return [f(column_type, column, name, **kwargs) for f in self.enum_filters]
