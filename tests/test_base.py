@@ -19,7 +19,7 @@ def test_exts(app):
     assert exts.admin is not None
     admin = exts.admin
     assert admin.app is not None
-    print(app.config.get("NOREPLY_EMAIL_SENDER"))
+    # print(app.config.get("NOREPLY_EMAIL_SENDER"))
 
 def test_blueprints(app):
     assert len(app.blueprints) == 3

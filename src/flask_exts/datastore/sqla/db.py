@@ -69,8 +69,6 @@ class Db:
             raise RuntimeError("A 'SQLAlchemy' instance has already been registered.")
         app.extensions["sqlalchemy"] = self
 
-        self._cleanup()
-
         engine_options = {
             "url": app.config.get("SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:")
         }
@@ -85,6 +83,7 @@ class Db:
         session_options = {"bind": self.engine}
         self.session = self._make_scoped_session(session_options)
 
+        print("Teardown registered") 
         app.teardown_appcontext(self._teardown_session)
         app.shell_context_processor(self._add_models_to_shell)
 
@@ -112,13 +111,16 @@ class Db:
         return id(g._get_current_object())
 
     def _teardown_session(self, exception: Exception | None = None) -> None:
+        print("teardown_session")
         if isinstance(self.session, scoped_session):
+            print("teardown_session")
             if exception is not None:
                 try:
                     self.session.rollback()
                 except Exception:
                     pass
             self.session.remove()
+            self.session = None
 
     def _add_models_to_shell(self) -> dict:
         db_instance = current_app.extensions["sqlalchemy"]
