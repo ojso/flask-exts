@@ -2,7 +2,7 @@ import pytest
 from flask_exts.datastore.sqla import db
 from flask_exts.admin.sqla import filter
 from flask_exts.admin.sqla.view import SqlaModelView
-from tests.admin.sqla.models.model1 import Model1, Model2
+from tests.models.model1 import Model1, Model2
 from .custom_sqla_model_view import CustomSqlaModelView
 
 

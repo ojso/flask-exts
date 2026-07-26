@@ -1,7 +1,7 @@
 import pytest
 from flask_exts.admin.sqla.query import Query
-from tests.admin.sqla.models.model1 import Model1
-from tests.admin.sqla.models.relations import ModelA, ModelB, ModelC
+from tests.models.model1 import Model1
+from tests.models.relations import ModelA, ModelB, ModelC
 
 
 

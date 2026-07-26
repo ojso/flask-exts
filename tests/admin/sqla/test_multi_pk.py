@@ -1,5 +1,5 @@
 from flask_exts.datastore.sqla import db
-from tests.admin.sqla.models.multpk import Multpk
+from tests.models.multpk import Multpk
 from flask_exts.admin.sqla.view import SqlaModelView
 from .custom_sqla_model_view import CustomSqlaModelView
 

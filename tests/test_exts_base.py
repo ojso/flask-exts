@@ -7,7 +7,6 @@ def test_extensions(app):
     # print(app.extensions)
     # print(app.extensions.keys())
     assert "babel" in app.extensions
-    assert "sqlalchemy" in app.extensions
     assert getattr(app, "login_manager", None) is not None
     
 

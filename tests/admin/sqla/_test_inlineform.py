@@ -5,7 +5,7 @@ from flask_exts.template.fields.sqla import InlineModelFormList
 from flask_exts.template.validators.sqla import ItemsRequired
 from flask_exts.datastore.sqla import db
 from tests.datastore.sqla.models.user import MyUser, UserInfo, UserEmail, Tag
-from tests.admin.sqla.models.tree import Tree 
+from tests.models.tree import Tree 
 
 
 

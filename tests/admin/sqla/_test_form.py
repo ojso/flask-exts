@@ -1,6 +1,6 @@
 import pytest
-from tests.admin.sqla.models.model1 import ModelForm, ModelChild
-from tests.admin.sqla.models.relations import OneToOneChild, OneToOneParent
+from tests.models.model1 import ModelForm, ModelChild
+from tests.models.relations import OneToOneChild, OneToOneParent
 
 def test_form_columns(app, admin):
     with app.app_context():

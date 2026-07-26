@@ -106,9 +106,6 @@ class ModelHybrid2(db.Model):
     owner: Mapped[ModelHybrid] = relationship(back_populates="tiles", uselist=False)
 
 
-
-
-
 class ModelForm(db.Model):
     __tablename__ = "model_form"
 
