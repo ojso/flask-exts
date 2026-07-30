@@ -1,9 +1,7 @@
 import pytest
 from flask_exts.admin.sqla.query import Query
-from tests.models.model1 import Model1
+from tests.models.demo import Model1
 from tests.models.relations import ModelA, ModelB, ModelC
-
-
 
 
 def test_get_field_with_path():
@@ -40,25 +38,24 @@ def test_get_field_with_path():
         Query.get_field_with_path(Model1, "name.invalid")
 
 
-
 def test_eager_load():
     query = Query(ModelB)
     query.add_eager_loads(["a_first", "x"])
-    print(query._joinedloads)
-    print(query._selectinloads)
+    # print(query._joinedloads)
+    # print(query._selectinloads)
 
 
 def test_count_query():
     manager = Query(ModelA)
     alias_b1 = manager.join_path("first_b")
     stmt = manager.build()
-    print(stmt)
+    # print(stmt)
     count_stmt = manager.build_count()
-    print(count_stmt)
+    # print(count_stmt)
 
 
 # 使用示例
-def test_query():
+def _test_query():
     # 场景1: [A.a, B.b] 和 [A.b, B.b] 指向同一个 B 的不同实例
     print("=" * 50)
     print("场景1: 多个路径指向同一张表")
@@ -163,7 +160,7 @@ def test_query():
     print(f"复杂查询 SQL:\n{stmt}")
 
 
-def test_column_type():
+def _test_column_type():
     for key in [
         "id",
         "test1",
@@ -184,4 +181,3 @@ def test_column_type():
         if column_type_name == "Enum":
             print(f"  Model1.{key} is an Enum with values: {column_type.enums}")
             print(f"  Model1.{key} Enum class: {column_type.enum_class}")
-        

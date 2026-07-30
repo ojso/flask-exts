@@ -1,10 +1,13 @@
 import pytest
 from flask_exts.admin import expose_url
 from flask_exts.admin.view import View
-from flask_exts.admin.model.actions import ActionsMixin
+from flask_exts.template.forms.form.flask_form import FlaskForm
+from flask_exts.admin.model.actions_mixin import ActionsMixin
 
 
 class MockView(View, ActionsMixin):
+    form_base_class = FlaskForm
+
     @expose_url("/")
     def index(self):
         return "Success!"

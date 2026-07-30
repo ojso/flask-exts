@@ -18,51 +18,19 @@ from wtforms.fields import HiddenField
 from wtforms.validators import ValidationError, InputRequired
 from flask_babel import gettext, ngettext
 from ..view import View
-from .actions import ActionsMixin
-from .rowaction import RowActionMixin
+from ..exposer import expose_url
+from ...template.forms.form.flask_form import FlaskForm
+from .view_args import ViewArgs
+from .actions_mixin import ActionsMixin
+from .rowaction_mixin import RowActionMixin
 from .filter_mixin import FilterMixin
 from .form_mixin import FormMixin
-from ..exposer import expose_url
 from .types import T_COLUMN_LIST, T_FORMATTERS
 from .typefmt import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
 from .ajax import AjaxModelLoader
 
 
-class ViewArgs:
-    """
-    List view arguments.
-    """
 
-    def __init__(
-        self,
-        page=None,
-        page_size=None,
-        sort=None,
-        sort_desc=None,
-        search=None,
-        filters=None,
-        extra_args=None,
-    ):
-        self.page = page
-        self.page_size = page_size
-        self.sort = sort
-        self.sort_desc = bool(sort_desc)
-        self.search = search or None
-        self.filters = filters
-        self.extra_args = extra_args or dict()
-
-    def clone(self, **kwargs):
-        flt = list(self.filters) if self.filters else None
-
-        kwargs.setdefault("page", self.page)
-        kwargs.setdefault("page_size", self.page_size)
-        kwargs.setdefault("sort", self.sort)
-        kwargs.setdefault("sort_desc", self.sort_desc)
-        kwargs.setdefault("search", self.search)
-        kwargs.setdefault("filters", flt)
-        kwargs.setdefault("extra_args", dict(self.extra_args))
-
-        return ViewArgs(**kwargs)
 
 
 class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin, FormMixin):
@@ -83,6 +51,8 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin, FormMixin):
         2. Implement various data-related methods (`get_list`, `get_one`, `create_model`, etc)
         3. Implement automatic form generation from the model representation (`scaffold_form`)
     """
+
+    form_base_class = FlaskForm
 
     # Permissions
     can_create = True

@@ -1,8 +1,10 @@
 from wtforms.fields import StringField
 from flask_exts.admin.model.view import ModelView
 from flask_exts.admin.model.filter import BaseFilter
-from flask_exts.admin.model.rowaction import ViewRowAction,EditRowAction,DeleteRowAction
-from flask_exts.admin.model.rowaction import ViewPopupRowAction,EditPopupRowAction
+from flask_exts.admin.model.rowaction import ViewRowAction
+from flask_exts.admin.model.rowaction import EditRowAction
+from flask_exts.admin.model.rowaction import DeleteRowAction
+from flask_exts.admin.model.rowaction import ViewPopupRowAction, EditPopupRowAction
 
 
 class MockModel:
@@ -108,18 +110,18 @@ def test_view():
     assert view.admin is None
     assert view.blueprint is None
 
-    print(view._list_columns)
-    print(view._sortable_columns)
+    # print(view._list_columns)
+    # print(view._sortable_columns)
     assert view._sortable_columns == ["col1", "col2", "col3"]
-    print(view._details_columns)
-    print(view._export_columns)
-    print(view._export_columns)
-    print(view.column_editable_list)
+    # print(view._details_columns)
+    # print(view._export_columns)
+    # print(view._export_columns)
+    # print(view.column_editable_list)
 
     # forms
-    print(view._create_form_class)
-    print(view._edit_form_class)
-    print(view.create_form)
+    # print(view._create_form_class)
+    # print(view._edit_form_class)
+    # print(view.create_form)
 
     # Verify scaffolding
 
@@ -582,7 +584,6 @@ def test_export_tablib(client, admin):
 
 
 def test_list_row_actions(client, admin):
-    
 
     # Test default actions
     view = MockModelView(MockModel, name="test", endpoint="test")

@@ -81,6 +81,7 @@ association_table = Table(
 class ManyToManyLeft(db.Model):
     __tablename__ = "many_to_many_left"
     id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
     rights: Mapped[List["ManyToManyRight"]] = relationship(
         secondary=association_table, back_populates="lefts"
     )
@@ -89,6 +90,7 @@ class ManyToManyLeft(db.Model):
 class ManyToManyRight(db.Model):
     __tablename__ = "many_to_many_right"
     id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
     lefts: Mapped[List["ManyToManyLeft"]] = relationship(
         secondary=association_table, back_populates="rights"
     )

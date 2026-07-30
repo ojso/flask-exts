@@ -6,10 +6,24 @@ from sqlalchemy.orm import scoped_session
 from flask_exts.datastore.sqla.db import Db
 
 
-def test_getattr_raises_when_session_is_not_initialized():
+def test_scoped_session():
+    app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+
     db = Db()
-    with pytest.raises(AttributeError):
-        _ = db.execute("SELECT 1")
+    db.init_app(app)
+
+    with pytest.raises(RuntimeError):
+        db.session()
+
+    with app.app_context():
+        session1 = db.session()
+        session2 = db.session()
+        assert session1 is session2
+
+    with app.app_context():
+        session3 = db.session()
+        assert session1 is not session3
 
 
 def test_init_app_registers_extension_and_adds_models_to_shell():

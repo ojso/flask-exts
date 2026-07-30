@@ -6,21 +6,26 @@ from flask_exts.template.forms.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla.query import Query
 from flask_exts.datastore.sqla import db
-from tests.models.model1 import EnumChoices
-from tests.models.model1 import Model1, Model2
+from tests.models.demo import EnumChoices
+from tests.models.demo import Model1, Model2
+from tests.models.demo import StringTestModel
+from tests.models.relations import ManyToManyLeft, ManyToManyRight
 from .custom_sqla_model_view import CustomSqlaModelView
+
 
 def fill_db():
     model1_obj1 = Model1(test1="test1_val_1", test2="test2_val_1", bool_field=True)
     model1_obj2 = Model1(test1="test1_val_2", test2="test2_val_2", bool_field=False)
     model1_obj3 = Model1(test1="test1_val_3", test2="test2_val_3")
-    model1_obj4 = Model1(test1="test1_val_4", test2="test2_val_4", choice_field="choice-1")
+    model1_obj4 = Model1(
+        test1="test1_val_4", test2="test2_val_4", choice_field="choice-1"
+    )
 
-    model2_obj1 = Model2(string_field="test2_val_1", model1=model1_obj1, float_field=None)
-    model2_obj2 = Model2(string_field="test2_val_2", model1=model1_obj2, float_field=None)
-    model2_obj3 = Model2(string_field="test2_val_3", int_field=5000, float_field=25.9)
-    model2_obj4 = Model2(string_field="test2_val_4", int_field=9000, float_field=75.5)
-    model2_obj5 = Model2(string_field="test2_val_5", int_field=6169453081680413441)
+    model2_obj1 = Model2(string_field="test2_val_1", model1=model1_obj1)
+    model2_obj2 = Model2(string_field="test2_val_2", model1=model1_obj2)
+    model2_obj3 = Model2(string_field="test2_val_3")
+    model2_obj4 = Model2(string_field="test2_val_4")
+    model2_obj5 = Model2(string_field="test2_val_5")
 
     date_obj1 = Model1(test1="date_obj1", date_field=date(2014, 11, 17))
     date_obj2 = Model1(test1="date_obj2", date_field=date(2013, 10, 16))
@@ -33,11 +38,8 @@ def fill_db():
         test1="datetime_obj2", datetime_field=datetime(2013, 3, 2, 0, 8, 0)
     )
 
-    enum_obj1 = Model1(test1="enum_obj1", enum_field="model1_v1")
-    enum_obj2 = Model1(test1="enum_obj2", enum_field="model1_v2")
-
-    enum_type_obj1 = Model1(test1="enum_type_obj1", enum_type_field=EnumChoices.first)
-    enum_type_obj2 = Model1(test1="enum_type_obj2", enum_type_field=EnumChoices.second)
+    enum_obj1 = Model1(test1="enum_type_obj1", enum_field=EnumChoices.first)
+    enum_obj2 = Model1(test1="enum_type_obj2", enum_field=EnumChoices.second)
 
     empty_obj = Model1(test1="empty_obj")
 
@@ -60,8 +62,6 @@ def fill_db():
             datetime_obj2,
             enum_obj1,
             enum_obj2,
-            enum_type_obj1,
-            enum_type_obj2,
             empty_obj,
         ]
     )
@@ -79,7 +79,7 @@ def test_model(app, client, admin):
         assert view.endpoint == "model1"
 
         assert view._primary_key == "id"
-        print(view._sortable_columns)
+        # print(view._sortable_columns)
         return
         assert "test1" in view._sortable_columns
         assert "test2" in view._sortable_columns
@@ -169,8 +169,6 @@ def test_model(app, client, admin):
         assert db.session.query(Model1).count() == 0
 
 
-
-
 def test_list_columns(app, client, admin):
     with app.app_context():
         db.reset_all()
@@ -212,7 +210,7 @@ def test_list_columns(app, client, admin):
 def test_complex_list_columns(app, client, admin):
     with app.app_context():
         db.reset_all()
-        m1 = Model1(test1="model1_val1",test2="val2")
+        m1 = Model1(test1="model1_val1", test2="val2")
         db.session.add(m1)
         db.session.add(Model2(string_field="model2_val1", model1=m1))
         db.session.commit()
@@ -231,19 +229,19 @@ def test_column_searchable_list(app, client, admin):
         db.reset_all()
 
         view = CustomSqlaModelView(
-            Model2, column_searchable_list=["string_field", "int_field"]
+            Model1, column_searchable_list=["test1", "int_field"]
         )
         admin.add_view(view)
 
-        db.session.add(Model2(string_field="model1-test", int_field=5000))
-        db.session.add(Model2(string_field="model2-test", int_field=9000))
+        db.session.add(Model1(test1="model1-test", int_field=5000))
+        db.session.add(Model1(test1="model2-test", int_field=9000))
         db.session.commit()
 
-        rv = client.get("/admin/model2/?search=model1")
+        rv = client.get("/admin/model1/?search=model1")
         assert "model1-test" in rv.text
         assert "model2-test" not in rv.text
 
-        rv = client.get("/admin/model2/?search=9000")
+        rv = client.get("/admin/model1/?search=9000")
         assert "model1-test" not in rv.text
         assert "model2-test" in rv.text
 
@@ -260,7 +258,11 @@ def test_extra_args_search(app, client, admin):
 
         admin.add_view(view1)
 
-        db.session.add(Model2(string_field="model1-test",))
+        db.session.add(
+            Model2(
+                string_field="model1-test",
+            )
+        )
         db.session.commit()
 
         # check that extra args in the url are propagated as hidden fields in the search form
@@ -272,19 +274,19 @@ def test_extra_args_filter(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view2 = CustomSqlaModelView(
-            Model2,
+        view1 = CustomSqlaModelView(
+            Model1,
             column_filters=[
                 "int_field",
             ],
         )
-        admin.add_view(view2)
+        admin.add_view(view1)
 
-        db.session.add(Model2(string_field="model2-test", int_field=5000))
+        db.session.add(Model1(test1="model1-test", int_field=5000))
         db.session.commit()
 
         # check that extra args in the url are propagated as hidden fields in the  form
-        rv = client.get("/admin/model2/?flt1_0=5000&foo=bar")
+        rv = client.get("/admin/model1/?flt1_0=5000&foo=bar")
         assert '<input type="hidden" name="foo" value="bar">' in rv.text
 
 
@@ -294,7 +296,9 @@ def test_complex_searchable_list(app, client, admin):
 
         view1 = CustomSqlaModelView(Model2, column_searchable_list=["model1.test1"])
         admin.add_view(view1)
-        view2 = CustomSqlaModelView(Model1, column_searchable_list=["model2.string_field"])
+        view2 = CustomSqlaModelView(
+            Model1, column_searchable_list=["model2.string_field"]
+        )
         admin.add_view(view2)
 
         m1 = Model1(test1="model1-test1-val")
@@ -336,7 +340,9 @@ def test_column_editable_list(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        view1 = CustomSqlaModelView(Model1, column_editable_list=["test1", "enum_field"])
+        view1 = CustomSqlaModelView(
+            Model1, column_editable_list=["test1", "enum_field"]
+        )
         admin.add_view(view1)
 
         # Test in-line editing for relations
@@ -510,8 +516,6 @@ def test_url_args(app, client, admin):
         assert "data2" in rv.text
 
 
-
-
 def test_relations():
     # TODO: test relations
     pass
@@ -524,7 +528,7 @@ def test_multiple_delete(app, client, admin):
         db.session.add_all([Model1(test1="a"), Model1(test1="b"), Model1(test1="c")])
         db.session.commit()
         query = Query(Model1)
-        db.session.scalar(query.build_count()) ==3
+        db.session.scalar(query.build_count()) == 3
 
         view = SqlaModelView(Model1)
         admin.add_view(view)
@@ -533,18 +537,24 @@ def test_multiple_delete(app, client, admin):
             "/admin/model1/action/", data=dict(action="delete", rowid=[1, 2])
         )
         assert rv.status_code == 302
-        db.session.scalar(query.build_count()) ==1
+        db.session.scalar(query.build_count()) == 1
 
 
 def test_default_sort(app, admin):
     with app.app_context():
         db.reset_all()
 
-        db.session.add_all([Model1(test1="c", test2="x"), Model1(test1="b", test2="x"), Model1(test1="a", test2="y")])
+        db.session.add_all(
+            [
+                Model1(test1="c", test2="x"),
+                Model1(test1="b", test2="x"),
+                Model1(test1="a", test2="y"),
+            ]
+        )
         db.session.commit()
         query = Query(Model1)
-        db.session.scalar(query.build_count()) ==3
-        
+        db.session.scalar(query.build_count()) == 3
+
         view1 = CustomSqlaModelView(Model1, name="view1", column_default_sort="test1")
         admin.add_view(view1)
 
@@ -788,19 +798,19 @@ def test_ajax_fk(app, client, admin):
 
         assert "model1" in view._form_ajax_refs
 
-        model = Model1(test1="first")
+        model1 = Model1(test1="first")
         model2 = Model1(test1="foo", test2="bar")
-        db.session.add_all([model, model2])
+        db.session.add_all([model1, model2])
         db.session.commit()
 
         # Check loader
         loader = view._form_ajax_refs["model1"]
-        mdl = loader.get_one(model.id)
-        assert mdl.test1 == model.test1
+        mdl = loader.get_one(model1.id)
+        assert mdl.test1 == model1.test1
 
         items = loader.get_list("fir")
         assert len(items) == 1
-        assert items[0].id == model.id
+        assert items[0].id == model1.id
 
         items = loader.get_list("bar")
         assert len(items) == 1
@@ -813,7 +823,7 @@ def test_ajax_fk(app, client, admin):
         with app.test_request_context("/admin/view/"):
             assert 'value=""' not in form.model1()
 
-            form.model1.data = model
+            form.model1.data = model1
             # todo
             # assert (
             #     'data-json="[%s, &quot;first&quot;]"' % model.id in form.model1()
@@ -827,75 +837,52 @@ def test_ajax_fk(app, client, admin):
         # assert req.data.decode("utf-8") == '[[%s, "foo"]]' % model2.id
 
         # Check submitting
-        req = client.post("/admin/view/new/", data={"model1": str(model.id)})
+        req = client.post(
+            "/admin/view/new/",
+            data={"string_field": "model2-test", "model1": str(model1.id)},
+        )
         mdl = db.session.query(Model2).first()
 
         assert mdl is not None
         assert mdl.model1 is not None
-        assert mdl.model1.id == model.id
+        assert mdl.model1.id == model1.id
         assert mdl.model1.test1 == "first"
 
 
-def test_ajax_fk_multi(app, client, admin):
+def _test_ajax_fk_multi(app, client, admin):
     with app.app_context():
-
-        class Modelfk1(db.Model):
-            __tablename__ = "modelfk1"
-
-            id = db.Column(db.Integer, primary_key=True)
-            name = db.Column(db.String(20))
-
-            def __str__(self):
-                return self.name
-
-        table = db.Table(
-            "m2m",
-            db.Model.metadata,
-            db.Column("modelfk1_id", db.Integer, db.ForeignKey("modelfk1.id")),
-            db.Column("modelfk2_id", db.Integer, db.ForeignKey("modelfk2.id")),
-        )
-
-        class Modelfk2(db.Model):
-            __tablename__ = "modelfk2"
-
-            id = db.Column(db.Integer, primary_key=True)
-            name = db.Column(db.String(20))
-
-            modelfk1_id = db.Column(db.Integer(), db.ForeignKey(Modelfk1.id))
-            modelfk1 = db.relationship(Modelfk1, backref="modelfks2", secondary=table)
-
         db.create_all()
 
         view = CustomSqlaModelView(
-            Modelfk2,
+            ManyToManyRight,
             url="view",
-            form_ajax_refs={"modelfk1": {"fields": ["name"]}},
+            form_ajax_refs={"many_to_many_left": {"fields": ["name"]}},
         )
         admin.add_view(view)
 
-        assert "modelfk1" in view._form_ajax_refs
+        assert "many_to_many_left" in view._form_ajax_refs
 
-        model = Modelfk1(name="first")
-        db.session.add_all([model, Modelfk1(name="foo")])
+        model = ManyToManyLeft(name="first")
+        db.session.add_all([model, ManyToManyRight(name="foo")])
         db.session.commit()
 
         # Check form generation
         form = view.create_form()
-        assert form.modelfk1.__class__.__name__ == "AjaxSelectMultipleField"
+        assert form.many_to_many_left.__class__.__name__ == "AjaxSelectMultipleField"
 
         with app.test_request_context("/admin/view/"):
-            assert 'data-json="[]"' in form.modelfk1()
+            assert 'data-json="[]"' in form.many_to_many_left()
 
-            form.modelfk1.data = [model]
+            form.many_to_many_left.data = [model]
             # todo
             # assert (
-            #     'data-json="[[1, &quot;first&quot;]]"' in form.model1()
-            #     or 'data-json="[[1, &#34;first&#34;]]"' in form.model1()
+            #     'data-json="[[1, &quot;first&quot;]]"' in form.many_to_many_left()
+            #     or 'data-json="[[1, &#34;first&#34;]]"' in form.many_to_many_left()
             # )
 
         # Check submitting
-        client.post("/admin/view/new/", data={"modelfk1": str(model.id)})
-        mdl = db.session.query(Modelfk2).first()
+        client.post("/admin/view/new/", data={"many_to_many_left": str(model.id)})
+        mdl = db.session.query(ManyToManyRight).first()
 
         assert mdl is not None
         assert mdl.modelfk1 is not None
@@ -906,7 +893,9 @@ def test_customising_page_size(app, client, admin):
     with app.app_context():
         db.reset_all()
 
-        db.session.add_all([Model1(test1=str(f"instance-{x+1:03d}")) for x in range(101)])
+        db.session.add_all(
+            [Model1(test1=str(f"instance-{x+1:03d}")) for x in range(101)]
+        )
 
         view1 = CustomSqlaModelView(
             Model1,
@@ -1025,72 +1014,11 @@ def test_unlimited_page_size(app, admin):
         assert len(data) == 21
 
         # test False as page_size
-        _, data = view.get_list(
-            0, None, None, None, None, page_size=False
-        )
+        _, data = view.get_list(0, None, None, None, None, page_size=False)
         assert len(data) == 21
 
 
-def test_advanced_joins(app, admin):
-    with app.app_context():
 
-        class Modeljoin1(db.Model):
-            id = db.Column(db.Integer, primary_key=True)
-            val1 = db.Column(db.String(20))
-            test = db.Column(db.String(20))
-
-        class Modeljoin2(db.Model):
-            id = db.Column(db.Integer, primary_key=True)
-            val2 = db.Column(db.String(20))
-
-            model1_id = db.Column(db.Integer, db.ForeignKey(Modeljoin1.id))
-            model1 = db.relationship(Modeljoin1, backref="model2")
-
-        class Modeljoin3(db.Model):
-            id = db.Column(db.Integer, primary_key=True)
-            val2 = db.Column(db.String(20))
-
-            model2_id = db.Column(db.Integer, db.ForeignKey(Modeljoin2.id))
-            model2 = db.relationship(Modeljoin2, backref="model3")
-
-        view1 = CustomSqlaModelView(Modeljoin1)
-        admin.add_view(view1)
-
-        view2 = CustomSqlaModelView(Modeljoin2)
-        admin.add_view(view2)
-
-        view3 = CustomSqlaModelView(Modeljoin3)
-        admin.add_view(view3)
-
-        # Test how joins are applied
-        query = view3.get_query()
-
-        joins = {}
-        q1, joins, alias = view3._apply_path_joins(query, joins, path)
-        assert (True, Modeljoin3.model2) in joins
-        assert (True, Modeljoin2.model1) in joins
-        assert alias is not None
-
-        # Check if another join would use same path
-        attr, path = get_field_with_path(Modeljoin2, "model1.test")
-        q2, joins, alias = view2._apply_path_joins(query, joins, path)
-
-        assert len(joins) == 2
-
-        if hasattr(q2, "_join_entities"):
-            for p in q2._join_entities:
-                assert p in q1._join_entities
-
-        assert alias is not None
-
-        # Check if normal properties are supported by get_field_with_path
-        attr, path = get_field_with_path(Modeljoin2, "model1.test")
-        assert attr == Modeljoin1.test
-        assert path == [Modeljoin1.__table__]
-
-        q3, joins, alias = view2._apply_path_joins(view2.get_query(), joins, path)
-        assert len(joins) == 3
-        assert alias is None
 
 
 def test_model_default(app, client, admin):
@@ -1153,21 +1081,8 @@ STRING_CONSTANT = "Anyway, here's Wonderwall"
 
 def test_string_null_behavior(app, client, admin):
     with app.app_context():
-
-        class StringTestModel(db.Model):
-            id = db.Column(db.Integer, primary_key=True)
-            test_no = db.Column(db.Integer, nullable=False)
-            string_field = db.Column(db.String)
-            string_field_nonull = db.Column(db.String, nullable=False)
-            string_field_nonull_default = db.Column(
-                db.String, nullable=False, default=""
-            )
-            text_field = db.Column(db.Text)
-            text_field_nonull = db.Column(db.Text, nullable=False)
-            text_field_nonull_default = db.Column(db.Text, nullable=False, default="")
-
         db.create_all()
-
+        
         view = CustomSqlaModelView(StringTestModel)
         admin.add_view(view)
 

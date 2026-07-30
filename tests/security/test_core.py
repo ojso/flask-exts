@@ -20,7 +20,7 @@ class TestSecurity:
             token = security_serializer.dumps("test", data)
             assert token is not None
             r = security_serializer.loads("test", token, max_age=3600)
-            print(r)
+            # print(r)
             assert r[0] is False
             assert r[1] is False
             assert r[2] == data

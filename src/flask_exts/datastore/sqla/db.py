@@ -4,7 +4,6 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from flask import Flask
-from flask import current_app
 from flask import g
 
 
@@ -19,8 +18,7 @@ class Db:
     def __init__(self, app: Flask | None = None):
         self.Model = self._make_declarative_base()
         self.engine: Engine | None = None
-        self.session: scoped_session | sessionmaker | None = None
-        self._session_factory: sessionmaker | None = None
+        self.session: scoped_session | None = None
         if app is not None:
             self.init_app(app)
 
@@ -43,7 +41,6 @@ class Db:
 
         engine_opts = app.config.get("SQLALCHEMY_ENGINE_OPTIONS", {})
         engine_options.update(engine_opts)
-
         self.engine = self._make_engine(engine_options)
 
         session_options = {"bind": self.engine}
@@ -63,21 +60,11 @@ class Db:
         return id(g._get_current_object())
 
     def _teardown_session(self, exception: Exception | None = None) -> None:
-        if isinstance(self.session, scoped_session):
-            if exception is not None:
-                try:
-                    self.session.rollback()
-                except Exception:
-                    pass
-            self.session.remove()
+        self.session.remove()
 
     def _add_models_to_shell(self) -> dict:
-        db_instance = current_app.extensions["sqlalchemy"]
-        if db_instance is None:
-            return {}
-
-        out = {m.class_.__name__: m.class_ for m in db_instance.Model.registry.mappers}
-        out["db"] = db_instance
+        out = {m.class_.__name__: m.class_ for m in self.Model.registry.mappers}
+        out["db"] = self
         return out
 
     def create_all(self, **kwargs):
@@ -93,5 +80,3 @@ class Db:
     def reset_all(self):
         self.Model.metadata.drop_all(self.engine)
         self.Model.metadata.create_all(self.engine)
-
-

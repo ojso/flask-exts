@@ -26,10 +26,13 @@ class Model1(db.Model):
     __tablename__ = "model1"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    string_field_required: Mapped[str]
-    string_field_optional: Mapped[Optional[str]]
-    string_field_limit: Mapped[Optional[str]] = mapped_column(String(20))
-    text_field: Mapped[Optional[str]] = mapped_column(TEXT)
+    test1: Mapped[str]
+    test2: Mapped[Optional[str]]
+    test3: Mapped[Optional[str]] = mapped_column(String(20))
+    test4: Mapped[Optional[str]] = mapped_column(TEXT)
+    test5 = mapped_column(String(20), nullable=False, default="")
+    int_field: Mapped[Optional[int]]
+    float_field: Mapped[Optional[float]]
     bool_field: Mapped[Optional[bool]]
     date_field: Mapped[Optional[date]]
     time_field: Mapped[Optional[time]]
@@ -40,7 +43,7 @@ class Model1(db.Model):
     model2: Mapped["Model2"] = relationship(back_populates="model1")
 
     def __str__(self):
-        return str(self.string_field_required)
+        return str(self.test1)
 
 
 class Model2(db.Model):
@@ -48,12 +51,6 @@ class Model2(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     string_field: Mapped[str]
-    string_field_default = mapped_column(TEXT, nullable=False, default="")
-    string_field_empty_default = mapped_column(TEXT, nullable=False, default="")
-    int_field = mapped_column(Integer)
-    bool_field = mapped_column(Boolean)
-    enum_field = mapped_column(Enum("model2_v1", "model2_v2"), nullable=True)
-    float_field = mapped_column(Float)
     model1_id = mapped_column(ForeignKey("model1.id"))
     model1: Mapped[Model1] = relationship(back_populates="model2")
     model3_id = mapped_column(ForeignKey("model3.id"))
@@ -125,3 +122,17 @@ class ModelChild(db.Model):
     model: Mapped[ModelForm] = relationship(back_populates="backref")
     enum_field = mapped_column(Enum("model1_v1", "model1_v2"), nullable=True)
     choice_field = mapped_column(String, nullable=True)
+
+class StringTestModel(db.Model):
+    __tablename__ = "string_test_model"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    test_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    string_field: Mapped[Optional[str]] = mapped_column(String)
+    string_field_nonull: Mapped[str] = mapped_column(String, nullable=False)
+    string_field_nonull_default: Mapped[str] = mapped_column(
+        String, nullable=False, default=""
+    )
+    text_field: Mapped[Optional[str]] = mapped_column(TEXT)
+    text_field_nonull: Mapped[str] = mapped_column(TEXT, nullable=False)
+    text_field_nonull_default: Mapped[str] = mapped_column(TEXT, nullable=False, default="")

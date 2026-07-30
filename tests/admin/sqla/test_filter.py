@@ -2,7 +2,7 @@ import pytest
 from flask_exts.datastore.sqla import db
 from flask_exts.admin.sqla import filter
 from flask_exts.admin.sqla.view import SqlaModelView
-from tests.models.model1 import Model1, Model2
+from tests.models.demo import Model1, Model2
 from .custom_sqla_model_view import CustomSqlaModelView
 
 
@@ -47,11 +47,10 @@ def test_relation_column_filters(app, client, admin):
                 "model1.datetime_field",
                 "model1.email_field",
                 "model1.enum_field",
-                "model1.enum_type_field",
             ],
         )
-        print(view._filters)
-        print(view._filter_groups)
+        # print(view._filters)
+        # print(view._filter_groups)
 
         assert [
             (f["index"], f["operation"]) for f in view._filter_groups["model1.test1"]
@@ -170,30 +169,6 @@ def test_relation_column_filters(app, client, admin):
             (60, "empty"),
             (61, "in list"),
             (62, "not in list"),
-        ]
-
-        assert [
-            (f["index"], f["operation"])
-            for f in view._filter_groups["model1.enum_type_field"]
-        ] == [
-            (63, "equals"),
-            (64, "not equal"),
-            (65, "empty"),
-            (66, "in list"),
-            (67, "not in list"),
-        ]
-
-        assert [
-            (f["index"], f["operation"])
-            for f in view._filter_groups["Model1 / Choice Field"]
-        ] == [
-            (68, "contains"),
-            (69, "not contains"),
-            (70, "equals"),
-            (71, "not equal"),
-            (72, "empty"),
-            (73, "in list"),
-            (74, "not in list"),
         ]
 
 

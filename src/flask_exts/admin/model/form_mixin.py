@@ -2,13 +2,10 @@ from wtforms.fields import HiddenField
 from wtforms.fields.core import UnboundField
 from wtforms.validators import InputRequired
 from ...template.forms.widgets import XEditableWidget
-from ...template.forms.form.flask_form import FlaskForm
 
 
 class FormMixin:
     """Form mixin for model view."""
-
-    form_base_class = FlaskForm
 
     def create_editable_list_form(self, form_class, widget=None):
         """
