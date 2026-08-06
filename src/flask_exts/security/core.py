@@ -32,7 +32,7 @@ class Security:
         self.reset_password = ResetPassword(app)
 
         # authorizer
-        from .authorizer.casbin_authorizer import CasbinAuthorizer
+        from ....examples.casbin_authorizer.casbin_authorizer import CasbinAuthorizer
 
         self.authorizer = CasbinAuthorizer(app)
 

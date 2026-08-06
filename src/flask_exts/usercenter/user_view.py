@@ -29,6 +29,8 @@ class UserView(View):
     Default administrative interface index page when visiting the ``/user/`` URL.
     """
 
+    allow_access = True
+
     index_template = "user/index.html"
     list_template = "user/list.html"
     login_template = "user/login.html"
@@ -52,9 +54,6 @@ class UserView(View):
             static_folder=static_folder,
             static_url_path=static_url_path,
         )
-
-    def allow(self, *args, **kwargs):
-        return True
 
     def get_login_form_class(self):
         return LoginForm

@@ -8,13 +8,14 @@ from flask import abort
 
 def _wrap_view_func_with_access(f):
     if hasattr(f, "_wrapped_access"):
-        raise
-        return f
+        raise Exception(
+            f"View function {f.__name__} has already been wrapped with access control"
+        )
 
     @wraps(f)
     def wrapper(self, *args, **kwargs):
-        if not self._allow_view_fn(f, *args, **kwargs):
-            return self._inaccessible_callback(f, **kwargs)
+        if not self.allow(f, *args, **kwargs):
+            return self.inaccessible_callback(f, *args, **kwargs)
         return f(self, *args, **kwargs)
 
     wrapper._wrapped_access = True
@@ -34,6 +35,8 @@ class View(metaclass=ViewMeta):
     Base form class. Will be used by form scaffolding function when creating model form.
     Useful if you want to have custom constructor or override some fields.
     """
+
+    allow_access = False
 
     def __init__(
         self,
@@ -212,32 +215,7 @@ class View(metaclass=ViewMeta):
         """
         return name.replace("_", " ").title()
 
-    def allow(self, *args, **kwargs):
-        """
-        Override this method to add permission checks.
-
-        It does not make any assumptions about the authentication system used in your application, so it is
-        up to you to implement it.
-
-        By default, it will allow access for everyone.
-        """
-        if self.admin is not None:
-            return self.admin.allow(*args, **kwargs)
-        else:
-            return True
-
-    def is_accessible(self):
-        """
-        Override this method to add permission checks.
-
-        It does not make any assumptions about the authentication system used in your application, so it is
-        up to you to implement it.
-
-        By default, it will allow access for everyone.
-        """
-        return self.allow(view=self)
-
-    def _allow_view_fn(self, fn, *args, **kwargs):
+    def allow(self, fn, *args, **kwargs):
         """
         This method will be executed before calling any view method.
 
@@ -245,10 +223,29 @@ class View(metaclass=ViewMeta):
             View function
         :param kwargs:
             View function arguments
-        """
-        return self.allow(view=self, fn=fn)
 
-    def _inaccessible_callback(self, fn, **kwargs):
+        """
+        if self.allow_access is True:
+            return True
+
+        if self.admin is None:
+            return True
+
+        return self.admin.allow(*args, view=self, fn=fn, **kwargs)
+
+    def is_accessible(self):
+        """
+        Check if the view is accessible.
+        """
+        if self.allow_access is True:
+            return True
+
+        if self.admin is None:
+            return True
+
+        return self.admin.allow(view=self)
+
+    def inaccessible_callback(self, fn, *args, **kwargs):
         """
         Handle the response to inaccessible views.
 

@@ -1,7 +1,7 @@
 import os.path
 from casbin.model import Model
 from casbin import Enforcer
-from .base import Authorizer
+from flask_exts.security.authorizer.base import Authorizer
 
 
 CASBIN_RBAC_MODEL = """

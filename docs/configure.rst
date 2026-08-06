@@ -2,13 +2,10 @@
 Configure
 ==========
 
-Configuration
-==============
-
-========================== =====================================================================
-``ADMIN_ALL_ACCESSED``     Set to ``True`` to enable access within admin views for all users,
-                           otherwise, only the users with access role can access admin views.
-                           Default is ``False``.
+========================== ============================================================================
+``ADMIN_ALLOW_ACCESS``     Set to ``False`` to limit admin view access to role‑granted users only;
+                           otherwise, all users have access.
+                           Default is ``True``.
 ``BABEL_ACCEPT_LANGUAGES`` Set to ``en;zh`` to bebel's accept languages.
                            Default is ``None``.
 ``BABEL_DEFAULT_TIMEZONE`` Set to ``Asia/Shanghai`` to babel's default timezone.
@@ -23,6 +20,6 @@ Configuration
                            Default is ``1800``. 
 ``NOREPLY_EMAIL_SENDER``   Email address used to send emails.
                            It is a dict for smtp with keys: host,port,user,password.
-                           Default is None.
-========================== =====================================================================
+                           Default is ``None``.
+========================== ============================================================================
 

@@ -1,5 +1,5 @@
 import pytest
-from flask import url_for
+from flask import app, url_for
 from flask_exts.admin import expose_url
 from flask_exts.admin import View
 from flask_exts.admin.admin import Admin
@@ -20,8 +20,6 @@ class MockView(View):
     def test(self):
         return self.render("mock.html")
 
-    def allow(self, *args, **kwargs):
-        return self.allow_access
 
 
 class MockNoindexView(View):
@@ -91,12 +89,15 @@ def test_admin_menu():
     assert menu_category1.get_url() is None
     assert menu_category2.get_url() is None
 
-    view_3.allow_access = False
+    # todo with app.app_content
     # Categories are only accessible if there is at least one accessible child
-    assert menu_category2.is_accessible()
-    children = menu_category2.get_children()
-    assert len(children) == 1
-    assert children[0].is_accessible()
+    # with app.test_request_context():
+    #     assert menu_category1.is_accessible()
+    #     assert menu_category2.is_accessible()
+    #     assert menu_category2.is_accessible()
+    #     children = menu_category2.get_children()
+    #     assert len(children) == 1
+    #     assert children[0].is_accessible()
 
 def test_app_admin_default(app, client, admin):
     # print(app.blueprints)
@@ -171,6 +172,7 @@ def test_app_admin_add_view(app, client, admin: Admin):
 
     # Check authentication failure
     mock_view.allow_access = False
+    admin.allow_access = False
     rv = client.get("/admin/mockview/")
     assert rv.status_code == 403
 

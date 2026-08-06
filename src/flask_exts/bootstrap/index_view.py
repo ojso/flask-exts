@@ -2,6 +2,8 @@ from ..admin import View, expose_url
 
 
 class IndexView(View):
+    allow_access = True
+
     def __init__(
         self,
         name="Index",
@@ -13,9 +15,6 @@ class IndexView(View):
             endpoint=endpoint,
             url=url,
         )
-
-    def allow(self, *args, **kwargs):
-        return True
 
     @expose_url("/")
     def index(self):

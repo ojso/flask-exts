@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import delete
-from ...datastore.sqla import db
+from flask_exts.datastore.sqla import db
 
 
 class CasbinRule(db.Model):

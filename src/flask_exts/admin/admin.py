@@ -11,6 +11,8 @@ class Admin:
     Collection of the admin views. Also manages menu structure.
     """
 
+    allow_access = True
+
     def __init__(self, app=None):
         self.app = app
         self.name = self.get_admin_name()
@@ -41,8 +43,8 @@ class Admin:
         """
         self.app = app
 
-        if not app.config.get("ADMIN_ALL_ACCESSED", True):
-            self.all_accessed = False
+        if not app.config.get("ADMIN_ALLOW_ACCESS", True):
+            self.allow_access = False
 
         # Register views
         for v in self._views.values():
@@ -106,10 +108,10 @@ class Admin:
         return url_for(endpoint, **kwargs)
 
     def allow(self, *args, **kwargs):
-        if self.all_accessed:
+        if self.allow_access is True:
             return True
-        else:
-            return _security.authorize_allow(*args, **kwargs)
+        
+        return _security.authorize_allow(*args, **kwargs)
 
     def render(self, template, **kwargs):
         """
