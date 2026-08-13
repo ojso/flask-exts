@@ -42,7 +42,6 @@ Released 2025-04-09
 - fix datetimepicker
 - fix select.ajax for select2@4.1.0 
 - fix select in modal
-- add casbin
 - add module: security 
 
 v0.2.1

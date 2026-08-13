@@ -2,7 +2,7 @@ import pytest
 from wtforms import validators
 from flask_exts.datastore.sqla import db
 from tests.models.demo import Model1, Model2
-from tests.models.demo import ModelForm, ModelChild
+from tests.models.demo import FormModel, ChildModel
 from tests.models.relations import OneToOneChild, OneToOneParent
 from .custom_sqla_model_view import CustomSqlaModelView
 
@@ -10,16 +10,16 @@ def test_form_columns(app, admin):
     with app.app_context():
         db.reset_all()
         view1 = CustomSqlaModelView(
-            ModelForm,
+            FormModel,
             endpoint="view1",
             form_columns=("int_field", "text_field"),
         )
         view2 = CustomSqlaModelView(
-            ModelForm,
+            FormModel,
             endpoint="view2",
             form_excluded_columns=("excluded_column",),
         )
-        view3 = CustomSqlaModelView(ModelChild, endpoint="view3")
+        view3 = CustomSqlaModelView(ChildModel, endpoint="view3")
 
         form1 = view1.create_form()
         form2 = view2.create_form()
@@ -41,7 +41,7 @@ def test_form_columns(app, admin):
 
         # test form_columns with model objects
         view4 = CustomSqlaModelView(
-            ModelForm, endpoint="view1", form_columns=["int_field"]
+            FormModel, endpoint="view1", form_columns=["int_field"]
         )
         form4 = view4.create_form()
         assert "int_field" in form4._fields

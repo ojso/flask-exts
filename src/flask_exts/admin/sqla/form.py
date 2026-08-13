@@ -10,9 +10,10 @@ from wtforms.fields import IntegerField
 from wtforms.fields import DecimalField
 from wtforms.fields import BooleanField
 from wtforms.fields import DateField
+
 # from wtforms.fields import TimeField
-from ...template.forms.fields import TimeField
 from wtforms.fields import DateTimeLocalField as DateTimeField
+from ...template.forms.fields import TimeField
 from ...template.forms.fields import Select2Field
 from ...template.forms.fields import Select2TagsField
 from ...template.forms.fields import JSONField
@@ -26,7 +27,6 @@ from ...template.forms.fields.inline import InlineFormField
 from ...template.forms.widgets import DatePickerWidget
 from ...template.forms.form.base_form import BaseForm
 from ...template.forms.validators.sqla import Unique
-from ..model.form import convert_formfield
 from ..model.form import BaseFormFieldConverter
 from ..model.form import InlineModelConverterBase
 from .query import Query
@@ -40,6 +40,14 @@ class FieldPlaceholder:
 
     def __init__(self, field):
         self.field = field
+
+
+def convert_form_field(*args):
+    def decorator(func):
+        func._converter_for_form_field = args
+        return func
+
+    return decorator
 
 
 class FormConverter(BaseFormFieldConverter):
@@ -62,47 +70,47 @@ class FormConverter(BaseFormFieldConverter):
             field_args["validators"].append(validators.Length(max=column.type.length))
         self._nullable_common(column, field_args, **extra)
 
-    @convert_formfield("String")
+    @convert_form_field("String")
     def conv_string(self, column, field_args, **extra):
         self._string_common(column=column, field_args=field_args, **extra)
         return StringField(**field_args)
 
-    @convert_formfield("Text")
+    @convert_form_field("Text")
     def conv_text(self, field_args, **extra):
         self._string_common(field_args=field_args, **extra)
         return TextAreaField(**field_args)
 
-    @convert_formfield("Boolean")
+    @convert_form_field("Boolean")
     def conv_boolean(self, field_args, **extra):
         return BooleanField(**field_args)
 
-    @convert_formfield("Integer", "BigInteger", "SmallInteger")
+    @convert_form_field("Integer", "BigInteger", "SmallInteger")
     def convert_integer(self, column, field_args, **extra):
         unsigned = getattr(column.type, "unsigned", False)
         if unsigned:
             field_args["validators"].append(validators.NumberRange(min=0))
         return IntegerField(**field_args)
 
-    @convert_formfield("Numeric", "DECIMAL", "Float", "REAL", "DOUBLE")
+    @convert_form_field("Numeric", "DECIMAL", "Float", "REAL", "DOUBLE")
     def convert_decimal(self, column, field_args, **extra):
         # override default decimal places limit, use database defaults instead
         field_args.setdefault("places", None)
         return DecimalField(**field_args)
 
-    @convert_formfield("Date")
+    @convert_form_field("Date")
     def convert_date(self, field_args, **extra):
         field_args["widget"] = DatePickerWidget()
         return DateField(**field_args)
 
-    @convert_formfield("Time")
+    @convert_form_field("Time")
     def convert_time(self, field_args, **extra):
         return TimeField(**field_args)
 
-    @convert_formfield("DateTime")
+    @convert_form_field("DateTime")
     def convert_datetime(self, field_args, **extra):
         return DateTimeField(**field_args)
 
-    @convert_formfield("sqlalchemy.sql.sqltypes.Enum")
+    @convert_form_field("sqlalchemy.sql.sqltypes.Enum")
     def convert_enum(self, column, field_args, **extra):
         available_choices = [(f, f) for f in column.type.enums]
         accepted_values = [choice[0] for choice in available_choices]
@@ -118,7 +126,7 @@ class FormConverter(BaseFormFieldConverter):
         field_args["coerce"] = lambda v: v.name if isinstance(v, Enum) else str(v)
         return Select2Field(**field_args)
 
-    @convert_formfield("JSON")
+    @convert_form_field("JSON")
     def convert_json(self, field_args, **extra):
         return JSONField(**field_args)
 
@@ -318,7 +326,7 @@ class FormConverter(BaseFormFieldConverter):
 def get_form(
     model,
     converter,
-    base_class=BaseForm,
+    base_class,
     only=None,
     exclude=None,
     field_args=None,
@@ -343,29 +351,23 @@ def get_form(
     :param hidden_pk:
         Generate hidden field with model primary key or not
     """
-    mapper = inspect(model)
-    field_args = field_args or {}
 
-    properties = [(p.key, p) for p in mapper.attrs]
+    field_args = field_args or {}
+    
+    mapper = inspect(model)
 
     if only:
-
-        def find(name):
-            # If field is in extra_fields, it has higher priority
+        properties = []
+        for name in only:
             if extra_fields and name in extra_fields:
-                return name, FieldPlaceholder(extra_fields[name])
-            column, path = Query.get_field_with_path(model, name)
-            relation_name = column.key
-
-            if column is not None and hasattr(column, "property"):
-                return relation_name, column.property
-
-            raise ValueError("Invalid model property name %s.%s" % (model, name))
-
-        # Filter properties while maintaining property order in 'only' list
-        properties = [find(x) for x in only]
-    elif exclude:
-        properties = [x for x in properties if x[0] not in exclude]
+                properties.append((name, FieldPlaceholder(extra_fields[name])))
+            else:
+                column, _path = Query.get_field_with_path(model, name)
+                properties.append((column.key, column.property))
+    else:
+        properties = [(p.key, p) for p in mapper.attrs]
+        if exclude:
+            properties = [x for x in properties if x[0] not in exclude]
 
     field_dict = {}
     for name, p in properties:

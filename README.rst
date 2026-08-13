@@ -3,11 +3,9 @@ Flask Exts
 
 Flask-Exts is mainly inspired by:
 
-- `Bootstrap <https://getbootstrap.com/>`_
 - `Flask-Admin <https://github.com/pallets-eco/flask-admin/>`_
-- `Flask-Security <https://github.com/pallets-eco/flask-security/>`_
+- `Bootstrap <https://getbootstrap.com/>`_
 
-Flask-Exts is partially rewrited from above and well tested.
 
 License
 -------
@@ -22,7 +20,7 @@ Install and update using pip:
 
 .. code-block:: console
 
-    $ pip install -U Flask-Exts
+    $ pip install Flask-Exts
 
 Examples
 ----------
@@ -34,7 +32,6 @@ Examples
 
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "dev"
-    # Exts init
     exts = Exts()
     exts.init_app(app)
 

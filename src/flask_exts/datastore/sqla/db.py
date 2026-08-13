@@ -34,7 +34,7 @@ class Db:
         app.extensions["sqlalchemy"] = self
 
         engine_options = {
-            "url": app.config.get("SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:")
+            "url": app.config.get("SQLALCHEMY_DATABASE_URI")
         }
         if app.config.get("SQLALCHEMY_ECHO"):
             engine_options["echo"] = True

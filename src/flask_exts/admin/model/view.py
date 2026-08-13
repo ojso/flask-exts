@@ -347,7 +347,7 @@ class ModelView(View, ActionsMixin, RowActionMixin, FilterMixin, FormMixin):
                 }
     """
 
-    form_args = None
+    form_args = {}
     """
         Dictionary of form field arguments. Refer to WTForms documentation for
         list of possible options.

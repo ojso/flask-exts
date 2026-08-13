@@ -51,9 +51,11 @@ class Model2(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     string_field: Mapped[str]
+
     model1_id = mapped_column(ForeignKey("model1.id"))
-    model1: Mapped[Model1] = relationship(back_populates="model2")
     model3_id = mapped_column(ForeignKey("model3.id"))
+
+    model1: Mapped[Model1] = relationship(back_populates="model2")
     model3: Mapped["Model3"] = relationship(back_populates="model2")
 
 
@@ -65,8 +67,8 @@ class Model3(db.Model):
     model2: Mapped["Model2"] = relationship(back_populates="model3")
 
 
-class ModelHybrid(db.Model):
-    __tablename__ = "model_hybrid"
+class HybridModel(db.Model):
+    __tablename__ = "hybrid_model"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
@@ -75,7 +77,7 @@ class ModelHybrid(db.Model):
 
     firstname = Mapped[str]
     lastname = Mapped[str]
-    tiles: Mapped["ModelHybrid2"] = relationship(back_populates="owner", uselist=True)
+    titles: Mapped["HybridModel2"] = relationship(back_populates="owner", uselist=True)
 
     @hybrid_property
     def fullname(self):
@@ -94,32 +96,32 @@ class ModelHybrid(db.Model):
         return cast(cls.width * cls.height, String)
 
 
-class ModelHybrid2(db.Model):
-    __tablename__ = "model_hybrid2"
+class HybridModel2(db.Model):
+    __tablename__ = "hybrid_model2"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name = Mapped[str]
-    owner_id = mapped_column(Integer, ForeignKey("model_hybrid.id", ondelete="CASCADE"))
-    owner: Mapped[ModelHybrid] = relationship(back_populates="tiles", uselist=False)
+    owner_id = mapped_column(Integer, ForeignKey("hybrid_model.id", ondelete="CASCADE"))
+    owner: Mapped[HybridModel] = relationship(back_populates="titles", uselist=False)
 
 
-class ModelForm(db.Model):
-    __tablename__ = "model_form"
+class FormModel(db.Model):
+    __tablename__ = "form_model"
 
     id: Mapped[str] = mapped_column(primary_key=True)
     int_field = mapped_column(Integer)
     datetime_field = mapped_column(DateTime)
     text_field: Mapped[str]
     excluded_column: Mapped[str]
-    backref: Mapped["ModelChild"] = relationship(back_populates="model", uselist=False)
+    backref: Mapped["ChildModel"] = relationship(back_populates="model", uselist=False)
 
 
-class ModelChild(db.Model):
-    __tablename__ = "model_child"
+class ChildModel(db.Model):
+    __tablename__ = "child_model"
 
     id: Mapped[str] = mapped_column(primary_key=True)
-    model_id = mapped_column(Integer, ForeignKey(ModelForm.id))
-    model: Mapped[ModelForm] = relationship(back_populates="backref")
+    model_id = mapped_column(Integer, ForeignKey(FormModel.id))
+    model: Mapped[FormModel] = relationship(back_populates="backref")
     enum_field = mapped_column(Enum("model1_v1", "model1_v2"), nullable=True)
     choice_field = mapped_column(String, nullable=True)
 

@@ -7,9 +7,6 @@ from .models.author import AVAILABLE_USER_TYPES
 from .models.tag import Tag
 from .models.post import Post
 from .models.tree import Tree
-from .models.keyword import Keyword
-from .models.myuser import MyUser
-from .models.location_image import ImageType
 
 
 def build_user_admin():
@@ -19,26 +16,6 @@ def build_user_admin():
     role_admin = _userstore.create_role(name="admin")
     _userstore.user_add_role(user_admin, role_admin)
 
-
-def build_sample_image_type():
-
-    # Add some image types for the form_ajax_refs inside the inline_model
-    image_types = ("JPEG", "PNG", "GIF")
-    for image_type in image_types:
-        itype = ImageType(name=image_type)
-        db.session.add(itype)
-    db.session.commit()
-
-
-def build_sample_userkeyword():
-    user_log = MyUser()
-    user_log.username = "log"
-    user_log.email = "log"
-    user_log.password = "log"
-    for kw in (Keyword("blammo"), Keyword("itsig")):
-        user_log.kw.append(kw)
-    db.session.add(user_log)
-    db.session.commit()
 
 
 def build_sample_tree():
@@ -232,10 +209,9 @@ def build_sample_db():
     db.drop_all()
     db.create_all()
 
-    build_sample_userkeyword()
     build_sample_tree()
     build_sample_post()
     build_user_admin()
-    build_sample_image_type()
+
 
     return

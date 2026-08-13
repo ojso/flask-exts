@@ -54,76 +54,71 @@ def test_count_query():
     # print(count_stmt)
 
 
-# 使用示例
-def _test_query():
-    # 场景1: [A.a, B.b] 和 [A.b, B.b] 指向同一个 B 的不同实例
-    print("=" * 50)
-    print("场景1: 多个路径指向同一张表")
-
+def test_join_path():
     manager = Query(ModelA)
 
-    # 第一次 JOIN: A -> first_b (路径: first_b)
-    print('join_path("first_b")')
+    # First JOIN: A -> first_b (path: first_b)
+    # print('join_path("first_b")')
     alias_b1 = manager.join_path("first_b")
-    print(f"第一次 JOIN 返回别名: {alias_b1}")
+    # print(f"First JOIN returned alias: {alias_b1}")
 
-    # 第二次 JOIN: A -> second_b (路径: second_b)
-    # 虽然都指向 TableB，但是是不同的关系，需要不同的别名
-    print('join_path("second_b")')
+    # Second JOIN: A -> second_b (path: second_b)
+    # Although both point to TableB, they are different relationships and need different aliases
+    # print('join_path("second_b")')
     alias_b2 = manager.join_path("second_b")
-    print(f"第二次 JOIN 返回别名: {alias_b2}")
+    # print(f"Second JOIN returned alias: {alias_b2}")
 
-    # 验证是不同的别名
-    assert alias_b1 != alias_b2, "应该返回不同的别名"
-    print("✓ 正确返回不同别名")
+    # Verify they are different aliases
+    assert alias_b1 != alias_b2, "Should return different aliases"
+    # print("✓ Correctly returned different aliases")
 
-    # 场景2: [A.a, B.b, C.c] 重复部分路径
-    print("\n" + "=" * 50)
-    print("场景2: 共享前缀路径")
+    # Scenario 2: [A.a, B.b, C.c] repeated partial paths
+    # print("\n" + "=" * 50)
+    # print("Scenario 2: Shared prefix paths")
 
     manager2 = Query(ModelA)
 
-    # 完整路径
-    print('join_path(("first_b", "c_items")')
+    # Full path
+    # print('join_path(("first_b", "c_items")')
     alias_c1 = manager2.join_path(("first_b", "c_items"))
-    print(f"完整路径 first_b -> c_items: {alias_c1}")
+    # print(f"Full path first_b -> c_items: {alias_c1}")
 
-    # 再次 JOIN 相同路径，应该复用
-    print('join_path(("first_b", "c_items")')
+    # JOIN the same path again, should reuse
+    # print('join_path(("first_b", "c_items")')
     alias_c2 = manager2.join_path(("first_b", "c_items"))
-    print(f"再次 JOIN 相同路径: {alias_c2}")
+    # print(f"JOIN same path again: {alias_c2}")
     assert alias_c1 is alias_c2
-    print(f"是否复用: {alias_c1 is alias_c2}")
+    # print(f"Is reused: {alias_c1 is alias_c2}")
 
-    # 场景3: 前缀复用
-    print("\n" + "=" * 50)
-    print("场景3: 前缀复用")
+    # Scenario 3: Prefix reuse
+    # print("\n" + "=" * 50)
+    # print("Scenario 3: Prefix reuse")
 
     manager3 = Query(ModelA)
 
-    # 先 JOIN 部分路径
-    print('join_path(("first_b",)')
+    # First JOIN partial path
+    # print('join_path(("first_b",)')
     alias_b = manager3.join_path(("first_b",))
-    print(f"先 JOIN first_b: {alias_b}")
+    # print(f"First JOIN first_b: {alias_b}")
 
-    # 再 JOIN 扩展路径，应该复用 first_b
-    print('join_path(("first_b", "c_items")')
+    # Then JOIN extended path, should reuse first_b
+    # print('join_path(("first_b", "c_items")')
     alias_c = manager3.join_path(("first_b", "c_items"))
-    print(f"再 JOIN first_b -> c_items: {alias_c}")
+    # print(f"Then JOIN first_b -> c_items: {alias_c}")
 
-    # 获取已 JOIN 的别名
+    # Get already JOINed alias
     retrieved_b = manager3.get_path_alias(("first_b",))
-    print(f"检索 first_b 别名: {retrieved_b}")
+    # print(f"Retrieved first_b alias: {retrieved_b}")
 
-    # 在查询中使用
+    # Use in query
     stmt = manager3.build()
     stmt = stmt.where(manager3.get_column(("first_b", "c_items", "name")) == "test")
 
-    print(f"\n最终 SQL: {stmt}")
+    # print(f"\nFinal SQL: {stmt}")
 
-    # 场景3-2:
-    print("\n" + "=" * 50)
-    print("场景3-2: 前缀复用")
+    # Scenario 3-2:
+    # print("\n" + "=" * 50)
+    # print("Scenario 3-2: Prefix reuse")
 
     manager32 = Query(ModelA)
 
@@ -131,25 +126,19 @@ def _test_query():
     stmt = manager32.build()
     stmt = stmt.where(manager32.get_column(("first_b", "c_items", "name")) == "test")
 
-    print(f"\n最终 SQL: {stmt}")
+    # print(f"\nFinal SQL: {stmt}")
 
-    # 场景4: 复杂的多路径查询
-    print("\n" + "=" * 50)
-    print("场景4: 复杂查询示例")
+    # Scenario 4: Complex multi-path query
 
     manager4 = Query(ModelA)
 
-    # 同时 JOIN 多个路径
-    print('join_path(("first_b",")')
+    # JOIN multiple paths simultaneously
     alias_b_first = manager4.join_path(("first_b",))
-    print('join_path(("second_b",)')
     alias_b_second = manager4.join_path(("second_b",))
-    print('join_path(("first_b", "c_items")')
     alias_c_from_first = manager4.join_path(("first_b", "c_items"))
-    print('join_path(("second_b", "c_items")')
     alias_c_from_second = manager4.join_path(("second_b", "c_items"))
 
-    # 构建复杂查询
+    # Build complex query
     stmt = manager4.build()
     stmt = stmt.where(
         (manager4.get_column(("first_b", "type")) == "type1")
@@ -157,10 +146,10 @@ def _test_query():
         | (manager4.get_column(("second_b", "name")) == "special")
     )
 
-    print(f"复杂查询 SQL:\n{stmt}")
+    # print(f"Complex query SQL:\n{stmt}")
 
 
-def _test_column_type():
+def test_get_column_type():
     for key in [
         "id",
         "test1",
@@ -173,11 +162,12 @@ def _test_column_type():
         "datetime_field",
         "email_field",
         "enum_field",
-        "enum_type_field",
     ]:
         column_type = Query.get_model_column_type(Model1, key)
         column_type_name = column_type.__class__.__name__
-        print(f"Model1.{key} column type: {column_type_name}")
+        # print(f"Model1.{key} column type: {column_type_name}")
+        assert column_type is not None, f"Column type for Model1.{key} should not be None"
         if column_type_name == "Enum":
-            print(f"  Model1.{key} is an Enum with values: {column_type.enums}")
-            print(f"  Model1.{key} Enum class: {column_type.enum_class}")
+            # print(f"  Model1.{key} is an Enum with values: {column_type.enums}")
+            # print(f"  Model1.{key} Enum class: {column_type.enum_class}")
+            pass

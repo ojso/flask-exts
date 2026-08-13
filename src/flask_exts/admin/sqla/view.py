@@ -141,8 +141,8 @@ class SqlaModelView(ModelView):
         :param url:
             Base URL. If not set, defaults to '/admin/' + endpoint
         """
-        # set db.session as default session
-        self.session = session if session is not None else db.session
+
+        self.session = session or db.session
         self.filter_converter = FilterConverter()
 
         super().__init__(

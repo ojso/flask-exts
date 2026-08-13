@@ -1,15 +1,5 @@
 import types
 
-from ...template.forms.form.base_form import BaseForm
-
-
-def convert_formfield(*args):
-    def decorator(func):
-        func._converter_for_formfield = args
-        return func
-
-    return decorator
-
 
 class BaseFormFieldConverter:
     _converters = {}
@@ -21,8 +11,8 @@ class BaseFormFieldConverter:
             base_map = getattr(base, "_converters", {})
             converters.update(base_map)
         for name, method in cls.__dict__.items():
-            if callable(method) and hasattr(method, "_converter_for_formfield"):
-                for type_name in method._converter_for_formfield:
+            if callable(method) and hasattr(method, "_converter_for_form_field"):
+                for type_name in method._converter_for_form_field:
                     converters[type_name] = method
         cls._converters = converters
 
@@ -52,12 +42,8 @@ class BaseFormFieldConverter:
 
         return None
 
-    def get_form(
-        self, model, base_class=BaseForm, only=None, exclude=None, field_args=None
-    ):
+    def get_form(self, model, base_class, only=None, exclude=None, field_args=None):
         raise NotImplementedError()
-
-
 
 
 class InlineBaseFormAdmin:

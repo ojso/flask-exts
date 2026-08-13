@@ -9,7 +9,7 @@ class Security:
 
     def init_app(self, app):
         self.app = app
-        secret_key = app.config.get("SECRET_KEY", "_default_security_secret_key")
+        secret_key = app.secret_key
 
         # hasher
         from .hasher import Blake2bHasher
@@ -32,9 +32,9 @@ class Security:
         self.reset_password = ResetPassword(app)
 
         # authorizer
-        from ....examples.casbin_authorizer.casbin_authorizer import CasbinAuthorizer
+        from .authorizer.simple_authorizer import SimpleAuthorizer
 
-        self.authorizer = CasbinAuthorizer(app)
+        self.authorizer = SimpleAuthorizer(app)
 
         # 2FA
         from .two_factor_authentication import TwoFactorAuthentication
