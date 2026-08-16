@@ -1,7 +1,7 @@
 from flask import session
 from wtforms.fields import StringField
 from flask_exts.admin.model.view import ModelView
-from flask_exts.template.forms.form.csrf import get_csrf_token
+from flask_exts.forms.form.csrf import get_csrf_token
 
 
 class MockModel:

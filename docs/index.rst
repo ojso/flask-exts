@@ -41,16 +41,19 @@ More examples, please click :doc:`examples`.
    :maxdepth: 2
    :caption: Contents:
 
+   getting_started
+   admin_modelview
    configure
    develop
    examples
+   advanced
+   advanced_custom_plugins
+   advanced_custom_fields
+   performance
+   theming
+   security_advanced
+   api
    changes
-
-API Reference
--------------
-
-If you are looking for information on a specific function, class or
-method, this part of the documentation is for you.
 
 .. toctree::
    :maxdepth: 1

@@ -1,0 +1,10 @@
+from .init_flask_login import init_login
+from .subscribe import subscribe_signals
+from .init_admin_views import add_views
+
+
+def setting(app):
+    """Initialize Jinja2, Flask-Login, subscribe to signals and add admin views."""
+    init_login(app)
+    subscribe_signals(app)
+    add_views(app)

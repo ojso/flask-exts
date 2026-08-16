@@ -13,10 +13,10 @@ def test_extensions(app):
 def test_exts(app):
     assert "exts" in app.extensions
     exts = app.extensions["exts"]
-    assert exts.usercenter is not None
-    assert exts.security is not None
-    assert exts.admin is not None
-    admin = exts.admin
+    assert exts.get_usercenter() is not None
+    assert exts.get_security() is not None
+    assert exts.get_admin() is not None
+    admin = exts.get_admin()
     assert admin.app is not None
     # print(app.config.get("NOREPLY_EMAIL_SENDER"))
 

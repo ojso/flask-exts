@@ -20,7 +20,7 @@
         {% set class_name = item.get_class_name() or '' %}
         {% set dropdown_class = "dropdown active" if item.is_active(current_view) else "dropdown" %}
         <li class="{{ dropdown_class }}">
-          <a class="dropdown-toggle nav-link" data-toggle="dropdown" href="#">
+          <a class="dropdown-toggle nav-link" data-bs-toggle="dropdown" href="#">
             {% if item.class_name %}<span class="{{ item.class_name }}"></span>{% endif %}
             {{ render_menu_icon(item) }}{{ item.name }}
           </a>

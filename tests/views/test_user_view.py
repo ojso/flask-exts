@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 from flask import session
 from flask_exts.datastore.sqla import db
-from flask_exts.template.forms.form.csrf import get_csrf_token
+from flask_exts.forms.form.csrf import get_csrf_token
 from flask_exts.email.sender import Sender
 from flask_exts.proxies import _security
 from flask_exts.proxies import _userstore
@@ -23,9 +23,9 @@ class TestUserView:
             db.create_all()
 
         email_sender = EmailSender()
-        app.extensions["exts"].email.register_sender("verify_email", email_sender)
-        app.extensions["exts"].email.register_sender("reset_password", email_sender)
-        # print(app.extensions["exts"].email.senders)
+        app.extensions["exts"].get_email().register_sender("verify_email", email_sender)
+        app.extensions["exts"].get_email().register_sender("reset_password", email_sender)
+        # print(app.extensions["exts"].get_email().senders)
 
         with app.test_request_context():
             self.user_login_url = url_for("user.login")

@@ -20,7 +20,7 @@ class User(db.Model, BaseUser):
     uuid: Mapped[str] = mapped_column(unique=True, default=lambda: str(uuid.uuid4()))
     username: Mapped[Optional[str]] = mapped_column(unique=True)
     password: Mapped[Optional[str]]
-    actived: Mapped[bool] = mapped_column(default=False)
+    _is_active: Mapped[bool] = mapped_column('is_active', default=False)
     status: Mapped[int] = mapped_column(default=0)
     expired_at: Mapped[Optional[datetime]]
     email: Mapped[Optional[str]] = mapped_column(unique=True)
@@ -48,7 +48,11 @@ class User(db.Model, BaseUser):
 
     @property
     def is_active(self):
-        return self.actived
+        return self._is_active
+
+    @is_active.setter
+    def is_active(self, value: bool) -> None:
+        self._is_active = value
 
     @property
     def is_authenticated(self):

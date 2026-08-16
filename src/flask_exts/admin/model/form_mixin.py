@@ -1,8 +1,8 @@
 from wtforms.fields import HiddenField
 from wtforms.fields.core import UnboundField
 from wtforms.validators import InputRequired
-from ...template.forms.widgets import XEditableWidget
-
+from ...forms.widgets import XEditableWidget  # todo
+# from ...forms.widgets import XEditableWidget  
 
 class FormMixin:
     """Form mixin for model view."""

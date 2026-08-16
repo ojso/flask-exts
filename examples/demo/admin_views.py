@@ -5,7 +5,7 @@ from .views.post_view import postview
 
 
 def add_views(app):
-    admin = app.extensions["exts"].admin
+    admin = app.extensions["exts"].get_admin()
     admin.add_view(authorview)
     admin.add_view(postview)
     admin.add_view(tagview)    

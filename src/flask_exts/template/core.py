@@ -1,9 +1,8 @@
 import os.path as op
 from flask import Blueprint
-from .funcs import init_template_funcs
-from .plugins.plugin_manager import PluginManager
+from ..html_plugins.plugin_manager import PluginManager
 from .theme import Theme
-
+from ..forms.form.csrf import get_csrf_token
 
 class Template:
     """Template extension for Flask applications."""
@@ -17,10 +16,12 @@ class Template:
         self.app = app
         app.jinja_env.globals["_template"] = self
         self.init_template_blueprint(app)
-        self.init_funcs(app)
         self.init_plugins(app)
-
         self.init_theme(app)
+        app.jinja_env.globals["csrf_token"] = get_csrf_token
+        app.jinja_env.add_extension("jinja2.ext.do")
+        # app.extensions["exts"].template.plugin_manager.enable_plugin(["bootstrap5"])
+        # app.jinja_env.add_extension('jinja2.ext.debug')
 
     def init_template_blueprint(self, app):
         blueprint = Blueprint(
@@ -31,9 +32,6 @@ class Template:
             static_folder="../static",
         )
         app.register_blueprint(blueprint)
-
-    def init_funcs(self, app):
-        init_template_funcs(app)
 
     def init_plugins(self, app):
         self.plugin_manager = PluginManager()

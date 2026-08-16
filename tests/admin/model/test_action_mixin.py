@@ -1,7 +1,7 @@
 import pytest
 from flask_exts.admin import expose_url
 from flask_exts.admin.view import View
-from flask_exts.template.forms.form.flask_form import FlaskForm
+from flask_exts.forms.form.flask_form import FlaskForm
 from flask_exts.admin.model.actions_mixin import ActionsMixin
 
 

@@ -133,17 +133,17 @@ class FilterMixin:
 
         return str(index)
 
-    def get_actived_filters_kwargs(self, actived_filters):
+    def get_active_filters_kwargs(self, active_filters):
         """
         Get active filters as dictionary of URL arguments and values
 
-        :param filters:
+        :param active_filters:
             List of filters from ViewArgs object
         """
         kwargs = {}
 
-        if actived_filters:
-            for i, pair in enumerate(actived_filters):
+        if active_filters:
+            for i, pair in enumerate(active_filters):
                 idx, flt_name, value = pair
                 key = "flt%d_%s" % (i, self._get_filter_arg(idx, self._filters[idx]))
                 kwargs[key] = value
@@ -165,7 +165,7 @@ class FilterMixin:
 
         return None
 
-    def get_actived_filters(self) -> list[tuple[int, str, str]]:
+    def get_active_filters(self) -> list[tuple[int, str, str]]:
         if self._filters:
             filters = []
             for arg in request.args:

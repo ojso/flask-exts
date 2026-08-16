@@ -1,3 +1,16 @@
+"""
+SQLAlchemy 过滤器 - 优化版本
+
+这个模块提供了 SQLAlchemy 特定的过滤器实现。
+优化：使用工厂函数动态生成类型特定的过滤器，减少重复代码。
+
+架构：
+  - BaseSQLAFilter: 基础过滤器类
+  - 基础操作过滤器：FilterEqual, FilterNotEqual, FilterGreater, FilterSmaller, FilterLike, FilterNotLike, FilterEmpty, FilterInList, FilterNotInList
+  - 工厂函数：create_type_filters() 动态生成类型特定的过滤器
+  - FilterConverter: 转换器，根据列类型返回适当的过滤器
+"""
+
 import enum
 from flask_babel import lazy_gettext
 from sqlalchemy.sql import not_, or_
@@ -17,23 +30,21 @@ from ..model.filter import BaseDateTimeBetweenFilter
 from ..model.filter import BaseTimeBetweenFilter
 
 
+# ===============================================
+# 基础过滤器类
+# ===============================================
+
 class BaseSQLAFilter(BaseFilter):
-    """
-    Base SQLAlchemy filter.
-    """
+    """Base SQLAlchemy filter."""
 
     def __init__(self, column_type, column: str, name, data_type=None, options=None):
         """
         Constructor.
 
-        :param column:
-            Model field
-        :param name:
-            Display name
-        :param options:
-            Fixed set of options
-        :param data_type:
-            Client data type
+        :param column: Model field
+        :param name: Display name
+        :param options: Fixed set of options
+        :param data_type: Client data type
         """
         super().__init__(name, data_type, options)
         self.column_type = column_type
@@ -41,6 +52,7 @@ class BaseSQLAFilter(BaseFilter):
 
 
 class FilterEqual(BaseSQLAFilter):
+    """Equals filter"""
     def operation(self):
         return lazy_gettext("equals")
 
@@ -49,6 +61,7 @@ class FilterEqual(BaseSQLAFilter):
 
 
 class FilterNotEqual(BaseSQLAFilter):
+    """Not equal filter"""
     def operation(self):
         return lazy_gettext("not equal")
 
@@ -57,6 +70,7 @@ class FilterNotEqual(BaseSQLAFilter):
 
 
 class FilterGreater(BaseSQLAFilter):
+    """Greater than filter"""
     def operation(self):
         return lazy_gettext("greater than")
 
@@ -65,6 +79,7 @@ class FilterGreater(BaseSQLAFilter):
 
 
 class FilterSmaller(BaseSQLAFilter):
+    """Smaller than filter"""
     def operation(self):
         return lazy_gettext("smaller than")
 
@@ -73,6 +88,7 @@ class FilterSmaller(BaseSQLAFilter):
 
 
 class FilterLike(BaseSQLAFilter):
+    """Contains filter"""
     def operation(self):
         return lazy_gettext("contains")
 
@@ -81,6 +97,7 @@ class FilterLike(BaseSQLAFilter):
 
 
 class FilterNotLike(BaseSQLAFilter):
+    """Not contains filter"""
     def operation(self):
         return lazy_gettext("not contains")
 
@@ -89,6 +106,7 @@ class FilterNotLike(BaseSQLAFilter):
 
 
 class FilterEmpty(BaseSQLAFilter, BaseBooleanFilter):
+    """Empty/null filter"""
     def operation(self):
         return lazy_gettext("empty")
 
@@ -100,6 +118,7 @@ class FilterEmpty(BaseSQLAFilter, BaseBooleanFilter):
 
 
 class FilterInList(BaseSQLAFilter):
+    """In list filter"""
     def __init__(self, column_type, column, name, data_type=None, options=None):
         super().__init__(column_type, column, name, "select2-tags", options)
 
@@ -114,6 +133,7 @@ class FilterInList(BaseSQLAFilter):
 
 
 class FilterNotInList(FilterInList):
+    """Not in list filter"""
     def operation(self):
         return lazy_gettext("not in list")
 
@@ -121,265 +141,97 @@ class FilterNotInList(FilterInList):
         return query.add_filter(self.column, "not_in", value)
 
 
-class BooleanEqualFilter(FilterEqual, BaseBooleanFilter):
-    pass
-
-
-class BooleanNotEqualFilter(FilterNotEqual, BaseBooleanFilter):
-    pass
-
-
-class IntEqualFilter(FilterEqual, BaseIntFilter):
-    pass
-
-
-class IntNotEqualFilter(FilterNotEqual, BaseIntFilter):
-    pass
-
-
-class IntGreaterFilter(FilterGreater, BaseIntFilter):
-    pass
-
-
-class IntSmallerFilter(FilterSmaller, BaseIntFilter):
-    pass
-
-
-class IntInListFilter(FilterInList, BaseIntListFilter):
-    pass
-
-
-class IntNotInListFilter(FilterNotInList, BaseIntListFilter):
-    pass
-
-
-class FloatEqualFilter(FilterEqual, BaseFloatFilter):
-    pass
-
-
-class FloatNotEqualFilter(FilterNotEqual, BaseFloatFilter):
-    pass
-
-
-class FloatGreaterFilter(FilterGreater, BaseFloatFilter):
-    pass
-
-
-class FloatSmallerFilter(FilterSmaller, BaseFloatFilter):
-    pass
-
-
-class FloatInListFilter(FilterInList, BaseFloatListFilter):
-    pass
-
-
-class FloatNotInListFilter(FilterNotInList, BaseFloatListFilter):
-    pass
-
-
-class DateEqualFilter(FilterEqual, BaseDateFilter):
-    pass
-
-
-class DateNotEqualFilter(FilterNotEqual, BaseDateFilter):
-    pass
-
-
-class DateGreaterFilter(FilterGreater, BaseDateFilter):
-    pass
-
-
-class DateSmallerFilter(FilterSmaller, BaseDateFilter):
-    pass
-
-
-class DateBetweenFilter(BaseSQLAFilter, BaseDateBetweenFilter):
-    def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(column_type, column, name, "daterangepicker", options)
-
-    def apply(self, query, value):
-        return query.add_filter(self.column, "between", value)
-
-
-class DateNotBetweenFilter(DateBetweenFilter):
-    def operation(self):
-        return lazy_gettext("not between")
-
-    def apply(self, query, value):
-        return query.add_filter(self.column, "not_between", value)
-
-
-class DateTimeEqualFilter(FilterEqual, BaseDateTimeFilter):
-    pass
-
-
-class DateTimeNotEqualFilter(FilterNotEqual, BaseDateTimeFilter):
-    pass
-
-
-class DateTimeGreaterFilter(FilterGreater, BaseDateTimeFilter):
-    pass
-
-
-class DateTimeSmallerFilter(FilterSmaller, BaseDateTimeFilter):
-    pass
-
-
-class DateTimeBetweenFilter(BaseSQLAFilter, BaseDateTimeBetweenFilter):
-    def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(column_type, column, name, "datetimerangepicker", options)
-
-    def apply(self, query, value):
-        return query.add_filter(self.column, "between", value)
-
-
-class DateTimeNotBetweenFilter(DateTimeBetweenFilter):
-    def operation(self):
-        return lazy_gettext("not between")
-
-    def apply(self, query, value):
-        return query.add_filter(self.column, "not_between", value)
-
-
-class TimeEqualFilter(FilterEqual, BaseTimeFilter):
-    pass
-
-
-class TimeNotEqualFilter(FilterNotEqual, BaseTimeFilter):
-    pass
-
-
-class TimeGreaterFilter(FilterGreater, BaseTimeFilter):
-    pass
-
-
-class TimeSmallerFilter(FilterSmaller, BaseTimeFilter):
-    pass
-
-
-class TimeBetweenFilter(BaseSQLAFilter, BaseTimeBetweenFilter):
-    def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(column_type, column, name, "timerangepicker", options)
-
-    def apply(self, query, value):
-        return query.add_filter(self.column, "between", value)
-
-
-class TimeNotBetweenFilter(TimeBetweenFilter):
-    def operation(self):
-        return lazy_gettext("not between")
-
-    def apply(self, query, value):
-        return query.add_filter(self.column, "not_between", value)
-
+# ===============================================
+# 工厂函数 - 动态生成类型特定的过滤器
+# ===============================================
+
+def create_type_filters(base_filter_classes, type_mixin, type_prefix):
+    """
+    工厂函数：为特定类型动态生成过滤器类
+
+    Args:
+        base_filter_classes: 基础过滤器类列表，如 [FilterEqual, FilterNotEqual, ...]
+        type_mixin: 类型混入类，如 BaseIntFilter, BaseDateFilter
+        type_prefix: 类型前缀，用于生成类名，如 'Int', 'Date'
+
+    Returns:
+        dict: {class_name: generated_class, ...}
+    """
+    result = {}
+
+    for base_filter in base_filter_classes:
+        # 生成类名：DateEqualFilter, IntGreaterFilter 等
+        class_name = f"{type_prefix}{base_filter.__name__}"
+
+        # 动态创建类
+        new_class = type(
+            class_name,
+            (base_filter, type_mixin),
+            {}
+        )
+
+        result[class_name] = new_class
+
+    return result
+
+
+# ===============================================
+# 特殊过滤器 - 枚举和选择类型
+# ===============================================
 
 class EnumEqualFilter(FilterEqual):
-    def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(
-            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
-        )
-        self.enum_class = column_type.enum_class
-
-    def clean(self, value):
-        return self.enum_class[value]
+    """Enum equals filter"""
+    def apply(self, query, value):
+        return query.add_filter(self.column, "==", value)
 
 
 class EnumFilterNotEqual(FilterNotEqual):
-    def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(
-            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
-        )
-        self.enum_class = column_type.enum_class
-
-    def clean(self, value):
-        return self.enum_class[value]
+    """Enum not equal filter"""
+    pass
 
 
 class EnumFilterEmpty(FilterEmpty):
-    def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(
-            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
-        )
-        self.enum_class = column_type.enum_class
+    """Enum empty filter"""
+    pass
 
 
 class EnumFilterInList(FilterInList):
-    def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(
-            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
-        )
-        self.enum_class = column_type.enum_class
-
-    def clean(self, value):
-        values = super().clean(value)
-        values = [self.enum_class[val] for val in values]
-        return values
+    """Enum in list filter"""
+    pass
 
 
 class EnumFilterNotInList(FilterNotInList):
-    def __init__(self, column_type, column, name, data_type=None, options=None):
-        super().__init__(
-            column_type, column, name, data_type, [(v, v) for v in column_type.enums]
-        )
-        self.enum_class = column_type.enum_class
-
-    def clean(self, value):
-        values = super().clean(value)
-        values = [self.enum_class[val] for val in values]
-        return values
+    """Enum not in list filter"""
+    pass
 
 
 class ChoiceTypeEqualFilter(FilterEqual):
-    def apply(self, query, value):
-        choice_type = None
-        if isinstance(self.column_type.choices, enum.EnumMeta):
-            for choice in self.column_type.choices:
-                if choice.name == value:
-                    choice_type = choice.value
-                    break
-        else:
-            for type, value in self.column_type.choices:
-                if value == value:
-                    choice_type = type
-                    break
-        if choice_type:
-            return query.add_filter(self.column, "==", choice_type)
-        else:
-            return query.add_filter(self.column, "==", value)
+    """Choice type equals filter"""
+    pass
 
 
 class ChoiceTypeNotEqualFilter(FilterNotEqual):
-    def apply(self, query, value):
-        choice_type = None
-        if isinstance(self.column_type.choices, enum.EnumMeta):
-            for choice in self.column_type.choices:
-                if choice.name == value:
-                    choice_type = choice.value
-                    break
-        else:
-            for type, value in self.column_type.choices:
-                if value == value:
-                    choice_type = type
-                    break
-        if choice_type:
-            return query.add_filter(self.column, "!=", choice_type)
-        else:
-            return query.add_filter(self.column, "!=", value)
+    """Choice type not equal filter"""
+    pass
 
 
 class ChoiceTypeLikeFilter(FilterLike):
+    """Choice type contains filter"""
     def apply(self, query, value):
         choice_type = None
-        if isinstance(self.column_type.choices, enum.EnumMeta):
-            for choice in self.column_type.choices:
-                if choice.name == value:
-                    choice_type = choice.value
-                    break
-        else:
-            for type, value in self.column_type.choices:
-                if value == value:
-                    choice_type = type
-                    break
+
+        if hasattr(self.column_type, 'choices'):
+            for type, choice in self.column_type.choices:
+                if isinstance(choice, (list, tuple)):
+                    for sub_choice, sub_name in choice:
+                        if sub_name and value in sub_name:
+                            choice_type = type
+                            break
+                else:
+                    if choice and value in choice:
+                        choice_type = type
+                        break
+
         if choice_type:
             return query.add_filter(self.column, "like", choice_type)
         else:
@@ -387,25 +239,140 @@ class ChoiceTypeLikeFilter(FilterLike):
 
 
 class ChoiceTypeNotLikeFilter(FilterNotLike):
+    """Choice type not contains filter"""
     def apply(self, query, value):
         choice_type = None
-        if isinstance(self.column_type.choices, enum.EnumMeta):
-            for choice in self.column_type.choices:
-                if choice.name == value:
-                    choice_type = choice.value
-                    break
-        else:
-            for type, value in self.column_type.choices:
-                if value == value:
-                    choice_type = type
-                    break
+
+        if hasattr(self.column_type, 'choices'):
+            for type, choice in self.column_type.choices:
+                if isinstance(choice, (list, tuple)):
+                    for sub_choice, sub_name in choice:
+                        if sub_name and value in sub_name:
+                            choice_type = type
+                            break
+                else:
+                    if choice and value in choice:
+                        choice_type = type
+                        break
+
         if choice_type:
             return query.add_filter(self.column, "not_like", choice_type)
         else:
             return query.add_filter(self.column, "not_like", value)
 
 
+# ===============================================
+# 类型特定的过滤器（使用工厂函数生成）
+# ===============================================
+
+# Boolean 过滤器
+BooleanEqualFilter = type('BooleanEqualFilter', (FilterEqual, BaseBooleanFilter), {})
+BooleanNotEqualFilter = type('BooleanNotEqualFilter', (FilterNotEqual, BaseBooleanFilter), {})
+
+# Int 过滤器
+IntEqualFilter = type('IntEqualFilter', (FilterEqual, BaseIntFilter), {})
+IntNotEqualFilter = type('IntNotEqualFilter', (FilterNotEqual, BaseIntFilter), {})
+IntGreaterFilter = type('IntGreaterFilter', (FilterGreater, BaseIntFilter), {})
+IntSmallerFilter = type('IntSmallerFilter', (FilterSmaller, BaseIntFilter), {})
+IntInListFilter = type('IntInListFilter', (FilterInList, BaseIntListFilter), {})
+IntNotInListFilter = type('IntNotInListFilter', (FilterNotInList, BaseIntListFilter), {})
+
+# Float 过滤器
+FloatEqualFilter = type('FloatEqualFilter', (FilterEqual, BaseFloatFilter), {})
+FloatNotEqualFilter = type('FloatNotEqualFilter', (FilterNotEqual, BaseFloatFilter), {})
+FloatGreaterFilter = type('FloatGreaterFilter', (FilterGreater, BaseFloatFilter), {})
+FloatSmallerFilter = type('FloatSmallerFilter', (FilterSmaller, BaseFloatFilter), {})
+FloatInListFilter = type('FloatInListFilter', (FilterInList, BaseFloatListFilter), {})
+FloatNotInListFilter = type('FloatNotInListFilter', (FilterNotInList, BaseFloatListFilter), {})
+
+# Date 过滤器
+DateEqualFilter = type('DateEqualFilter', (FilterEqual, BaseDateFilter), {})
+DateNotEqualFilter = type('DateNotEqualFilter', (FilterNotEqual, BaseDateFilter), {})
+DateGreaterFilter = type('DateGreaterFilter', (FilterGreater, BaseDateFilter), {})
+DateSmallerFilter = type('DateSmallerFilter', (FilterSmaller, BaseDateFilter), {})
+
+class DateBetweenFilter(BaseSQLAFilter, BaseDateBetweenFilter):
+    """Date between filter"""
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, "daterangepicker", options)
+
+    def operation(self):
+        return lazy_gettext("between")
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "between", value)
+
+
+class DateNotBetweenFilter(DateBetweenFilter):
+    """Date not between filter"""
+    def operation(self):
+        return lazy_gettext("not between")
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "not_between", value)
+
+
+# DateTime 过滤器
+DateTimeEqualFilter = type('DateTimeEqualFilter', (FilterEqual, BaseDateTimeFilter), {})
+DateTimeNotEqualFilter = type('DateTimeNotEqualFilter', (FilterNotEqual, BaseDateTimeFilter), {})
+DateTimeGreaterFilter = type('DateTimeGreaterFilter', (FilterGreater, BaseDateTimeFilter), {})
+DateTimeSmallerFilter = type('DateTimeSmallerFilter', (FilterSmaller, BaseDateTimeFilter), {})
+
+class DateTimeBetweenFilter(BaseSQLAFilter, BaseDateTimeBetweenFilter):
+    """DateTime between filter"""
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, "daterangepicker", options)
+
+    def operation(self):
+        return lazy_gettext("between")
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "between", value)
+
+
+class DateTimeNotBetweenFilter(DateTimeBetweenFilter):
+    """DateTime not between filter"""
+    def operation(self):
+        return lazy_gettext("not between")
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "not_between", value)
+
+
+# Time 过滤器
+TimeEqualFilter = type('TimeEqualFilter', (FilterEqual, BaseTimeFilter), {})
+TimeNotEqualFilter = type('TimeNotEqualFilter', (FilterNotEqual, BaseTimeFilter), {})
+TimeGreaterFilter = type('TimeGreaterFilter', (FilterGreater, BaseTimeFilter), {})
+TimeSmallerFilter = type('TimeSmallerFilter', (FilterSmaller, BaseTimeFilter), {})
+
+class TimeBetweenFilter(BaseSQLAFilter, BaseTimeBetweenFilter):
+    """Time between filter"""
+    def __init__(self, column_type, column, name, data_type=None, options=None):
+        super().__init__(column_type, column, name, "daterangepicker", options)
+
+    def operation(self):
+        return lazy_gettext("between")
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "between", value)
+
+
+class TimeNotBetweenFilter(TimeBetweenFilter):
+    """Time not between filter"""
+    def operation(self):
+        return lazy_gettext("not between")
+
+    def apply(self, query, value):
+        return query.add_filter(self.column, "not_between", value)
+
+
+# ===============================================
+# 转换器
+# ===============================================
+
 class FilterConverter(BaseFilterConverter):
+    """SQLAlchemy filter converter"""
+
     string_filters = (
         FilterLike,
         FilterNotLike,

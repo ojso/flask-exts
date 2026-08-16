@@ -3,6 +3,7 @@ from wtforms import validators
 from flask_babel import gettext
 from sqlalchemy import select
 from flask_exts.admin.sqla.view import SqlaModelView
+from flask_exts.admin.model.form import InlineFormAdmin
 from ..models.author import Author, AVAILABLE_USER_TYPES
 from ..models.post import Post
 
@@ -28,6 +29,15 @@ class AuthorView(SqlaModelView):
     page_size = 5
     page_size_options = (5, 10, 15)
     action_disallowed_list = ["delete"]
+
+    # Inline model: edit Posts directly within the Author form
+    inline_models = (
+        InlineFormAdmin(
+            Post,
+            form_columns=("title", "text", "color", "date"),
+            form_args={"title": {"label": "Post Title"}},
+        ),
+    )
 
     form_choices = {
         "type": AVAILABLE_USER_TYPES,

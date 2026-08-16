@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 _exts: "Exts" = LocalProxy(lambda: current_app.extensions["exts"])
 
-_template: "Template" = LocalProxy(lambda: _exts.template)
+_template: "Template" = LocalProxy(lambda: _exts.get_template())
 
-_userstore: "BaseUserStore" = LocalProxy(lambda: _exts.usercenter.userstore)
+_userstore: "BaseUserStore" = LocalProxy(lambda: _exts.get_usercenter().userstore)
 
-_security: "Security" = LocalProxy(lambda: _exts.security)
+_security: "Security" = LocalProxy(lambda: _exts.get_security())

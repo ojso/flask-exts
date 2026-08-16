@@ -1,0 +1,135 @@
+"""
+分页管理 (Pagination Management)
+
+负责管理 Admin 模型视图中的分页功能。
+包括分页参数提取、分页大小验证和 URL 生成。
+"""
+
+from typing import Optional, Tuple, Dict, Any
+from flask import request
+
+
+class ViewArgs:
+    """视图参数容器（如果尚未导入）"""
+    def __init__(self, page=0, page_size=0, sort=None, sort_desc=False, search=None, filters=None, extra_args=None):
+        self.page = page
+        self.page_size = page_size
+        self.sort = sort
+        self.sort_desc = sort_desc
+        self.search = search
+        self.filters = filters or []
+        self.extra_args = extra_args or {}
+
+    def clone(self, **kwargs):
+        """克隆视图参数，覆盖指定的参数"""
+        args = {
+            'page': self.page,
+            'page_size': self.page_size,
+            'sort': self.sort,
+            'sort_desc': self.sort_desc,
+            'search': self.search,
+            'filters': self.filters,
+            'extra_args': self.extra_args.copy()
+        }
+        args.update(kwargs)
+        return ViewArgs(**args)
+
+
+class PaginationMixin:
+    """
+    分页管理功能混入类。
+
+    提供分页参数处理、验证和 URL 生成功能。
+    """
+
+    # 分页配置属性（继承自 ModelView）
+    page_size: int = 20
+    """默认页大小"""
+
+    can_set_page_size: bool = True
+    """是否允许通过下拉列表选择页大小"""
+
+    page_size_options: Tuple[int, ...] = (5, 10, 20, 50, 100)
+    """页大小选项"""
+
+    def get_safe_page_size(self, page_size: int) -> int:
+        """
+        获取安全的页大小。
+
+        如果 can_set_page_size 为 True 且 page_size 在 page_size_options 中，
+        则使用提供的 page_size；否则使用默认的 page_size。
+
+        Args:
+            page_size (int): 请求的页大小
+
+        Returns:
+            int: 安全的页大小
+        """
+        if self.can_set_page_size and page_size in self.page_size_options:
+            return page_size
+        return self.page_size
+
+    def _get_list_args(self) -> 'ViewArgs':
+        """
+        从查询字符串提取列表视图参数。
+
+        提取分页、排序、搜索和过滤参数。
+
+        Returns:
+            ViewArgs: 包含所有视图参数的对象
+        """
+        # 注意：这里假设存在 get_active_filters() 方法
+        # 该方法应在 FilterMixin 中定义
+        return ViewArgs(
+            page=request.args.get("page", 0, type=int),
+            page_size=request.args.get("page_size", 0, type=int),
+            sort=request.args.get("sort", None, type=int),
+            sort_desc=request.args.get("desc", None, type=int),
+            search=request.args.get("search", None),
+            filters=self.get_active_filters() if hasattr(self, 'get_active_filters') else [],
+            extra_args=dict(
+                [
+                    (k, v)
+                    for k, v in request.args.items()
+                    if k
+                    not in (
+                        "page",
+                        "page_size",
+                        "sort",
+                        "desc",
+                        "search",
+                    )
+                    and not k.startswith("flt")
+                ]
+            ),
+        )
+
+    def _get_list_url(self, view_args: 'ViewArgs') -> str:
+        """
+        生成带有当前页、排序列和其他参数的页面 URL。
+
+        Args:
+            view_args (ViewArgs): 视图参数对象
+
+        Returns:
+            str: 生成的 URL
+        """
+        page = view_args.page or None
+        desc = 1 if view_args.sort_desc else None
+
+        kwargs = dict(
+            page=page, sort=view_args.sort, desc=desc, search=view_args.search
+        )
+        kwargs.update(view_args.extra_args)
+
+        kwargs["page_size"] = self.get_safe_page_size(view_args.page_size)
+
+        # 注意：这里假设存在 get_active_filters_kwargs() 和 get_url() 方法
+        if hasattr(self, 'get_active_filters_kwargs'):
+            kwargs.update(self.get_active_filters_kwargs(view_args.filters))
+
+        if hasattr(self, 'get_url'):
+            return self.get_url(".index_view", **kwargs)
+        else:
+            # 返回基本格式，子类应实现 get_url()
+            return f"?{'&'.join(f'{k}={v}' for k, v in kwargs.items() if v)}"

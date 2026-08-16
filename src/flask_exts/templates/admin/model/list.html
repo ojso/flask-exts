@@ -65,14 +65,14 @@
     {% if view.can_set_page_size %}<li class="nav-item">{{ page_size_form(page_size_url, page_size, view.page_size_options) }}</li>{% endif %}
     {% if actions %}
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">{{ gettext("With selected") }}</a>
+        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">{{ gettext("With selected") }}</a>
         <div class="dropdown-menu">
           {% for p in actions %}<a class="dropdown-item" href="#" onclick="return listAction.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
         </div>
       </li>
     {% endif %}
     {% if view.column_searchable_list %}
-      <li class="nav-item ml-2">
+      <li class="nav-item ms-2">
         <form method="get" action="{{ return_url }}" class="d-flex flex-wrap align-items-center my-2 my-lg-0">
           {% for flt_name, flt_value in filter_args.items() %}<input type="hidden" name="{{ flt_name }}" value="{{ flt_value }}">{% endfor %}
           {% if page_size != default_page_size %}<input type="hidden" name="page_size" value="{{ page_size }}">{% endif %}
@@ -81,14 +81,12 @@
           {% if sort_desc %}<input type="hidden" name="desc" value="1">{% endif %}
           <div class="input-group">
             <input class="form-control" type="text" name="search" value="{{ search | default('',true) }}" placeholder="{{ view.search_placeholder() }}">
-            <div class="input-group-append">
-              {% if search %}
-                <span class="input-group-text">
-                  <a href="{{ clear_search_url }}" class="align-middle"><span>x</span></a>
-                </span>
-              {% endif %}
-              <button class="btn btn-outline-secondary" type="submit">{{ render_icon('search') }}</button>
-            </div>
+            {% if search %}
+              <span class="input-group-text">
+                <a href="{{ clear_search_url }}" class="align-middle"><span>x</span></a>
+              </span>
+            {% endif %}
+            <button class="btn btn-outline-secondary" type="submit">{{ render_icon('search') }}</button>
           </div>
         </form>
       </li>
@@ -103,7 +101,7 @@
       {% if sort_desc %}<input type="hidden" name="desc" value="1">{% endif %}
       {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
       {% if page_size != default_page_size %}<input type="hidden" name="page_size" value="{{ page_size }}">{% endif %}
-      <div class="pull-right">
+      <div class="float-end">
         <button type="submit" class="btn btn-primary d-none">{{ gettext("Apply") }}</button>
         {% if active_filters %}<a href="{{ clear_search_url }}" class="btn btn-secondary">{{ gettext("Reset Filters") }}</a>{% endif %}
       </div>

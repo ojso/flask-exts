@@ -3,7 +3,7 @@ from flask import g
 
 class TestBase:
     def test_base(self, app):
-        template = app.extensions["exts"].template
+        template = app.extensions["exts"].get_template()
         # theme
         theme = template.theme
         assert theme is not None

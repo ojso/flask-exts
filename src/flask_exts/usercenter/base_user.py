@@ -3,9 +3,10 @@ from flask_login.mixins import UserMixin
 
 
 class BaseUser(UserMixin):
+
     @property
     def is_active(self):
-        return self.actived
+        return True
 
     def hash_password(self, password):
         return generate_password_hash(password)

@@ -67,11 +67,11 @@
   <form method="post" {% if action %}action="{{ action }}"{% endif %}>
     <div class="modal-header">
       <h5 class="modal-title">{{ title }}</h5>
-      <button type="button" class="close" data-dismiss="modal">×</button>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
     </div>
     <div class="modal-body">{{ render_form_fields(form, form_opts=form_opts) }}</div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ gettext("Cancel") }}</button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Cancel") }}</button>
       <button type="submit" class="btn btn-primary">{{ gettext("Save") }}</button>
     </div>
   </form>
