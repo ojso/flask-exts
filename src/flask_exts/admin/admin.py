@@ -3,7 +3,7 @@ from flask import render_template_string
 from flask import url_for
 from flask import make_response
 from .menu import Menu
-from ..proxies import _security
+from ..proxies import current_security
 
 
 class Admin:
@@ -111,7 +111,7 @@ class Admin:
         if self.allow_access is True:
             return True
         
-        return _security.authorize_allow(*args, **kwargs)
+        return current_security.authorize_allow(*args, **kwargs)
 
     def render(self, template, **kwargs):
         """

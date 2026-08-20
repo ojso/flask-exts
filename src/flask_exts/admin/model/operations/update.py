@@ -16,6 +16,17 @@ class UpdateOperationsMixin:
 
     def update_model(self, form: Any, model: Any) -> bool:
         """
+        Update model from the form.
+
+        Returns `True` if operation succeeded.
+
+        Must be implemented in the child class.
+
+        :param form:
+            Form instance
+        :param model:
+            Model instance
+
         从表单更新模型。
 
         如果操作成功则返回 True。

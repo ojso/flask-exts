@@ -23,7 +23,6 @@ Example:
     class UserAdmin(ModelView):
         column_list = ['id', 'username', 'email', 'created_at']
         column_sortable_list = ['username', 'created_at']
-        can_export = True
 
     admin.register_view(UserAdmin, User)
     ```

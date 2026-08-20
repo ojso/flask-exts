@@ -1,3 +1,3 @@
-from .db import Db
+from .sqla_db import SqlaDb
 
-db = Db()
+db = SqlaDb()

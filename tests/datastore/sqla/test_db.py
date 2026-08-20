@@ -3,14 +3,14 @@ from flask import Flask
 from sqlalchemy import String, select
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.orm import scoped_session
-from flask_exts.datastore.sqla.db import Db
+from flask_exts.datastore.sqla.sqla_db import SqlaDb
 
 
 def test_scoped_session():
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 
-    db = Db()
+    db = SqlaDb()
     db.init_app(app)
 
     with pytest.raises(RuntimeError):
@@ -30,7 +30,7 @@ def test_init_app_registers_extension_and_adds_models_to_shell():
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 
-    db = Db()
+    db = SqlaDb()
 
     class Demo(db.Model):
         __tablename__ = "demo"
@@ -60,7 +60,7 @@ def test_reset_all_drops_and_recreates_tables():
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 
-    db = Db()
+    db = SqlaDb()
 
     class Demo(db.Model):
         __tablename__ = "demo"

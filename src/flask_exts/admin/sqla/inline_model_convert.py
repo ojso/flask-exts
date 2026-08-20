@@ -1,25 +1,55 @@
-"""
-内联模型表单处理
-
-提取 InlineModelConverter 和 InlineOneToOneModelConverter
-以及相关的表单生成逻辑。
-
-这个模块专门处理内联关系模型的表单转换，使 form.py 更轻量化。
-"""
-
 from sqlalchemy import inspect
-from ...forms.fields.sqla import InlineModelFormListField, InlineModelOneToOneField
+from ...forms.fields.sqla import InlineModelFormListField
+from ...forms.fields.sqla import InlineModelOneToOneField
 from ...forms.form.base_form import BaseForm
-from ..model.form import InlineModelConverterBase
-from .query import Query
 from .ajax import create_ajax_loader
-from .form import get_form
+from .utils import get_model_form
 
 
-class InlineModelConverter(InlineModelConverterBase):
+class InlineModelForm:
     """
-    Inline model form helper.
+    Settings for inline form administration.
+
+    You can use this class to customize displayed form.
+    For example::
+
+        class MyUserInfoForm(InlineModelForm):
+            form_columns = ('name', 'email')
     """
+
+    _defaults = [
+        "base_form_class",
+        "form_columns",
+        "form_excluded_columns",
+        "form_args",
+        "form_extra_fields",
+    ]
+
+    def __init__(self, model, **kwargs):
+        """
+        Constructor
+
+        :param model:
+            Model class
+        :param kwargs:
+            Additional options
+        """
+        self.model = model
+
+        for k in self._defaults:
+            if not hasattr(self, k):
+                setattr(self, k, None)
+
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+
+class InlineModelConverter:
+    """
+    Inline model form converter.
+    """
+
+    form_admin_class = InlineModelForm
 
     inline_field_list_type = InlineModelFormListField
     """
@@ -39,17 +69,51 @@ class InlineModelConverter(InlineModelConverterBase):
             View object
         :param model_converter:
             Model converter class. Will be automatically instantiated with
-            appropriate `InlineFormAdmin` instance.
+            appropriate `InlineForm` instance.
         """
-        super().__init__(view)
+
+        self.view = view
         self.session = session
         self.model_converter = model_converter
 
-    def get_info(self, p):
-        info = super().get_info(p)
+    def get_label(self, info, name):
+        """
+        Get inline model field label
 
-        # Special case for model instances
-        if info is None:
+        :param info:
+            Inline model info
+        :param name:
+            Field name
+        """
+        form_name = getattr(info, "form_label", None)
+        if form_name:
+            return form_name
+
+        column_labels = getattr(self.view, "column_labels", None)
+
+        if column_labels and name in column_labels:
+            return column_labels[name]
+
+        return None
+
+    def get_info(self, p):
+        """
+        Figure out InlineForm information.
+
+        :param p:
+            Inline model. Can be one of:
+
+                - ``tuple``, first value is related model instance,
+                second is dictionary with options
+                - ``InlineForm`` instance
+                - Model class
+        """
+        if isinstance(p, tuple):
+            info = self.form_admin_class(p[0], **p[1])
+        elif isinstance(p, self.form_admin_class):
+            info = p
+        else:
+            # Special case for model instances
             if hasattr(p, "_sa_class_manager"):
                 return self.form_admin_class(p)
             else:
@@ -107,7 +171,7 @@ class InlineModelConverter(InlineModelConverterBase):
         :param model:
             Model class
         :param info:
-            The InlineFormAdmin instance
+            The InlineForm instance
         :return:
             A dict of forward property key and reverse property key
         """
@@ -156,8 +220,7 @@ class InlineModelConverter(InlineModelConverterBase):
 
     def contribute(self, model, form_class, inline_model):
         """
-        Generate form fields for inline forms and contribute them to
-        the `form_class`
+        Generate form fields for inline model and contribute them to the `form_class`
 
         :param converter:
             ModelConverterBase instance
@@ -172,7 +235,7 @@ class InlineModelConverter(InlineModelConverterBase):
 
              - ``tuple``, first value is related model instance,
              second is dictionary with options
-             - ``InlineFormAdmin`` instance
+             - ``InlineForm`` instance
              - Model class
 
         :return:
@@ -196,22 +259,16 @@ class InlineModelConverter(InlineModelConverterBase):
             converter = self.model_converter(self.session, info)
 
             # Create form
-            child_form = info.get_form()
-
-            if child_form is None:
-                child_form = get_form(
-                    info.model,
-                    converter,
-                    base_class=info.form_base_class or BaseForm,
-                    only=info.form_columns,
-                    exclude=exclude,
-                    field_args=info.form_args,
-                    hidden_pk=True,
-                    extra_fields=info.form_extra_fields,
-                )
-
-            # Post-process form
-            child_form = info.postprocess_form(child_form)
+            child_form = get_model_form(
+                info.model,
+                converter,
+                base_class=info.base_form_class or BaseForm,
+                only=info.form_columns,
+                exclude=exclude,
+                field_args=info.form_args,
+                hidden_pk=True,
+                extra_fields=info.form_extra_fields,
+            )
 
             kwargs = dict()
 
@@ -242,10 +299,9 @@ class InlineModelConverter(InlineModelConverterBase):
 
 class InlineOneToOneModelConverter(InlineModelConverter):
     """
-    Inline one-to-one model form helper.
-
-    用于处理一对一关系的内联表单转换。
+    Inline one-to-one model form converter.
     """
+
     inline_field_list_type = InlineModelOneToOneField
 
     def _calculate_mapping_key_pair(self, model, info):
@@ -317,22 +373,16 @@ class InlineOneToOneModelConverter(InlineModelConverter):
         converter = self.model_converter(self.session, info)
 
         # Create form
-        child_form = info.get_form()
-
-        if child_form is None:
-            child_form = get_form(
-                info.model,
-                converter,
-                base_class=info.form_base_class or BaseForm,
-                only=info.form_columns,
-                exclude=exclude,
-                field_args=info.form_args,
-                hidden_pk=True,
-                extra_fields=info.form_extra_fields,
-            )
-
-        # Post-process form
-        child_form = info.postprocess_form(child_form)
+        child_form = get_model_form(
+            info.model,
+            converter,
+            base_class=info.base_form_class or BaseForm,
+            only=info.form_columns,
+            exclude=exclude,
+            field_args=info.form_args,
+            hidden_pk=True,
+            extra_fields=info.form_extra_fields,
+        )
 
         kwargs = dict()
 

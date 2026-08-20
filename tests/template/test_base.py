@@ -1,9 +1,9 @@
-from flask_exts.proxies import _template
+from flask_exts.proxies import current_template
 from flask import g
 
 class TestBase:
     def test_base(self, app):
-        template = app.extensions["exts"].get_template()
+        template = app.extensions["exts"].get_extension("template")._template
         # theme
         theme = template.theme
         assert theme is not None
@@ -19,18 +19,18 @@ class TestBase:
 
     def test_theme(self, app):
         with app.test_request_context():
-            theme = _template.theme
+            theme = current_template.theme
             assert theme.icon_size == "1em"
          
     def test_plugins(self, app):
         with app.test_request_context():
-            _template.plugin_manager.enable_plugin(['jquery', 'bootstrap4'])
+            current_template.plugin_manager.enable_plugin(['jquery', 'bootstrap4'])
             # print(_template.plugin_manager.plugins)
             # print(_template.plugin_manager.enabled_plugins)
-            css = _template.plugin_manager.load_css()
+            css = current_template.plugin_manager.load_css()
             # print(css)
             assert "bootstrap.min.css" in str(css)
-            js = _template.plugin_manager.load_js()
+            js = current_template.plugin_manager.load_js()
             # print(js)
             assert "jquery.min.js" in str(js)
             assert "bootstrap.bundle.min.js" in str(js)

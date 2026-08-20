@@ -1,8 +1,8 @@
 from datetime import datetime
 from flask import url_for
 from flask import current_app
-from ..proxies import _security
-from ..proxies import _userstore
+from ..proxies import current_security
+from ..proxies import current_userstore
 from ..signals import to_send_email
 
 
@@ -20,8 +20,8 @@ class ResetPassword:
         """Generates a reset password token for the specified user.
         :param user: The user to work with
         """
-        data = (str(user.id), _security.hasher.hash(user.email))
-        token = _security.serializer.dumps(self.serializer_name, data)
+        data = (str(user.id), current_security.hasher.hash(user.email))
+        token = current_security.serializer.dumps(self.serializer_name, data)
         return token
 
     def send_reset_password_token(self, user):
@@ -48,9 +48,9 @@ class ResetPassword:
         Resets the password for a user with the given token.
         """
         if within is None:
-            within = _security.get_within(self.serializer_name)
+            within = current_security.get_within(self.serializer_name)
 
-        expired, invalid, token_data = _security.serializer.loads(
+        expired, invalid, token_data = current_security.serializer.loads(
             self.serializer_name, token, within
         )
 
@@ -61,18 +61,18 @@ class ResetPassword:
             return ("invalid_token", None)
 
         token_user_identity, token_email_hash = token_data
-        user = _userstore.get_user_by_identity(token_user_identity)
+        user = current_userstore.get_user_by_identity(token_user_identity)
 
         if not user:
             return ("no_user", None)
 
-        if not _security.hasher.verify(user.email, token_email_hash):
+        if not current_security.hasher.verify(user.email, token_email_hash):
             return ("invalid_token", None)
 
         if not user.email_verified:
             return ("email_not_verified", None)
 
-        _userstore.user_set(user, password=user.hash_password(password))
-        _userstore.save_user(user)
+        current_userstore.user_set(user, password=user.hash_password(password))
+        current_userstore.save_user(user)
 
         return ("ok", None)

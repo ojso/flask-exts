@@ -40,6 +40,11 @@ class ValuesMixin:
 
     def _get_object_attr(self, obj: Any, name: str) -> Any:
         """
+        Recursive getattr from the obj by the name. Name can be a dot-delimited string to get nested attributes.
+
+        :param name:
+            Dot delimited attribute name, for example 'user.username' to get obj.user.username.
+            
         递归从对象中获取属性。
 
         支持点号分隔的嵌套属性。例如，'user.username' 可以获取 obj.user.username。
@@ -64,6 +69,17 @@ class ValuesMixin:
         column_type_formatters: Optional[Dict[type, Callable]]
     ) -> Any:
         """
+        Returns the value to be displayed.
+
+        :param model:
+            Model instance
+        :param name:
+            Field name
+        :param column_formatters:
+            column_formatters to be used.
+        :param column_type_formatters:
+            column_type_formatters to be used.
+
         获取要显示的格式化值。
 
         应用列格式化器（如果存在），然后应用类型格式化器（如果存在），
@@ -104,6 +120,13 @@ class ValuesMixin:
 
     def get_list_value(self, model: Any, name: str) -> Any:
         """
+        Returns the value to be displayed in the list view
+
+        :param model:
+            Model instance
+        :param name:
+            Field name
+
         获取列表视图中显示的值。
 
         使用 column_formatters 和 column_type_formatters。
@@ -126,6 +149,13 @@ class ValuesMixin:
 
     def get_detail_value(self, model: Any, name: str) -> Any:
         """
+        Returns the value to be displayed in the detail view
+
+        :param model:
+            Model instance
+        :param name:
+            Field name
+
         获取详情视图中显示的值。
 
         使用 column_formatters_detail 和 column_type_formatters_detail。
@@ -150,6 +180,14 @@ class ValuesMixin:
 
     def get_export_value(self, model: Any, name: str) -> Any:
         """
+        Returns the value to be displayed in export.
+        Allows export to use different (non HTML) formatters.
+
+        :param model:
+            Model instance
+        :param name:
+            Field name
+
         获取导出视图中显示的值。
 
         使用 column_formatters_export 和 column_type_formatters_export。
@@ -177,7 +215,7 @@ class ValuesMixin:
     def get_export_name(self, export_type: str = "csv") -> str:
         """
         获取导出文件名。
-
+        :return: The exported csv file name.
         Returns:
             str: 导出文件名，格式如 'users_2026-08-14_12-30-45.csv'
         """

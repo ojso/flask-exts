@@ -97,7 +97,6 @@ class InlineModelFormField(FormField):
 
     def __init__(self, form_class, pk, form_opts=None, **kwargs):
         super().__init__(form_class, **kwargs)
-
         self._pk = pk
         self.form_opts = form_opts
 

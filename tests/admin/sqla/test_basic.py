@@ -4,7 +4,7 @@ from wtforms import fields, validators
 from flask_exts.forms.form.base_form import BaseForm
 from flask_exts.forms.fields import Select2Field
 from flask_exts.admin.sqla.view import SqlaModelView
-from flask_exts.admin.sqla.query import Query
+from flask_exts.datastore.sqla.query import Query
 from flask_exts.datastore.sqla import db
 from tests.models.demo import EnumChoices
 from tests.models.demo import Model1, Model2
@@ -344,7 +344,7 @@ def test_column_editable_list(app, client, admin):
             Model1, column_editable_list=["test1", "enum_field"]
         )
         admin.add_view(view1)
-
+        # return
         # Test in-line editing for relations
         view2 = CustomSqlaModelView(Model2, column_editable_list=["model1"])
         admin.add_view(view2)
@@ -776,7 +776,7 @@ def test_custom_form_base(app, admin):
 
         db.reset_all()
 
-        view = CustomSqlaModelView(Model1, form_base_class=TestForm)
+        view = CustomSqlaModelView(Model1, base_form_class=TestForm)
         admin.add_view(view)
 
         assert hasattr(view._create_form_class, "test1")

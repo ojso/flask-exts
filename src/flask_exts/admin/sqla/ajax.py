@@ -1,5 +1,6 @@
 from ..model.ajax import AjaxModelLoader, DEFAULT_PAGE_SIZE
-from .query import Query
+from ...datastore.sqla.utils import get_model_primary_key
+from ...datastore.sqla.query import Query
 
 class QueryAjaxModelLoader(AjaxModelLoader):
     def __init__(self, name, model, session=None, **options):
@@ -18,7 +19,7 @@ class QueryAjaxModelLoader(AjaxModelLoader):
         self.search_fields = options.get("fields")
         self.order_by = options.get("order_by")
         self.filters = options.get("filters")
-        self.pk = Query.get_model_primary_key(model)
+        self.pk = get_model_primary_key(model)
 
     def format(self, model):
         if not model:

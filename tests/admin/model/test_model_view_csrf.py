@@ -28,7 +28,7 @@ class MockModelView(ModelView):
         return len(self.models), self.models
 
     def scaffold_form(self):
-        class Form(self.form_base_class):
+        class Form(self.base_form_class):
             col = StringField()
 
         return Form

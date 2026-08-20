@@ -16,6 +16,15 @@ class CreateOperationsMixin:
 
     def create_model(self, form: Any) -> Union[Any, bool]:
         """
+        Create model from the form.
+
+        Returns the model instance if operation succeeded.
+
+        Must be implemented in the child class.
+
+        :param form:
+            Form instance
+            
         从表单创建模型。
 
         如果操作成功则返回模型实例。

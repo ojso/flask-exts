@@ -1,10 +1,10 @@
 from flask_login import LoginManager
 from ..security.auth_crypt import authorization_decoder
-from ..proxies import _userstore
+from ..proxies import current_userstore
 
 
 def user_loader(user_id):
-    return _userstore.user_loader(int(user_id))
+    return current_userstore.user_loader(int(user_id))
 
 
 def load_user_from_request(request):
@@ -35,12 +35,12 @@ def load_user_from_request(request):
         payload = authorization_decoder(authstr)
         if isinstance(payload, dict):
             if "id" in payload and payload["id"] is not None:
-                user = _userstore.get_user_by_id(int(payload["id"]))
+                user = current_userstore.get_user_by_id(int(payload["id"]))
                 if user:
                     return user
-            identity = payload.get(_userstore.identity_name)
+            identity = payload.get(current_userstore.identity_name)
             if identity is not None:
-                user = _userstore.get_user_by_identity(identity)
+                user = current_userstore.get_user_by_identity(identity)
                 if user:
                     return user
     # add other methods to get user

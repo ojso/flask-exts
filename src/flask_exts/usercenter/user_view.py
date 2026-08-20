@@ -18,8 +18,8 @@ from .forms.forgot_password import ForgotPasswordForm
 from .forms.reset_password import ResetPasswordForm
 from .forms.two_factor import TwoFactorForm
 from .forms.recovery import RecoveryForm
-from ..proxies import _userstore
-from ..proxies import _security
+from ..proxies import current_userstore
+from ..proxies import current_security
 from ..signals import user_registered
 from ..constants import NO_CACHE_HEADER
 
@@ -72,7 +72,7 @@ class UserView(View):
             return redirect(url_for(".index"))
         form = self.get_login_form_class()()
         if form.validate_on_submit():
-            user, error = _userstore.login_user_by_username_password(
+            user, error = current_userstore.login_user_by_username_password(
                 form.username.data, form.password.data
             )
             if user is not None:
@@ -101,7 +101,7 @@ class UserView(View):
             return redirect(url_for(".index"))
         form = self.register_form()
         if form.validate_on_submit():
-            status, user = _userstore.create_user(
+            status, user = current_userstore.create_user(
                 username=form.username.data,
                 password=form.password.data,
                 email=form.email.data,
@@ -123,7 +123,7 @@ class UserView(View):
     @expose_url("/verify_email/")
     def verify_email(self):
         token = request.args.get("token")
-        r = _security.email_verification.verify_email_with_token(token)
+        r = current_security.email_verification.verify_email_with_token(token)
         return self.render(self.verify_email_template, result=r[0])
 
     @login_required
@@ -139,14 +139,14 @@ class UserView(View):
 
         form = TwoFactorForm()
         if form.validate_on_submit():
-            if _security.tfa.verify_totp(current_user.totp_secret, form.code.data):
-                _userstore.user_set(current_user, tfa_enabled=enable)
+            if current_security.tfa.verify_totp(current_user.totp_secret, form.code.data):
+                current_userstore.user_set(current_user, tfa_enabled=enable)
                 if current_user.tfa_enabled and not session.get("tfa_verified"):
                     session["tfa_verified"] = True
                 elif not current_user.tfa_enabled and "tfa_verified" in session:
                     session.pop("tfa_verified")
                     # clear totp_secret
-                    _userstore.user_set(current_user, totp_secret=None)
+                    current_userstore.user_set(current_user, totp_secret=None)
             else:
                 return jsonify({"error": "Invalid code"})
         return jsonify({"tfa_enabled": current_user.tfa_enabled})
@@ -159,11 +159,11 @@ class UserView(View):
                 "user/show_tfa.html",
             )
         if not current_user.totp_secret:
-            _userstore.user_set(
-                current_user, totp_secret=_security.tfa.generate_totp_secret()
+            current_userstore.user_set(
+                current_user, totp_secret=current_security.tfa.generate_totp_secret()
             )
 
-        totp_uri = _security.tfa.get_totp_uri(
+        totp_uri = current_security.tfa.get_totp_uri(
             current_user.totp_secret, current_user.username
         )
         return self.render(
@@ -187,7 +187,7 @@ class UserView(View):
             abort(403)
         form = TwoFactorForm()
         if form.validate_on_submit():
-            if _security.tfa.verify_totp(current_user.totp_secret, form.code.data):
+            if current_security.tfa.verify_totp(current_user.totp_secret, form.code.data):
                 session["tfa_verified"] = True
                 next_page = request.args.get("next")
                 if not next_page:
@@ -202,7 +202,7 @@ class UserView(View):
     def change_password(self):
         form = ChangePasswordForm()
         if form.validate_on_submit():
-            _userstore.user_set(
+            current_userstore.user_set(
                 current_user,
                 password=current_user.hash_password(form.new_password.data),
             )
@@ -217,8 +217,8 @@ class UserView(View):
             return redirect(url_for(".index"))
         form = ForgotPasswordForm()
         if form.validate_on_submit():
-            _security.reset_password.send_reset_password_token(
-                _userstore.get_user_by_identity(form.email.data, "email")
+            current_security.reset_password.send_reset_password_token(
+                current_userstore.get_user_by_identity(form.email.data, "email")
             )
             flash(
                 "An email has been sent with instructions to reset your password.",
@@ -232,7 +232,7 @@ class UserView(View):
         token = request.args.get("token")
         form = ResetPasswordForm()
         if form.validate_on_submit():
-            r = _security.reset_password.reset_password_with_token(
+            r = current_security.reset_password.reset_password_with_token(
                 token, form.password.data
             )
             if r[0] == "ok":
@@ -249,9 +249,9 @@ class UserView(View):
         if not session.get("tfa_verified"):
             abort(403)
         if not current_user.recovery_codes:
-            _userstore.user_set(
+            current_userstore.user_set(
                 current_user,
-                recovery_codes=_security.tfa.generate_recovery_codes(),
+                recovery_codes=current_security.tfa.generate_recovery_codes(),
             )
         return self.render(
             "user/recovery_codes.html",
@@ -272,8 +272,8 @@ class UserView(View):
             ):
                 recovery_codes = current_user.recovery_codes
                 recovery_codes.remove(form.code.data)
-                _userstore.user_set(current_user, recovery_codes=recovery_codes)
-                totp_uri = _security.tfa.get_totp_uri(
+                current_userstore.user_set(current_user, recovery_codes=recovery_codes)
+                totp_uri = current_security.tfa.get_totp_uri(
                     current_user.totp_secret, current_user.username
                 )
                 return self.render(

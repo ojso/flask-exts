@@ -2,7 +2,7 @@ from wtforms import validators
 from flask_exts.admin.sqla.view import SqlaModelView
 from flask_exts.admin.sqla.filter import FilterLike
 from flask_exts.admin.sqla.filter import BaseSQLAFilter
-from flask_exts.admin.sqla.query import Query
+from flask_exts.datastore.sqla.utils import get_model_column_type
 from ..models.post import Post
 from ..models.author import Author
 
@@ -70,7 +70,7 @@ class PostView(SqlaModelView):
         "author.first_name",
         "author.id",
         FilterNameBrown(
-            column_type=Query.get_model_column_type(Author, "last_name"),
+            column_type=get_model_column_type(Author, "last_name"),
             column="author.last_name",
             name="Last Name",
         ),
@@ -80,7 +80,7 @@ class PostView(SqlaModelView):
         "date",
         "tags.name",
         FilterLike(
-            column_type=Query.get_model_column_type(Post, "title"),
+            column_type=get_model_column_type(Post, "title"),
             column="title",
             name="Fixed Title",
             options=(("test1", "Test 1"), ("test2", "Test 2")),

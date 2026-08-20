@@ -24,7 +24,10 @@ class SortingMixin:
 
     def scaffold_sortable_columns(self) -> Dict[str, Union[str, List[str]]]:
         """
-        返回可排序列的字典。必须在子类中实现。
+        Returns dictionary of sortable columns. Must be implemented in the child class.
+        
+        Expected return format is a dictionary, where keys are field names and values are property names.
+
 
         返回格式：字典，键是字段名，值是排序列名（例如属性名）。
 
@@ -38,6 +41,12 @@ class SortingMixin:
 
     def get_sortable_columns(self) -> Dict[str, Union[str, List[str]]]:
         """
+        Returns a dictionary of the sortable columns. Key is a model
+        field name and value is sort column (for example - attribute).
+
+        If `column_sortable_list` is set, will use it. Otherwise, will call
+        `scaffold_sortable_columns` to get them from the model.
+        
         获取可排序的列。
 
         如果设置了 column_sortable_list，使用它；
@@ -62,6 +71,13 @@ class SortingMixin:
 
     def is_sortable(self, name: str) -> bool:
         """
+        Verify if column is sortable.
+
+        Not case-sensitive.
+
+        :param name:
+            Column name.
+            
         验证列是否可排序。
 
         不区分大小写。
@@ -76,6 +92,7 @@ class SortingMixin:
 
     def _get_default_order(self) -> Optional[List[Tuple[str, bool]]]:
         """
+        Return default sort order.
         获取默认排序顺序。
 
         返回 (列名, 是否降序) 元组的列表。

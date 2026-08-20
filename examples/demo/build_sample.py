@@ -1,6 +1,6 @@
 import random
 import datetime
-from flask_exts.proxies import _userstore
+from flask_exts.proxies import current_userstore
 from .models import db
 from .models.author import Author
 from .models.author import AVAILABLE_USER_TYPES
@@ -10,11 +10,11 @@ from .models.tree import Tree
 
 
 def build_user_admin():
-    status, user_admin = _userstore.create_user(
+    status, user_admin = current_userstore.create_user(
         username="admin", password="admin", email="admin@example.com"
     )
-    role_admin = _userstore.create_role(name="admin")
-    _userstore.user_add_role(user_admin, role_admin)
+    role_admin = current_userstore.create_role(name="admin")
+    current_userstore.user_add_role(user_admin, role_admin)
 
 
 

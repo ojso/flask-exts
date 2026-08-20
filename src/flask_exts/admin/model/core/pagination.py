@@ -71,6 +71,8 @@ class PaginationMixin:
 
     def _get_list_args(self) -> 'ViewArgs':
         """
+        Return arguments from query string.
+        
         从查询字符串提取列表视图参数。
 
         提取分页、排序、搜索和过滤参数。
@@ -106,6 +108,13 @@ class PaginationMixin:
 
     def _get_list_url(self, view_args: 'ViewArgs') -> str:
         """
+        Generate page URL with current page, sort column and other parameters.
+
+        :param view:
+            View name
+        :param view_args:
+            ViewArgs object with page number, filters, etc.
+
         生成带有当前页、排序列和其他参数的页面 URL。
 
         Args:

@@ -45,17 +45,32 @@ class ModelView(BaseModelView):
     """
     Admin 模型视图主类。
 
+    Model view.
+
+    This view does not make any assumptions on how models are stored or managed, but expects the following:
+
+        1. The provided model is an object
+        2. The model contains properties
+        3. Each model contains an attribute which uniquely identifies it (i.e. a primary key for a database model)
+        4. It is possible to retrieve a list of sorted models with pagination applied from a data source
+        5. You can get one model by its identifier from the data source
+
+    Essentially, if you want to support a new data store, all you have to do is:
+
+        1. Derive from the `ModelView` class
+        2. Implement various data-related methods (`get_list`, `get_one`, `create_model`, etc)
+        3. Implement automatic form generation from the model representation (`scaffold_form`)
+
     提供完整的 Admin 界面功能，包括列表、创建、编辑、删除、详情和导出。
 
     这个类是 BaseModelView 的直接扩展，后者组合了所有功能模块。
     ModelView 只定义了路由视图方法和初始化逻辑。
 
     Attributes:
-        form_base_class: 表单基类
+        base_form_class: 表单基类
         can_create: 是否允许创建
         can_edit: 是否允许编辑
         can_delete: 是否允许删除
-        can_export: 是否允许导出
 
     Example:
         ```python
@@ -64,7 +79,6 @@ class ModelView(BaseModelView):
         class UserAdmin(ModelView):
             column_list = ['id', 'username', 'email', 'created_at']
             column_sortable_list = ['username', 'created_at']
-            can_export = True
 
             def scaffold_list_columns(self):
                 return ['id', 'username', 'email', 'created_at']
@@ -80,14 +94,18 @@ class ModelView(BaseModelView):
         static_folder=None,
     ):
         """
-        初始化 ModelView。
+        Constructor.
 
-        Args:
-            model: 模型类
-            name: 视图名称。如果未提供，将使用模型类名
-            endpoint: 基础端点。如果未提供，将使用模型名
-            url: 基础 URL。如果未提供，将使用端点作为 URL
-            static_folder: 静态文件夹
+        :param model:
+            Model class
+        :param name:
+            View name. If not provided, will use the model class name
+        :param endpoint:
+            Base endpoint. If not provided, will use the model name.
+        :param url:
+            Base URL. If not provided, will use endpoint as a URL.
+        :param static_folder:
+            Static folder for the view. If not provided, will use the default static folder.
         """
         self.model = model
 
@@ -164,6 +182,11 @@ class ModelView(BaseModelView):
 
     def is_editable(self, name: str) -> bool:
         """
+        Verify if column is editable.
+
+        :param name:
+            Column name.
+
         验证列是否可编辑。
 
         Args:
@@ -181,7 +204,10 @@ class ModelView(BaseModelView):
         return super().is_action_allowed(name) if hasattr(super(), 'is_action_allowed') else True
 
     def _process_ajax_references(self):
-        """处理 AJAX 参考配置"""
+        """
+        处理 AJAX 参考配置
+        Process `form_ajax_refs` and generate model loaders that will be used by the `ajax_lookup` view.
+        """
         result = {}
 
         if self.form_ajax_refs:
@@ -195,7 +221,7 @@ class ModelView(BaseModelView):
         return result
 
     def _create_ajax_loader(self, name, options):
-        """创建 AJAX 加载器（必须由子类实现）"""
+        """创建 AJAX 加载器 Model backend will override this to implement AJAX model loading."""
         raise NotImplementedError()
 
     def get_redirect_target(self, param_name="url", endpoint=".index_view"):
@@ -206,18 +232,23 @@ class ModelView(BaseModelView):
 
     @expose_url("/")
     def index_view(self):
-        """列表视图"""
+        """Index view"""
+
+        # Grab parameters from URL
         view_args = self._get_list_args()
 
         # 根据列索引映射列名
+        # Map column index to column name
         sort_column = self._get_column_by_idx(view_args.sort)
         if sort_column is not None:
             sort_column = sort_column[0]
 
         # 获取安全的页大小
+        # Get page size
         page_size = self.get_safe_page_size(view_args.page_size)
 
         # 获取数据
+        # Get count and data
         count, data = self.get_list(
             view_args.page,
             sort_column,
@@ -228,15 +259,18 @@ class ModelView(BaseModelView):
         )
 
         # 计算页数
+        # Calculate number of pages
         if count is not None and page_size:
             num_pages = int(ceil(count / float(page_size)))
         elif not page_size:
-            num_pages = 0  # 隐藏分页器
+            num_pages = 0  # 隐藏分页器 hide pager for unlimited page_size
         else:
-            num_pages = None  # 使用简单分页器
+            num_pages = None  # 使用简单分页器 use simple pager
 
         # URL 生成辅助函数
+        # Various URL generation helpers
         def pager_url(p):
+            # Do not add page number if it is first page
             if p == 0:
                 p = None
             return self._get_list_url(view_args.clone(page=p))
@@ -262,9 +296,11 @@ class ModelView(BaseModelView):
         return self.render(
             self.list_template,
             data=data,
+            # list
             list_columns=self._list_columns,
             sortable_columns=self._sortable_columns,
             editable_columns=self.column_editable_list,
+            # Pagination
             count=count,
             pager_url=pager_url,
             num_pages=num_pages,
@@ -272,20 +308,24 @@ class ModelView(BaseModelView):
             page=view_args.page,
             page_size=page_size,
             default_page_size=self.page_size,
+            # sort
             sort_column=view_args.sort,
             sort_desc=view_args.sort_desc,
             sort_url=sort_url,
+            # search
             clear_search_url=clear_search_url,
             search=view_args.search,
+            # filter
             active_filters=view_args.filters,
             filter_args=self.get_active_filters_kwargs(view_args.filters) if hasattr(self, 'get_active_filters_kwargs') else {},
+            # misc
             return_url=self._get_list_url(view_args),
             extra_args=view_args.extra_args,
         )
 
     @expose_url("/new/", methods=("GET", "POST"))
     def create_view(self):
-        """创建视图"""
+        """Create model view"""
         return_url = self.get_redirect_target()
 
         if not self.can_create:
@@ -323,7 +363,7 @@ class ModelView(BaseModelView):
 
     @expose_url("/edit/", methods=("GET", "POST"))
     def edit_view(self):
-        """编辑视图"""
+        """Edit model view"""
         return_url = self.get_redirect_target()
 
         if not self.can_edit:
@@ -367,7 +407,7 @@ class ModelView(BaseModelView):
 
     @expose_url("/details/")
     def details_view(self):
-        """详情视图"""
+        """Details model view"""
         return_url = self.get_redirect_target()
 
         id = request.args.get("id")
@@ -395,7 +435,7 @@ class ModelView(BaseModelView):
 
     @expose_url("/delete/", methods=("POST",))
     def delete_view(self):
-        """删除视图"""
+        """Delete model view. Only POST method is allowed."""
         return_url = self.get_redirect_target()
         if not self.can_delete:
             return redirect(return_url)
@@ -442,7 +482,7 @@ class ModelView(BaseModelView):
 
     @expose_url("/ajax/update/", methods=("POST",))
     def ajax_update(self):
-        """内联编辑端点"""
+        """内联编辑端点 Edits a single column of a record in list view."""
         if not self.column_editable_list:
             abort(404)
 

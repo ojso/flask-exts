@@ -5,7 +5,6 @@ from .models.simple import SimpleModel
 
 
 def test_db(app):
-    assert "sqlalchemy" in app.extensions
     assert app.extensions["sqlalchemy"] is db
 
     with app.app_context():

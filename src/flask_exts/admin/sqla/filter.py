@@ -11,9 +11,8 @@ SQLAlchemy 过滤器 - 优化版本
   - FilterConverter: 转换器，根据列类型返回适当的过滤器
 """
 
-import enum
+
 from flask_babel import lazy_gettext
-from sqlalchemy.sql import not_, or_
 from ..model.filter import BaseFilterConverter
 from ..model.filter import convert_filter
 from ..model.filter import BaseFilter

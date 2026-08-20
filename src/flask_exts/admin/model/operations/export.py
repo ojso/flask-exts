@@ -1,17 +1,14 @@
-"""
-导出操作 (Export Operations)
-
-负责导出模型数据的操作。
-支持 CSV 和其他由 tablib 支持的格式。
-"""
-
 from typing import Optional, List, Tuple, Any
 import csv
 import mimetypes
 import tablib
-from flask import Response, redirect, flash, request, jsonify, abort, stream_with_context
+from flask import Response
+from flask import redirect
+from flask import flash
+from flask import stream_with_context
 from flask_babel import gettext
 from werkzeug.utils import secure_filename
+from ...exposer import expose_url
 
 
 class ExportOperationsMixin:
@@ -21,15 +18,14 @@ class ExportOperationsMixin:
     提供数据导出功能，支持 CSV 和其他格式。
     """
 
-    # 导出配置属性（继承自 ModelView）
+    can_export: bool = False
+    """是否允许导出"""
+
     export_max_rows: int = 0
     """导出的最大行数，0 表示无限制"""
 
     export_types: List[str] = ["csv"]
     """可用的导出类型列表"""
-
-    can_export: bool = False
-    """是否允许导出"""
 
     def _export_data(self) -> Tuple[Optional[int], List[Any]]:
         """
@@ -46,6 +42,7 @@ class ExportOperationsMixin:
         # 验证格式化器
         for col, func in (self.column_formatters_export or {}).items():
             # 跳过未导出的列
+            # skip checking columns not being exported
             if col not in [col for col, _ in self._export_columns]:
                 continue
 
@@ -57,14 +54,16 @@ class ExportOperationsMixin:
                 )
 
         # 获取列表参数
+        # Grab parameters from URL
         view_args = self._get_list_args()
 
         # 根据索引映射列名
+        # Map column index to column name
         sort_column = self._get_column_by_idx(view_args.sort)
         if sort_column is not None:
             sort_column = sort_column[0]
 
-        # 获取数据
+        # Get count and data
         count, data = self.get_list(
             0,
             sort_column,
@@ -78,6 +77,7 @@ class ExportOperationsMixin:
 
     def _export_csv(self, return_url: str) -> Response:
         """
+        Export a CSV of records as a stream.
         以流的形式导出 CSV 记录。
 
         Args:
@@ -90,16 +90,17 @@ class ExportOperationsMixin:
 
         # CSV Echo 类用于流式写入
         class Echo:
-            """实现类似文件的写方法的对象"""
+            """实现类似文件的写方法的对象An object that implements just the write method of the file-like interface."""
 
             def write(self, value):
-                """返回值而不是存储在缓冲区"""
+                """返回值而不是存储在缓冲区Write the value by returning it, instead of storing in a buffer."""
                 return value
 
         writer = csv.writer(Echo())
 
         def generate():
             # 在开始处添加列标题
+            # Append the column titles at the beginning
             titles = [c[1] for c in self._export_columns]
             yield writer.writerow(titles)
 
@@ -119,6 +120,8 @@ class ExportOperationsMixin:
 
     def _export_tablib(self, export_type: str, return_url: str) -> Response:
         """
+        Exports a variety of formats using the tablib library.
+
         使用 tablib 库导出多种格式。
 
         Args:
@@ -167,6 +170,7 @@ class ExportOperationsMixin:
             mimetype=mimetype,
         )
 
+    @expose_url("/export/<export_type>/")
     def export(self, export_type: str) -> Response:
         """
         导出处理器（路由处理）。
@@ -179,7 +183,9 @@ class ExportOperationsMixin:
         Returns:
             Response: 导出文件或重定向
         """
-        return_url = self.get_redirect_target() if hasattr(self, 'get_redirect_target') else "#"
+        return_url = (
+            self.get_redirect_target() if hasattr(self, "get_redirect_target") else "#"
+        )
 
         if not self.can_export or (export_type not in self.export_types):
             flash(gettext("Permission denied."), "error")

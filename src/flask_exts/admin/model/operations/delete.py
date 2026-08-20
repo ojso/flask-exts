@@ -16,6 +16,15 @@ class DeleteOperationsMixin:
 
     def delete_model(self, model: Any) -> bool:
         """
+        Delete model.
+
+        Returns `True` if operation succeeded.
+
+        Must be implemented in the child class.
+
+        :param model:
+            Model instance
+
         删除模型。
 
         如果操作成功则返回 True。

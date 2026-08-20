@@ -1,15 +1,13 @@
-"""
-读取操作 (Read Operations)
-
-负责从数据源读取模型数据的操作。
-"""
-
 from typing import Tuple, List, Any, Optional
 
 
 class ReadOperationsMixin:
     """
     读取操作功能混入类。
+
+    读取操作 (Read Operations)
+
+    负责从数据源读取模型数据的操作。
 
     提供 get_list 和 get_one 方法。
     """
@@ -24,6 +22,26 @@ class ReadOperationsMixin:
         page_size: Optional[int] = None,
     ) -> Tuple[Optional[int], List[Any]]:
         """
+        Return a tuple of a count of results and a paginated and sorted list of models from the data source.
+
+        Must be implemented in the child class.
+
+        :param page:
+            Page number, 0 based. Can be set to None if it is first page.
+        :param sort_field:
+            Sort column name or None.
+        :param sort_desc:
+            If set to True, sorting is in descending order.
+        :param search:
+            Search query
+        :param filters:
+            List of filter tuples. First value in a tuple is a search
+            index, second value is a search value.
+        :param page_size:
+            Number of results. Defaults to ModelView's page_size. Can be
+            overriden to change the page_size limit. Removing the page_size
+            limit requires setting page_size to 0 or False.
+            
         从数据源返回分页和排序的模型列表。
 
         必须在子类中实现。
@@ -50,34 +68,28 @@ class ReadOperationsMixin:
 
     def get_one(self, id: Any) -> Optional[Any]:
         """
-        通过 id 返回一个模型。
+        Return one model by its id.
 
-        必须在子类中实现。
+        Must be implemented in the child class.
+
+        :param id:
+            Model id
+
+        Return one model by its id.
 
         Args:
-            id (Any): 模型 id
+            id (Any): Model id
 
         Returns:
-            Optional[Any]: 模型实例或 None
+            Optional[Any]: model instance or None
 
         Raises:
-            NotImplementedError: 必须在子类中实现
+            NotImplementedError: must be implemented in subclass
         """
         raise NotImplementedError("Please implement get_one method")
 
     def get_pk_value(self, obj: Any) -> Any:
         """
-        从模型对象返回主键值。
-
-        必须在子类中实现。
-
-        Args:
-            obj (Any): 模型对象
-
-        Returns:
-            Any: 主键值
-
-        Raises:
-            NotImplementedError: 必须在子类中实现
+        Return PK value from a model object.
         """
         raise NotImplementedError("Please implement get_pk_value method")

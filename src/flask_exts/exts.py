@@ -26,7 +26,7 @@ class Exts:
         self,
         app=None,
         extensions: Optional[List[str]] = None,
-        skip_missing: bool = False
+        skip_missing: bool = False,
     ):
         """
         Initialize Exts manager.
@@ -84,9 +84,7 @@ class Exts:
             self._registry.register(ext_class)
 
     def register_extension(
-        self,
-        extension_class: Type[Extension],
-        enable: bool = True
+        self, extension_class: Type[Extension], enable: bool = True
     ) -> Extension:
         """
         Register a custom extension.
@@ -139,10 +137,7 @@ class Exts:
             self._enabled_extensions.remove(name)
 
     def init_app(
-        self,
-        app,
-        extensions: Optional[List[str]] = None,
-        skip_missing: bool = False
+        self, app, extensions: Optional[List[str]] = None, skip_missing: bool = False
     ) -> None:
         """
         Initialize extensions with Flask application.
@@ -169,49 +164,6 @@ class Exts:
         # Initialize all extensions
         self._registry.init_all(app, enabled, skip_missing)
 
-
-    # Backward compatibility methods
-    def get_db(self):
-        """Get SQLAlchemy db instance (backward compatible)"""
-        from .datastore.sqla import db
-        return db
-
-    def get_template(self):
-        """Get Template extension (backward compatible)"""
-        if hasattr(self, 'template'):
-            return self.template
-        template_ext = self._registry.get('template')
-        return template_ext._template if template_ext else None
-
-    def get_email(self):
-        """Get Email extension (backward compatible)"""
-        if hasattr(self, 'email'):
-            return self.email
-        email_ext = self._registry.get('email')
-        return email_ext._email if email_ext else None
-
-    def get_usercenter(self):
-        """Get UserCenter extension (backward compatible)"""
-        if hasattr(self, 'usercenter'):
-            return self.usercenter
-        usercenter_ext = self._registry.get('usercenter')
-        return usercenter_ext._usercenter if usercenter_ext else None
-
-    def get_security(self):
-        """Get Security extension (backward compatible)"""
-        if hasattr(self, 'security'):
-            return self.security
-        security_ext = self._registry.get('security')
-        return security_ext._security if security_ext else None
-
-    def get_admin(self):
-        """Get Admin extension (backward compatible)"""
-        if hasattr(self, 'admin'):
-            return self.admin
-        admin_ext = self._registry.get('admin')
-        return admin_ext._admin if admin_ext else None
-
-    # Modern API
     def get_extension(self, name: str) -> Optional[Extension]:
         """
         Get extension by name (modern API).

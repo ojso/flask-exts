@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import request, jsonify
 from flask_login import current_user
-from ..proxies import _security
+from ..proxies import current_security
 
 
 def auth_required(func):
@@ -10,7 +10,7 @@ def auth_required(func):
         uri = str(request.path)
         try:
             if current_user.is_authenticated:
-                if _security.authorize_allow(resource=uri, method=request.method):
+                if current_security.authorize_allow(resource=uri, method=request.method):
                     return func(*args, **kwargs)
                 return (jsonify({"message": "Forbidden"}), 403)
             else:
@@ -26,7 +26,7 @@ def needs_required(**needs):
         def wrapper(*args, **kwargs):
             try:
                 if current_user.is_authenticated:
-                    if _security.authorize_allow(**needs):
+                    if current_security.authorize_allow(**needs):
                         return func(*args, **kwargs)
                     return (jsonify({"message": "Forbidden"}), 403)
                 else:

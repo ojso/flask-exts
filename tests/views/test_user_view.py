@@ -4,8 +4,8 @@ from flask import session
 from flask_exts.datastore.sqla import db
 from flask_exts.forms.form.csrf import get_csrf_token
 from flask_exts.email.sender import Sender
-from flask_exts.proxies import _security
-from flask_exts.proxies import _userstore
+from flask_exts.proxies import current_security
+from flask_exts.proxies import current_userstore
 
 
 mail_data = []
@@ -23,9 +23,10 @@ class TestUserView:
             db.create_all()
 
         email_sender = EmailSender()
-        app.extensions["exts"].get_email().register_sender("verify_email", email_sender)
-        app.extensions["exts"].get_email().register_sender("reset_password", email_sender)
-        # print(app.extensions["exts"].get_email().senders)
+        email = app.extensions["exts"].get_extension("email")._email
+        email.register_sender("verify_email", email_sender)
+        email.register_sender("reset_password", email_sender)
+        # print(email.senders)
 
         with app.test_request_context():
             self.user_login_url = url_for("user.login")
@@ -176,8 +177,8 @@ class TestUserView:
         assert rv.headers.get("Expires") == "0"
 
         with app.app_context():
-            u = _userstore.get_user_by_id(self.test_user_id)
-            totp_code = _security.tfa.get_totp_code(u.totp_secret)
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
 
         # enable tfa without code
         rv = client.get(self.user_enable_tfa_url, query_string={"enable": True})
@@ -209,16 +210,16 @@ class TestUserView:
             assert "tfa_verified" not in sess
 
         with app.app_context():
-            u = _userstore.get_user_by_id(self.test_user_id)
-            totp_code = _security.tfa.get_totp_code(u.totp_secret)
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
 
         assert u.totp_secret is None
 
         # refresh setup_tfa page to generate new totp_secret
         rv = client.get(self.user_setup_tfa_url)
         with app.app_context():
-            u = _userstore.get_user_by_id(self.test_user_id)
-            totp_code = _security.tfa.get_totp_code(u.totp_secret)
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
 
         assert u.totp_secret is not None
 
@@ -235,8 +236,8 @@ class TestUserView:
             assert "tfa_verified" in sess and sess["tfa_verified"] is True
 
         with app.app_context():
-            u = _userstore.get_user_by_id(self.test_user_id)
-            totp_code = _security.tfa.get_totp_code(u.totp_secret)
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
 
         # when tfa is enabled, tfa_verified is required to access setup_tfa
         rv = client.get(self.user_setup_tfa_url)
@@ -437,8 +438,8 @@ class TestUserView:
         assert rv.status_code == 200
 
         with app.app_context():
-            u = _userstore.get_user_by_id(self.test_user_id)
-            totp_code = _security.tfa.get_totp_code(u.totp_secret)
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
 
         rv = client.post(
             self.user_enable_tfa_url,
@@ -456,7 +457,7 @@ class TestUserView:
         assert rv.status_code == 200
 
         with app.app_context():
-            u = _userstore.get_user_by_id(self.test_user_id)
+            u = current_userstore.get_user_by_id(self.test_user_id)
             totp_secret = u.totp_secret
             recovery_codes = u.recovery_codes
 
@@ -477,7 +478,7 @@ class TestUserView:
 
         # u.recovery_codes removed recovery_code
         with app.app_context():
-            u = _userstore.get_user_by_id(self.test_user_id)
+            u = current_userstore.get_user_by_id(self.test_user_id)
             recovery_codes_2 = u.recovery_codes
 
         assert len(recovery_codes) == len(recovery_codes_2) + 1

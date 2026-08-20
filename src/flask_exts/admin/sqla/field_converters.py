@@ -4,10 +4,73 @@
 提供 SQLAlchemy 字段类型到 WTForms 字段的基础转换功能。
 """
 
+import types
 from wtforms import validators
-from wtforms.fields import StringField, TextAreaField, IntegerField, DecimalField, BooleanField, DateField
+from wtforms.fields import StringField
+from wtforms.fields import TextAreaField
+from wtforms.fields import IntegerField
+from wtforms.fields import DecimalField
+from wtforms.fields import BooleanField
+from wtforms.fields import DateField
 from ...forms.fields import TimeField
 from ...forms.widgets import DatePickerWidget
+
+
+def convert_form_field(*args):
+    def decorator(func):
+        func._converter_for_form_field = args
+        return func
+
+    return decorator
+
+
+class BaseFormFieldConverter:
+    _converters = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        converters = {}
+        # Merge converters from base classes
+        for base in cls.__bases__:
+            base_map = getattr(base, "_converters", {})
+            converters.update(base_map)
+        # Add converters from the current class including methods from the entire MRO
+        # for name, method in cls.__dict__.items(): # only check the current class, not the base classes
+        for base in cls.__mro__:
+            for name, method in base.__dict__.items():
+                if callable(method) and hasattr(method, "_converter_for_form_field"):
+                    for type_name in method._converter_for_form_field:
+                        converters[type_name] = method
+        cls._converters = converters
+
+    def __init__(self, use_mro=True):
+        self.use_mro = use_mro
+
+    def get_converter(self, column):
+        col_type = type(column.type)
+        if self.use_mro:
+            types_list = col_type.__mro__
+        else:
+            types_list = (col_type,)
+
+        # Search by module + name
+        for t in types_list:
+            full_name = f"{t.__module__}.{t.__name__}"
+            if full_name in self._converters:
+                func = self._converters[full_name]
+                return types.MethodType(func, self)
+
+        # Search by name
+        for t in types_list:
+            short_name = t.__name__
+            if short_name in self._converters:
+                func = self._converters[short_name]
+                return types.MethodType(func, self)
+
+        return None
+
+    def get_form(self, model, base_class, only=None, exclude=None, field_args=None):
+        raise NotImplementedError()
 
 
 class BasicFieldConverter:
@@ -34,20 +97,24 @@ class BasicFieldConverter:
             field_args["validators"].append(validators.Length(max=column.type.length))
         self._nullable_common(column, field_args, **extra)
 
+    @convert_form_field("String")
     def conv_string(self, column, field_args, **extra):
         """转换 String 字段"""
         self._string_common(column=column, field_args=field_args, **extra)
         return StringField(**field_args)
 
+    @convert_form_field("Text")
     def conv_text(self, field_args, **extra):
         """转换 Text 字段"""
         self._string_common(field_args=field_args, **extra)
         return TextAreaField(**field_args)
 
+    @convert_form_field("Boolean")
     def conv_boolean(self, field_args, **extra):
         """转换 Boolean 字段"""
         return BooleanField(**field_args)
 
+    @convert_form_field("Integer", "BigInteger", "SmallInteger")
     def convert_integer(self, column, field_args, **extra):
         """转换 Integer 字段"""
         unsigned = getattr(column.type, "unsigned", False)
@@ -55,9 +122,10 @@ class BasicFieldConverter:
             field_args["validators"].append(validators.NumberRange(min=0))
         return IntegerField(**field_args)
 
+    @convert_form_field("Numeric", "DECIMAL", "Float", "REAL", "DOUBLE")
     def convert_decimal(self, column, field_args, **extra):
         """转换 Decimal/Float 字段"""
-        # 使用数据库默认精度而不是 WTForms 默认的
+        # override default decimal places limit, use database defaults instead
         field_args.setdefault("places", None)
         return DecimalField(**field_args)
 
@@ -69,18 +137,22 @@ class TemporalFieldConverter:
     提供日期、时间、日期时间字段的转换。
     """
 
+    @convert_form_field("Date")
     def convert_date(self, field_args, **extra):
         """转换 Date 字段"""
         field_args["widget"] = DatePickerWidget()
         return DateField(**field_args)
 
+    @convert_form_field("Time")
     def convert_time(self, field_args, **extra):
         """转换 Time 字段"""
         return TimeField(**field_args)
 
+    @convert_form_field("DateTime", "TIMESTAMP")
     def convert_datetime(self, field_args, **extra):
         """转换 DateTime 字段"""
         from wtforms.fields import DateTimeLocalField
+
         return DateTimeLocalField(**field_args)
 
 
@@ -91,6 +163,7 @@ class SpecialFieldConverter:
     提供枚举、JSON 等特殊字段的转换。
     """
 
+    @convert_form_field("Enum")
     def convert_enum(self, column, field_args, **extra):
         """转换 Enum 字段"""
         from enum import Enum
@@ -108,7 +181,9 @@ class SpecialFieldConverter:
         field_args["coerce"] = lambda v: v.name if isinstance(v, Enum) else str(v)
         return Select2Field(**field_args)
 
+    @convert_form_field("JSON")
     def convert_json(self, field_args, **extra):
         """转换 JSON 字段"""
         from ...forms.fields import JSONField
+
         return JSONField(**field_args)

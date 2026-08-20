@@ -1,6 +1,6 @@
 import click
 from flask.cli import AppGroup
-from .proxies import _userstore
+from .proxies import current_userstore
 from .datastore.sqla import db
 
 
@@ -20,15 +20,15 @@ security_cli = AppGroup("security", short_help="security for the app.")
 @click.argument("name")
 def create_user(name):
     print(f"security create_user {name}")
-    result = _userstore.create_user(username=name)
+    result = current_userstore.create_user(username=name)
     click.echo(result)
 
 
 @security_cli.command("create_admin", help="create user:admin with admin:role")
 @click.argument("password", default="admin")
 def create_admin(password):
-    _, user_admin = _userstore.create_user(username="admin", password=password)
-    role_admin = _userstore.create_role(name="admin")
-    _userstore.user_add_role(user_admin, role_admin)
+    _, user_admin = current_userstore.create_user(username="admin", password=password)
+    role_admin = current_userstore.create_role(name="admin")
+    current_userstore.user_add_role(user_admin, role_admin)
 
     print(f"security create admin {user_admin.username} with role {role_admin.name} ")

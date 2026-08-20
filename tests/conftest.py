@@ -40,8 +40,8 @@ def exts(app):
 
 @pytest.fixture
 def admin(exts):
-    return exts.get_admin()
+    return exts.get_extension("admin")._admin
 
 @pytest.fixture
 def email(exts):
-    return exts.get_email()
+    return exts.get_extension("email")._email

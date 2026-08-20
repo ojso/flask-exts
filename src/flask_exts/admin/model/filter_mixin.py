@@ -68,7 +68,7 @@ class FilterMixin:
             class MyModelView(BaseModelView):
                 column_filters = [
                     FilterNameBrown(
-                        column_type = Query.get_model_column_type(Author, "last_name"),
+                        column_type = get_model_column_type(Author, "last_name"),
                         column="author.last_name",
                         name="Last Name",
                     ),

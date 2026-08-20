@@ -45,7 +45,7 @@ class ActionsMixin:
         Create form class for a model action.
         """
 
-        class ActionForm(self.form_base_class):
+        class ActionForm(self.base_form_class):
             action = HiddenField()
             # get_redirect_target() will use url to redirect after action is performed.
             url = HiddenField()

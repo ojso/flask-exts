@@ -1,6 +1,7 @@
 import pytest
 from flask_exts.datastore.sqla import db
-from flask_exts.admin.model.form import InlineFormAdmin
+from flask_exts.admin.sqla.inline_model_convert import InlineModelForm
+from flask_exts.admin.sqla.inline_model_convert import InlineOneToOneModelConverter
 from tests.models.relations import OneToManyParent
 from tests.models.relations import ManyToOneChild2
 from tests.models.relations import ManyToOneChild3
@@ -30,11 +31,11 @@ class TestInlineModelConverter:
             assert hasattr(form, "children2")
 
     def test_inline_model_with_form_admin(self, app, admin):
-        """Test inline_models with InlineFormAdmin instance."""
+        """Test inline_models with InlineForm instance."""
         with app.app_context():
             db.reset_all()
 
-            inline = InlineFormAdmin(ManyToOneChild2)
+            inline = InlineModelForm(ManyToOneChild2)
             view = CustomSqlaModelView(
                 OneToManyParent,
                 endpoint="inline_admin",
@@ -50,7 +51,7 @@ class TestInlineModelConverter:
         with app.app_context():
             db.reset_all()
 
-            inline = InlineFormAdmin(
+            inline = InlineModelForm(
                 OneToOneChild,
                 form_columns=("test",),
             )
@@ -69,7 +70,7 @@ class TestInlineModelConverter:
         with app.app_context():
             db.reset_all()
 
-            inline = InlineFormAdmin(
+            inline = InlineModelForm(
                 OneToOneChild,
                 form_excluded_columns=("test",),
             )
@@ -120,7 +121,6 @@ class TestInlineOneToOneModelConverter:
 
     def test_one_to_one_inline(self, app, admin):
         """Test one-to-one inline model form generation."""
-        from flask_exts.admin.sqla.form import InlineOneToOneModelConverter
 
         with app.app_context():
             db.reset_all()

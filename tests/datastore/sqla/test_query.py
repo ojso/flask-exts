@@ -1,5 +1,7 @@
 import pytest
-from flask_exts.admin.sqla.query import Query
+from flask_exts.datastore.sqla.query import Query
+from flask_exts.datastore.sqla.utils import get_model_column_type
+from flask_exts.datastore.sqla.utils import get_field_with_path
 from tests.models.demo import Model1
 from tests.models.relations import ModelA, ModelB, ModelC
 
@@ -7,26 +9,26 @@ from tests.models.relations import ModelA, ModelB, ModelC
 def test_get_field_with_path():
 
     # Test simple column access
-    attr, joins = Query.get_field_with_path(Model1, "test1")
+    attr, joins = get_field_with_path(Model1, "test1")
     # print(attr, [str(join) for join in joins])
     assert attr.key == "test1"
     assert len(joins) == 0
 
     # Test relationship access
-    attr, joins = Query.get_field_with_path(Model1, "model2")
+    attr, joins = get_field_with_path(Model1, "model2")
     # print(attr, [str(join) for join in joins])
     assert attr.key == "model2"
     assert len(joins) == 1
     assert joins[0].key == "model2"
 
     # Test nested relationship access
-    attr, joins = Query.get_field_with_path(Model1, "model2.string_field")
+    attr, joins = get_field_with_path(Model1, "model2.string_field")
     # print(attr, [str(join) for join in joins])
     assert attr.key == "string_field"
     assert len(joins) == 1
     assert joins[0].key == "model2"
 
-    attr, joins = Query.get_field_with_path(Model1, "model2.model3.val")
+    attr, joins = get_field_with_path(Model1, "model2.model3.val")
     # print(attr, [str(join) for join in joins])
     assert attr.key == "val"
     assert len(joins) == 2
@@ -35,7 +37,7 @@ def test_get_field_with_path():
 
     # Test invalid path
     with pytest.raises(AttributeError, match="has no attribute"):
-        Query.get_field_with_path(Model1, "name.invalid")
+        get_field_with_path(Model1, "name.invalid")
 
 
 def test_eager_load():
@@ -163,7 +165,7 @@ def test_get_column_type():
         "email_field",
         "enum_field",
     ]:
-        column_type = Query.get_model_column_type(Model1, key)
+        column_type = get_model_column_type(Model1, key)
         column_type_name = column_type.__class__.__name__
         # print(f"Model1.{key} column type: {column_type_name}")
         assert column_type is not None, f"Column type for Model1.{key} should not be None"

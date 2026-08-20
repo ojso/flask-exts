@@ -1,12 +1,12 @@
-from flask_exts.proxies import _security
-from flask_exts.proxies import _userstore
+from flask_exts.proxies import current_security
+from flask_exts.proxies import current_userstore
 from flask_exts.datastore.sqla import db
 
 
 class TestSecurity:
     def test_hasher(self, app):
         with app.app_context():
-            security_hasher = _security.hasher
+            security_hasher = current_security.hasher
             data1 = "test"
             data2 = "test"
             h1 = security_hasher.hash(data1)
@@ -15,7 +15,7 @@ class TestSecurity:
 
     def test_serializer(self, app):
         with app.app_context():
-            security_serializer = _security.serializer
+            security_serializer = current_security.serializer
             data = {"test": "data"}
             token = security_serializer.dumps("test", data)
             assert token is not None
@@ -35,7 +35,7 @@ class TestSecurity:
     def test_verify_email(self, app):
         with app.app_context():
             db.reset_all()
-            status, user = _userstore.create_user(
+            status, user = current_userstore.create_user(
                 username="testuser",
                 password="testpassword",
                 email="testuser@example.com",
@@ -43,8 +43,8 @@ class TestSecurity:
             assert status == "ok"
             assert user is not None
             assert user.is_active is False
-            token = _security.email_verification.generate_verify_email_token(user)
-            r = _security.email_verification.verify_email_with_token(token)
+            token = current_security.email_verification.generate_verify_email_token(user)
+            r = current_security.email_verification.verify_email_with_token(token)
             assert r[0] == "verified"
             assert r[1].email_verified is True
             assert r[1].is_active is True

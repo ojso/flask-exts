@@ -1,11 +1,5 @@
-"""
-基础 ModelView 类
-
-将所有核心功能混入和操作混入组合成单个基础类。
-这个类仍然是抽象的，特定的后端实现（SQLAlchemy, Peewee 等）
-应该继承这个类并实现抽象方法。
-"""
-
+from typing import Optional
+from .types import T_COLUMN_LIST, T_FORMATTERS
 from ..view import View
 from .core import (
     ColumnsMixin,
@@ -102,4 +96,419 @@ class BaseModelView(
         - 过滤和搜索
     """
 
-    pass
+    # Permissions
+    can_create = True
+    """Is model creation allowed"""
+
+    can_edit = True
+    """Is model editing allowed"""
+
+    can_delete = True
+    """Is model deletion allowed"""
+
+    # Templates
+    list_template = "admin/model/list.html"
+    """Default list view template"""
+
+    edit_template = "admin/model/edit.html"
+    """Default edit template"""
+
+    create_template = "admin/model/create.html"
+    """Default create template"""
+
+    details_template = "admin/model/details.html"
+    """Default details view template"""
+
+    # Modal Templates
+    edit_modal_template = "admin/model/modals/edit.html"
+    """Default edit modal template"""
+
+    create_modal_template = "admin/model/modals/create.html"
+    """Default create modal template"""
+
+    details_modal_template = "admin/model/modals/details.html"
+    """Default details modal view template"""
+
+    # Modals
+    edit_modal = False
+    """Setting this to true will display the edit_view as a modal dialog."""
+
+    create_modal = False
+    """Setting this to true will display the create_view as a modal dialog."""
+
+    details_modal = False
+    """Setting this to true will display the details_view as a modal dialog."""
+
+    
+
+    column_formatters = dict()
+    """
+        Dictionary of list view column formatters.
+
+        For example, if you want to show price multiplied by
+        two, you can do something like this::
+
+            class MyModelView(BaseModelView):
+                column_formatters = dict(price=lambda v, m, p: m.price*2)
+
+        The Callback function has the prototype::
+
+            def formatter(view, model, name):
+                # `view` is current administrative view
+                # `model` is model instance
+                # `name` is property name
+                pass
+    """
+
+    column_formatters_export = None
+    """
+        Dictionary of list view column formatters to be used for export.
+        Defaults to column_formatters when set to None.
+    """
+
+    column_formatters_detail = None
+    """
+        Dictionary of list view column formatters to be used for the detail view.
+        Defaults to column_formatters when set to None.
+    """
+
+    column_type_formatters: Optional[T_FORMATTERS] = None
+    """
+        Dictionary of value type formatters to be used in the list view.
+
+        By default, three types are formatted:
+
+        1. ``None`` will be displayed as an empty string
+        2. ``bool`` will be displayed as a checkmark if it is ``True``
+        3. ``list`` will be joined using ', '
+
+        If you don't like the default behavior and don't want any type formatters
+        applied, just override this property with an empty dictionary::
+
+            class MyModelView(BaseModelView):
+                column_type_formatters = dict()
+
+        If you want to display `NULL` instead of an empty string, you can do
+        something like this. Also comes with bonus `date` formatter::
+
+            from datetime import date
+            from .model import typefmt
+
+            def date_format(view, value):
+                return value.strftime('%d.%m.%Y')
+
+            MY_DEFAULT_FORMATTERS = dict(typefmt.BASE_FORMATTERS)
+            MY_DEFAULT_FORMATTERS.update({
+                    type(None): typefmt.null_formatter,
+                    date: date_format
+                })
+
+            class MyModelView(BaseModelView):
+                column_type_formatters = MY_DEFAULT_FORMATTERS
+
+        Type formatters have lower priority than list column formatters.
+
+        The callback function has following prototype::
+
+            def type_formatter(view, value):
+                # `view` is current administrative view
+                # `value` value to format
+                pass
+    """
+
+    column_type_formatters_export = None
+    """
+        Dictionary of value type formatters to be used in the export.
+
+        By default, two types are formatted:
+
+        1. ``None`` will be displayed as an empty string
+        2. ``list`` will be joined using ', '
+
+        Functions the same way as column_type_formatters.
+    """
+
+    column_type_formatters_detail = None
+    """
+        Dictionary of value type formatters to be used in the detail view.
+
+        By default, two types are formatted:
+
+        1. ``None`` will be displayed as an empty string
+        2. ``list`` will be joined using ', '
+
+        Functions the same way as column_type_formatters.
+    """
+
+    column_labels = {}
+    """
+        Dictionary where key is column name and value is string to display.
+
+        For example::
+
+            class MyModelView(BaseModelView):
+                column_labels = dict(name='Name', last_name='Last Name')
+    """
+
+    column_descriptions = None
+    """
+        Dictionary where key is column name and
+        value is description for `list view` column or add/edit form field.
+
+        For example::
+
+            class MyModelView(BaseModelView):
+                column_descriptions = dict(
+                    full_name='First and Last name'
+                )
+    """
+
+    column_sortable_list: Optional[T_COLUMN_LIST] = None
+    """
+        Collection of the sortable columns for the list view.
+        If set to `None`, will get them from the model.
+
+        For example::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = ('name', 'last_name')
+
+        If you want to explicitly specify field/column to be used while
+        sorting, you can use a tuple::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = ('name', ('user', 'user.username'))
+
+        You can also specify multiple fields to be used while sorting::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = (
+                    'name', ('user', ('user.first_name', 'user.last_name')))
+        When using SQLAlchemy models, model attributes can be used instead
+        of strings::
+
+            class MyModelView(BaseModelView):
+                column_sortable_list = ('name', ('user', 'user.username'))
+    """
+
+    column_default_sort = None
+    """
+        Default sort column if no sorting is applied.
+
+        Example::
+
+            class MyModelView(BaseModelView):
+                column_default_sort = 'user'
+
+        You can use tuple to control ascending descending order. In following example, items
+        will be sorted in descending order::
+
+            class MyModelView(BaseModelView):
+                column_default_sort = ('user', True)
+
+        If you want to sort by more than one column,
+        you can pass a list of tuples::
+
+            class MyModelView(BaseModelView):
+                column_default_sort = [('name', True), ('last_name', True)]
+    """
+
+    column_searchable_list: Optional[T_COLUMN_LIST] = None
+    """
+        A collection of the searchable columns. It is assumed that only
+        text-only fields are searchable, but it is up to the model
+        implementation to decide.
+
+        Example::
+
+            class MyModelView(ModelView):
+                column_searchable_list = ('name', 'email')
+
+        You can also pass relation.column::
+
+            class MyModelView(ModelView):
+                column_searchable_list = (user.name, user.email)
+
+    """
+
+    column_editable_list = None
+    """
+        Collection of the columns which can be edited from the list view.
+
+        For example::
+
+            class MyModelView(BaseModelView):
+                column_editable_list = ('name', 'last_name')
+    """
+
+    column_choices = {}
+    """
+        Map choices to columns in list view
+
+        Example::
+
+            class MyModelView(BaseModelView):
+                column_choices = {
+                    'my_column': {
+                        'db_value': 'display_value',
+                        'db_value2': 'display_value2',
+                    }
+                }
+    """
+
+    form_args = {}
+    """
+        Dictionary of form field arguments. Refer to WTForms documentation for
+        list of possible options.
+
+        Example::
+
+            from wtforms.validators import DataRequired
+            class MyModelView(BaseModelView):
+                form_args = dict(
+                    name=dict(label='First Name', validators=[DataRequired()])
+                )
+    """
+
+    form_columns = None
+    """
+        Collection of the model field names for the form. If set to `None` will
+        get them from the model.
+
+        Example::
+
+            class MyModelView(BaseModelView):
+                form_columns = ('name', 'email')
+
+        SQLAlchemy model attributes can be used instead of strings::
+
+            class MyModelView(BaseModelView):
+                form_columns = ('name', 'user.last_name')
+    """
+
+    form_excluded_columns = None
+    """
+        Collection of excluded form field names.
+
+        For example::
+
+            class MyModelView(BaseModelView):
+                form_excluded_columns = ('last_name', 'email')
+    """
+
+    form_widget_args = None
+    """
+        Dictionary of form widget rendering arguments.
+        Use this to customize how widget is rendered without using custom template.
+
+        Example::
+
+            class MyModelView(BaseModelView):
+                form_widget_args = {
+                    'description': {
+                        'rows': 10,
+                        'style': 'color: black'
+                    },
+                    'other_field': {
+                        'disabled': True
+                    }
+                }
+
+        Changing the format of a DateTimeField will require changes to both form_widget_args and form_args.
+
+        Example::
+
+            form_args = dict(
+                start=dict(format='%Y-%m-%d %I:%M %p') # changes how the input is parsed by strptime (12 hour time)
+            )
+            form_widget_args = dict(
+                start={
+                    'data-date-format': u'yyyy-mm-dd HH:ii P',
+                    'data-show-meridian': 'True'
+                } # changes how the DateTimeField displays the time
+            )
+    """
+
+    form_extra_fields = None
+    """
+        Dictionary of additional fields.
+
+        Example::
+
+            class MyModelView(BaseModelView):
+                form_extra_fields = {
+                    'password': PasswordField('Password')
+                }
+
+        You can control order of form fields using ``form_columns`` property. For example::
+
+            class MyModelView(BaseModelView):
+                form_columns = ('name', 'email', 'password', 'secret')
+
+                form_extra_fields = {
+                    'password': PasswordField('Password')
+                }
+
+        In this case, password field will be put between email and secret fields that are autogenerated.
+    """
+
+    form_ajax_refs = None
+    """
+        Use AJAX for foreign key model loading.
+
+        Should contain dictionary, where key is field name and value is either a dictionary which
+        configures AJAX lookups or backend-specific `AjaxModelLoader` class instance.
+
+        For example, it can look like::
+
+            class MyModelView(BaseModelView):
+                form_ajax_refs = {
+                    'user': {
+                        'fields': ('first_name', 'last_name', 'email'),
+                        'placeholder': 'Please select',
+                        'page_size': 10,
+                        'minimum_input_length': 0,
+                    }
+                }
+
+        Or with SQLAlchemy backend like this::
+
+            class MyModelView(BaseModelView):
+                form_ajax_refs = {
+                    'user': QueryAjaxModelLoader('user', User, self.session, fields=['email'], page_size=10)
+                }
+    """
+
+    # Export settings
+    export_max_rows = 0
+    """
+        Maximum number of rows allowed for export.
+
+        Unlimited by default. Uses `page_size` if set to `None`.
+    """
+
+    export_types = ["csv"]
+    """
+        A list of available export filetypes. `csv` only is default, but any
+        filetypes supported by tablib can be used.
+
+        Check tablib for https://tablib.readthedocs.io/en/stable/formats.html
+        for supported types.
+    """
+
+    # Pagination settings
+    page_size = 20
+    """
+        Default page size for pagination.
+    """
+
+    can_set_page_size = True
+    """
+        Allows to select page size via dropdown list
+    """
+
+    page_size_options: tuple = (5, 10, 20, 50, 100)
+    """
+        Sets the page size options available, if `can_set_page_size` is True
+    """
+

@@ -114,13 +114,13 @@ Step 2: Create Admin Views
 
    # views.py
    from flask_exts.admin.sqla.view import SqlaModelView
-   from flask_exts.admin.model.form import InlineFormAdmin
+   from flask_exts.admin.model.form import InlineForm
    from models import Post, Category
 
    class CategoryView(SqlaModelView):
        # Inline editing: edit Posts directly inside Category form
        inline_models = (
-           InlineFormAdmin(Post, form_columns=("title", "content")),
+           InlineForm(Post, form_columns=("title", "content")),
        )
 
    class PostView(SqlaModelView):

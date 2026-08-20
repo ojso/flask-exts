@@ -1,55 +1,29 @@
-from enum import Enum
 from wtforms import validators
-from sqlalchemy import inspect
 from sqlalchemy import select
 from sqlalchemy import Boolean, Column
 from wtforms.fields import HiddenField
-from wtforms.fields import DateTimeLocalField as DateTimeField
 from ...forms.fields import Select2Field
 from ...forms.fields.ajax_select import AjaxSelectField
 from ...forms.fields.ajax_select import AjaxSelectMultipleField
 from ...forms.fields.sqla import QuerySelectField
 from ...forms.fields.sqla import QuerySelectMultipleField
-from ...forms.fields.sqla import InlineModelFormListField
-from ...forms.fields.sqla import InlineModelOneToOneField
-from ...forms.fields.inline import InlineFormField
-from ...forms.form.base_form import BaseForm
 from ...forms.validators.sqla import Unique
-from ..model.form import BaseFormFieldConverter
-from ..model.form import InlineModelConverterBase
-from .query import Query
-from .ajax import create_ajax_loader
-from .form_converters import BasicFieldConverter, TemporalFieldConverter, SpecialFieldConverter
-# 导入内联模型转换器
-from .form_inline import InlineModelConverter, InlineOneToOneModelConverter
+from ...datastore.sqla.utils import is_model_multiple_pks
+from .field_converters import BaseFormFieldConverter
+from .field_converters import BasicFieldConverter
+from .field_converters import TemporalFieldConverter
+from .field_converters import SpecialFieldConverter
+from .utils import FieldPlaceholder
 
 
-class FieldPlaceholder:
+class ModelFieldConverter(
+    BasicFieldConverter,
+    TemporalFieldConverter,
+    SpecialFieldConverter,
+    BaseFormFieldConverter,
+):
     """
-    Field placeholder for model convertors.
-    """
-
-    def __init__(self, field):
-        self.field = field
-
-
-def convert_form_field(*args):
-    def decorator(func):
-        func._converter_for_form_field = args
-        return func
-
-    return decorator
-
-
-# 使用 Mixin 组合优化 FormConverter
-class FormConverter(BasicFieldConverter, TemporalFieldConverter, SpecialFieldConverter, BaseFormFieldConverter):
-    """
-    SQLAlchemy model to form converter
-
-    使用 Mixin 组合优化代码结构，将字段转换方法分离为不同的关注点。
-    - BasicFieldConverter: 基础字段类型（字符串、整数、小数等）
-    - TemporalFieldConverter: 时间相关字段（日期、时间、日期时间）
-    - SpecialFieldConverter: 特殊字段（枚举、JSON）
+    SQLAlchemy model to form converter.
     """
 
     def __init__(self, session, view):
@@ -181,7 +155,7 @@ class FormConverter(BasicFieldConverter, TemporalFieldConverter, SpecialFieldCon
                         return None
 
                     # Current Unique Validator does not work with multicolumns-pks
-                    if not Query.has_multiple_pks(model):
+                    if not is_model_multiple_pks(model):
                         kwargs["validators"].append(Unique(self.session, model, column))
                         unique = True
 
@@ -234,7 +208,6 @@ class FormConverter(BasicFieldConverter, TemporalFieldConverter, SpecialFieldCon
 
             # Run converter
             converter = self.get_converter(column)
-
             if converter is None:
                 return None
 
@@ -242,71 +215,3 @@ class FormConverter(BasicFieldConverter, TemporalFieldConverter, SpecialFieldCon
                 model=model, mapper=mapper, prop=prop, column=column, field_args=kwargs
             )
         return None
-
-
-# Get list of fields and generate form
-def get_form(
-    model,
-    converter,
-    base_class,
-    only=None,
-    exclude=None,
-    field_args=None,
-    hidden_pk=False,
-    extra_fields=None,
-):
-    """
-    Generate form from the model.
-
-    :param model:
-        Model to generate form from
-    :param converter:
-        Converter class to use
-    :param base_class:
-        Base form class
-    :param only:
-        Include fields
-    :param exclude:
-        Exclude fields
-    :param field_args:
-        Dictionary with additional field arguments
-    :param hidden_pk:
-        Generate hidden field with model primary key or not
-    """
-
-    field_args = field_args or {}
-    
-    mapper = inspect(model)
-
-    if only:
-        properties = []
-        for name in only:
-            if extra_fields and name in extra_fields:
-                properties.append((name, FieldPlaceholder(extra_fields[name])))
-            else:
-                column, _path = Query.get_field_with_path(model, name)
-                properties.append((column.key, column.property))
-    else:
-        properties = [(p.key, p) for p in mapper.attrs]
-        if exclude:
-            properties = [x for x in properties if x[0] not in exclude]
-
-    field_dict = {}
-    for name, p in properties:
-        # Ignore protected properties
-        if name.startswith("_"):
-            continue
-
-        field = converter.convert(
-            model, mapper, name, p, field_args.get(name), hidden_pk
-        )
-        if field is not None:
-            field_dict[name] = field
-
-    # Contribute extra fields
-    if not only and extra_fields:
-        for name, field in extra_fields.items():
-            unbound = field
-            field_dict[name] = unbound.field_class(*unbound.args, **unbound.kwargs)
-
-    return type(model.__name__ + "Form", (base_class,), field_dict)

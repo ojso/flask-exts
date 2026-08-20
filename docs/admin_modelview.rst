@@ -73,12 +73,12 @@ You can also create custom filter classes for advanced filtering logic:
 .. code-block:: python
 
    from flask_exts.admin.sqla.filter import BaseSQLAFilter
-   from flask_exts.admin.sqla.query import Query
+   from flask_exts.admin.sqla.utils import get_model_column_type
 
    class CustomStatusFilter(BaseSQLAFilter):
        def __init__(self):
            super().__init__(
-               column_type=Query.get_model_column_type(Post, "status"),
+               column_type=get_model_column_type(Post, "status"),
                column="status",
                name="Status",
                options=[('draft', 'Draft'), ('published', 'Published')]
@@ -155,11 +155,11 @@ Edit related models within the parent form (like Django's inline forms):
 
 .. code-block:: python
 
-   from flask_exts.admin.model.form import InlineFormAdmin
+   from flask_exts.admin.model.form import InlineForm
 
    class AuthorView(SqlaModelView):
        inline_models = (
-           InlineFormAdmin(
+           InlineForm(
                Post,
                form_columns=['title', 'content', 'published'],
            ),
@@ -283,7 +283,7 @@ A fully-featured ModelView combining most features:
 .. code-block:: python
 
    from flask_exts.admin.sqla.view import SqlaModelView
-   from flask_exts.admin.model.form import InlineFormAdmin
+   from flask_exts.admin.model.form import InlineForm
    from wtforms import validators
    from your_app.models import Author, Post
 
@@ -296,7 +296,7 @@ A fully-featured ModelView combining most features:
        column_default_sort = ('created_at', True)
 
        # Inline editing
-       inline_models = (InlineFormAdmin(Post, form_columns=['title', 'status']),)
+       inline_models = (InlineForm(Post, form_columns=['title', 'status']),)
 
        # Form customization
        form_columns = ['name', 'email', 'is_active']

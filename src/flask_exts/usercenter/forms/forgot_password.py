@@ -2,7 +2,7 @@ from wtforms import StringField
 from wtforms import SubmitField
 from wtforms.validators import DataRequired
 from . import Form
-from ...proxies import _userstore
+from ...proxies import current_userstore
 
 
 class ForgotPasswordForm(Form):
@@ -12,7 +12,7 @@ class ForgotPasswordForm(Form):
     def validate(self, **kwargs):
         if not super().validate(**kwargs):
             return False
-        user = _userstore.get_user_by_identity(self.email.data, "email")
+        user = current_userstore.get_user_by_identity(self.email.data, "email")
         if user is None or not user.email_verified:
             self.email.errors.append("Found no user with this email")
             return False

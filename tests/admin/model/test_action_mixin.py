@@ -6,7 +6,7 @@ from flask_exts.admin.model.actions_mixin import ActionsMixin
 
 
 class MockView(View, ActionsMixin):
-    form_base_class = FlaskForm
+    base_form_class = FlaskForm
 
     @expose_url("/")
     def index(self):

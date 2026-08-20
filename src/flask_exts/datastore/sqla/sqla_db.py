@@ -7,11 +7,11 @@ from flask import Flask
 from flask import g
 
 
-class Db:
+class SqlaDb:
     """sqlalchemy database
 
     Examples:
-        db = Db(app)
+        db = SqlaDb(app)
         db.init_app(app)
     """
 

@@ -4,32 +4,36 @@ from flask_babel import gettext
 from sqlalchemy import inspect
 from ...datastore.sqla import db
 from ..model.view import ModelView
-from . import form
 from .filter import FilterConverter
 from .ajax import create_ajax_loader
 from .typefmt import DEFAULT_FORMATTERS
-from .query import Query
-
+from ...datastore.sqla.query import Query
+from ...datastore.sqla.utils import get_model_primary_key
+from ...datastore.sqla.utils import get_model_column_type
+from ...datastore.sqla.utils import get_instance_identity
+from .utils import get_model_form
+from .model_field_convert import ModelFieldConverter
+from .inline_model_convert import InlineModelConverter
 
 class SqlaModelView(ModelView):
     """
     SQLAlchemy model view
     """
 
-    model_form_converter = form.FormConverter
+    model_field_converter = ModelFieldConverter
     """
-        Model form conversion class. Use this to implement custom field conversion logic.
+        Model field conversion class. Use this to implement custom field conversion logic.
 
         For example::
 
-            class MyModelConverter(AdminModelConverter):
+            class MyModelFieldConverter(ModelFieldConverter):
                 pass
                 
             class MyAdminView(ModelView):
-                model_form_converter = MyModelConverter
+                model_field_converter = MyModelFieldConverter
     """
 
-    inline_model_form_converter = form.InlineModelConverter
+    inline_model_converter = InlineModelConverter
     """
         Inline model conversion class. If you need some kind of post-processing for inline
         forms, you can customize behavior by doing something like this::
@@ -40,7 +44,7 @@ class SqlaModelView(ModelView):
                     return form_class
 
             class MyAdminView(ModelView):
-                inline_model_form_converter = MyInlineModelConverter
+                inline_model_converter = MyInlineModelConverter
     """
 
     inline_models = None
@@ -59,11 +63,11 @@ class SqlaModelView(ModelView):
             class MyModelView(ModelView):
                 inline_models = [(Post, dict(form_columns=['title']))]
 
-        3. Django-like ``InlineFormAdmin`` class instance::
+        3. Django-like ``InlineForm`` class instance::
 
-            from .model.form import InlineFormAdmin
+            from .model.form import InlineForm
 
-            class MyInlineModelForm(InlineFormAdmin):
+            class MyInlineModelForm(InlineModelForm):
                 form_columns = ('title', 'date')
 
             class MyModelView(ModelView):
@@ -91,14 +95,14 @@ class SqlaModelView(ModelView):
 
         By default used ManyToMany relationship for inline models.
         You may configure inline model for OneToOne relationship.
-        To achieve this, you need to install special ``inline_converter``
+        To achieve this, you need to install special ``inline_model_converter``
         for your model::
 
             from .sqla.form import InlineOneToOneModelConverter
 
-            class MyInlineModelForm(InlineFormAdmin):
+            class MyInlineModelForm(InlineModelForm):
                 form_columns = ('title', 'date')
-                inline_converter = InlineOneToOneModelConverter
+                inline_model_converter = InlineOneToOneModelConverter
 
             class MyModelView(ModelView):
                 inline_models = (MyInlineModelForm(MyInlineModel),)
@@ -156,7 +160,7 @@ class SqlaModelView(ModelView):
         if self.form_choices is None:
             self.form_choices = {}
 
-        self._primary_key = Query.get_model_primary_key(self.model)
+        self._primary_key = get_model_primary_key(self.model)
         self._is_multiple_pk = isinstance(self._primary_key, tuple)
 
         if self._primary_key is None:
@@ -199,7 +203,7 @@ class SqlaModelView(ModelView):
         Return the primary key value from a model object.
         If there are multiple primary keys, they're encoded into string representation.
         """
-        value = Query.get_instance_identity(instance)
+        value = get_instance_identity(instance)
         if isinstance(value, tuple):
             return ",".join([str(v) for v in value])
         else:
@@ -249,7 +253,7 @@ class SqlaModelView(ModelView):
         Return list of enabled filters
         """
 
-        column_type = Query.get_model_column_type(self.model, column_path)
+        column_type = get_model_column_type(self.model, column_path)
 
         if self.column_labels and column_path in self.column_labels:
             visible_name = self.column_labels[column_path]
@@ -268,11 +272,12 @@ class SqlaModelView(ModelView):
         """
         Create form from the model.
         """
-        converter = self.model_form_converter(self.session, self)
-        form_class = form.get_form(
+        converter = self.model_field_converter(self.session, self)
+
+        form_class = get_model_form(
             self.model,
             converter,
-            base_class=self.form_base_class,
+            base_class=self.base_form_class,
             only=self.form_columns,
             exclude=self.form_excluded_columns,
             field_args=self.form_args,
@@ -280,7 +285,7 @@ class SqlaModelView(ModelView):
         )
 
         if self.inline_models:
-            form_class = self.scaffold_inline_form_models(form_class)
+            form_class = self.scaffold_inline_models_form(form_class)
 
         return form_class
 
@@ -295,37 +300,36 @@ class SqlaModelView(ModelView):
             `form_args` dict with only validators
             {'name': {'validators': [required()]}}
         """
-        converter = self.model_form_converter(self.session, self)
-        form_class = form.get_form(
+        converter = self.model_field_converter(self.session, self)
+        form_class = get_model_form(
             self.model,
             converter,
-            base_class=self.form_base_class,
+            base_class=self.base_form_class,
             only=self.column_editable_list,
             field_args=validators,
         )
 
         return self.create_editable_list_form(form_class, widget)
 
-    def scaffold_inline_form_models(self, form_class):
+    def scaffold_inline_models_form(self, form_class):
         """
         Contribute inline models to the form
 
         :param form_class:
             Form class
         """
-        default_converter = self.inline_model_form_converter(
-            self.session, self, self.model_form_converter
+        default_converter = self.inline_model_converter(
+            self.session, self, self.model_field_converter
         )
 
         for m in self.inline_models:
-            if not hasattr(m, "inline_converter"):
+            if hasattr(m, "inline_model_converter"):
+                custom_converter = m.inline_model_converter(
+                    self.session, self, self.model_field_converter
+                )
+                form_class = custom_converter.contribute(self.model, form_class, m)
+            else:
                 form_class = default_converter.contribute(self.model, form_class, m)
-                continue
-
-            custom_converter = m.inline_converter(
-                self.session, self, self.model_form_converter
-            )
-            form_class = custom_converter.contribute(self.model, form_class, m)
         return form_class
 
     def _create_ajax_loader(self, name, options):

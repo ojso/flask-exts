@@ -1,8 +1,8 @@
 from datetime import datetime
 from flask import url_for
 from flask import current_app
-from ..proxies import _security
-from ..proxies import _userstore
+from ..proxies import current_security
+from ..proxies import current_userstore
 from ..signals import to_send_email
 
 
@@ -21,8 +21,8 @@ class EmailVerification:
         """Generates a verification token for the specified user.
         :param user: The user to work with
         """
-        data = (str(user.id), _security.hasher.hash(user.email))
-        token = _security.serializer.dumps(self.serializer_name, data)
+        data = (str(user.id), current_security.hasher.hash(user.email))
+        token = current_security.serializer.dumps(self.serializer_name, data)
         return token
 
     def send_verify_email_token(self, user):
@@ -51,9 +51,9 @@ class EmailVerification:
         This is always a GET from an email - so for 'spa' must always redirect.
         """
         if within is None:
-            within = _security.get_within(self.serializer_name)
+            within = current_security.get_within(self.serializer_name)
 
-        expired, invalid, token_data = _security.serializer.loads(
+        expired, invalid, token_data = current_security.serializer.loads(
             self.serializer_name, token, within
         )
 
@@ -64,12 +64,12 @@ class EmailVerification:
             return ("invalid_token", None)
 
         token_user_identity, token_email_hash = token_data
-        user = _userstore.get_user_by_identity(token_user_identity)
+        user = current_userstore.get_user_by_identity(token_user_identity)
 
         if not user:
             return ("no_user", None)
 
-        if not _security.hasher.verify(user.email, token_email_hash):
+        if not current_security.hasher.verify(user.email, token_email_hash):
             return ("invalid_email", None)
 
         if user.email_verified:
@@ -79,6 +79,6 @@ class EmailVerification:
         user.email_verified_at = datetime.now()
         user.is_active = True
 
-        _userstore.save_user(user)
+        current_userstore.save_user(user)
 
         return ("verified", user)
