@@ -71,7 +71,7 @@ class Admin:
         static_folder = "../static"
         return static_folder
 
-    def add_view(self, view, is_menu=True, category=None):
+    def register_view(self, view, is_menu=True, category=None):
         """
         Add a view to the collection.
 

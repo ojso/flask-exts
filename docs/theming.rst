@@ -23,9 +23,9 @@ Accessing the Theme
 
 Access theme configuration in your application::
 
-    from flask_exts import Exts
+    from flask_exts import ExtensionManager
 
-    exts = Exts(app)
+    exts = ExtensionManager(app)
     theme = exts.theme
 
     # Get theme properties
@@ -46,7 +46,7 @@ Set theme in application config::
     app.config['THEME_PRIMARY_COLOR'] = '#007bff'
     app.config['THEME_SECONDARY_COLOR'] = '#6c757d'
 
-    exts = Exts(app)
+    exts = ExtensionManager(app)
     # Theme configuration is applied
 
 CSS Variables
@@ -186,11 +186,11 @@ Using Custom Theme
     from myapp.themes import MyCustomTheme
 
     app = Flask(__name__)
-    ext = Exts(app)
+    exts = ExtensionManager(app)
 
     # Replace default theme
-    ext.theme = MyCustomTheme()
-    ext.theme.set_color_palette({
+    exts.theme = MyCustomTheme()
+    exts.theme.set_color_palette({
         'primary': '#ff6b6b',
         'secondary': '#4ecdc4',
         'accent': '#f7dc6f',

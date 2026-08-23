@@ -13,7 +13,7 @@ class Model2View(SqlaModelView):
 def test_column_filters(app, client, admin):
     with app.app_context():
         view = CustomSqlaModelView(Model1, name="view1", column_filters=["test1"])
-        admin.add_view(view)
+        admin.register_view(view)
         assert len(view._filters) == 7
         assert len(view._filter_groups) == 1
         # print(view._filters)

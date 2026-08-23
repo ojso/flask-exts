@@ -16,7 +16,7 @@ from .operations import (
     ExportOperationsMixin,
 )
 from .actions_mixin import ActionsMixin
-from .rowaction_mixin import RowActionMixin
+from .row_actions import RowActionMixin
 from .filter_mixin import FilterMixin
 from .form_mixin import FormMixin
 
@@ -39,9 +39,6 @@ class BaseModelView(
     FormMixin,
 ):
     """
-    Admin ModelView 基础类。
-
-    组合所有核心功能模块和操作模块，提供完整的 Admin 界面。
 
     这个类是抽象的。特定的后端实现应该继承这个类并实现以下抽象方法：
 
@@ -477,23 +474,6 @@ class BaseModelView(
                 form_ajax_refs = {
                     'user': QueryAjaxModelLoader('user', User, self.session, fields=['email'], page_size=10)
                 }
-    """
-
-    # Export settings
-    export_max_rows = 0
-    """
-        Maximum number of rows allowed for export.
-
-        Unlimited by default. Uses `page_size` if set to `None`.
-    """
-
-    export_types = ["csv"]
-    """
-        A list of available export filetypes. `csv` only is default, but any
-        filetypes supported by tablib can be used.
-
-        Check tablib for https://tablib.readthedocs.io/en/stable/formats.html
-        for supported types.
     """
 
     # Pagination settings

@@ -4,9 +4,11 @@ import wtforms.fields
 from ..widgets.datetime import DateTimePickerWidget
 from ..widgets.datetime import TimePickerWidget
 
+
 class TimeField(wtforms.fields.TimeField):
     def __init__(self, label=None, validators=None, format="%H:%M:%S", **kwargs):
         super().__init__(label, validators, format, **kwargs)
+
 
 class DateTimePickerField(wtforms.fields.DateTimeField):
     """
@@ -27,9 +29,7 @@ class DateTimePickerField(wtforms.fields.DateTimeField):
         :param kwargs:
             Any additional parameters
         """
-        super().__init__(
-            label, validators, format or "%Y-%m-%d %H:%M:%S", **kwargs
-        )
+        super().__init__(label, validators, format or "%Y-%m-%d %H:%M:%S", **kwargs)
 
 
 class TimePickerField(wtforms.fields.Field):
@@ -47,7 +47,7 @@ class TimePickerField(wtforms.fields.Field):
         formats=None,
         default_format=None,
         widget_format=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Constructor

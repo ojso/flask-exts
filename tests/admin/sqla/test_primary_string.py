@@ -6,7 +6,7 @@ def test_non_int_pk(app, client, admin):
     with app.app_context():
         db.reset_all()
         view = CustomSqlaModelView(PrimaryStringModel, endpoint="model",form_columns=["id", "test"])
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.get("/admin/model/")
         assert rv.status_code == 200

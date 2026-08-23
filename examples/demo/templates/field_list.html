@@ -1,5 +1,3 @@
-{% from "macro/inline.html" import render_inline_fields %}
-
 {% macro render_field(field) %}
   {% set model = field.object_data %}
   {% if model and model.path %}
@@ -10,4 +8,5 @@
   {{ field }}
 {% endif %}
 {% endmacro %}
-{{ render_inline_fields(field, template, render_field) }}
+
+{{ (field, template, render_field) }}

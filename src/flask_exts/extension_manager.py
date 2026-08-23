@@ -3,7 +3,7 @@ from .extension_registry import ExtensionRegistry
 from .extension import Extension
 
 
-class Exts:
+class ExtensionManager:
     """
     Composable Flask-Exts extension manager.
 
@@ -13,10 +13,10 @@ class Exts:
 
     Usage:
         # Basic usage (backward compatible)
-        exts = Exts(app)
+        exts = ExtensionManager(app)
 
         # With selective extension loading
-        exts = Exts(app, extensions=['database', 'template', 'admin'])
+        exts = ExtensionManager(app, extensions=['database', 'template', 'admin'])
 
         # Add custom extensions
         exts.register_extension(MyCustomExtension)
@@ -38,13 +38,13 @@ class Exts:
 
         Example:
             # Load all extensions
-            exts = Exts(app)
+            exts = ExtensionManager(app)
 
             # Load specific extensions only
-            exts = Exts(app, extensions=['database', 'template'])
+            exts = ExtensionManager(app, extensions=['database', 'template'])
 
             # Defer initialization
-            exts = Exts()
+            exts = ExtensionManager()
             exts.init_app(app)
         """
         self.app = app
@@ -53,13 +53,13 @@ class Exts:
         self._skip_missing = skip_missing
 
         # Register default extensions
-        self._register_default_extensions()
+        self.register_default_extensions()
 
         # Initialize if app provided
         if app is not None:
             self.init_app(app, extensions, skip_missing)
 
-    def _register_default_extensions(self) -> None:
+    def register_default_extensions(self) -> None:
         """Register all built-in extensions"""
         # Import here to avoid circular imports
         from .extensions.database_ext import DatabaseExtension
@@ -67,6 +67,7 @@ class Exts:
         from .extensions.template_ext import TemplateExtension
         from .extensions.email_ext import EmailExtension
         from .extensions.usercenter_ext import UserCenterExtension
+        from .extensions.login_ext import LoginExtension
         from .extensions.security_ext import SecurityExtension
         from .extensions.admin_ext import AdminExtension
         from .extensions.startup_ext import StartupExtension
@@ -77,6 +78,7 @@ class Exts:
             TemplateExtension,
             EmailExtension,
             UserCenterExtension,
+            LoginExtension,
             SecurityExtension,
             AdminExtension,
             StartupExtension,

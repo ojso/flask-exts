@@ -63,7 +63,7 @@ def test_form_args(app, admin):
         shared_form_args = {"test1": {"validators": [validators.Regexp("test")]}}
 
         view = CustomSqlaModelView(Model1, form_args=shared_form_args)
-        admin.add_view(view)
+        admin.register_view(view)
 
         create_form = view.create_form()
         # print(create_form.test1.validators)
@@ -79,8 +79,8 @@ def test_form_onetoone(app, admin):
         db.reset_all()
         view1 = CustomSqlaModelView(OneToOneChild, endpoint="view1")
         view2 = CustomSqlaModelView(OneToOneParent, endpoint="view2")
-        admin.add_view(view1)
-        admin.add_view(view2)
+        admin.register_view(view1)
+        admin.register_view(view2)
 
         model1 = OneToOneChild(test="test")
         model2 = OneToOneParent(child=model1)

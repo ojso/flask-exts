@@ -51,7 +51,6 @@ from ..model.form import InlineModelConverterBase
 from ...forms.fields.sqla import (
     InlineModelFormListField,
     InlineModelOneToOneField,
-    InlineFormField,
 )
 from .ajax import create_ajax_loader
 
@@ -320,32 +319,8 @@ class Query:
     # 改为使用构建器
 ```
 
-**结果**：query.py 从 473 行 → 150 行 ✅
 
----
 
-## 🎯 Task #26: sqla.py 优化完整指南
-
-### 目标
-- 当前：350 行
-- 目标：120 行
-- 减少：230 行（-66%）
-
-### 步骤 1：创建 sqla_fields 子模块
-
-#### 文件 1：`query_fields.py`（60 行）
-
-```python
-"""查询字段"""
-
-class QuerySelectField:
-    """查询选择字段"""
-    pass
-
-class QuerySelectMultipleField:
-    """查询多选字段"""
-    pass
-```
 
 #### 文件 2：`inline_fields.py`（80 行）
 
@@ -375,22 +350,6 @@ __all__ = [
 ]
 ```
 
-### 步骤 2：更新 sqla.py
-
-```python
-# 导入所有字段
-from .sqla_fields import (
-    QuerySelectField,
-    QuerySelectMultipleField,
-    InlineModelFormListField,
-    InlineModelOneToOneField,
-)
-
-# 删除所有字段类定义（230 行）
-# 保留导出和兼容性代理
-```
-
-**结果**：sqla.py 从 350 行 → 120 行 ✅
 
 ---
 

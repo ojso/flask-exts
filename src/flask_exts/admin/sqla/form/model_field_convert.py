@@ -2,17 +2,17 @@ from wtforms import validators
 from sqlalchemy import select
 from sqlalchemy import Boolean, Column
 from wtforms.fields import HiddenField
-from ...forms.fields import Select2Field
-from ...forms.fields.ajax_select import AjaxSelectField
-from ...forms.fields.ajax_select import AjaxSelectMultipleField
-from ...forms.fields.sqla import QuerySelectField
-from ...forms.fields.sqla import QuerySelectMultipleField
-from ...forms.validators.sqla import Unique
-from ...datastore.sqla.utils import is_model_multiple_pks
-from .field_converters import BaseFormFieldConverter
-from .field_converters import BasicFieldConverter
-from .field_converters import TemporalFieldConverter
-from .field_converters import SpecialFieldConverter
+from ....forms.fields import Select2Field
+from ....forms.fields.ajax_select import AjaxSelectField, AjaxSelectMultipleField
+from ....forms.fields.sqla import QuerySelectField, QuerySelectMultipleField
+from ....forms.validators.sqla import Unique
+from ....datastore.sqla.utils import is_model_multiple_pks
+from .field_converters import (
+    BaseFormFieldConverter,
+    BasicFieldConverter,
+    TemporalFieldConverter,
+    SpecialFieldConverter,
+)
 from .utils import FieldPlaceholder
 
 

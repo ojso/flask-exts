@@ -1,6 +1,6 @@
 import os.path as op
 from flask import Flask
-from flask_exts import Exts
+from flask_exts import ExtensionManager
 
 
 def get_sqlite_path():
@@ -25,16 +25,16 @@ def create_app():
 
 
 def init_app(app: Flask):
-    exts = Exts()
+    exts = ExtensionManager()
     exts.init_app(app)
 
     from .models import init_models
 
     init_models()
 
-    from .admin_views import add_views
+    from .admin_views import register_views
 
-    add_views(app)
+    register_views(app)
 
     @app.route("/locationlist")
     def location_list():

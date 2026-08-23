@@ -11,9 +11,9 @@ from ...datastore.sqla.query import Query
 from ...datastore.sqla.utils import get_model_primary_key
 from ...datastore.sqla.utils import get_model_column_type
 from ...datastore.sqla.utils import get_instance_identity
-from .utils import get_model_form
-from .model_field_convert import ModelFieldConverter
-from .inline_model_convert import InlineModelConverter
+from .form import get_model_form
+from .form.model_field_convert import ModelFieldConverter
+from .form.inline_model_convert import InlineModelConverter
 
 class SqlaModelView(ModelView):
     """

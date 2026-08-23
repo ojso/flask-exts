@@ -34,10 +34,9 @@ class SortingMixin:
         Returns:
             Dict[str, Union[str, List[str]]]: 可排序列的字典
 
-        Raises:
-            NotImplementedError: 必须在子类中实现
+
         """
-        raise NotImplementedError("Please implement scaffold_sortable_columns method")
+        return {}
 
     def get_sortable_columns(self) -> Dict[str, Union[str, List[str]]]:
         """

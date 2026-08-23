@@ -12,7 +12,7 @@ def test_multiple_pk(app, client, admin):
             endpoint="model",
             form_columns=["id", "id2", "data"],
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.get("/admin/model/")
         assert rv.status_code == 200

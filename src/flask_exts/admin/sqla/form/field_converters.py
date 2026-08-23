@@ -6,14 +6,16 @@
 
 import types
 from wtforms import validators
-from wtforms.fields import StringField
-from wtforms.fields import TextAreaField
-from wtforms.fields import IntegerField
-from wtforms.fields import DecimalField
-from wtforms.fields import BooleanField
-from wtforms.fields import DateField
-from ...forms.fields import TimeField
-from ...forms.widgets import DatePickerWidget
+from wtforms.fields import (
+    StringField,
+    TextAreaField,
+    IntegerField,
+    DecimalField,
+    BooleanField,
+    DateField,
+)
+from ....forms.fields import TimeField
+from ....forms.widgets import DatePickerWidget
 
 
 def convert_form_field(*args):
@@ -167,7 +169,7 @@ class SpecialFieldConverter:
     def convert_enum(self, column, field_args, **extra):
         """转换 Enum 字段"""
         from enum import Enum
-        from ...forms.fields import Select2Field
+        from ....forms.fields import Select2Field
 
         available_choices = [(f, f) for f in column.type.enums]
         accepted_values = [choice[0] for choice in available_choices]
@@ -184,6 +186,6 @@ class SpecialFieldConverter:
     @convert_form_field("JSON")
     def convert_json(self, field_args, **extra):
         """转换 JSON 字段"""
-        from ...forms.fields import JSONField
+        from ....forms.fields import JSONField
 
         return JSONField(**field_args)

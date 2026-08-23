@@ -72,7 +72,7 @@ def test_model(app, client, admin):
     with app.app_context():
         db.reset_all()
         view = CustomSqlaModelView(Model1)
-        admin.add_view(view)
+        admin.register_view(view)
 
         assert view.model == Model1
         assert view.name == "Model1"
@@ -180,7 +180,7 @@ def test_list_columns(app, client, admin):
             column_list=["test1", "test3"],
             column_labels=dict(test1="Column1"),
         )
-        admin.add_view(view1)
+        admin.register_view(view1)
 
         # test column_list with a list of SQLAlchemy columns
         view2 = CustomSqlaModelView(
@@ -190,7 +190,7 @@ def test_list_columns(app, client, admin):
             column_list=["test1", "test3"],
             column_labels=dict(test1="Column1"),
         )
-        admin.add_view(view2)
+        admin.register_view(view2)
 
         assert len(view1._list_columns) == 2
         assert view1._list_columns == [("test1", "Column1"), ("test3", "Test3")]
@@ -217,7 +217,7 @@ def test_complex_list_columns(app, client, admin):
 
         # test column_list with a list of strings on a relation
         view = CustomSqlaModelView(Model2, column_list=["model1.test1"])
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.get("/admin/model2/")
         assert rv.status_code == 200
@@ -231,7 +231,7 @@ def test_column_searchable_list(app, client, admin):
         view = CustomSqlaModelView(
             Model1, column_searchable_list=["test1", "int_field"]
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         db.session.add(Model1(test1="model1-test", int_field=5000))
         db.session.add(Model1(test1="model2-test", int_field=9000))
@@ -256,7 +256,7 @@ def test_extra_args_search(app, client, admin):
             ],
         )
 
-        admin.add_view(view1)
+        admin.register_view(view1)
 
         db.session.add(
             Model2(
@@ -280,7 +280,7 @@ def test_extra_args_filter(app, client, admin):
                 "int_field",
             ],
         )
-        admin.add_view(view1)
+        admin.register_view(view1)
 
         db.session.add(Model1(test1="model1-test", int_field=5000))
         db.session.commit()
@@ -295,11 +295,11 @@ def test_complex_searchable_list(app, client, admin):
         db.reset_all()
 
         view1 = CustomSqlaModelView(Model2, column_searchable_list=["model1.test1"])
-        admin.add_view(view1)
+        admin.register_view(view1)
         view2 = CustomSqlaModelView(
             Model1, column_searchable_list=["model2.string_field"]
         )
-        admin.add_view(view2)
+        admin.register_view(view2)
 
         m1 = Model1(test1="model1-test1-val")
         m2 = Model1(test1="model1-test2-val")
@@ -327,7 +327,7 @@ def test_complex_searchable_list_missing_children(app, client, admin):
         view = CustomSqlaModelView(
             Model1, column_searchable_list=["test1", "model2.string_field"]
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         db.session.add(Model1(test1="magic string"))
         db.session.commit()
@@ -343,11 +343,11 @@ def test_column_editable_list(app, client, admin):
         view1 = CustomSqlaModelView(
             Model1, column_editable_list=["test1", "enum_field"]
         )
-        admin.add_view(view1)
+        admin.register_view(view1)
         # return
         # Test in-line editing for relations
         view2 = CustomSqlaModelView(Model2, column_editable_list=["model1"])
-        admin.add_view(view2)
+        admin.register_view(view2)
 
         fill_db()
 
@@ -424,11 +424,11 @@ def test_details_view(app, client, admin):
         db.reset_all()
 
         view_no_details = CustomSqlaModelView(Model1, name="view1")
-        admin.add_view(view_no_details)
+        admin.register_view(view_no_details)
 
         # fields are scaffolded
         view_w_details = CustomSqlaModelView(Model2, name="view2")
-        admin.add_view(view_w_details)
+        admin.register_view(view_w_details)
 
         # show only specific fields in details w/ column_details_list
         string_field_view = CustomSqlaModelView(
@@ -437,7 +437,7 @@ def test_details_view(app, client, admin):
             column_details_list=["string_field"],
             endpoint="sf_view",
         )
-        admin.add_view(string_field_view)
+        admin.register_view(string_field_view)
 
         fill_db()
 
@@ -476,7 +476,7 @@ def test_url_args(app, client, admin):
             column_searchable_list=["test1"],
             column_filters=["test1"],
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         db.session.add(Model1(test1="data1"))
         db.session.add(Model1(test1="data2"))
@@ -531,7 +531,7 @@ def test_multiple_delete(app, client, admin):
         db.session.scalar(query.build_count()) == 3
 
         view = SqlaModelView(Model1)
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.post(
             "/admin/model1/action/", data=dict(action="delete", rowid=[1, 2])
@@ -556,7 +556,7 @@ def test_default_sort(app, admin):
         db.session.scalar(query.build_count()) == 3
 
         view1 = CustomSqlaModelView(Model1, name="view1", column_default_sort="test1")
-        admin.add_view(view1)
+        admin.register_view(view1)
 
         _, data = view1.get_list(0, None, None, None, None)
 
@@ -573,7 +573,7 @@ def test_default_sort(app, admin):
             column_labels={"test1": "blah"},
             endpoint="m1_2",
         )
-        admin.add_view(view2)
+        admin.register_view(view2)
 
         _, data = view2.get_list(0, None, None, None, None)
 
@@ -591,7 +591,7 @@ def test_default_sort(app, admin):
             endpoint="m1_3",
             column_list=["test1"],
         )
-        admin.add_view(view3)
+        admin.register_view(view3)
 
         _, data = view3.get_list(0, None, None, None, None)
 
@@ -603,7 +603,7 @@ def test_default_sort(app, admin):
         # test default sort with multiple columns
         order = [("test2", False), ("test1", False)]
         view4 = CustomSqlaModelView(Model1, column_default_sort=order, endpoint="m1_4")
-        admin.add_view(view4)
+        admin.register_view(view4)
 
         _, data = view4.get_list(0, None, None, None, None)
 
@@ -638,7 +638,7 @@ def test_complex_sort(app, client, admin):
             column_list=["string_field", "model1.test1"],
             column_sortable_list=["model1.test1"],
         )
-        admin.add_view(view1)
+        admin.register_view(view1)
         view2 = CustomSqlaModelView(
             Model2,
             name="view2",
@@ -646,7 +646,7 @@ def test_complex_sort(app, client, admin):
             column_sortable_list=[("model1", ("model1.test2", "model1.test1"))],
             endpoint="m1_2",
         )
-        admin.add_view(view2)
+        admin.register_view(view2)
 
         rv = client.get("/admin/model2/?sort=0")
         assert rv.status_code == 200
@@ -677,7 +677,7 @@ def test_complex_sort_exception(app, admin):
         view = CustomSqlaModelView(
             Model2, endpoint="model2_3", column_sortable_list=[Model1.test1]
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         sort_column = view._get_column_by_idx(0)[0]
         _, data = view.get_list(0, sort_column, False, None, None)
@@ -704,7 +704,7 @@ def test_default_complex_sort(app, admin):
         view1 = CustomSqlaModelView(
             Model2, name="view1", column_default_sort="model1.test1"
         )
-        admin.add_view(view1)
+        admin.register_view(view1)
 
         _, data = view1.get_list(0, None, None, None, None)
 
@@ -719,7 +719,7 @@ def test_default_complex_sort(app, admin):
             endpoint="model2_2",
             column_default_sort=("model1.test1", False),
         )
-        admin.add_view(view2)
+        admin.register_view(view2)
 
         _, data = view2.get_list(0, None, None, None, None)
 
@@ -736,7 +736,7 @@ def test_extra_fields(app, client, admin):
             Model1,
             form_extra_fields={"extra_field": fields.StringField("Extra Field")},
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.get("/admin/model1/new/")
         assert rv.status_code == 200
@@ -757,7 +757,7 @@ def test_extra_field_order(app, client, admin):
             form_columns=("extra_field", "test1"),
             form_extra_fields={"extra_field": fields.StringField("Extra Field")},
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.get("/admin/model1/new/")
         assert rv.status_code == 200
@@ -777,7 +777,7 @@ def test_custom_form_base(app, admin):
         db.reset_all()
 
         view = CustomSqlaModelView(Model1, base_form_class=TestForm)
-        admin.add_view(view)
+        admin.register_view(view)
 
         assert hasattr(view._create_form_class, "test1")
 
@@ -794,7 +794,7 @@ def test_ajax_fk(app, client, admin):
             url="view",
             form_ajax_refs={"model1": {"fields": ("test1", "test2")}},
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         assert "model1" in view._form_ajax_refs
 
@@ -858,7 +858,7 @@ def _test_ajax_fk_multi(app, client, admin):
             url="view",
             form_ajax_refs={"many_to_many_left": {"fields": ["name"]}},
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         assert "many_to_many_left" in view._form_ajax_refs
 
@@ -904,17 +904,17 @@ def test_customising_page_size(app, client, admin):
             page_size=20,
             can_set_page_size=False,
         )
-        admin.add_view(view1)
+        admin.register_view(view1)
 
         view2 = CustomSqlaModelView(
             Model1, name="view2", endpoint="view2", page_size=5, can_set_page_size=False
         )
-        admin.add_view(view2)
+        admin.register_view(view2)
 
         view3 = CustomSqlaModelView(
             Model1, name="view3", endpoint="view3", page_size=20, can_set_page_size=True
         )
-        admin.add_view(view3)
+        admin.register_view(view3)
 
         view4 = CustomSqlaModelView(
             Model1,
@@ -924,7 +924,7 @@ def test_customising_page_size(app, client, admin):
             page_size_options=(5, 10, 15),
             can_set_page_size=True,
         )
-        admin.add_view(view4)
+        admin.register_view(view4)
 
         rv = client.get("/admin/view1/")
         assert "instance-020" in rv.text
@@ -1029,7 +1029,7 @@ def test_model_default(app, client, admin):
             pass
 
         view = ModelView(Model2)
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.post("/admin/model2/new/", data=dict())
         assert "This field is required" in rv.text
@@ -1050,7 +1050,7 @@ def test_export_csv(app, client, admin):
             export_max_rows=2,
             endpoint="row_limit_2",
         )
-        admin.add_view(view1)
+        admin.register_view(view1)
         view2 = CustomSqlaModelView(
             Model1,
             name="view2",
@@ -1058,7 +1058,7 @@ def test_export_csv(app, client, admin):
             column_list=["test1", "test2"],
             endpoint="no_row_limit",
         )
-        admin.add_view(view2)
+        admin.register_view(view2)
 
         # test export_max_rows
         rv = client.get("/admin/row_limit_2/export/csv/")
@@ -1084,7 +1084,7 @@ def test_string_null_behavior(app, client, admin):
         db.create_all()
         
         view = CustomSqlaModelView(StringTestModel)
-        admin.add_view(view)
+        admin.register_view(view)
 
         valid_params = {
             "test_no": 1,

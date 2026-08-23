@@ -55,9 +55,9 @@ def test_admin_menu():
     view_2 = MockView(name="Test 2", endpoint="test2")
     view_3 = MockView(name="Test 3", endpoint="test3")
 
-    admin.add_view(view_1, category="Category1")
-    admin.add_view(view_2, category="Category2")
-    admin.add_view(view_3, category="Category2")
+    admin.register_view(view_1, category="Category1")
+    admin.register_view(view_2, category="Category2")
+    admin.register_view(view_3, category="Category2")
 
     # print(menu._menu)
     # print(menu._menu_categories)
@@ -150,9 +150,9 @@ def test_app_admin_default(app, client, admin):
     assert rv.status_code == 302
 
 
-def test_app_admin_add_view(app, client, admin: Admin):
+def test_app_admin_register_view(app, client, admin: Admin):
     mock_view = MockView()
-    admin.add_view(mock_view)
+    admin.register_view(mock_view)
     assert "mockview" in app.blueprints
 
     with app.test_request_context():

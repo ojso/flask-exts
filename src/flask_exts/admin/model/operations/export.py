@@ -22,10 +22,20 @@ class ExportOperationsMixin:
     """是否允许导出"""
 
     export_max_rows: int = 0
-    """导出的最大行数，0 表示无限制"""
+    """
+        Maximum number of rows allowed for export.
+
+        Unlimited by default. Uses `page_size` if set to `None`.
+    """
 
     export_types: List[str] = ["csv"]
-    """可用的导出类型列表"""
+    """
+        A list of available export filetypes. `csv` only is default, but any
+        filetypes supported by tablib can be used.
+
+        Check tablib for https://tablib.readthedocs.io/en/stable/formats.html
+        for supported types.
+    """
 
     def _export_data(self) -> Tuple[Optional[int], List[Any]]:
         """

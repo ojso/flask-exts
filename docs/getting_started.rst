@@ -26,14 +26,14 @@ The simplest Flask-Exts application looks like this:
 
    # app.py
    from flask import Flask
-   from flask_exts import Exts
+   from flask_exts import ExtensionManager
    from flask_exts.datastore.sqla import db
 
    app = Flask(__name__)
    app.config["SECRET_KEY"] = "change-this-in-production"
    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
 
-   exts = Exts()
+   exts = ExtensionManager()
    exts.init_app(app)
 
    with app.app_context():
@@ -137,7 +137,7 @@ Step 3: Wire It All Together
 
    # app.py
    from flask import Flask
-   from flask_exts import Exts
+   from flask_exts import ExtensionManager
    from flask_exts.datastore.sqla import db
    from models import Category, Post
    from views import CategoryView, PostView
@@ -147,12 +147,12 @@ Step 3: Wire It All Together
        app.config["SECRET_KEY"] = "dev"
        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///blog.db"
 
-       exts = Exts()
+       exts = ExtensionManager()
        exts.init_app(app)
 
        # Register admin views
-       exts.admin.add_view(CategoryView(Category))
-       exts.admin.add_view(PostView(Post))
+       exts.admin.register_view(CategoryView(Category))
+       exts.admin.register_view(PostView(Post))
 
        with app.app_context():
            db.create_all()
@@ -252,7 +252,7 @@ You can create custom admin views that don't map to a database model:
        def index(self):
            return self.render("dashboard.html")
 
-   exts.admin.add_view(DashboardView(name="Dashboard", url="dashboard"))
+   exts.admin.register_view(DashboardView(name="Dashboard", url="dashboard"))
 
 Internationalization
 --------------------

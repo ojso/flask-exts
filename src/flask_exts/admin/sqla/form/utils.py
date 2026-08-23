@@ -1,6 +1,5 @@
-
 from sqlalchemy import inspect
-from ...datastore.sqla.utils import get_field_with_path
+from ....datastore.sqla.utils import get_field_with_path
 
 
 class FieldPlaceholder:

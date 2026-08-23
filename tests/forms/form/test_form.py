@@ -2,11 +2,18 @@ import pytest
 from flask import g
 from wtforms import StringField
 from wtforms.validators import DataRequired
-from flask_exts.forms.form.flask_form import FlaskForm
+from flask_exts.forms.form import Form
 
 
-class F(FlaskForm):
+class F(Form):
     name = StringField(validators=[DataRequired()])
+
+
+def test_from(app):
+    with pytest.raises(RuntimeError):
+        f=F()
+    with app.app_context():
+        f=F()
 
 
 def test_csrf_form(app):

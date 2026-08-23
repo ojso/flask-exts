@@ -28,11 +28,11 @@ Examples
 .. code-block:: python
 
     from flask import Flask
-    from flask_exts import Exts
+    from flask_exts import ExtensionManager
 
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "dev"
-    exts = Exts()
+    exts = ExtensionManager()
     exts.init_app(app)
 
     if __name__ == "__main__":

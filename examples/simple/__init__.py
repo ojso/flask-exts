@@ -1,7 +1,7 @@
 # simple.py
 import os.path as op
 from flask import Flask
-from flask_exts import Exts
+from flask_exts import ExtensionManager
 from flask_exts.admin import expose_url
 from flask_exts.admin import View
 from flask_exts.datastore.sqla import db
@@ -27,10 +27,10 @@ app.config["SECRET_KEY"] = "dev"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + op.join(
     op.realpath(op.dirname(__file__)), "simple.sqlite"
 )
-exts = Exts()
+exts = ExtensionManager()
 exts.init_app(app)
 # Register a mock view
-exts.admin.add_view(MockView())
+exts.admin.register_view(MockView())
 
 with app.app_context():
     db.create_all()

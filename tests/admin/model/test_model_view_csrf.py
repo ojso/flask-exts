@@ -58,7 +58,7 @@ def test_mockview_without_csrf(app, client, admin):
     app.config.update(CSRF_ENABLED=False)
 
     view = MockModelView(MockModel)
-    admin.add_view(view)
+    admin.register_view(view)
 
     # Model view requests
     rv = client.get("/admin/mockmodel/")
@@ -105,7 +105,7 @@ def test_mockview_with_csrf(app, client, admin):
         sess["csrf_token"] = session_csrf_token
 
     view = MockModelView(MockModel)
-    admin.add_view(view)
+    admin.register_view(view)
 
     # Model view requests
     rv = client.get("/admin/mockmodel/")

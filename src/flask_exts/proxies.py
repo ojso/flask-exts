@@ -3,7 +3,7 @@ from flask import current_app
 from werkzeug.local import LocalProxy
 
 if TYPE_CHECKING:
-    from .exts import Exts
+    from .extension_manager import ExtensionManager
     from .template.core import Template
     from .usercenter.core import UserCenter
     from .usercenter.base_user_store import BaseUserStore
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .admin.admin import Admin
 
 
-current_exts: "Exts" = LocalProxy(lambda: current_app.extensions["exts"])
+current_exts: "ExtensionManager" = LocalProxy(lambda: current_app.extensions["exts"])
 
 current_template: "Template" = LocalProxy(lambda: current_exts.get_extension("template")._template)
 

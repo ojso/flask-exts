@@ -19,7 +19,7 @@ The simplest ModelView requires just a model class:
        pass
 
    # Register with admin
-   admin.add_view(UserView(User))
+   admin.register_view(UserView(User))
 
 Displaying Columns
 ------------------

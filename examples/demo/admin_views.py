@@ -4,9 +4,9 @@ from .views.author_view import authorview
 from .views.post_view import postview
 
 
-def add_views(app):
+def register_views(app):
     admin = app.extensions["exts"].get_extension("admin")._admin
-    admin.add_view(authorview)
-    admin.add_view(postview)
-    admin.add_view(tagview)    
-    admin.add_view(treeview)
+    admin.register_view(authorview)
+    admin.register_view(postview)
+    admin.register_view(tagview)    
+    admin.register_view(treeview)

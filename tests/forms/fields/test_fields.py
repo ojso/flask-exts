@@ -4,14 +4,8 @@ from wtforms.fields import FieldList
 from wtforms.fields.core import UnboundField
 from flask_exts.forms.fields import JSONField
 from flask_exts.forms.fields import DateTimePickerField
+from tests.forms.common import DummyPostData
 
-
-class DummyPostData(dict):
-    def getlist(self, key):
-        v = self[key]
-        if not isinstance(v, (list, tuple)):
-            v = [v]
-        return v
 
 def test_form_fields():
     class F(Form):

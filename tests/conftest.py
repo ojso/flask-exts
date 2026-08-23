@@ -1,6 +1,6 @@
 import pytest
 from flask import Flask
-from flask_exts import Exts
+from flask_exts import ExtensionManager
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ def app():
     app.config["JWT_SECRET_KEY"] = "SHA256_SECRET_KEY_RECOMMENDED_32_BYTES"  #  The HMAC key is recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
     app.config["JWT_HASH"] = "HS256"
     app.config.from_pyfile('config_prod.py', silent=True)
-    exts = Exts()
+    exts = ExtensionManager()
     exts.init_app(app)
     return app
 

@@ -1,5 +1,3 @@
-"""Base extension class and interfaces for composable architecture"""
-
 from abc import ABC, abstractmethod
 from typing import List, Optional
 

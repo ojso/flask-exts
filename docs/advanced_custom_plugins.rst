@@ -159,7 +159,7 @@ Custom plugins are automatically discovered and registered. To use them::
     from my_plugins import ToastNotificationPlugin  # Auto-registered
 
     app = Flask(__name__)
-    ext = Exts(app)
+    exts = ExtensionManager(app)
 
     # Plugin is now active and loaded in templates
 
@@ -171,7 +171,7 @@ Control plugin loading::
     from flask_exts import Exts, get_exts
 
     app = Flask(__name__)
-    ext = Exts(app)
+    exts = ExtensionManager(app)
 
     # Enable specific plugins
     template = get_exts()._template

@@ -1,10 +1,10 @@
 from wtforms.fields import StringField
 from flask_exts.admin.model.view import ModelView
 from flask_exts.admin.model.filter import BaseFilter
-from flask_exts.admin.model.rowaction import ViewRowAction
-from flask_exts.admin.model.rowaction import EditRowAction
-from flask_exts.admin.model.rowaction import DeleteRowAction
-from flask_exts.admin.model.rowaction import ViewPopupRowAction, EditPopupRowAction
+from flask_exts.admin.model.row_actions import ViewRowAction
+from flask_exts.admin.model.row_actions import EditRowAction
+from flask_exts.admin.model.row_actions import DeleteRowAction
+from flask_exts.admin.model.row_actions import ViewPopupRowAction, EditPopupRowAction
 
 
 class MockModel:
@@ -151,7 +151,7 @@ def test_view():
 
 def test_mockview(client, admin):
     view = MockModelView(MockModel)
-    admin.add_view(view)
+    admin.register_view(view)
 
     # Make model view requests
     rv = client.get("/admin/mockmodel/")
@@ -202,7 +202,7 @@ def test_mockview(client, admin):
 
 def test_permissions(client, admin):
     view = MockModelView(MockModel)
-    admin.add_view(view)
+    admin.register_view(view)
 
     view.can_create = False
     rv = client.get("/admin/mockmodel/new/")
@@ -219,7 +219,7 @@ def test_permissions(client, admin):
 
 def test_templates(client, admin):
     view = MockModelView(MockModel)
-    admin.add_view(view)
+    admin.register_view(view)
 
     view.list_template = "mock.html"
     view.create_template = "mock.html"
@@ -239,7 +239,7 @@ def test_list_columns(client, admin):
     view = MockModelView(
         MockModel, column_list=["col1", "col3"], column_labels=dict(col1="Column1")
     )
-    admin.add_view(view)
+    admin.register_view(view)
 
     assert len(view._list_columns) == 2
     assert view._list_columns == [("col1", "Column1"), ("col3", "Col3")]
@@ -251,19 +251,19 @@ def test_list_columns(client, admin):
 
 def test_sortable_columns(admin):
     view = MockModelView(MockModel, column_sortable_list=["col1", ("col2", "test1")])
-    admin.add_view(view)
+    admin.register_view(view)
     assert view._sortable_columns == dict(col1="col1", col2="test1")
 
 
 def test_column_searchable_list(admin):
     view = MockModelView(MockModel, column_searchable_list=["col1", "col2"])
-    admin.add_view(view)
+    admin.register_view(view)
     assert len(view.column_searchable_list) == 2
 
 
 def test_column_filters(admin):
     view = MockModelView(MockModel, column_filters=["col1", "col2"])
-    admin.add_view(view)
+    admin.register_view(view)
 
     assert len(view._filters) == 2
     assert view._filters[0].name == "col1"
@@ -283,7 +283,7 @@ def test_filter_list_callable(admin):
     flt = SimpleFilter("test", options=lambda: [("1", "Test 1"), ("2", "Test 2")])
 
     view = MockModelView(MockModel, column_filters=[flt])
-    admin.add_view(view)
+    admin.register_view(view)
 
     opts = flt.get_options()
     assert len(opts) == 2
@@ -306,10 +306,10 @@ def test_modal_edit_bs4(client, admin):
         create_modal=False,
         endpoint="create_modal_off",
     )
-    admin.add_view(edit_modal_on)
-    admin.add_view(edit_modal_off)
-    admin.add_view(create_modal_on)
-    admin.add_view(create_modal_off)
+    admin.register_view(edit_modal_on)
+    admin.register_view(edit_modal_off)
+    admin.register_view(create_modal_on)
+    admin.register_view(create_modal_off)
 
     # bootstrap 2 - ensure modal window is added when edit_modal is enabled
     rv = client.get("/admin/edit_modal_on/")
@@ -346,7 +346,7 @@ def test_export_csv(client, admin):
     view = MockModelView(
         MockModel, name="test1", column_list=["col1", "col2"], endpoint="test"
     )
-    admin.add_view(view)
+    admin.register_view(view)
 
     # basic test of csv export with a few records
     view_data = {
@@ -362,7 +362,7 @@ def test_export_csv(client, admin):
         can_export=True,
         column_list=["col1", "col2"],
     )
-    admin.add_view(view2)
+    admin.register_view(view2)
 
     # test explicit use of column_export_list
     view3 = MockModelView(
@@ -374,7 +374,7 @@ def test_export_csv(client, admin):
         column_export_list=["id", "col1", "col2"],
         endpoint="exportinclusion",
     )
-    admin.add_view(view3)
+    admin.register_view(view3)
 
     # test utf8 characters in csv export
     view_data_v2 = {
@@ -389,7 +389,7 @@ def test_export_csv(client, admin):
         column_list=["col1", "col2"],
         endpoint="utf8",
     )
-    admin.add_view(view5)
+    admin.register_view(view5)
 
     # test None type, integer type, column_labels, and column_formatters
     view_data_v3 = {
@@ -408,7 +408,7 @@ def test_export_csv(client, admin):
         column_formatters=dict(col2=lambda v, m, p: m.col2 * 2),
         endpoint="types_and_formatters",
     )
-    admin.add_view(view6)
+    admin.register_view(view6)
 
     # test column_formatters_export and column_formatters_export
     type_formatters = {type(None): lambda view, value, name: "null"}
@@ -423,7 +423,7 @@ def test_export_csv(client, admin):
         column_type_formatters_export=type_formatters,
         endpoint="export_types_and_formatters",
     )
-    admin.add_view(view7)
+    admin.register_view(view7)
 
     # Macros are not implemented for csv export yet and will throw an error
     view8 = MockModelView(
@@ -434,7 +434,7 @@ def test_export_csv(client, admin):
         # column_formatters=dict(col1=macro("render_macro")),
         endpoint="macro_exception",
     )
-    admin.add_view(view8)
+    admin.register_view(view8)
 
     # We should be able to specify column_formatters_export
     # and not get an exception if a column_formatter is using a macro
@@ -451,7 +451,7 @@ def test_export_csv(client, admin):
         column_formatters_export=dict(col1=export_formatter),
         endpoint="macro_exception_formatter_override",
     )
-    admin.add_view(view9)
+    admin.register_view(view9)
 
     # We should not get an exception if a column_formatter is using a macro
     view10 = MockModelView(
@@ -463,7 +463,7 @@ def test_export_csv(client, admin):
         # column_formatters=dict(col1=macro("render_macro")),
         endpoint="macro_exception_exclude_override",
     )
-    admin.add_view(view10)
+    admin.register_view(view10)
 
     # When we use column_export_list to hide the macro field
     # we should not get an exception
@@ -477,7 +477,7 @@ def test_export_csv(client, admin):
         column_export_list=["col2"],
         endpoint="macro_exception_list_override",
     )
-    admin.add_view(view11)
+    admin.register_view(view11)
 
     # If they define a macro on the column_formatters_export list
     # then raise an exception
@@ -490,7 +490,7 @@ def test_export_csv(client, admin):
         # column_formatters=dict(col1=macro("render_macro")),
         endpoint="macro_exception_macro_override",
     )
-    admin.add_view(view12)
+    admin.register_view(view12)
 
     rv = client.get("/admin/test/export/csv/")
     assert rv.status_code == 302
@@ -569,7 +569,7 @@ def test_export_tablib(client, admin):
         column_list=["col1", "col2"],
         export_types=["tsv"],
     )
-    admin.add_view(view)
+    admin.register_view(view)
 
     rv = client.get("/admin/mockmodel/export/tsv/")
     assert rv.mimetype == "text/tab-separated-values"
@@ -587,7 +587,7 @@ def test_list_row_actions(client, admin):
 
     # Test default actions
     view = MockModelView(MockModel, name="test", endpoint="test")
-    admin.add_view(view)
+    admin.register_view(view)
 
     actions = view.get_row_actions()
     assert len(actions) == 3
@@ -603,7 +603,7 @@ def test_list_row_actions(client, admin):
         can_edit=False,
         can_delete=False,
     )
-    admin.add_view(view)
+    admin.register_view(view)
 
     actions = view.get_row_actions()
     assert len(actions) == 1
@@ -617,7 +617,7 @@ def test_list_row_actions(client, admin):
         details_modal=True,
         edit_modal=True,
     )
-    admin.add_view(view)
+    admin.register_view(view)
 
     actions = view.get_row_actions()
     assert isinstance(actions[0], ViewPopupRowAction)

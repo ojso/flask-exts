@@ -8,20 +8,6 @@ from ..widgets.inline import InlineFormWidget
 class InlineFieldList(FieldList):
     widget = InlineFieldListWidget()
 
-    def __call__(self, **kwargs):
-        template = self.unbound_field.bind(form=None, name="")
-        if isinstance(template, FormField):
-            template.separator = ""
-
-        template.process(None)
-
-        return self.widget(
-            self, template=template, check=self.display_row_controls, **kwargs
-        )
-
-    def display_row_controls(self, field):
-        return True
-
     def process(self, formdata, data=unset_value, extra_filters=None):
         res = super().process(formdata, data)
 
@@ -75,14 +61,6 @@ class InlineFieldList(FieldList):
                 output.append(fake_obj.data)
 
         setattr(obj, name, output)
-
-
-class InlineFormField(FormField):
-    """
-    Inline version of the ``FormField`` widget.
-    """
-
-    widget = InlineFormWidget()
 
 
 class InlineModelFormField(FormField):

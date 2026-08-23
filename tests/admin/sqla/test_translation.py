@@ -20,7 +20,7 @@ def test_column_label_translation(app, client, admin):
             column_labels=dict(test1=label),
             column_filters=("test1",),
         )
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.get("/admin/model1/?flt1_0=test")
         assert rv.status_code == 200
@@ -32,7 +32,7 @@ def test_unique_validator_translation_is_dynamic(app, client, admin):
         db.create_all()
         view = SqlaModelView(UniqueModel)
         view.can_create = True
-        admin.add_view(view)
+        admin.register_view(view)
 
         rv = client.post(
             "/admin/uniquemodel/new",

@@ -1,7 +1,7 @@
 import pytest
 from flask_exts.datastore.sqla import db
-from flask_exts.admin.sqla.inline_model_convert import InlineModelForm
-from flask_exts.admin.sqla.inline_model_convert import InlineOneToOneModelConverter
+from flask_exts.admin.sqla.form.inline_model_convert import InlineModelForm
+from flask_exts.admin.sqla.form.inline_model_convert import InlineOneToOneModelConverter
 from tests.models.relations import OneToManyParent
 from tests.models.relations import ManyToOneChild2
 from tests.models.relations import ManyToOneChild3
@@ -25,7 +25,7 @@ class TestInlineModelConverter:
                 endpoint="inline_class",
                 inline_models=(ManyToOneChild2,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             form = view.create_form()
             assert hasattr(form, "children2")
@@ -41,7 +41,7 @@ class TestInlineModelConverter:
                 endpoint="inline_admin",
                 inline_models=(inline,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             form = view.create_form()
             assert hasattr(form, "children2")
@@ -60,7 +60,7 @@ class TestInlineModelConverter:
                 endpoint="inline_columns",
                 inline_models=(inline,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             form = view.create_form()
             assert hasattr(form, "child")
@@ -79,7 +79,7 @@ class TestInlineModelConverter:
                 endpoint="inline_excluded",
                 inline_models=(inline,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             form = view.create_form()
             assert hasattr(form, "child")
@@ -94,7 +94,7 @@ class TestInlineModelConverter:
                 endpoint="inline_multi",
                 inline_models=(ManyToOneChild2, ManyToOneChild3),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             form = view.create_form()
             assert hasattr(form, "children2")
@@ -110,7 +110,7 @@ class TestInlineModelConverter:
                 endpoint="inline_bc",
                 inline_models=(ModelC,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             form = view.create_form()
             assert hasattr(form, "c_items")
@@ -131,7 +131,7 @@ class TestInlineOneToOneModelConverter:
                 inline_models=(OneToOneChild,),
                 inline_model_form_converter=InlineOneToOneModelConverter,
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             form = view.create_form()
             assert hasattr(form, "child")
@@ -150,7 +150,7 @@ class TestInlineModelIntegration:
                 endpoint="inline_create",
                 inline_models=(ManyToOneChild2,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
         client = app.test_client()
         rv = client.get("/admin/inline_create/new/")
@@ -166,7 +166,7 @@ class TestInlineModelIntegration:
                 endpoint="inline_edit",
                 inline_models=(ManyToOneChild2,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             # Create parent with children
             parent = OneToManyParent()
@@ -189,7 +189,7 @@ class TestInlineModelIntegration:
                 endpoint="inline_post",
                 inline_models=(ManyToOneChild2,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
         client = app.test_client()
         rv = client.post(
@@ -209,7 +209,7 @@ class TestInlineModelIntegration:
                 endpoint="inline_bc_page",
                 inline_models=(ModelC,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
         client = app.test_client()
         rv = client.get("/admin/inline_bc_page/new/")
@@ -229,7 +229,7 @@ class TestInlineModelFormListField:
                 endpoint="inline_data",
                 inline_models=(ManyToOneChild2,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             parent = OneToManyParent()
             child1 = ManyToOneChild2(parent2=parent)
@@ -256,7 +256,7 @@ class TestInlineModelFormListField:
                 endpoint="inline_empty",
                 inline_models=(ManyToOneChild2,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             parent = OneToManyParent()
             db.session.add(parent)
@@ -281,7 +281,7 @@ class TestInlineModelFormField:
                 endpoint="inline_pk_test",
                 inline_models=(ManyToOneChild2,),
             )
-            admin.add_view(view)
+            admin.register_view(view)
 
             # Verify form is created with correct inline field type
             form_class = view._create_form_class

@@ -18,8 +18,7 @@ from .forms.forgot_password import ForgotPasswordForm
 from .forms.reset_password import ResetPasswordForm
 from .forms.two_factor import TwoFactorForm
 from .forms.recovery import RecoveryForm
-from ..proxies import current_userstore
-from ..proxies import current_security
+from ..proxies import current_userstore,current_security
 from ..signals import user_registered
 from ..constants import NO_CACHE_HEADER
 

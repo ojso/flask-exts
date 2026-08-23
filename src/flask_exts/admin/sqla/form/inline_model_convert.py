@@ -1,9 +1,8 @@
 from sqlalchemy import inspect
-from ...forms.fields.sqla import InlineModelFormListField
-from ...forms.fields.sqla import InlineModelOneToOneField
-from ...forms.form.base_form import BaseForm
-from .ajax import create_ajax_loader
-from .utils import get_model_form
+from ....forms.fields.sqla import InlineModelFormListField, InlineModelOneToOneField
+from ....forms.form.base_form import BaseForm
+from ..ajax import create_ajax_loader
+from . import get_model_form
 
 
 class InlineModelForm:

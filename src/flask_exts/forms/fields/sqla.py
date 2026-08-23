@@ -1,11 +1,10 @@
 import operator
-from sqlalchemy.orm.util import identity_key
-from wtforms.fields import SelectFieldBase, StringField
+from wtforms.fields import SelectFieldBase
 from wtforms.validators import ValidationError
 from .inline import InlineFieldList, InlineModelFormField
 from ..widgets.select import Select2Widget
 from ..widgets.checkbox import CheckboxListInput
-from ...datastore.sqla.query import Query
+from sqlalchemy.orm.util import identity_key
 from ...datastore.sqla.utils import get_model_primary_key
 
 

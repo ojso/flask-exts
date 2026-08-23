@@ -11,52 +11,9 @@
 
 | 位置 | 问题 | 建议 |
 |------|------|------|
-| `usercenter/models/user.py` | `actived` 拼写错误 | 改为 `is_active`（布尔字段加 `is_` 前缀） |
-| `exts.py` | 类名 `Exts` 含义模糊 | 改为 `FlaskExts` 或 `ExtensionManager` |
 | `admin/model/typefmt.py` | 文件名缩写不清晰 | 改为 `type_formatters.py` |
-| `admin/model/rowaction_mixin.py` | 混用 `rowaction`/`row_action` | 统一为 `row_action.py` + `row_action_mixin.py` |
 | `template/plugins/admin_admin_plugin.py` | 前缀冗余 | 连续 `admin_admin` 容易困惑 |
-| `bootstrap/startup.py` | 函数名 `run_bootstrap` | Flask 生态更常用 `init_app` 模式 |
-| `security/auth_crypt.py` | 模块名混合认证和加密 | 实际是JWT操作，建议改为 `jwt_utils.py` |
-| `proxies.py` | `_exts`, `_template` 前缀表私有 | 实际是公共代理，建议改为 `current_security` 式命名 |
 
-### 1.2 与 Flask 生态对比
-
-| 维度 | Flask 生态标准 | flask-exts 现状 | 评分 |
-|------|---------------|-----------------|------|
-| 扩展注册 `app.extensions[name]` | 标准做法 | 存在双重注册机制 | 7/10 |
-| `init_app` 模式 | 所有扩展必须支持 | 完全支持 | 9/10 |
-| 单一职责 | 一个扩展做一件事 | `Exts` 做所有事 | 4/10 |
-| 配置管理 `app.config['EXT_XXX']` | 标准做法 | 部分使用，不够系统化 | 6/10 |
-| 蓝图使用 | 标准 Blueprint 注册 | 正确使用 | 8/10 |
-| 错误处理 | 自定义异常类 | 大量使用裸 `Exception` | 5/10 |
-| 可选依赖 | `extras_require` 管理 | 所有依赖都是硬性必选 | 3/10 |
-
-### 1.3 架构优势
-
-1. **清晰的模块边界**: admin/security/usercenter/datastore 各有明确职责
-2. **良好的抽象层次**: `BaseUserStore` -> `SqlaUserStore`，`Authorizer` -> `SimpleAuthorizer`
-3. **信号驱动解耦**: 通过 `blinker` 信号实现模块间松耦合
-4. **插件系统设计精巧**: `__init_subclass__` 自动注册，零配置发现
-5. **应用工厂模式全面支持**: 所有组件支持延迟初始化
-
-### 1.4 架构弱点
-
-#### P0: God Object -- `Exts` 类
-
-`Exts` 类承担了过多职责（数据库/国际化/模板/邮件/用户中心/安全/管理面板全部初始化）。建议改为组合模式，让每个子扩展可独立使用，保留 `Exts` 作为可选的便利包装器。
-
-#### P0: `actived` 拼写错误
-
-这是数据库字段名，越早修越好（数据迁移代价递增）。
-
-#### P1: `bootstrap/` 模块定位模糊
-
-名字容易与 Bootstrap CSS 混淆，实际是"应用编排层"。建议改名为 `startup/`。且硬编码了 `IndexView`、`UserView`、JWT认证逻辑，导致用户无法选择性使用子模块。
-
-#### P1: `template/` 模块过于庞大
-
-包含 55 个文件，同时承担：Jinja2 模板管理、WTForms 表单系统、前端插件资源管理、主题系统。建议拆分为 `forms/`、`plugins/`、`theme/` 独立模块。
 
 #### P1: 代码重复
 

@@ -61,7 +61,7 @@ class FormsMixin:
         Raises:
             NotImplementedError: 必须在子类中实现
         """
-        raise NotImplementedError("Please implement scaffold_form method")
+        return None
 
     def scaffold_list_form(self, widget=None, validators=None) -> Type:
         """
