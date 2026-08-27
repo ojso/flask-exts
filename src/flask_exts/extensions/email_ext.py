@@ -1,4 +1,5 @@
-from ..extension import Extension
+from ..extension.base import Extension
+from ..email.base import Email
 
 
 class EmailExtension(Extension):
@@ -11,7 +12,5 @@ class EmailExtension(Extension):
         return 10
 
     def init_app(self, app):
-        from ..email.base import Email
-
         self._email = Email()
         self._email.init_app(app)

@@ -36,7 +36,6 @@ from .core import (
     ColumnsMixin,
     SortingMixin,
     PaginationMixin,
-    ViewArgs,
     ValuesMixin,
     FormsMixin,
 )
@@ -63,7 +62,6 @@ __all__ = [
     'ColumnsMixin',
     'SortingMixin',
     'PaginationMixin',
-    'ViewArgs',
     'ValuesMixin',
     'FormsMixin',
     # Operations

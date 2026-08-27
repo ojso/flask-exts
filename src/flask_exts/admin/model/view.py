@@ -5,7 +5,6 @@ ModelView - Admin 模型视图主类
 BaseModelView 组合了所有核心功能模块和操作模块。
 
 改进：
-- 从 1591 行简化到 < 300 行
 - 职责分离：核心功能分离到独立模块
 - 更易于测试和维护
 - 保持 100% 向后兼容性
@@ -39,12 +38,11 @@ from werkzeug.utils import secure_filename
 
 from ..exposer import expose_url
 from .base import BaseModelView
+from .type_formatters import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
 
 
 class ModelView(BaseModelView):
     """
-    Admin 模型视图主类。
-
     Model view.
 
     This view does not make any assumptions on how models are stored or managed, but expects the following:
@@ -149,7 +147,7 @@ class ModelView(BaseModelView):
             self.column_formatters_detail = self.column_formatters
 
         # 导入类型格式化器的默认值
-        from .typefmt import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
+        
 
         if self.column_type_formatters is None:
             self.column_type_formatters = dict(BASE_FORMATTERS)
@@ -468,7 +466,7 @@ class ModelView(BaseModelView):
 
     @expose_url("/ajax/lookup/")
     def ajax_lookup(self):
-        """AJAX 查找端点"""
+        """AJAX lookup"""
         name = request.args.get("name")
         query = request.args.get("query")
         offset = request.args.get("offset", type=int)
@@ -482,7 +480,7 @@ class ModelView(BaseModelView):
 
     @expose_url("/ajax/update/", methods=("POST",))
     def ajax_update(self):
-        """内联编辑端点 Edits a single column of a record in list view."""
+        """Ajax update. Edits a single column of a record in list view."""
         if not self.column_editable_list:
             abort(404)
 

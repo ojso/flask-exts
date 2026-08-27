@@ -178,7 +178,8 @@ class TestUserView:
 
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
-            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
+            tfa = current_security.get_plugin("two_factor_authentication")
+            totp_code = tfa.get_totp_code(u.totp_secret)
 
         # enable tfa without code
         rv = client.get(self.user_enable_tfa_url, query_string={"enable": True})
@@ -211,7 +212,8 @@ class TestUserView:
 
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
-            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
+            tfa = current_security.get_plugin("two_factor_authentication")
+            totp_code = tfa.get_totp_code(u.totp_secret)
 
         assert u.totp_secret is None
 
@@ -219,7 +221,8 @@ class TestUserView:
         rv = client.get(self.user_setup_tfa_url)
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
-            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
+            tfa = current_security.get_plugin("two_factor_authentication")
+            totp_code = tfa.get_totp_code(u.totp_secret)
 
         assert u.totp_secret is not None
 
@@ -237,7 +240,8 @@ class TestUserView:
 
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
-            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
+            tfa = current_security.get_plugin("two_factor_authentication")
+            totp_code = tfa.get_totp_code(u.totp_secret)
 
         # when tfa is enabled, tfa_verified is required to access setup_tfa
         rv = client.get(self.user_setup_tfa_url)
@@ -397,7 +401,7 @@ class TestUserView:
         assert reset_password_mail_data["email"] == self.test_email
         assert "reset_password_link" in reset_password_mail_data
         reset_password_link = reset_password_mail_data["reset_password_link"]
-
+        
         # reset password with new password
         newpassword = "newpassword1234"
         rv = client.post(
@@ -439,7 +443,8 @@ class TestUserView:
 
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
-            totp_code = current_security.tfa.get_totp_code(u.totp_secret)
+            tfa = current_security.get_plugin("two_factor_authentication")
+            totp_code = tfa.get_totp_code(u.totp_secret)
 
         rv = client.post(
             self.user_enable_tfa_url,

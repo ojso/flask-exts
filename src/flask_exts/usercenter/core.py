@@ -1,4 +1,4 @@
-from .sqla_user_store import SqlaUserStore
+from .user_store import UserStore
 
 
 class UserCenter:
@@ -9,4 +9,4 @@ class UserCenter:
 
     def init_app(self, app):
         self.app = app
-        self.userstore = SqlaUserStore()
+

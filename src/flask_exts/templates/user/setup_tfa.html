@@ -2,7 +2,7 @@
 
 {% from "macro/modal.html" import add_modal_button, add_modal_window %}
 
-{% do _template.plugin_manager.enable_plugin(["qrcode", "modal"]) %}
+{% do _template.plugin_manager.add_request_plugins(["qrcode", "modal"]) %}
 
 {% block title %}setup 2fa{% endblock %}
 

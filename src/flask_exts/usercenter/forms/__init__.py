@@ -1,1 +1,1 @@
-from ...forms.form.flask_form import FlaskForm as Form
+from ...forms.form import Form

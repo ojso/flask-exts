@@ -5,14 +5,14 @@
 {% from "macro/modal.html" import add_modal_button,add_modal_window %}
 {% from "macro/form.html" import render_form_fields %}
 
-{% do _template.plugin_manager.enable_plugin(["modal","filters","select2","form","xeditor","daterangepicker","moment"]) %}
+{% do _template.plugin_manager.add_request_plugins(["modal","filters","select2","form","xeditor","daterangepicker","moment"]) %}
 
 {% set actions = view.get_list_actions() %}
 {% set row_actions = view.get_row_actions() %}
 {% set filter_groups = view.get_filter_groups() %}
 
 {% if actions %}
-  {%- do _template.plugin_manager.enable_plugin(['list_action']) -%}
+  {%- do _template.plugin_manager.add_request_plugins(['list_action']) -%}
 {% endif %}
 
 {% macro link(action, url) %}

@@ -43,8 +43,9 @@ class TestSecurity:
             assert status == "ok"
             assert user is not None
             assert user.is_active is False
-            token = current_security.email_verification.generate_verify_email_token(user)
-            r = current_security.email_verification.verify_email_with_token(token)
+            ev = current_security.get_plugin("email_verification")
+            token = ev.generate_token(user)
+            r = ev.execute_with_token(token)
             assert r[0] == "verified"
             assert r[1].email_verified is True
             assert r[1].is_active is True

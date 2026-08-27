@@ -1,60 +1,7 @@
-# Flask-Exts 项目全面分析报告
-
-> 生成时间: 2026-08-14  
-> 分析范围: 框架规范性、inline_model、Bootstrap 5迁移、文档与测试
-
----
-
-## 一、框架标准性与命名规范
-
-### 1.1 命名问题清单
-
-| 位置 | 问题 | 建议 |
-|------|------|------|
-| `admin/model/typefmt.py` | 文件名缩写不清晰 | 改为 `type_formatters.py` |
-| `template/plugins/admin_admin_plugin.py` | 前缀冗余 | 连续 `admin_admin` 容易困惑 |
-
-
-#### P1: 代码重复
-
-`EmailVerification` 和 `ResetPassword` 有高度相似的 token 生成/发送/验证结构，应提取基类 `TokenBasedAction`。
-
-#### P2: `admin/model/view.py` 过于庞大
-
-1592 行的 `ModelView` 类，建议拆分为 `ModelListView`、`ModelFormView`、`ModelExportMixin`。
-
-#### P2: 未使用代码
-
-- `admin/admin.py` 中 `all_accessed = True` 从未引用
-- `usercenter/forms/profile.py` 中 `validate_email` 方法为空
-- `sqla_user_store.py` 中 `remove_user` 返回 `NotImplemented`（应 raise `NotImplementedError`）
-
-#### P2: 依赖管理
-
-所有依赖（SQLAlchemy, Flask-Login, Flask-Babel, WTForms, PyJWT, pyotp, tablib）都是硬性必选。建议将非核心依赖放入 `[project.optional-dependencies]`。
-
----
-
-## 二、Inline Model 分析
-
-### 2.1 架构概述
-
-inline_model 允许在父模型编辑表单中内嵌编辑子模型，分为四层：
-
-- **字段层**: `InlineFieldList` (容器) + `InlineModelFormField` (子表单) + `InlineModelFormListField` (SQLAlchemy版)
-- **Widget层**: `InlineFieldListWidget` + `InlineFormWidget` 渲染模板
-- **模板层**: `macro/inline.html` (渲染已有/新增/删除/添加按钮)
-- **转换器层**: `InlineModelConverter` 自动发现父子关系并生成字段
-
-### 2.2 当前测试状态
-
-**`tests/admin/sqla/test_inlineform.py` 内容仅为 `# todo` -- 完全没有测试。**
-
 ### 2.3 发现的 Bug 和代码问题
 
 | 问题 | 位置 | 严重程度 |
 |------|------|---------|
-| `self._pk = "id"` 硬编码 | `template/forms/fields/sqla.py:231` | 高 -- 不支持非标准主键名 |
 | `on_model_change` 未定义 | `template/forms/fields/sqla.py:325` | 高 -- 运行时 AttributeError |
 | 死代码（不可达） | `admin/sqla/form.py:442` | 低 |
 | 变量遮蔽 `name` | `template/forms/fields/inline.py:114` | 低 |
@@ -69,11 +16,6 @@ inline_model 允许在父模型编辑表单中内嵌编辑子模型，分为四�
 4. `InlineOneToOneModelConverter` -- 一对一关系场景
 5. 集成测试 -- 完整HTTP请求创建/编辑带inline子记录的父记录
 
-### 2.5 缺失的 Demo
-
-**examples/demo 中没有任何 inline_models 的使用示例**，虽然 Author-Post 是典型的一对多关系，非常适合作为demo。
-
----
 
 ## 三、Bootstrap 5 迁移方案
 
@@ -87,13 +29,6 @@ inline_model 允许在父模型编辑表单中内嵌编辑子模型，分为四�
 | daterangepicker | **强依赖 jQuery + Moment** | Flatpickr |
 | Moment.js | 不需要（但已废弃） | Day.js |
 | vanilla-editor (X-Editable) | **强依赖** | 自建轻量方案 |
-| Clipboard.js | 不需要 | 保留 |
-
-### 3.2 已完全脱离 jQuery 的文件（无需迁移）
-
-`detail_filter.js`、`list_action.js`、`rediscli.js`、`copybutton.js`、`qrcode.js`、`security/base64.js`、`security/webauthn.js` -- 已经是纯 Vanilla JS。
-
-### 3.3 替代方案推荐
 
 #### Select2 --> Tom Select
 
@@ -132,24 +67,6 @@ input-group-append --> 直接嵌套
 close --> btn-close
 form-group --> mb-3
 ```
-
-### 3.5 渐进迁移阶段
-
-| 阶段 | 内容 | 风险 | 工时 |
-|------|------|------|------|
-| Phase 1 | BS4模板 -> BS5（data-*/class替换） | 低 | 1-2天 |
-| Phase 2 | Select2 -> Tom Select + Flatpickr | 中 | 3-5天 |
-| Phase 3 | X-Editable 自建替代 + jQuery全面清除 | 高 | 5-7天 |
-| Phase 4 | 删除旧vendor文件和插件 | 低 | 1天 |
-| **总计** | | | **15-23天** |
-
-### 3.6 插件架构支持渐进迁移
-
-项目的 `PluginBase` + `PluginManager` 架构完美支持渐进迁移：
-- 插件独立注册，可创建新的 `tom_select_plugin.py`、`flatpickr_plugin.py`
-- 启用是模板层面的，可逐页切换
-- `bootstrap5_plugin.py` 和 Bootstrap 5 vendor 文件已预置
-- `init_template.py` 第7行有被注释的 `enable_plugin(["bootstrap5"])` 表明已有迁移意图
 
 ---
 
@@ -207,21 +124,8 @@ form-group --> mb-3
 4. 补充 authorizer 和 commands 测试
 5. 编写 Getting Started 文档
 
-### 中期（3-4周）
 
-1. 执行 Bootstrap 5 Phase 1 迁移（模板层）
-2. 重命名 `bootstrap/` -> `startup/`
-3. 拆分 `template/` 模块
-4. 补充 Admin ModelView 教程文档
-5. 添加可选依赖支持
 
-### 长期（1-2月）
-
-1. 完成 Bootstrap 5 Phase 2-4 全面迁移
-2. 拆解 `Exts` God Object
-3. 完成完整 API Reference 文档
-4. 提升测试覆盖率到 80%+
-5. 优化 `admin/model/view.py` 结构
 
 ---
 
@@ -229,20 +133,12 @@ form-group --> mb-3
 
 ```
 src/flask_exts/
-├── exts.py                          # God Object，需拆分
-├── proxies.py                       # 全局代理
-├── admin/model/view.py              # 1592行，需拆分
-├── admin/sqla/form.py               # inline转换器，有死代码
-├── template/forms/fields/inline.py  # inline字段，变量遮蔽
-├── template/forms/fields/sqla.py    # _pk硬编码为"id"
-├── template/plugins/                # 15个插件支持渐进迁移
+
+
 ├── static/js/form.js                # jQuery最密集，迁移核心
 ├── static/js/filters.js             # jQuery第二密集
-├── static/vendor/bootstrap5/        # BS5已预置
-├── usercenter/models/user.py        # actived拼写错误
-└── bootstrap/                       # 需重命名为startup/
 
-tests/admin/sqla/test_inlineform.py  # 空文件，需补充
-docs/                                # 仅覆盖约5%，需大量补充
-examples/demo/                       # 缺少inline_model示例
+
+
+
 ```

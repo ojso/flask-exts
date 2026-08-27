@@ -1,1 +1,1 @@
-from .extension_manager import ExtensionManager
+from .extension.manager import ExtensionManager

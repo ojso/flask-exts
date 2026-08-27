@@ -3,22 +3,21 @@ from flask import current_app
 from werkzeug.local import LocalProxy
 
 if TYPE_CHECKING:
-    from .extension_manager import ExtensionManager
-    from .template.core import Template
+    from .extension.manager import ExtensionManager
     from .usercenter.core import UserCenter
-    from .usercenter.base_user_store import BaseUserStore
+    from .usercenter.user_store import UserStore
     from .security.core import Security
     from .admin.admin import Admin
 
 
 current_exts: "ExtensionManager" = LocalProxy(lambda: current_app.extensions["exts"])
 
-current_template: "Template" = LocalProxy(lambda: current_exts.get_extension("template")._template)
+current_userstore: "UserStore" = LocalProxy(
+    lambda: current_exts.get_extension("userstore").get_store()
+)
 
-current_usercenter: "UserCenter" = LocalProxy(lambda: current_exts.get_extension("usercenter")._usercenter)
-
-current_userstore: "BaseUserStore" = LocalProxy(lambda: current_usercenter.userstore)
-
-current_security: "Security" = LocalProxy(lambda: current_exts.get_extension("security")._security)
+current_security: "Security" = LocalProxy(
+    lambda: current_exts.get_extension("security")._security
+)
 
 current_admin: "Admin" = LocalProxy(lambda: current_exts.get_extension("admin")._admin)

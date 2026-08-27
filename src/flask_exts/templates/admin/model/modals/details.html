@@ -1,4 +1,4 @@
-{%- do _template.plugin_manager.enable_plugin(["detail_filter"]) -%}
+{%- do _template.plugin_manager.add_request_plugins(["detail_filter"]) -%}
 
 {% block body %}
   <div class="modal-header">

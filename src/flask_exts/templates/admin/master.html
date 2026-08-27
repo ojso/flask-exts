@@ -4,7 +4,7 @@
 {% from "macro/message.html" import render_messages %}
 {% from "macro/nav.html" import render_nav_item %}
 
-{% do _template.plugin_manager.enable_plugin(["admin"]) %}
+{% do _template.plugin_manager.add_request_plugins(["admin"]) %}
 
 {% block body %}
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">

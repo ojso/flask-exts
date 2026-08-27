@@ -1,9 +1,10 @@
 import jwt
 import datetime
-from flask_login import LoginManager
 from flask import current_app
+from flask_login import LoginManager
+from ..extension.base import Extension
 from ..proxies import current_userstore
-from ..extension import Extension
+
 
 
 class LoginExtension(Extension):

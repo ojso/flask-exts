@@ -10,7 +10,7 @@ from flask import request
 
 
 class ViewArgs:
-    """视图参数容器（如果尚未导入）"""
+    """List view arguments."""
     def __init__(self, page=0, page_size=0, sort=None, sort_desc=False, search=None, filters=None, extra_args=None):
         self.page = page
         self.page_size = page_size
@@ -42,15 +42,22 @@ class PaginationMixin:
     提供分页参数处理、验证和 URL 生成功能。
     """
 
-    # 分页配置属性（继承自 ModelView）
+    # Pagination settings
     page_size: int = 20
-    """默认页大小"""
+    """
+        Default page size for pagination.
+    """
 
-    can_set_page_size: bool = True
-    """是否允许通过下拉列表选择页大小"""
+    can_set_page_size = True
+    """
+        Allows to select page size via dropdown list
+    """
 
-    page_size_options: Tuple[int, ...] = (5, 10, 20, 50, 100)
-    """页大小选项"""
+    page_size_options: tuple = (5, 10, 20, 50, 100)
+    """
+        Sets the page size options available, if `can_set_page_size` is True
+    """
+
 
     def get_safe_page_size(self, page_size: int) -> int:
         """
@@ -71,9 +78,7 @@ class PaginationMixin:
 
     def _get_list_args(self) -> 'ViewArgs':
         """
-        Return arguments from query string.
-        
-        从查询字符串提取列表视图参数。
+        Return arguments from query.
 
         提取分页、排序、搜索和过滤参数。
 

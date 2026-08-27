@@ -1,5 +1,5 @@
-from flask_exts.usercenter.sqla_user_store import SqlaUserStore
-from flask_exts.usercenter.models.user import User
+from flask_exts.userstore.sqla_user_store import SqlaUserStore
+from flask_exts.userstore.models.user import User
 from flask_exts.datastore.sqla import db
 
 class TestSqlaUserCenter:

@@ -1,4 +1,5 @@
-from ..extension import Extension
+from ..extension.base import Extension
+from ..datastore.sqla import db
 
 
 class DatabaseExtension(Extension):
@@ -11,6 +12,4 @@ class DatabaseExtension(Extension):
         return 10
 
     def init_app(self, app):
-        from ..datastore.sqla import db
-
         db.init_app(app)

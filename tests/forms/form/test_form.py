@@ -3,44 +3,44 @@ from flask import g
 from wtforms import StringField
 from wtforms.validators import DataRequired
 from flask_exts.forms.form import Form
-
+from tests.forms.common import DummyPostData
 
 class F(Form):
-    name = StringField(validators=[DataRequired()])
+    a = StringField(validators=[DataRequired()])
 
 
 def test_from(app):
     with pytest.raises(RuntimeError):
-        f=F()
+        f = F()
     with app.app_context():
-        f=F()
+        f = F()
 
 
 def test_csrf_form(app):
     app.config.update(CSRF_ENABLED=True)
     with app.test_request_context():
         assert g.get("csrf_token") is None
-        form = F()
+        f = F()
         assert g.get("csrf_token") is not None
-        assert "name" in form
-        assert "csrf_token" in form
-        data = {"name": "test"}
-        form.process(data=data)
-        assert form.name.data == "test"
-        assert form.validate() is False
-        data2 = {"name": "test", "csrf_token": g.get("csrf_token")}
-        form.process(data=data2)
-        assert form.validate()
+        assert "a" in f
+        assert "csrf_token" in f
+        f = F(a="foo")
+        assert f.a.data == "foo"
+        assert f.validate() is False
+        f = F(a="foo", csrf_token=g.get("csrf_token"))
+        assert f.validate()
+        # formdata
+        formdata = DummyPostData(a="bar", csrf_token=g.get("csrf_token"))
+        assert f.validate()
 
 
 def test_nocsrf_form(app):
     app.config.update(CSRF_ENABLED=False)
     with app.test_request_context():
-        form = F()
-        assert "name" in form
-        assert "csrf_token" not in form
+        f = F()
+        assert "a" in f
+        assert "csrf_token" not in f
         assert g.get("csrf_token") is None
-        data = {"name": "test"}
-        form.process(data=data)
-        assert form.name.data == "test"
-        assert form.validate()
+        f = F(a="foo")
+        assert f.a.data == "foo"
+        assert f.validate()

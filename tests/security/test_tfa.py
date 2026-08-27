@@ -1,4 +1,4 @@
-from flask_exts.security.two_factor_authentication import TwoFactorAuthentication
+from flask_exts.security.plugins.two_factor_authentication import TwoFactorAuthentication
 
 
 def test_pyotp():

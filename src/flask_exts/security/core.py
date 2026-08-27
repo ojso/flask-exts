@@ -1,9 +1,13 @@
 from flask_login import current_user
+from .registry import Registry
+from .hasher import Blake2bHasher
+from .serializer import TimedUrlSerializer
 
 
 class Security:
     def __init__(self, app=None):
         self.app = app
+        self._registry = Registry()
         if app is not None:
             self.init_app(app)
 
@@ -12,34 +16,16 @@ class Security:
         secret_key = app.secret_key
 
         # hasher
-        from .hasher import Blake2bHasher
-
         self.hasher = Blake2bHasher(secret_key)
 
         # serializer
-        from .serializer import TimedUrlSerializer
-
         self.serializer = TimedUrlSerializer(secret_key)
 
-        # email verification
-        from .email_verification import EmailVerification
+        # registry plugins
+        self._registry.load_all(app)
 
-        self.email_verification = EmailVerification(app)
-
-        # reset password
-        from .reset_password import ResetPassword
-
-        self.reset_password = ResetPassword(app)
-
-        # authorizer
-        from .authorizer.simple_authorizer import SimpleAuthorizer
-
-        self.authorizer = SimpleAuthorizer(app)
-
-        # 2FA
-        from .two_factor_authentication import TwoFactorAuthentication
-
-        self.tfa = TwoFactorAuthentication(app)
+    def get_plugin(self, name):
+        return self._registry.get(name)
 
     def get_within(self, serializer_name):
         """Get the max age for a serializer."""
@@ -53,14 +39,16 @@ class Security:
         else:
             user = current_user
 
-        if self.authorizer.is_root_user(user):
+        authorizer = self.get_plugin("authorizer")
+
+        if authorizer.is_root_user(user):
             return True
 
         if "role_need" in kwargs:
-            if self.authorizer.has_role(user, kwargs["role_need"]):
+            if authorizer.has_role(user, kwargs["role_need"]):
                 return True
         elif "resource" in kwargs and "method" in kwargs:
-            if self.authorizer.allow(user, kwargs["resource"], kwargs["method"]):
+            if authorizer.allow(user, kwargs["resource"], kwargs["method"]):
                 return True
 
         return False

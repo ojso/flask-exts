@@ -2,7 +2,7 @@
 
 {% block title %}recovery codes{% endblock %}
 
-{% do _template.plugin_manager.enable_plugin("copybutton") %}
+{% do _template.plugin_manager.add_request_plugins("copybutton") %}
 
 {% block main %}
   <div class="container border p-3">

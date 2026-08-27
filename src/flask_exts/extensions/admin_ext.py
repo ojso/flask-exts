@@ -1,4 +1,4 @@
-from ..extension import Extension
+from ..extension.base import Extension
 
 
 class AdminExtension(Extension):

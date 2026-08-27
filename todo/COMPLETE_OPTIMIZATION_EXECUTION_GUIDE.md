@@ -119,14 +119,6 @@ python -c "from flask_exts.admin.sqla.form import FormConverter; print('OK')"
 python -c "from flask_exts.admin.sqla.form import InlineModelConverter; print('OK')"
 ```
 
----
-
-## 🎯 Task #24: view.py 优化完整指南
-
-### 目标
-- 当前：500 行
-- 目标：200 行
-- 减少：300 行（-60%）
 
 ### 步骤 1：创建子模块
 

@@ -1,6 +1,6 @@
-from ..extension import Extension
 from flask import session
 from flask_login import user_logged_out
+from ..extension.base import Extension
 from ..signals import user_registered
 from ..proxies import current_security
 from ..admin.default_views.index_view import IndexView
@@ -27,7 +27,7 @@ class StartupExtension(Extension):
         def on_user_registered(sender, user, **extra):
             """Signal handler for user registration."""
             if user.email and not user.email_verified:
-                current_security.email_verification.send_verify_email_token(user)
+                current_security.get_plugin("email_verification").send_token(user)
 
         # logged out
         @user_logged_out.connect_via(app)

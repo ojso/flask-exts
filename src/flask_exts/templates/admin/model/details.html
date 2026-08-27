@@ -1,6 +1,6 @@
 {% extends "admin/master.html" %}
 
-{% do _template.plugin_manager.enable_plugin(["detail_filter"]) %}
+{% do _template.plugin_manager.add_request_plugins(["detail_filter"]) %}
 
 {% block main %}
   <ul class="nav nav-tabs">

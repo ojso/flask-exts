@@ -6,7 +6,7 @@ from ...datastore.sqla import db
 from ..model.view import ModelView
 from .filter import FilterConverter
 from .ajax import create_ajax_loader
-from .typefmt import DEFAULT_FORMATTERS
+from .type_formatters import DEFAULT_FORMATTERS
 from ...datastore.sqla.query import Query
 from ...datastore.sqla.utils import get_model_primary_key
 from ...datastore.sqla.utils import get_model_column_type

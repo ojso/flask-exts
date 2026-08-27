@@ -1,5 +1,5 @@
-from ..extension import Extension
-
+from ..extension.base import Extension
+from ..security.core import Security
 
 class SecurityExtension(Extension):
     @property
@@ -12,10 +12,8 @@ class SecurityExtension(Extension):
 
     @property
     def dependencies(self) -> list[str]:
-        return ["database", "usercenter"]
+        return ["usercenter"]
 
     def init_app(self, app):
-        from ..security.core import Security
-
         self._security = Security()
         self._security.init_app(app)

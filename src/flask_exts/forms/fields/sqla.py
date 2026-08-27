@@ -8,7 +8,6 @@ from sqlalchemy.orm.util import identity_key
 from ...datastore.sqla.utils import get_model_primary_key
 
 
-
 class QuerySelectField(SelectFieldBase):
     """
     Will display a select drop-down field to choose between ORM results in a

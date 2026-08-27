@@ -1,4 +1,5 @@
-from ..extension import Extension
+from ..extension.base import Extension
+from ..usercenter.core import UserCenter
 
 
 class UserCenterExtension(Extension):
@@ -8,14 +9,12 @@ class UserCenterExtension(Extension):
 
     @property
     def priority(self) -> int:
-        return 20
+        return 30
 
     @property
     def dependencies(self) -> list[str]:
-        return ["database"]
+        return ["userstore"]
 
     def init_app(self, app):
-        from ..usercenter.core import UserCenter
-
         self._usercenter = UserCenter()
         self._usercenter.init_app(app)

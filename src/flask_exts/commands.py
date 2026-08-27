@@ -3,7 +3,6 @@ from flask.cli import AppGroup
 from .proxies import current_userstore
 from .datastore.sqla import db
 
-
 datastore_cli = AppGroup("datastore", short_help="datastore for the app.")
 
 
@@ -18,13 +17,32 @@ security_cli = AppGroup("security", short_help="security for the app.")
 
 @security_cli.command("create_user")
 @click.argument("name")
-def create_user(name):
+@click.password_option(
+    "--password",
+    prompt="Enter password",
+    confirmation_prompt=True,
+    help="User password (will prompt if not provided)",
+)
+@click.option("--email", default=None, help="User email address (optional)")
+@click.option(
+    "--active", is_flag=True, default=False, help="Activate the user immediately"
+)
+def create_user(name, password, email, active):
+    """
+    Create a new user with the given NAME.
+
+    Example:
+        security create_user john_doe
+        security create_user jane --password mypass123 --active
+    """
     print(f"security create_user {name}")
-    result = current_userstore.create_user(username=name)
+    result = current_userstore.create_user(username=name, password=password)
     click.echo(result)
 
 
-@security_cli.command("create_admin", help="create user:admin with admin:role")
+@security_cli.command(
+    "create_admin", help="create user:admin(defaullt password:admin) with admin:role"
+)
 @click.argument("password", default="admin")
 def create_admin(password):
     _, user_admin = current_userstore.create_user(username="admin", password=password)

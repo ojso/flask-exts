@@ -122,7 +122,7 @@ class UserView(View):
     @expose_url("/verify_email/")
     def verify_email(self):
         token = request.args.get("token")
-        r = current_security.email_verification.verify_email_with_token(token)
+        r = current_security.get_plugin("email_verification").execute_with_token(token)
         return self.render(self.verify_email_template, result=r[0])
 
     @login_required
@@ -138,7 +138,8 @@ class UserView(View):
 
         form = TwoFactorForm()
         if form.validate_on_submit():
-            if current_security.tfa.verify_totp(current_user.totp_secret, form.code.data):
+            tfa = current_security.get_plugin("two_factor_authentication")
+            if tfa.verify_totp(current_user.totp_secret, form.code.data):
                 current_userstore.user_set(current_user, tfa_enabled=enable)
                 if current_user.tfa_enabled and not session.get("tfa_verified"):
                     session["tfa_verified"] = True
@@ -157,12 +158,13 @@ class UserView(View):
             return self.render(
                 "user/show_tfa.html",
             )
-        if not current_user.totp_secret:
+        tfa = current_security.get_plugin("two_factor_authentication")
+        if not current_user.totp_secret:            
             current_userstore.user_set(
-                current_user, totp_secret=current_security.tfa.generate_totp_secret()
+                current_user, totp_secret=tfa.generate_totp_secret()
             )
 
-        totp_uri = current_security.tfa.get_totp_uri(
+        totp_uri = tfa.get_totp_uri(
             current_user.totp_secret, current_user.username
         )
         return self.render(
@@ -186,7 +188,8 @@ class UserView(View):
             abort(403)
         form = TwoFactorForm()
         if form.validate_on_submit():
-            if current_security.tfa.verify_totp(current_user.totp_secret, form.code.data):
+            tfa = current_security.get_plugin("two_factor_authentication")
+            if tfa.verify_totp(current_user.totp_secret, form.code.data):
                 session["tfa_verified"] = True
                 next_page = request.args.get("next")
                 if not next_page:
@@ -216,7 +219,7 @@ class UserView(View):
             return redirect(url_for(".index"))
         form = ForgotPasswordForm()
         if form.validate_on_submit():
-            current_security.reset_password.send_reset_password_token(
+            current_security.get_plugin("reset_password").send_token(
                 current_userstore.get_user_by_identity(form.email.data, "email")
             )
             flash(
@@ -231,8 +234,8 @@ class UserView(View):
         token = request.args.get("token")
         form = ResetPasswordForm()
         if form.validate_on_submit():
-            r = current_security.reset_password.reset_password_with_token(
-                token, form.password.data
+            r = current_security.get_plugin("reset_password").execute_with_token(
+                token, password=form.password.data
             )
             if r[0] == "ok":
                 flash("Your password has been reset.", "success")
@@ -248,9 +251,10 @@ class UserView(View):
         if not session.get("tfa_verified"):
             abort(403)
         if not current_user.recovery_codes:
+            tfa = current_security.get_plugin("two_factor_authentication")
             current_userstore.user_set(
                 current_user,
-                recovery_codes=current_security.tfa.generate_recovery_codes(),
+                recovery_codes=tfa.generate_recovery_codes(),
             )
         return self.render(
             "user/recovery_codes.html",
@@ -272,7 +276,8 @@ class UserView(View):
                 recovery_codes = current_user.recovery_codes
                 recovery_codes.remove(form.code.data)
                 current_userstore.user_set(current_user, recovery_codes=recovery_codes)
-                totp_uri = current_security.tfa.get_totp_uri(
+                tfa = current_security.get_plugin("two_factor_authentication")
+                totp_uri = tfa.get_totp_uri(
                     current_user.totp_secret, current_user.username
                 )
                 return self.render(

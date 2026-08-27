@@ -472,23 +472,9 @@ class BaseModelView(
 
             class MyModelView(BaseModelView):
                 form_ajax_refs = {
-                    'user': QueryAjaxModelLoader('user', User, self.session, fields=['email'], page_size=10)
+                    'user': AjaxSqlaModelLoader('user', User, self.session, fields=['email'], page_size=10)
                 }
     """
 
-    # Pagination settings
-    page_size = 20
-    """
-        Default page size for pagination.
-    """
 
-    can_set_page_size = True
-    """
-        Allows to select page size via dropdown list
-    """
-
-    page_size_options: tuple = (5, 10, 20, 50, 100)
-    """
-        Sets the page size options available, if `can_set_page_size` is True
-    """
 

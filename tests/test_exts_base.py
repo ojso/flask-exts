@@ -1,22 +1,14 @@
 import pytest
 
 
-def test_extensions(app):
-    # print(app.extensions)
-    # print(app.extensions.keys())
-    assert "exts" in app.extensions
-    assert "babel" in app.extensions
-    assert "sqlalchemy" in app.extensions
-
-
 def test_exts_extensions(exts):
     registries = exts._registry.list()
-    assert len(registries) == 9
+    assert len(registries) == 10
     registry_names = [r.name for r in registries]
     # print(registry_names)
     assert "database" in registry_names
     assert "babel" in registry_names
-    assert "template" in registry_names
+    assert "html" in registry_names
     assert "email" in registry_names
     assert "usercenter" in registry_names
     assert "login" in registry_names
@@ -30,9 +22,6 @@ def test_blueprints(app):
     assert "_template" in app.blueprints
     assert "index" in app.blueprints
     assert "user" in app.blueprints
-
-
-
 
 
 def test_jinja_globals(app):

@@ -7,7 +7,7 @@ from flask import (
     request,
     session,
 )
-from ..extension import Extension
+from ..extension.base import Extension
 from .. import translations
 
 babel = Babel()

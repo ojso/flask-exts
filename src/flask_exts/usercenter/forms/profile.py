@@ -8,4 +8,4 @@ class ProfileForm(Form):
     submit = SubmitField("Submit")
 
     def validate_email(self, email):
-        return
+        pass
