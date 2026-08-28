@@ -1,4 +1,5 @@
 from ..extension.base import Extension
+from ..admin import Admin
 
 
 class AdminExtension(Extension):
@@ -8,10 +9,11 @@ class AdminExtension(Extension):
 
     @property
     def priority(self) -> int:
-        return 40
+        return 50
 
     def init_app(self, app):
-        from ..admin.admin import Admin
-
         self._admin = Admin()
         self._admin.init_app(app)
+
+    def get_admin(self):
+        return self._admin

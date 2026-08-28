@@ -3,7 +3,7 @@ from wtforms import validators
 from flask_babel import gettext
 from sqlalchemy import select
 from flask_exts.admin.sqla.view import SqlaModelView
-from flask_exts.admin.sqla.form.inline_model_convert import InlineModelForm
+from flask_exts.admin.sqla.form.inline_model_convert import InlineForm
 from ..models.author import Author, AVAILABLE_USER_TYPES
 from ..models.post import Post
 
@@ -32,7 +32,7 @@ class AuthorView(SqlaModelView):
 
     # Inline model: edit Posts directly within the Author form
     inline_models = (
-        InlineModelForm(
+        InlineForm(
             Post,
             form_columns=("title", "text", "color", "date"),
             form_args={"title": {"label": "Post Title"}},
@@ -61,6 +61,7 @@ class AuthorView(SqlaModelView):
         "timezone",
         # "phone_number",
         "enum_choice_field",
+        "posts",
     ]
     column_searchable_list = [
         "first_name",

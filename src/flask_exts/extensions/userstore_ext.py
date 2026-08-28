@@ -18,5 +18,5 @@ class UserStoreExtension(Extension):
     def init_app(self, app):
         self._userstore = SqlaUserStore()
 
-    def get_store(self):
+    def get_userstore(self):
         return self._userstore

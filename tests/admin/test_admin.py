@@ -1,12 +1,8 @@
 import pytest
-from flask import app, url_for
-from flask_exts.admin import expose_url
-from flask_exts.admin import View
-from flask_exts.admin.admin import Admin
+from flask import url_for
+from flask_exts.admin import Admin, View, expose_url
 from flask_exts.admin.menu import MenuLink
-
-from ..helper import print_app_endpoint_rule
-from ..helper import get_app_endpoint_rule
+from ..helper import print_app_endpoint_rule, get_app_endpoint_rule
 
 
 class MockView(View):
@@ -21,7 +17,6 @@ class MockView(View):
         return self.render("mock.html")
 
 
-
 class MockNoindexView(View):
     allow_access = True
 
@@ -33,6 +28,7 @@ class MockNoindexView(View):
         if self.allow_access:
             return super().is_accessible()
         return False
+
 
 def test_admin_default():
     admin = Admin()
@@ -98,6 +94,7 @@ def test_admin_menu():
     #     children = menu_category2.get_children()
     #     assert len(children) == 1
     #     assert children[0].is_accessible()
+
 
 def test_app_admin_default(app, client, admin):
     # print(app.blueprints)
@@ -181,7 +178,7 @@ def test_menu_links(client, admin):
     menu = admin.menu
     menu.add_link(MenuLink("TestMenuLink1", endpoint=".index"))
     menu.add_link(MenuLink("TestMenuLink2", url="http://python.org/"))
-    
+
     rv = client.get("/admin/")
     assert "TestMenuLink1" in rv.text
     assert "TestMenuLink2" in rv.text

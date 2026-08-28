@@ -1,54 +1,14 @@
 from sqlalchemy import inspect
 from ....forms.fields.sqla import InlineModelFormListField, InlineModelOneToOneField
-from ....forms.form.base_form import BaseForm
 from ..ajax import create_ajax_loader
 from . import get_model_form
-
-
-class InlineModelForm:
-    """
-    Settings for inline form administration.
-
-    You can use this class to customize displayed form.
-    For example::
-
-        class MyUserInfoForm(InlineModelForm):
-            form_columns = ('name', 'email')
-    """
-
-    _defaults = [
-        "base_form_class",
-        "form_columns",
-        "form_excluded_columns",
-        "form_args",
-        "form_extra_fields",
-    ]
-
-    def __init__(self, model, **kwargs):
-        """
-        Constructor
-
-        :param model:
-            Model class
-        :param kwargs:
-            Additional options
-        """
-        self.model = model
-
-        for k in self._defaults:
-            if not hasattr(self, k):
-                setattr(self, k, None)
-
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+from .inline_form import InlineForm
 
 
 class InlineModelConverter:
     """
     Inline model form converter.
     """
-
-    form_admin_class = InlineModelForm
 
     inline_field_list_type = InlineModelFormListField
     """
@@ -95,57 +55,41 @@ class InlineModelConverter:
 
         return None
 
-    def get_info(self, p):
+    def get_inline_form(self, prop):
         """
         Figure out InlineForm information.
 
         :param p:
             Inline model. Can be one of:
-
-                - ``tuple``, first value is related model instance,
-                second is dictionary with options
+                - ``tuple``, first value is related model instance,second is dictionary with options
                 - ``InlineForm`` instance
                 - Model class
         """
-        if isinstance(p, tuple):
-            info = self.form_admin_class(p[0], **p[1])
-        elif isinstance(p, self.form_admin_class):
-            info = p
+        if isinstance(prop, InlineForm):
+            inline_form = prop
+        elif isinstance(prop, tuple):
+            inline_form = InlineForm(prop[0], **prop[1])
         else:
-            # Special case for model instances
-            if hasattr(p, "_sa_class_manager"):
-                return self.form_admin_class(p)
-            else:
-                model = getattr(p, "model", None)
-
-                if model is None:
-                    raise Exception("Unknown inline model admin: %s" % repr(p))
-
-                attrs = dict()
-                for attr in dir(p):
-                    if not attr.startswith("_") and attr != "model":
-                        attrs[attr] = getattr(p, attr)
-
-                return self.form_admin_class(model, **attrs)
+            inline_form = InlineForm(prop)
 
         # Resolve AJAX FKs
-        info._form_ajax_refs = self.process_ajax_refs(info)
+        inline_form._form_ajax_refs = self.process_ajax_refs(inline_form)
 
-        return info
+        return inline_form
 
-    def process_ajax_refs(self, info):
-        refs = getattr(info, "form_ajax_refs", None)
+    def process_ajax_refs(self, inline_form):
+        refs = getattr(inline_form, "form_ajax_refs", None)
 
         result = {}
 
         if refs:
             for name, opts in refs.items():
-                new_name = "%s-%s" % (info.model.__name__.lower(), name)
+                new_name = "%s-%s" % (inline_form.model.__name__.lower(), name)
 
                 loader = None
                 if isinstance(opts, dict):
                     loader = create_ajax_loader(
-                        info.model, self.session, new_name, name, opts
+                        inline_form.model, self.session, new_name, name, opts
                     )
                 else:
                     loader = opts
@@ -231,9 +175,7 @@ class InlineModelConverter:
             Form to add properties to
         :param inline_model:
             Inline model. Can be one of:
-
-             - ``tuple``, first value is related model instance,
-             second is dictionary with options
+             - ``tuple``, first value is related model instance, second is dictionary with options
              - ``InlineForm`` instance
              - Model class
 
@@ -241,7 +183,7 @@ class InlineModelConverter:
             Form class
         """
 
-        info = self.get_info(inline_model)
+        info = self.get_inline_form(inline_model)
 
         forward_reverse_props_keys = self._calculate_mapping_key_pair(model, info)
 
@@ -261,7 +203,7 @@ class InlineModelConverter:
             child_form = get_model_form(
                 info.model,
                 converter,
-                base_class=info.base_form_class or BaseForm,
+                base_class=info.base_form_class,
                 only=info.form_columns,
                 exclude=exclude,
                 field_args=info.form_args,
@@ -279,18 +221,20 @@ class InlineModelConverter:
                 field_args = self.view.form_args.get(forward_prop_key, {})
                 kwargs.update(**field_args)
 
+            
+            inline_field = InlineModelFormListField(
+                child_form,
+                self.session,
+                info.model,
+                reverse_prop_key,
+                info,
+                **kwargs,
+            )
             # Contribute field
             setattr(
                 form_class,
                 forward_prop_key,
-                self.inline_field_list_type(
-                    child_form,
-                    self.session,
-                    info.model,
-                    reverse_prop_key,
-                    info,
-                    **kwargs,
-                ),
+                inline_field,
             )
 
         return form_class
@@ -356,7 +300,7 @@ class InlineOneToOneModelConverter(InlineModelConverter):
         return inline_relationship
 
     def contribute(self, model, form_class, inline_model):
-        info = self.get_info(inline_model)
+        info = self.get_inline_form(inline_model)
 
         inline_relationships = self._calculate_mapping_key_pair(model, info)
 
@@ -375,7 +319,7 @@ class InlineOneToOneModelConverter(InlineModelConverter):
         child_form = get_model_form(
             info.model,
             converter,
-            base_class=info.base_form_class or BaseForm,
+            base_class=info.base_form_class,
             only=info.form_columns,
             exclude=exclude,
             field_args=info.form_args,

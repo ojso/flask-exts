@@ -67,11 +67,11 @@ class SqlaModelView(ModelView):
 
             from .model.form import InlineForm
 
-            class MyInlineModelForm(InlineModelForm):
+            class MyInlineForm(InlineForm):
                 form_columns = ('title', 'date')
 
             class MyModelView(ModelView):
-                inline_models = (MyInlineModelForm(MyInlineModel),)
+                inline_models = (MyInlineForm(MyInlineModel),)
 
         You can customize the generated field name by:
 
@@ -100,12 +100,12 @@ class SqlaModelView(ModelView):
 
             from .sqla.form import InlineOneToOneModelConverter
 
-            class MyInlineModelForm(InlineModelForm):
+            class MyInlineForm(InlineForm):
                 form_columns = ('title', 'date')
                 inline_model_converter = InlineOneToOneModelConverter
 
             class MyModelView(ModelView):
-                inline_models = (MyInlineModelForm(MyInlineModel),)
+                inline_models = (MyInlineForm(MyInlineModel),)
     """
 
     column_type_formatters = DEFAULT_FORMATTERS

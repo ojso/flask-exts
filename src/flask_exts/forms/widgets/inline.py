@@ -1,15 +1,14 @@
-class InlineFieldListWidget:
-    def __init__(self):
+from wtforms.widgets import ListWidget
+from wtforms.widgets import TableWidget
+
+
+class InlineFieldListWidget(ListWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.template = "inline_field_list"
 
-    def __call__(self, field, **kwargs):
-        return "TODO:InlineFieldListWidget"
 
-
-class InlineFormWidget:
-    def __init__(self):
+class InlineFormWidget(TableWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.template = "inline_form"
-
-    def __call__(self, field, **kwargs):
-        kwargs.setdefault("form_opts", getattr(field, "form_opts", None))
-        return super().__call__(field, **kwargs)

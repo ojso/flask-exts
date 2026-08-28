@@ -59,7 +59,7 @@ class ModelFieldConverter(
         if column_descriptions:
             return column_descriptions.get(name)
 
-    def _model_select_field(self, prop, multiple, remote_model, **kwargs):
+    def model_select_field(self, prop, multiple, remote_model, **kwargs):
         loader = getattr(self.view, "_form_ajax_refs", {}).get(prop.key)
 
         if loader:
@@ -78,7 +78,7 @@ class ModelFieldConverter(
         else:
             return QuerySelectField(**kwargs)
 
-    def _convert_relation(self, name, prop, kwargs):
+    def convert_relation(self, name, prop, kwargs):
         # Check if relation is specified
         form_columns = getattr(self.view, "form_columns", None)
         if form_columns and name not in form_columns:
@@ -110,7 +110,7 @@ class ModelFieldConverter(
                 kwargs["validators"].append(validators.InputRequired())
 
         multiple = prop.direction.name in ("ONETOMANY", "MANYTOMANY") and prop.uselist
-        return self._model_select_field(prop, multiple, remote_model, **kwargs)
+        return self.model_select_field(prop, multiple, remote_model, **kwargs)
 
     def convert(self, model, mapper, name, prop, field_args, hidden_pk):
         # Properly handle forced fields
@@ -129,7 +129,8 @@ class ModelFieldConverter(
 
         # Check if it is relation or property
         if hasattr(prop, "direction"):
-            return self._convert_relation(name, prop, kwargs)
+            return self.convert_relation(name, prop, kwargs)
+        
         elif hasattr(prop, "columns"):
             column = prop.columns[0]
             form_columns = getattr(self.view, "form_columns", None) or ()

@@ -1,6 +1,6 @@
 import pytest
 from flask_exts.datastore.sqla import db
-from flask_exts.admin.sqla.form.inline_model_convert import InlineModelForm
+from flask_exts.admin.sqla.form.inline_model_convert import InlineForm
 from flask_exts.admin.sqla.form.inline_model_convert import InlineOneToOneModelConverter
 from tests.models.relations import OneToManyParent
 from tests.models.relations import ManyToOneChild2
@@ -35,7 +35,7 @@ class TestInlineModelConverter:
         with app.app_context():
             db.reset_all()
 
-            inline = InlineModelForm(ManyToOneChild2)
+            inline = InlineForm(ManyToOneChild2)
             view = CustomSqlaModelView(
                 OneToManyParent,
                 endpoint="inline_admin",
@@ -51,7 +51,7 @@ class TestInlineModelConverter:
         with app.app_context():
             db.reset_all()
 
-            inline = InlineModelForm(
+            inline = InlineForm(
                 OneToOneChild,
                 form_columns=("test",),
             )
@@ -70,7 +70,7 @@ class TestInlineModelConverter:
         with app.app_context():
             db.reset_all()
 
-            inline = InlineModelForm(
+            inline = InlineForm(
                 OneToOneChild,
                 form_excluded_columns=("test",),
             )

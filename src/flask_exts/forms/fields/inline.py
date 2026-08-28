@@ -1,8 +1,7 @@
 import itertools
 from wtforms.fields import FieldList, FormField
 from wtforms.utils import unset_value
-from ..widgets.inline import InlineFieldListWidget
-from ..widgets.inline import InlineFormWidget
+from ..widgets.inline import InlineFormWidget, InlineFieldListWidget
 
 
 class InlineFieldList(FieldList):
