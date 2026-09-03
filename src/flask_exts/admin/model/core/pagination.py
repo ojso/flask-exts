@@ -1,8 +1,8 @@
 """
-分页管理 (Pagination Management)
+Pagination management / 分页管理
 
-负责管理 Admin 模型视图中的分页功能。
-包括分页参数提取、分页大小验证和 URL 生成。
+English summary: This module handles pagination state for Admin model views, including extracting query parameters, validating page sizes, and building page URLs.
+中文说明：这个模块负责管理 Admin 模型视图中的分页状态，包括提取查询参数、校验页大小和生成分页 URL。
 """
 
 from typing import Optional, Tuple, Dict, Any
@@ -21,7 +21,7 @@ class ViewArgs:
         self.extra_args = extra_args or {}
 
     def clone(self, **kwargs):
-        """克隆视图参数，覆盖指定的参数"""
+        """English: comment / 克隆视图参数，覆盖指定的参数"""
         args = {
             'page': self.page,
             'page_size': self.page_size,
@@ -37,9 +37,10 @@ class ViewArgs:
 
 class PaginationMixin:
     """
-    分页管理功能混入类。
+    Pagination mixin / 分页管理功能混入类
 
-    提供分页参数处理、验证和 URL 生成功能。
+    English summary: Provides pagination parameter extraction, validation, and URL generation for list views.
+    中文说明：提供列表视图的分页参数提取、校验和 URL 生成功能。
     """
 
     # Pagination settings
@@ -85,8 +86,8 @@ class PaginationMixin:
         Returns:
             ViewArgs: 包含所有视图参数的对象
         """
-        # 注意：这里假设存在 get_active_filters() 方法
-        # 该方法应在 FilterMixin 中定义
+        # English: note get_active_filters method / 注意：这里假设存在 get_active_filters() 方法
+        # English: FilterMixin / 该方法应在 FilterMixin 中定义
         return ViewArgs(
             page=request.args.get("page", 0, type=int),
             page_size=request.args.get("page_size", 0, type=int),
@@ -138,12 +139,12 @@ class PaginationMixin:
 
         kwargs["page_size"] = self.get_safe_page_size(view_args.page_size)
 
-        # 注意：这里假设存在 get_active_filters_kwargs() 和 get_url() 方法
+        # English: note get_active_filters_kwargs get_url method / 注意：这里假设存在 get_active_filters_kwargs() 和 get_url() 方法
         if hasattr(self, 'get_active_filters_kwargs'):
             kwargs.update(self.get_active_filters_kwargs(view_args.filters))
 
         if hasattr(self, 'get_url'):
             return self.get_url(".index_view", **kwargs)
         else:
-            # 返回基本格式，子类应实现 get_url()
+            # English: get_url / 返回基本格式，子类应实现 get_url()
             return f"?{'&'.join(f'{k}={v}' for k, v in kwargs.items() if v)}"

@@ -1,8 +1,8 @@
 """
-表单管理 (Forms Management)
+Form management / 表单管理
 
-负责管理 Admin 模型视图中的表单。
-包括表单脚手架、表单生成、表单实例化和返回 URL 处理。
+English summary: This module manages admin model-view forms, including scaffolding, generation, instantiation, and URL handling.
+中文说明：负责管理 Admin 模型视图中的表单，包括表单脚手架、表单生成、表单实例化和返回 URL 处理。
 """
 
 from typing import Optional, Type, Any, Dict, Callable
@@ -13,34 +13,35 @@ from ....forms.form.flask_form import FlaskForm
 
 class FormsMixin:
     """
-    表单管理功能混入类。
+    Form management mixin / 表单管理功能混入类
 
-    提供表单脚手架、创建、获取和处理功能。
+    English summary: Provides form scaffolding, creation, retrieval, and handling utilities for model views.
+    中文说明：提供表单脚手架、创建、获取和处理功能。
     """
 
     base_form_class = FlaskForm
-    """表单基类"""
+    """English: comment / 表单基类"""
 
-    # 表单配置属性（继承自 ModelView）
+    # English: ModelView / 表单配置属性（继承自 ModelView）
     form_args: Dict[str, Dict[str, Any]] = {}
-    """表单字段参数"""
+    """English: comment / 表单字段参数"""
 
     form_columns: Optional[list] = None
-    """表单字段列表"""
+    """English: comment / 表单字段列表"""
 
     form_excluded_columns: Optional[list] = None
-    """排除的表单字段"""
+    """English: comment / 排除的表单字段"""
 
     form_widget_args: Optional[Dict[str, Dict[str, Any]]] = None
-    """表单小部件参数"""
+    """English: comment / 表单小部件参数"""
 
     form_extra_fields: Optional[Dict[str, Any]] = None
-    """额外的表单字段"""
+    """English: comment / 额外的表单字段"""
 
     form_ajax_refs: Optional[Dict[str, Any]] = None
-    """AJAX 参考配置"""
+    """English: AJAX / AJAX 参考配置"""
 
-    # 缓存的表单类
+    # English: comment / 缓存的表单类
     _create_form_class: Optional[Type] = None
     _edit_form_class: Optional[Type] = None
     _delete_form_class: Optional[Type] = None
@@ -51,15 +52,14 @@ class FormsMixin:
         """
         Create `form.BaseForm` inherited class from the model. Must be implemented in the child class.
 
-        从模型创建表单类。
-
-        必须在子类中实现。
+        English summary: Build a form class from the model; child classes must implement this method.
+        中文说明：从模型创建表单类，必须在子类中实现。
 
         Returns:
-            Type: 表单类
+            Type: Form class / 表单类
 
         Raises:
-            NotImplementedError: 必须在子类中实现
+            NotImplementedError: must be implemented in subclass / 必须在子类中实现
         """
         return None
 
@@ -76,20 +76,18 @@ class FormsMixin:
 
         Must be implemented in the child class.
 
-        为 index_view（列表视图）创建表单。
-
-        仅使用 column_editable_list 中的列。
+        English summary: Build a form for the list view, using only editable columns defined for the index view.
+        中文说明：为 index_view（列表视图）创建表单，仅使用 column_editable_list 中的列。
 
         Args:
-            widget (Optional[Any]): WTForms 小部件类，默认为 XEditableWidget
-            validators (Optional[Dict]): 表单参数字典，仅包含验证器
-                例如 {'name': {'validators': [DataRequired()]}}
+            widget (Optional[Any]): WTForms widget class, default is XEditableWidget / WTForms 小部件类，默认为 XEditableWidget
+            validators (Optional[Dict]): Form argument dict containing only validators / 表单参数字典，仅包含验证器，例如 {'name': {'validators': [DataRequired()]}}
 
         Returns:
-            Type: 表单类
+            Type: Form class / 表单类
 
         Raises:
-            NotImplementedError: 必须在子类中实现
+            NotImplementedError: must be implemented in subclass / 必须在子类中实现
         """
         raise NotImplementedError("Please implement scaffold_list_form method")
 
@@ -116,32 +114,14 @@ class FormsMixin:
                 def get_list_form(self):
                     return self.scaffold_list_form(widget=CustomWidget)
 
-        获取可编辑列表视图的表单类。
-
-        仅使用 form_args 中的验证器来构建表单类。
-
-        允许重写可编辑列表视图的字段/小部件。例如：
-
-        ```python
-        from .model.widgets import XEditableWidget
-
-        class CustomWidget(XEditableWidget):
-            def get_kwargs(self, subfield, kwargs):
-                if subfield.type == 'TextAreaField':
-                    kwargs['data-type'] = 'textarea'
-                    kwargs['data-rows'] = '20'
-                return kwargs
-
-        class MyModelView(BaseModelView):
-            def get_list_form(self):
-                return self.scaffold_list_form(widget=CustomWidget)
-        ```
+        English summary: Return the editable list form, using only validators from form_args and allowing widget overrides.
+        中文说明：获取可编辑列表视图的表单类。仅使用 form_args 中的验证器来构建表单类，并允许重写可编辑列表视图的字段/小部件。
 
         Returns:
-            Type: 表单类
+            Type: Form class / 表单类
         """
         if self.form_args:
-            # 仅获取验证器，其他 form_args 可能会破坏 FieldList 包装
+            # English: form_args FieldList / 仅获取验证器，其他 form_args 可能会破坏 FieldList 包装
             validators = dict(
                 (key, {"validators": value["validators"]})
                 for key, value in self.form_args.items()
@@ -158,12 +138,11 @@ class FormsMixin:
 
         Override to implement customized behavior.
 
-        创建模型创建视图的表单类。
-
-        覆盖以实现自定义行为。
+        English summary: Return the form used for the create view; override this method to customize behavior.
+        中文说明：创建模型创建视图的表单类，覆盖以实现自定义行为。
 
         Returns:
-            Type: 表单类
+            Type: Form class / 表单类
         """
         return self.scaffold_form()
 
@@ -173,12 +152,11 @@ class FormsMixin:
 
         Override to implement customized behavior.
 
-        创建模型编辑视图的表单类。
-
-        覆盖以实现自定义行为。
+        English summary: Return the form used for the edit view; override this method to customize behavior.
+        中文说明：创建模型编辑视图的表单类，覆盖以实现自定义行为。
 
         Returns:
-            Type: 表单类
+            Type: Form class / 表单类
         """
         return self.scaffold_form()
 
@@ -188,12 +166,11 @@ class FormsMixin:
 
         Override to implement customized behavior.
 
-        创建模型删除视图的表单类。
-
-        覆盖以实现自定义行为。
+        English summary: Return the delete form; override this method to customize behavior.
+        中文说明：创建模型删除视图的表单类，覆盖以实现自定义行为。
 
         Returns:
-            Type: 表单类
+            Type: Form class / 表单类
         """
         class DeleteForm(self.base_form_class):
             id = HiddenField(validators=[InputRequired()])
@@ -206,12 +183,11 @@ class FormsMixin:
 
         Override to implement custom behavior.
 
-        实例化模型创建表单并返回。
-
-        覆盖以实现自定义行为。
+        English summary: Instantiate and return the create form; override to customize behavior.
+        中文说明：实例化模型创建表单并返回，覆盖以实现自定义行为。
 
         Returns:
-            Any: 表单实例
+            Any: Form instance / 表单实例
         """
         return self._create_form_class(*args, **kwargs)
 
@@ -221,12 +197,11 @@ class FormsMixin:
 
         Override to implement custom behavior.
 
-        实例化模型编辑表单并返回。
-
-        覆盖以实现自定义行为。
+        English summary: Instantiate and return the edit form; override to customize behavior.
+        中文说明：实例化模型编辑表单并返回，覆盖以实现自定义行为。
 
         Returns:
-            Any: 表单实例
+            Any: Form instance / 表单实例
         """
         return self._edit_form_class(*args, **kwargs)
 
@@ -236,12 +211,11 @@ class FormsMixin:
 
         Override to implement custom behavior.
 
-        实例化模型删除表单并返回。
-
-        覆盖以实现自定义行为。
+        English summary: Instantiate and return the delete form; override to customize behavior.
+        中文说明：实例化模型删除表单并返回，覆盖以实现自定义行为。
 
         Returns:
-            Any: 表单实例
+            Any: Form instance / 表单实例
         """
         return self._delete_form_class(*args, **kwargs)
 
@@ -251,12 +225,11 @@ class FormsMixin:
 
         Override to implement custom behavior.
 
-        实例化模型编辑表单（用于列表视图）并返回。
-
-        覆盖以实现自定义行为。
+        English summary: Instantiate and return the list-edit form for the index view; override to customize behavior.
+        中文说明：实例化模型编辑表单（用于列表视图）并返回，覆盖以实现自定义行为。
 
         Returns:
-            Any: 表单实例
+            Any: Form instance / 表单实例
         """
         return self._list_form_class(*args, **kwargs)
 

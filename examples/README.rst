@@ -2,6 +2,11 @@
 Examples
 ========================
 
+English / 中文
+----------------
+This page lists runnable examples for Flask-Exts and shows how to run them locally.
+中文说明：本页面列出 Flask-Exts 的可运行示例，并说明如何在本地启动这些示例。
+
 Download
 =========
 

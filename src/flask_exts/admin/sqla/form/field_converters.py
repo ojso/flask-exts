@@ -1,7 +1,8 @@
 """
-基础字段转换器
+Basic field converters / 基础字段转换器
 
-提供 SQLAlchemy 字段类型到 WTForms 字段的基础转换功能。
+English summary: This module converts SQLAlchemy column types to WTForms field definitions and provides reusable conversion helpers.
+中文说明：提供 SQLAlchemy 字段类型到 WTForms 字段的基础转换功能。
 """
 
 import types
@@ -77,20 +78,21 @@ class BaseFormFieldConverter:
 
 class BasicFieldConverter:
     """
-    基础字段类型转换器
+    Basic field type converter / 基础字段类型转换器
 
-    提供基本数据类型（字符串、整数、小数、布尔等）的字段转换。
+    English summary: Converts common scalar types such as strings, integers, decimals, and booleans to WTForms fields.
+    中文说明：提供基本数据类型（字符串、整数、小数、布尔等）的字段转换。
     """
 
     def _nullable_common(self, column, field_args, **extra):
-        """处理可空列"""
+        """English: comment / 处理可空列"""
         if column.nullable:
             filters = field_args.get("filters", [])
             filters.append(lambda x: x or None)
             field_args["filters"] = filters
 
     def _string_common(self, column, field_args, **extra):
-        """处理字符串列的通用逻辑"""
+        """English: comment / 处理字符串列的通用逻辑"""
         if (
             hasattr(column.type, "length")
             and isinstance(column.type.length, int)
@@ -101,24 +103,24 @@ class BasicFieldConverter:
 
     @convert_form_field("String")
     def conv_string(self, column, field_args, **extra):
-        """转换 String 字段"""
+        """English: convert String field / 转换 String 字段"""
         self._string_common(column=column, field_args=field_args, **extra)
         return StringField(**field_args)
 
     @convert_form_field("Text")
     def conv_text(self, field_args, **extra):
-        """转换 Text 字段"""
+        """English: convert Text field / 转换 Text 字段"""
         self._string_common(field_args=field_args, **extra)
         return TextAreaField(**field_args)
 
     @convert_form_field("Boolean")
     def conv_boolean(self, field_args, **extra):
-        """转换 Boolean 字段"""
+        """English: convert Boolean field / 转换 Boolean 字段"""
         return BooleanField(**field_args)
 
     @convert_form_field("Integer", "BigInteger", "SmallInteger")
     def convert_integer(self, column, field_args, **extra):
-        """转换 Integer 字段"""
+        """English: convert Integer field / 转换 Integer 字段"""
         unsigned = getattr(column.type, "unsigned", False)
         if unsigned:
             field_args["validators"].append(validators.NumberRange(min=0))
@@ -126,7 +128,7 @@ class BasicFieldConverter:
 
     @convert_form_field("Numeric", "DECIMAL", "Float", "REAL", "DOUBLE")
     def convert_decimal(self, column, field_args, **extra):
-        """转换 Decimal/Float 字段"""
+        """English: convert Decimal Float field / 转换 Decimal/Float 字段"""
         # override default decimal places limit, use database defaults instead
         field_args.setdefault("places", None)
         return DecimalField(**field_args)
@@ -134,25 +136,26 @@ class BasicFieldConverter:
 
 class TemporalFieldConverter:
     """
-    时间类型字段转换器
+    Temporal field converter / 时间类型字段转换器
 
-    提供日期、时间、日期时间字段的转换。
+    English summary: Converts date, time, and datetime fields to appropriate WTForms input fields.
+    中文说明：提供日期、时间、日期时间字段的转换。
     """
 
     @convert_form_field("Date")
     def convert_date(self, field_args, **extra):
-        """转换 Date 字段"""
+        """English: convert Date field / 转换 Date 字段"""
         field_args["widget"] = DatePickerWidget()
         return DateField(**field_args)
 
     @convert_form_field("Time")
     def convert_time(self, field_args, **extra):
-        """转换 Time 字段"""
+        """English: convert Time field / 转换 Time 字段"""
         return TimeField(**field_args)
 
     @convert_form_field("DateTime", "TIMESTAMP")
     def convert_datetime(self, field_args, **extra):
-        """转换 DateTime 字段"""
+        """English: convert DateTime field / 转换 DateTime 字段"""
         from wtforms.fields import DateTimeLocalField
 
         return DateTimeLocalField(**field_args)
@@ -160,14 +163,15 @@ class TemporalFieldConverter:
 
 class SpecialFieldConverter:
     """
-    特殊类型字段转换器
+    Special field converter / 特殊类型字段转换器
 
-    提供枚举、JSON 等特殊字段的转换。
+    English summary: Converts enum and JSON-like fields to compatible WTForms widgets and field types.
+    中文说明：提供枚举、JSON 等特殊字段的转换。
     """
 
     @convert_form_field("Enum")
     def convert_enum(self, column, field_args, **extra):
-        """转换 Enum 字段"""
+        """English: convert Enum field / 转换 Enum 字段"""
         from enum import Enum
         from ....forms.fields import Select2Field
 
@@ -185,7 +189,7 @@ class SpecialFieldConverter:
 
     @convert_form_field("JSON")
     def convert_json(self, field_args, **extra):
-        """转换 JSON 字段"""
+        """English: convert JSON field / 转换 JSON 字段"""
         from ....forms.fields import JSONField
 
         return JSONField(**field_args)

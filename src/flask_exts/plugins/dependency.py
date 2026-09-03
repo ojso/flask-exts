@@ -1,12 +1,12 @@
 """
 =============================================================
-插件依赖管理
+Plugin dependency management / 插件依赖管理
 =============================================================
 """
 from .base import PluginBase
 
 # ============================================================
-#  依赖解析器
+# English: Dependency resolver / Dependency resolver / 依赖解析器
 # ============================================================
 
 class DependencyNotFoundError(Exception): pass
@@ -14,7 +14,7 @@ class CircularDependencyError(Exception): pass
 
 
 def parse_dependency(dep_str):
-    """解析依赖字符串: 'core.db', 'core.cache?', 'core.db>=2.0'"""
+    """English: Parse dependency string core db cache / Parse dependency string: 'core.db', 'core.cache?', 'core.db>=2.0' / 解析依赖字符串: 'core.db', 'core.cache?', 'core.db>=2.0"""
     optional = dep_str.endswith("?")
     if optional:
         dep_str = dep_str[:-1]
@@ -29,7 +29,7 @@ def parse_dependency(dep_str):
 
 
 class DependencyResolver:
-    """依赖解析：拓扑排序 + 循环检测 + 可选依赖 + 版本约束"""
+    """English: Dependency resolution topological sort circular detection / Dependency resolution: topological sort + circular detection + optional dependency + version constraint / 依赖解析：拓扑排序 + 循环检测 + 可选依赖 + 版本约束"""
 
     def __init__(self):
         self._plugins = {}
@@ -45,16 +45,16 @@ class DependencyResolver:
             for dep_str in plugin.dependencies:
                 dep = parse_dependency(dep_str)
 
-                # 可选依赖：不存在就跳过
+                # English: Optional dependency skip if missing / Optional dependency: skip if missing / 可选依赖：不存在就跳过
                 if dep["optional"] and dep["name"] not in self._plugins:
                     print(f"    [跳过可选] {name} → {dep['name']} (未安装)")
                     continue
 
-                # 必须依赖：不存在就报错
+                # English: Required dependency raise error if missing / Required dependency: raise error if missing / 必须依赖：不存在就报错
                 if dep["name"] not in self._plugins:
                     raise DependencyNotFoundError(f"{name} 依赖 {dep['name']}，但未注册")
 
-                # 版本检查
+                # English: Version check / Version check / 版本检查
                 if dep["version"]:
                     target = self._plugins[dep["name"]]
                     op, ver = dep["version"]
@@ -65,7 +65,7 @@ class DependencyResolver:
                 graph[dep["name"]].append(name)
                 in_degree[name] += 1
 
-        # Kahn 算法拓扑排序
+        # English: Kahn topological sort / Kahn topological sort / Kahn 算法拓扑排序
         queue = sorted([n for n, d in in_degree.items() if d == 0])
         order = []
         while queue:
@@ -84,7 +84,7 @@ class DependencyResolver:
 
     @staticmethod
     def _check_version(current, op, required):
-        """简单版本比较"""
+        """English: Simple version comparison / Simple version comparison / 简单版本比较"""
         def to_tuple(v):
             try:
                 return tuple(int(x) for x in v.split("."))
@@ -97,7 +97,7 @@ class DependencyResolver:
 
 
 # ============================================================
-#  插件上下文（服务定位器）
+# English: Plugin context service locator / Plugin context (service locator) / 插件上下文（服务定位器）
 # ============================================================
 
 class PluginContext:
@@ -129,7 +129,7 @@ class PluginContext:
 
 
 # ============================================================
-#  演示 1：基本依赖 + 拓扑排序
+# English: 1 / 演示 1：基本依赖 + 拓扑排序
 # ============================================================
 print("=" * 60)
 print("演示 1：依赖声明 + 拓扑排序")
@@ -192,7 +192,7 @@ print(f"    trade.auth = {trade.auth}")
 
 
 # ============================================================
-#  演示 2：循环依赖检测
+# English: 2 / 演示 2：循环依赖检测
 # ============================================================
 print("\n" + "=" * 60)
 print("演示 2：循环依赖检测")
@@ -217,7 +217,7 @@ except CircularDependencyError as e:
 
 
 # ============================================================
-#  演示 3：缺失依赖检测
+# English: 3 / 演示 3：缺失依赖检测
 # ============================================================
 print("\n" + "=" * 60)
 print("演示 3：缺失依赖检测")
@@ -238,7 +238,7 @@ except DependencyNotFoundError as e:
 
 
 # ============================================================
-#  演示 4：可选依赖 + 版本约束
+# English: 4 / 演示 4：可选依赖 + 版本约束
 # ============================================================
 print("\n" + "=" * 60)
 print("演示 4：可选依赖 + 版本约束")
@@ -274,7 +274,7 @@ print(f"\n  加载顺序: {' → '.join(order)}")
 
 
 # ============================================================
-#  演示 5：版本不兼容
+# English: 5 / 演示 5：版本不兼容
 # ============================================================
 print("\n" + "=" * 60)
 print("演示 5：版本不兼容")
@@ -301,7 +301,7 @@ except DependencyNotFoundError as e:
 
 
 # ============================================================
-#  总结
+# English: comment / 总结
 # ============================================================
 print("\n" + "=" * 60)
 print("总结")

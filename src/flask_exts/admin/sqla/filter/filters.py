@@ -1,14 +1,14 @@
 """
-SQLAlchemy 过滤器 - 优化版本
+SQLAlchemy filters - optimized version / SQLAlchemy 过滤器 - 优化版本
 
-这个模块提供了 SQLAlchemy 特定的过滤器实现。
-优化：使用工厂函数动态生成类型特定的过滤器，减少重复代码。
+English summary: This module provides SQLAlchemy-specific filter implementations and uses factory functions to generate type-specific filters with less duplicated code.
+中文说明：这个模块提供了 SQLAlchemy 特定的过滤器实现，并使用工厂函数动态生成类型特定的过滤器，减少重复代码。
 
-架构：
-  - BaseSQLAFilter: 基础过滤器类
-  - 基础操作过滤器：FilterEqual, FilterNotEqual, FilterGreater, FilterSmaller, FilterLike, FilterNotLike, FilterEmpty, FilterInList, FilterNotInList
-  - 工厂函数：create_type_filters() 动态生成类型特定的过滤器
-  - FilterConverter: 转换器，根据列类型返回适当的过滤器
+Architecture:
+  - BaseSQLAFilter: base filter class / 基础过滤器类
+  - Basic operation filters: FilterEqual, FilterNotEqual, FilterGreater, FilterSmaller, FilterLike, FilterNotLike, FilterEmpty, FilterInList, FilterNotInList / 基础操作过滤器：FilterEqual, FilterNotEqual, FilterGreater, FilterSmaller, FilterLike, FilterNotLike, FilterEmpty, FilterInList, FilterNotInList
+  - Factory function: create_type_filters() dynamically generates type-specific filters / 工厂函数：create_type_filters() 动态生成类型特定的过滤器
+  - FilterConverter: converts column types to the proper filter / FilterConverter：转换器，根据列类型返回适当的过滤器
 """
 
 from flask_babel import lazy_gettext
@@ -28,7 +28,7 @@ from ...model.filter import (
 )
 
 # ===============================================
-# 基础过滤器类
+# English: comment / 基础过滤器类
 # ===============================================
 
 
@@ -149,7 +149,7 @@ class FilterNotInList(FilterInList):
 
 
 # ===============================================
-# 工厂函数 - 动态生成类型特定的过滤器
+# English: comment / 工厂函数 - 动态生成类型特定的过滤器
 # ===============================================
 
 
@@ -168,10 +168,10 @@ def create_type_filters(base_filter_classes, type_mixin, type_prefix):
     result = {}
 
     for base_filter in base_filter_classes:
-        # 生成类名：DateEqualFilter, IntGreaterFilter 等
+        # English: DateEqualFilter IntGreaterFilter / 生成类名：DateEqualFilter, IntGreaterFilter 等
         class_name = f"{type_prefix}{base_filter.__name__}"
 
-        # 动态创建类
+        # English: comment / 动态创建类
         new_class = type(class_name, (base_filter, type_mixin), {})
 
         result[class_name] = new_class
@@ -180,7 +180,7 @@ def create_type_filters(base_filter_classes, type_mixin, type_prefix):
 
 
 # ===============================================
-# 特殊过滤器 - 枚举和选择类型
+# English: comment / 特殊过滤器 - 枚举和选择类型
 # ===============================================
 
 
@@ -276,16 +276,16 @@ class ChoiceTypeNotLikeFilter(FilterNotLike):
 
 
 # ===============================================
-# 类型特定的过滤器（使用工厂函数生成）
+# English: comment / 类型特定的过滤器（使用工厂函数生成）
 # ===============================================
 
-# Boolean 过滤器
+# English: Boolean filter / Boolean 过滤器
 BooleanEqualFilter = type("BooleanEqualFilter", (FilterEqual, BaseBooleanFilter), {})
 BooleanNotEqualFilter = type(
     "BooleanNotEqualFilter", (FilterNotEqual, BaseBooleanFilter), {}
 )
 
-# Int 过滤器
+# English: Int filter / Int 过滤器
 IntEqualFilter = type("IntEqualFilter", (FilterEqual, BaseIntFilter), {})
 IntNotEqualFilter = type("IntNotEqualFilter", (FilterNotEqual, BaseIntFilter), {})
 IntGreaterFilter = type("IntGreaterFilter", (FilterGreater, BaseIntFilter), {})
@@ -295,7 +295,7 @@ IntNotInListFilter = type(
     "IntNotInListFilter", (FilterNotInList, BaseIntListFilter), {}
 )
 
-# Float 过滤器
+# English: Float filter / Float 过滤器
 FloatEqualFilter = type("FloatEqualFilter", (FilterEqual, BaseFloatFilter), {})
 FloatNotEqualFilter = type("FloatNotEqualFilter", (FilterNotEqual, BaseFloatFilter), {})
 FloatGreaterFilter = type("FloatGreaterFilter", (FilterGreater, BaseFloatFilter), {})
@@ -305,7 +305,7 @@ FloatNotInListFilter = type(
     "FloatNotInListFilter", (FilterNotInList, BaseFloatListFilter), {}
 )
 
-# Date 过滤器
+# English: Date filter / Date 过滤器
 DateEqualFilter = type("DateEqualFilter", (FilterEqual, BaseDateFilter), {})
 DateNotEqualFilter = type("DateNotEqualFilter", (FilterNotEqual, BaseDateFilter), {})
 DateGreaterFilter = type("DateGreaterFilter", (FilterGreater, BaseDateFilter), {})
@@ -335,7 +335,7 @@ class DateNotBetweenFilter(DateBetweenFilter):
         return query.add_filter(self.column, "not_between", value)
 
 
-# DateTime 过滤器
+# English: DateTime filter / DateTime 过滤器
 DateTimeEqualFilter = type("DateTimeEqualFilter", (FilterEqual, BaseDateTimeFilter), {})
 DateTimeNotEqualFilter = type(
     "DateTimeNotEqualFilter", (FilterNotEqual, BaseDateTimeFilter), {}
@@ -371,7 +371,7 @@ class DateTimeNotBetweenFilter(DateTimeBetweenFilter):
         return query.add_filter(self.column, "not_between", value)
 
 
-# Time 过滤器
+# English: Time filter / Time 过滤器
 TimeEqualFilter = type("TimeEqualFilter", (FilterEqual, BaseTimeFilter), {})
 TimeNotEqualFilter = type("TimeNotEqualFilter", (FilterNotEqual, BaseTimeFilter), {})
 TimeGreaterFilter = type("TimeGreaterFilter", (FilterGreater, BaseTimeFilter), {})

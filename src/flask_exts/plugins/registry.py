@@ -3,10 +3,10 @@ from .base import PluginBase
 
 
 class PluginRegistry:
-    """单一职责：管理插件的注册与查询，全局注册表，但按 namespace 隔离"""
+    """English: Single responsibility manage plugin registration and / Single responsibility: manage plugin registration and lookup; a global registry isolated by namespace / 单一职责：管理插件的注册与查询，全局注册表，但按 namespace 隔离"""
 
     def __init__(self):
-        self._plugins: dict[str, dict[str, Any]] = {}  # {namespace: {name: plugin}}
+        self._plugins: dict[str, dict[str, Any]] = {}  # {namespace: {name: plugin}} / {namespace: {name: plugin}}
 
     def register(self, plugin: PluginBase):
         ns = plugin.namespace
@@ -23,7 +23,7 @@ class PluginRegistry:
     def get_all(self, namespace: str = None):
         if namespace:
             return self._plugins.get(namespace, {})
-        # 返回所有
+        # English: Return all / Return all / 返回所有
         result = {}
         for ns, plugins in self._plugins.items():
             for name, p in plugins.items():

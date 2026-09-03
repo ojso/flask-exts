@@ -13,13 +13,14 @@ from ...exposer import expose_url
 
 class ExportOperationsMixin:
     """
-    导出操作功能混入类。
+    Export operations mixin / 导出操作功能混入类
 
-    提供数据导出功能，支持 CSV 和其他格式。
+    English summary: Provides data export capabilities for CSV and other tabular file formats.
+    中文说明：提供数据导出能力，支持 CSV 及其他表格格式。
     """
 
     can_export: bool = False
-    """是否允许导出"""
+    """English: comment / 是否允许导出; export is enabled when can_export is True / 导出功能在 can_export 为 True 时启用."""
 
     export_max_rows: int = 0
     """
@@ -49,9 +50,9 @@ class ExportOperationsMixin:
         Raises:
             NotImplementedError: 如果使用了不支持的宏
         """
-        # 验证格式化器
+        # English: comment / 验证格式化器
         for col, func in (self.column_formatters_export or {}).items():
-            # 跳过未导出的列
+            # English: comment / 跳过未导出的列
             # skip checking columns not being exported
             if col not in [col for col, _ in self._export_columns]:
                 continue
@@ -63,11 +64,11 @@ class ExportOperationsMixin:
                     "Column: %s" % (col,)
                 )
 
-        # 获取列表参数
+        # English: comment / 获取列表参数
         # Grab parameters from URL
         view_args = self._get_list_args()
 
-        # 根据索引映射列名
+        # English: comment / 根据索引映射列名
         # Map column index to column name
         sort_column = self._get_column_by_idx(view_args.sort)
         if sort_column is not None:
@@ -98,23 +99,23 @@ class ExportOperationsMixin:
         """
         count, data = self._export_data()
 
-        # CSV Echo 类用于流式写入
+        # English: CSV Echo / CSV Echo 类用于流式写入
         class Echo:
-            """实现类似文件的写方法的对象An object that implements just the write method of the file-like interface."""
+            """English: An object that implements just the / 实现类似文件的写方法的对象An object that implements just the write method of the file-like interface."""
 
             def write(self, value):
-                """返回值而不是存储在缓冲区Write the value by returning it, instead of storing in a buffer."""
+                """English: Write the value by returning it / 返回值而不是存储在缓冲区Write the value by returning it, instead of storing in a buffer."""
                 return value
 
         writer = csv.writer(Echo())
 
         def generate():
-            # 在开始处添加列标题
+            # English: comment / 在开始处添加列标题
             # Append the column titles at the beginning
             titles = [c[1] for c in self._export_columns]
             yield writer.writerow(titles)
 
-            # 逐行生成数据
+            # English: comment / 逐行生成数据
             for row in data:
                 vals = [self.get_export_value(row, c[0]) for c in self._export_columns]
                 yield writer.writerow(vals)
@@ -144,24 +145,24 @@ class ExportOperationsMixin:
         filename = self.get_export_name(export_type)
         disposition = "attachment;filename=%s" % (secure_filename(filename),)
 
-        # 猜测 MIME 类型
+        # English: MIME type / 猜测 MIME 类型
         mimetype, encoding = mimetypes.guess_type(filename)
         if not mimetype:
             mimetype = "application/octet-stream"
         if encoding:
             mimetype = "%s; charset=%s" % (mimetype, encoding)
 
-        # 创建 tablib 数据集
+        # English: create tablib / 创建 tablib 数据集
         ds = tablib.Dataset(headers=[c[1] for c in self._export_columns])
 
         count, data = self._export_data()
 
-        # 添加数据行
+        # English: comment / 添加数据行
         for row in data:
             vals = [self.get_export_value(row, c[0]) for c in self._export_columns]
             ds.append(vals)
 
-        # 导出为指定格式
+        # English: comment / 导出为指定格式
         try:
             try:
                 response_data = ds.export(format=export_type)

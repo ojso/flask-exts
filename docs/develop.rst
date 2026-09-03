@@ -2,6 +2,14 @@
 Develop
 =======
 
+English / 中文
+----------------
+This page is provided in English with a Chinese summary for easier reading.
+中文说明：本页面保留英文原文，并附带中文说明，便于中英文对照阅读。
+
+English summary: This guide explains how to install the project for development, run the test suite, build the docs, and manage translations with Babel.
+中文说明：本指南说明如何在开发环境中安装项目、运行测试、构建文档以及使用 Babel 管理国际化翻译。
+
 Install
 =======
 
@@ -67,5 +75,4 @@ pybabel
 
     # compile message catalogs to MO files
 
-    $ pybabel compile -d src/flask_exts/translations -D messages 
-
+    $ pybabel compile -d src/flask_exts/translations -D messages

@@ -6,7 +6,16 @@
 Welcome to Flask-Exts's documentation!
 ======================================
 
+English / 中文
+----------------
+This page is provided in English with a Chinese summary for easier reading.
+中文说明：本页面保留英文原文，并附带中文说明，便于中英文对照阅读。
+
+
 **Flask-Exts** is a Flask extensions with SQLAlchemy, babel, forms, fields, widgets, and so on.
+
+中文说明：Flask-Exts 是一个基于 Flask 的扩展集合，提供 SQLAlchemy、Babel、表单、字段、小组件和后台管理等能力，便于快速搭建完整的 Web 应用。
+English summary: Flask-Exts is a Flask extension toolkit that brings together SQLAlchemy, Babel, forms, fields, widgets, and admin features to help build complete web applications faster.
 
 Flask-Exts is mainly inspired by:
 

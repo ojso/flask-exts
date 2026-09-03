@@ -1,7 +1,8 @@
 """
-创建操作 (Create Operations)
+Create operations / 创建操作
 
-负责创建新模型的操作。
+English summary: This module defines the mixin for creating new model instances from a form.
+中文说明：这个模块定义了用于从表单创建新模型实例的混入类。
 """
 
 from typing import Any, Union, Optional
@@ -9,9 +10,10 @@ from typing import Any, Union, Optional
 
 class CreateOperationsMixin:
     """
-    创建操作功能混入类。
+    Create operations mixin / 创建操作功能混入类
 
-    提供 create_model 方法。
+    English summary: Provides the create_model method for instantiating a model from form data.
+    中文说明：提供 create_model 方法，用于从表单数据创建模型实例。
     """
 
     def create_model(self, form: Any) -> Union[Any, bool]:

@@ -3,13 +3,10 @@ from typing import Tuple, List, Any, Optional
 
 class ReadOperationsMixin:
     """
-    读取操作功能混入类。
+    Read operations mixin / 读取操作功能混入类
 
-    读取操作 (Read Operations)
-
-    负责从数据源读取模型数据的操作。
-
-    提供 get_list 和 get_one 方法。
+    English summary: Provides data access methods for reading model records, including list retrieval and single-record lookup.
+    中文说明：提供读取模型数据的方法，包括列表检索和单条记录查询。
     """
 
     def get_list(

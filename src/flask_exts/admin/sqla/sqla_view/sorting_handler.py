@@ -6,13 +6,13 @@
 
 
 class SortingHandler:
-    """处理排序逻辑"""
+    """English: comment / 处理排序逻辑"""
 
     def __init__(self, view):
         self.view = view
 
     def apply_sorting(self, query, sort_column, sort_desc):
-        """应用排序"""
+        """English: comment / 应用排序"""
         if sort_column:
             if sort_column in self.view.column_sortable_list:
                 column = self.view.model_admin.get_column_for_field_name(

@@ -1,8 +1,8 @@
 """
-值处理 (Value Processing)
+Value processing / 值处理
 
-负责管理 Admin 模型视图中的值提取、格式化和处理。
-包括获取模型属性、应用格式化器、处理选择项等。
+English summary: This module handles value extraction, formatting, and transformation for Admin model views, including nested attributes and choice mappings.
+中文说明：负责管理 Admin 模型视图中的值提取、格式化和处理，包括获取模型属性、应用格式化器和处理选择项等。
 """
 
 from typing import Optional, Dict, Any, Callable
@@ -11,32 +11,33 @@ from functools import reduce
 
 class ValuesMixin:
     """
-    值处理功能混入类。
+    Value processing mixin / 值处理功能混入类
 
-    提供值提取、格式化和处理功能。
+    English summary: Provides value extraction, formatting, and rendering support for list/detail/export views.
+    中文说明：提供值提取、格式化和处理功能。
     """
 
-    # 值处理配置属性（继承自 ModelView）
+    # English: ModelView / 值处理配置属性（继承自 ModelView）
     column_formatters: Dict[str, Callable] = {}
-    """列表视图的列格式化器"""
+    """English: comment / 列表视图的列格式化器"""
 
     column_formatters_export: Optional[Dict[str, Callable]] = None
-    """导出视图的列格式化器"""
+    """English: comment / 导出视图的列格式化器"""
 
     column_formatters_detail: Optional[Dict[str, Callable]] = None
-    """详情视图的列格式化器"""
+    """English: comment / 详情视图的列格式化器"""
 
     column_type_formatters: Optional[Dict[type, Callable]] = None
-    """类型格式化器（用于列表视图）"""
+    """English: comment / 类型格式化器（用于列表视图）"""
 
     column_type_formatters_export: Optional[Dict[type, Callable]] = None
-    """类型格式化器（用于导出）"""
+    """English: comment / 类型格式化器（用于导出）"""
 
     column_type_formatters_detail: Optional[Dict[type, Callable]] = None
-    """类型格式化器（用于详情视图）"""
+    """English: comment / 类型格式化器（用于详情视图）"""
 
     column_choices: Dict[str, Dict[Any, str]] = {}
-    """列选择项映射"""
+    """English: comment / 列选择项映射"""
 
     def _get_object_attr(self, obj: Any, name: str) -> Any:
         """
@@ -94,19 +95,19 @@ class ValuesMixin:
         Returns:
             Any: 格式化后的值
         """
-        # 首先应用列格式化器
+        # English: comment / 首先应用列格式化器
         column_fmt = column_formatters.get(name)
         if column_fmt is not None:
             value = column_fmt(self, model, name)
         else:
             value = self._get_object_attr(model, name)
 
-        # 应用选择项映射
+        # English: comment / 应用选择项映射
         choices_map = self.column_choices.get(name, {})
         if choices_map:
             return choices_map.get(value) or value
 
-        # 应用类型格式化器
+        # English: comment / 应用类型格式化器
         if column_type_formatters:
             type_fmt = None
             for typeobj, formatter in column_type_formatters.items():

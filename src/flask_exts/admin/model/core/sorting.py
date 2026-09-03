@@ -1,8 +1,8 @@
 """
-排序管理 (Sorting Management)
+Sorting management / 排序管理
 
-负责管理 Admin 模型视图中的排序功能。
-包括可排序列的脚手架生成、排序列的获取和排序状态管理。
+English summary: This module manages sorting behavior for Admin model views, including sortable-column scaffolding, lookup, and default ordering.
+中文说明：负责管理 Admin 模型视图中的排序功能，包括可排序列的脚手架生成、排序列的获取和排序状态管理。
 """
 
 from typing import Optional, Dict, List, Tuple, Union
@@ -10,16 +10,17 @@ from typing import Optional, Dict, List, Tuple, Union
 
 class SortingMixin:
     """
-    排序管理功能混入类。
+    Sorting mixin / 排序管理功能混入类
 
-    提供排序列配置、排序状态管理等功能。
+    English summary: Provides sortable-column configuration and default ordering logic for model views.
+    中文说明：提供排序列配置、排序状态管理等功能。
     """
 
-    # 排序配置属性（继承自 ModelView）
+    # English: ModelView / 排序配置属性（继承自 ModelView）
     column_sortable_list: Optional[List[Union[str, Tuple[str, str]]]] = None
     column_default_sort: Optional[Union[str, Tuple[str, bool], List[Tuple[str, bool]]]] = None
 
-    # 缓存的排序列
+    # English: comment / 缓存的排序列
     _sortable_columns: Dict[str, Union[str, List[str]]] = {}
 
     def scaffold_sortable_columns(self) -> Dict[str, Union[str, List[str]]]:
@@ -102,13 +103,13 @@ class SortingMixin:
         """
         if self.column_default_sort:
             if isinstance(self.column_default_sort, list):
-                # 已经是列表格式
+                # English: comment / 已经是列表格式
                 return self.column_default_sort
             elif isinstance(self.column_default_sort, tuple):
-                # 单个元组，转换为列表
+                # English: comment / 单个元组，转换为列表
                 return [self.column_default_sort]
             else:
-                # 字符串格式，转换为 (column, False) 升序
+                # English: column False / 字符串格式，转换为 (column, False) 升序
                 return [(self.column_default_sort, False)]
 
         return None

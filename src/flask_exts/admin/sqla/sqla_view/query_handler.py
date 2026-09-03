@@ -6,13 +6,13 @@
 
 
 class QueryHandler:
-    """处理 SQLAlchemy 查询的构建和过滤"""
+    """English: handle SQLAlchemy / 处理 SQLAlchemy 查询的构建和过滤"""
 
     def __init__(self, view):
         self.view = view
 
     def apply_search(self, query, search):
-        """应用搜索过滤"""
+        """English: comment / 应用搜索过滤"""
         if search:
             search_query = None
             values = search.split(" ")
@@ -24,7 +24,7 @@ class QueryHandler:
         return query
 
     def apply_filters(self, query, filters):
-        """应用筛选条件"""
+        """English: comment / 应用筛选条件"""
         if filters:
             for filter_name, filter_value in filters.items():
                 col_filter = self.view._filters.get(filter_name)

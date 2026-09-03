@@ -40,31 +40,32 @@ class BaseModelView(
 ):
     """
 
-    这个类是抽象的。特定的后端实现应该继承这个类并实现以下抽象方法：
+    English summary: This base class is abstract. Concrete backend implementations should inherit it and implement the required abstract methods below.
+    中文说明：这个类是抽象的。特定的后端实现应该继承这个类，并实现下面的抽象方法。
 
-    - scaffold_list_columns()：从模型获取列列表
-    - scaffold_sortable_columns()：从模型获取可排序列列表
-    - scaffold_form()：从模型生成表单类
-    - scaffold_list_form()：从模型生成列表编辑表单
-    - get_list()：获取分页数据列表
-    - get_one()：按 ID 获取单个模型
-    - get_pk_value()：从模型获取主键值
-    - create_model()：从表单创建新模型
-    - update_model()：从表单更新现有模型
-    - delete_model()：删除模型
-    - _create_ajax_loader()：创建 AJAX 加载器（如果使用 form_ajax_refs）
+    - scaffold_list_columns(): return the column list from the model / 从模型获取列列表
+    - scaffold_sortable_columns(): return the sortable column list / 从模型获取可排序列列表
+    - scaffold_form(): build a form class from the model / 从模型生成表单类
+    - scaffold_list_form(): build a list-edit form from the model / 从模型生成列表编辑表单
+    - get_list(): fetch paginated data from the model / 获取分页数据列表
+    - get_one(): fetch one model by id / 按 ID 获取单个模型
+    - get_pk_value(): read the primary key value from a model / 从模型获取主键值
+    - create_model(): create a new model from a form / 从表单创建新模型
+    - update_model(): update an existing model from a form / 从表单更新现有模型
+    - delete_model(): delete a model / 删除模型
+    - _create_ajax_loader(): create an AJAX loader when form_ajax_refs is used / 创建 AJAX 加载器（如果使用 form_ajax_refs）
 
     Example:
         ```python
         from flask_exts.admin.model import ModelView
 
         class UserAdmin(ModelView):
-            # 配置
+            # English: configuration / 配置
             column_list = ['id', 'username', 'email', 'created_at']
             column_sortable_list = ['username', 'created_at']
             form_columns = ['username', 'email', 'password']
 
-            # 实现抽象方法
+            # English: comment / 实现抽象方法
             def scaffold_list_columns(self):
                 return ['id', 'username', 'email', 'created_at']
 
@@ -72,25 +73,25 @@ class BaseModelView(
                 return {'username': 'username', 'created_at': 'created_at'}
 
             def scaffold_form(self):
-                # 使用 flask_sqlalchemy 或其他 ORM
+                # English: use flask_sqlalchemy ORM / 使用 flask_sqlalchemy 或其他 ORM
                 return generate_form_from_model(User)
 
             def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
                 query = User.query
-                # 应用搜索、排序、过滤和分页
+                # English: apply search, sorting, filtering and pagination / 应用搜索、排序、过滤和分页
                 return count, items
         ```
 
     Features:
-        - 列管理（列表、详情、导出视图）
-        - 排序支持
-        - 分页支持
-        - 值格式化和类型转换
-        - 表单生成和处理
-        - CRUD 操作
-        - 导出功能（CSV、JSON、Excel 等）
-        - 操作和行操作
-        - 过滤和搜索
+        - Column management for list, detail, and export views / 列管理（列表、详情、导出视图）
+        - Sorting support / 排序支持
+        - Pagination support / 分页支持
+        - Value formatting and type conversion / 值格式化和类型转换
+        - Form generation and handling / 表单生成和处理
+        - CRUD operations / CRUD 操作
+        - Export support (CSV, JSON, Excel, etc.) / 导出功能（CSV、JSON、Excel 等）
+        - Actions and row actions / 操作和行操作
+        - Filtering and searching / 过滤和搜索
     """
 
     # Permissions

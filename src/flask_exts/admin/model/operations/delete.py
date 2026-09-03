@@ -1,7 +1,8 @@
 """
-删除操作 (Delete Operations)
+Delete operations / 删除操作
 
-负责删除模型的操作。
+English summary: This module defines the mixin for deleting model records.
+中文说明：这个模块定义了用于删除模型记录的混入类。
 """
 
 from typing import Any
@@ -9,9 +10,10 @@ from typing import Any
 
 class DeleteOperationsMixin:
     """
-    删除操作功能混入类。
+    Delete operations mixin / 删除操作功能混入类
 
-    提供 delete_model 方法。
+    English summary: Provides the delete_model method for removing model instances.
+    中文说明：提供 delete_model 方法，用于删除模型实例。
     """
 
     def delete_model(self, model: Any) -> bool:

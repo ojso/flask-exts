@@ -1,8 +1,17 @@
 Getting Started
 ===============
 
+English / 中文
+----------------
+This page is provided in English with a Chinese summary for easier reading.
+中文说明：本页面保留英文原文，并附带中文说明，便于中英文对照阅读。
+
+
 This tutorial walks you through building a complete Flask application with Flask-Exts,
 including user authentication, an admin panel, and data management.
+
+中文说明：本教程将带你从零开始构建一个完整的 Flask 应用，包含用户认证、后台管理面板和数据管理功能。
+English summary: This guide shows how to build a full Flask application with Flask-Exts, including authentication, an admin dashboard, and database-driven management features.
 
 Prerequisites
 -------------

@@ -56,7 +56,7 @@ class RiskCheckPlugin(PluginBase):
         return amount <= self.max_amount
 
 
-# ============ 使用 ============
+# English: use / ============ 使用 ============
 
 print("=" * 60)
 print("方案 C：全局注册 + 模块隔离")

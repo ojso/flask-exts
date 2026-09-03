@@ -2,6 +2,14 @@
 Configure
 ==========
 
+English / 中文
+----------------
+This page is provided in English with a Chinese summary for easier reading.
+中文说明：本页面保留英文原文，并附带中文说明，便于中英文对照阅读。
+
+English summary: This page lists the most commonly used Flask-Exts configuration options for admin access, CSRF, i18n, and email behavior.
+中文说明：本页列出 Flask-Exts 常用配置项，涵盖后台访问控制、CSRF、国际化和邮件设置等关键功能。
+
 ========================== ============================================================================
 ``ADMIN_ALLOW_ACCESS``     Set to ``False`` to limit admin view access to role‑granted users only;
                            otherwise, all users have access.
@@ -22,4 +30,3 @@ Configure
                            It is a dict for smtp with keys: host,port,user,password.
                            Default is ``None``.
 ========================== ============================================================================
-

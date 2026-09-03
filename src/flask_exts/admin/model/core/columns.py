@@ -55,20 +55,21 @@ class ColumnsMixin:
             ['name', 'first_name', 'last_name']
 
         Returns:
-            List[str]: 字段名称列表
+            List[str]: Field name list / 字段名称列表
         """
         return []
 
     def get_column_label(self, column_name: str) -> str:
         """
         Return a human-readable column name.
-        如果在 column_labels 中定义了标签，使用该标签；否则使用格式化的列名。
+        English summary: If a label is defined in column_labels, use it; otherwise format the field name into a display label.
+        中文说明：如果在 column_labels 中定义了标签，使用该标签；否则使用格式化的列名。
 
         :param column_name:
             Model field name.
 
         Returns:
-            str: 格式化的列标签
+            str: Formatted column label / 格式化的列标签
         """
         if self.column_labels and column_name in self.column_labels:
             return self.column_labels[column_name]
@@ -77,18 +78,17 @@ class ColumnsMixin:
 
     def _prettify_name(self, name: str) -> str:
         """
-        将字段名转换为友好的显示名。
-
-        例如：user_name -> User name
+        English summary: Convert a field name into a friendlier display name such as user_name -> User name.
+        中文说明：将字段名转换为友好的显示名，例如：user_name -> User name。
 
         Args:
-            name (str): 字段名
+            name (str): Field name / 字段名
 
         Returns:
-            str: 格式化后的名称
+            str: Formatted name / 格式化后的名称
         """
-        # 这个方法应该在父类中定义
-        # 这里假设它存在或需要在子类中实现
+        # English: comment / This method should be defined in the parent class.
+        # English: comment / Here we assume it exists or should be implemented in a subclass.
         return name.replace("_", " ").title()
 
     def get_column_names(self, columns: List[str]) -> List[Tuple[str, str]]:
@@ -98,12 +98,11 @@ class ColumnsMixin:
         :param columns:
             List of columns to include in the results.
 
-
         Args:
-            columns (List[str]): 列名列表
+            columns (List[str]): Column names / 列名列表
 
         Returns:
-            List[Tuple[str, str]]: (字段名, 格式化名称) 的元组列表
+            List[Tuple[str, str]]: (field name, formatted name) tuples / (字段名, 格式化名称) 的元组列表
         """
         return [(c, self.get_column_label(c)) for c in columns]
 
@@ -113,12 +112,11 @@ class ColumnsMixin:
 
         If `column_list` is not set, the columns from `scaffold_list_columns` will be used.
 
-        获取列表视图中使用的列。
-
-        如果设置了 column_list，使用它；否则使用 scaffold_list_columns() 返回的列。
+        English summary: Return the columns used by the list view.
+        中文说明：获取列表视图中使用的列。如果设置了 column_list，使用它；否则使用 scaffold_list_columns() 返回的列。
 
         Returns:
-            List[Tuple[str, str]]: (字段名, 标签) 的元组列表
+            List[Tuple[str, str]]: (field name, label) tuples / (字段名, 标签) 的元组列表
         """
         return self.get_column_names(self.column_list or self.scaffold_list_columns())
 
@@ -126,12 +124,12 @@ class ColumnsMixin:
         """
         Get a list of tuples with the model field name and formatted name for the columns in `column_details_list`.
         If `column_details_list` is not set, the columns from `scaffold_list_columns` will be used.
-        获取详情视图中使用的列。
 
-        如果设置了 column_details_list，使用它；否则使用 scaffold_list_columns() 返回的列。
+        English summary: Return the columns shown in the detail view.
+        中文说明：获取详情视图中使用的列。如果设置了 column_details_list，使用它；否则使用 scaffold_list_columns() 返回的列。
 
         Returns:
-            List[Tuple[str, str]]: (字段名, 标签) 的元组列表
+            List[Tuple[str, str]]: (field name, label) tuples / (字段名, 标签) 的元组列表
         """
         return self.get_column_names(
             self.column_details_list or self.scaffold_list_columns()
@@ -142,12 +140,12 @@ class ColumnsMixin:
         Get a list of tuples with the model field name and formatted name for the columns in `column_export_list`.
         If `column_export_list` is not set, it will attempt to use the columns from `column_list`
         or finally the columns from `scaffold_list_columns` will be used.
-        获取导出视图中使用的列。
 
-        首先尝试使用 column_export_list，然后 column_list，最后使用 scaffold_list_columns()。
+        English summary: Return the columns used by the export view.
+        中文说明：获取导出视图中使用的列。首先尝试使用 column_export_list，然后 column_list，最后使用 scaffold_list_columns()。
 
         Returns:
-            List[Tuple[str, str]]: (字段名, 标签) 的元组列表
+            List[Tuple[str, str]]: (field name, label) tuples / (字段名, 标签) 的元组列表
         """
         return self.get_column_names(
             self.column_export_list or self.column_list or self.scaffold_list_columns()
@@ -156,13 +154,15 @@ class ColumnsMixin:
     def _get_column_by_idx(self, idx: Optional[int]) -> Optional[Tuple[str, str]]:
         """
         Return column index by idx.
-        通过索引获取列。
+
+        English summary: Look up a column tuple by index in the list view columns.
+        中文说明：通过索引获取列。
 
         Args:
-            idx (Optional[int]): 列索引
+            idx (Optional[int]): Column index / 列索引
 
         Returns:
-            Optional[Tuple[str, str]]: (字段名, 标签) 的元组，或 None 如果索引无效
+            Optional[Tuple[str, str]]: (field name, label) tuple or None when the index is invalid / (字段名, 标签) 的元组，或 None 如果索引无效
         """
         if idx is None or idx < 0 or idx >= len(self._list_columns):
             return None
@@ -181,15 +181,11 @@ class ColumnsMixin:
 
         placeholder is: "Name, Last Name"
 
-        返回搜索占位符文本。
-
-        基于 column_searchable_list 和 column_labels 生成。
-
-        例如，如果 column_searchable_list = ('name', 'email')
-        则返回 "Name, Email"
+        English summary: Build a search placeholder text from the searchable column labels.
+        中文说明：返回搜索占位符文本。基于 column_searchable_list 和 column_labels 生成，例如，如果 column_searchable_list = ('name', 'email')，则返回 "Name, Email"。
 
         Returns:
-            Optional[str]: 搜索占位符或 None
+            Optional[str]: Search placeholder or None / 搜索占位符或 None
         """
         if not self.column_searchable_list:
             return None

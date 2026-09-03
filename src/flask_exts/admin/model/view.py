@@ -1,33 +1,33 @@
 """
-ModelView - Admin 模型视图主类
+ModelView - admin model view core / ModelView - 管理模型视图主类
 
-这个模块提供了简化后的 ModelView 类，通过继承 BaseModelView 来获得所有功能。
-BaseModelView 组合了所有核心功能模块和操作模块。
+English summary: This module provides the streamlined ModelView class, which inherits BaseModelView to gain the full admin feature set.
+中文说明：这个模块提供了简化后的 ModelView 类，通过继承 BaseModelView 来获得所有功能。BaseModelView 组合了所有核心功能模块和操作模块。
 
-改进：
-- 职责分离：核心功能分离到独立模块
-- 更易于测试和维护
-- 保持 100% 向后兼容性
+Improvements:
+- Separation of responsibilities: core features moved into dedicated modules / 职责分离：核心功能分离到独立模块
+- Easier to test and maintain / 更易于测试和维护
+- 100% backward compatibility retained / 保持 100% 向后兼容性
 
-架构：
+Architecture:
     ModelView (this file, < 300 lines)
-    ├── 视图路由方法（index_view, create_view 等）
-    └── 继承自 BaseModelView
-        ├── View（基础 Flask 视图）
-        ├── ColumnsMixin（列管理）
-        ├── SortingMixin（排序管理）
-        ├── PaginationMixin（分页管理）
-        ├── ValuesMixin（值处理）
-        ├── FormsMixin（表单管理）
-        ├── ReadOperationsMixin（读取操作）
-        ├── CreateOperationsMixin（创建操作）
-        ├── UpdateOperationsMixin（更新操作）
-        ├── DeleteOperationsMixin（删除操作）
-        ├── ExportOperationsMixin（导出操作）
-        ├── ActionsMixin（动作管理）
-        ├── RowActionMixin（行动作）
-        ├── FilterMixin（过滤管理）
-        └── FormMixin（表单混入）
+    ├── view routes such as index_view, create_view, etc. / 视图路由方法（index_view, create_view 等）
+    └── inherits BaseModelView / 继承自 BaseModelView
+        ├── View (Flask base view) / View（基础 Flask 视图）
+        ├── ColumnsMixin (column management) / ColumnsMixin（列管理）
+        ├── SortingMixin (sorting management) / SortingMixin（排序管理）
+        ├── PaginationMixin (pagination management) / PaginationMixin（分页管理）
+        ├── ValuesMixin (value handling) / ValuesMixin（值处理）
+        ├── FormsMixin (form management) / FormsMixin（表单管理）
+        ├── ReadOperationsMixin (read operations) / ReadOperationsMixin（读取操作）
+        ├── CreateOperationsMixin (create operations) / CreateOperationsMixin（创建操作）
+        ├── UpdateOperationsMixin (update operations) / UpdateOperationsMixin（更新操作）
+        ├── DeleteOperationsMixin (delete operations) / DeleteOperationsMixin（删除操作）
+        ├── ExportOperationsMixin (export operations) / ExportOperationsMixin（导出操作）
+        ├── ActionsMixin (actions management) / ActionsMixin（动作管理）
+        ├── RowActionMixin (row actions) / RowActionMixin（行动作）
+        ├── FilterMixin (filter management) / FilterMixin（过滤管理）
+        └── FormMixin (form mixin) / FormMixin（表单混入）
 """
 
 from typing import Optional
@@ -43,7 +43,10 @@ from .type_formatters import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTE
 
 class ModelView(BaseModelView):
     """
-    Model view.
+    Model view / 模型视图
+
+    English summary: This view does not make assumptions about the backing store, but expects a standard model API with listing, retrieval, creation, update, deletion, and form scaffolding.
+    中文说明：此视图不假设底层数据存储方式，但要求遵循标准模型接口，支持列表、查询、创建、更新、删除和表单脚手架。
 
     This view does not make any assumptions on how models are stored or managed, but expects the following:
 
@@ -59,16 +62,16 @@ class ModelView(BaseModelView):
         2. Implement various data-related methods (`get_list`, `get_one`, `create_model`, etc)
         3. Implement automatic form generation from the model representation (`scaffold_form`)
 
-    提供完整的 Admin 界面功能，包括列表、创建、编辑、删除、详情和导出。
+    Provides complete admin interface functionality, including list, create, edit, delete, detail, and export features / 提供完整的 Admin 界面功能，包括列表、创建、编辑、删除、详情和导出。
 
-    这个类是 BaseModelView 的直接扩展，后者组合了所有功能模块。
-    ModelView 只定义了路由视图方法和初始化逻辑。
+    This class is a direct extension of BaseModelView, which composes all functional modules / 这个类是 BaseModelView 的直接扩展，后者组合了所有功能模块。
+    ModelView mainly defines route methods and initialization logic / ModelView 只定义了路由视图方法和初始化逻辑。
 
     Attributes:
-        base_form_class: 表单基类
-        can_create: 是否允许创建
-        can_edit: 是否允许编辑
-        can_delete: 是否允许删除
+        base_form_class: base form class / 表单基类
+        can_create: whether creation is allowed / 是否允许创建
+        can_edit: whether editing is allowed / 是否允许编辑
+        can_delete: whether deletion is allowed / 是否允许删除
 
     Example:
         ```python
@@ -123,13 +126,13 @@ class ModelView(BaseModelView):
         self._init_view()
 
     def _init_view(self):
-        """初始化视图配置"""
+        """English: comment / 初始化视图配置"""
         self._list_columns = self.get_list_columns()
         self._sortable_columns = self.get_sortable_columns()
         self._details_columns = self.get_details_columns()
         self._export_columns = self.get_export_columns()
 
-        # 初始化 Mixin
+        # English: initialize Mixin / 初始化 Mixin
         if hasattr(self, 'init_actions'):
             self.init_actions()
         if hasattr(self, 'init_row_actions'):
@@ -139,14 +142,14 @@ class ModelView(BaseModelView):
 
         self._init_forms()
 
-        # 设置默认的格式化器
+        # English: comment / 设置默认的格式化器
         if self.column_formatters_export is None:
             self.column_formatters_export = self.column_formatters
 
         if self.column_formatters_detail is None:
             self.column_formatters_detail = self.column_formatters
 
-        # 导入类型格式化器的默认值
+        # English: comment / 导入类型格式化器的默认值
         
 
         if self.column_type_formatters is None:
@@ -162,7 +165,7 @@ class ModelView(BaseModelView):
             self.column_descriptions = dict()
 
     def _init_forms(self):
-        """初始化表单"""
+        """English: comment / 初始化表单"""
         self._form_ajax_refs = self._process_ajax_references()
 
         if self.form_widget_args is None:
@@ -172,7 +175,7 @@ class ModelView(BaseModelView):
         self._edit_form_class = self.get_edit_form()
         self._delete_form_class = self.get_delete_form()
 
-        # 列表视图内联编辑
+        # English: comment / 列表视图内联编辑
         if self.column_editable_list:
             self._list_form_class = self.get_list_form()
         else:
@@ -196,7 +199,7 @@ class ModelView(BaseModelView):
         return name in self.column_editable_list and self.can_edit
 
     def is_action_allowed(self, name: str) -> bool:
-        """验证操作是否被允许"""
+        """English: comment / 验证操作是否被允许"""
         if name == "delete" and not self.can_delete:
             return False
         return super().is_action_allowed(name) if hasattr(super(), 'is_action_allowed') else True
@@ -219,14 +222,14 @@ class ModelView(BaseModelView):
         return result
 
     def _create_ajax_loader(self, name, options):
-        """创建 AJAX 加载器 Model backend will override this to implement AJAX model loading."""
+        """English: create AJAX Model backend will override / 创建 AJAX 加载器 Model backend will override this to implement AJAX model loading."""
         raise NotImplementedError()
 
     def get_redirect_target(self, param_name="url", endpoint=".index_view"):
-        """获取重定向目标 URL"""
+        """English: URL / 获取重定向目标 URL"""
         return request.values.get(param_name) or self.get_url(endpoint)
 
-    # =========== 视图路由方法 ===========
+    # English: comment / =========== 视图路由方法 ===========
 
     @expose_url("/")
     def index_view(self):
@@ -235,17 +238,17 @@ class ModelView(BaseModelView):
         # Grab parameters from URL
         view_args = self._get_list_args()
 
-        # 根据列索引映射列名
+        # English: comment / 根据列索引映射列名
         # Map column index to column name
         sort_column = self._get_column_by_idx(view_args.sort)
         if sort_column is not None:
             sort_column = sort_column[0]
 
-        # 获取安全的页大小
+        # English: comment / 获取安全的页大小
         # Get page size
         page_size = self.get_safe_page_size(view_args.page_size)
 
-        # 获取数据
+        # English: comment / 获取数据
         # Get count and data
         count, data = self.get_list(
             view_args.page,
@@ -256,7 +259,7 @@ class ModelView(BaseModelView):
             page_size=page_size,
         )
 
-        # 计算页数
+        # English: comment / 计算页数
         # Calculate number of pages
         if count is not None and page_size:
             num_pages = int(ceil(count / float(page_size)))
@@ -265,7 +268,7 @@ class ModelView(BaseModelView):
         else:
             num_pages = None  # 使用简单分页器 use simple pager
 
-        # URL 生成辅助函数
+        # English: URL / URL 生成辅助函数
         # Various URL generation helpers
         def pager_url(p):
             # Do not add page number if it is first page
@@ -486,7 +489,7 @@ class ModelView(BaseModelView):
 
         form = self.list_form()
 
-        # 防止验证问题 - 删除未提交的字段
+        # English: comment / 防止验证问题 - 删除未提交的字段
         for field in list(form):
             if (field.name in request.form) or (field.name == "csrf_token"):
                 pass

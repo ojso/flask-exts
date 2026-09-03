@@ -1,6 +1,7 @@
 # simple.py
 import os.path as op
 from flask import Flask
+from flask import render_template
 from flask_exts import ExtensionManager
 from flask_exts.admin import expose_url
 from flask_exts.admin import View
@@ -30,7 +31,12 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + op.join(
 exts = ExtensionManager()
 exts.init_app(app)
 # Register a mock view
-exts.admin.register_view(MockView())
+admin = app.extensions["exts"].get_extension("admin").get_admin()
+admin.register_view(MockView())
+
+@app.route('/test')
+def test():
+    return render_template('test.html')
 
 with app.app_context():
     db.create_all()
