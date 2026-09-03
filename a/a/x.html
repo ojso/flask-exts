@@ -1,0 +1,61 @@
+Stimulus 的主要优势：
+
+| 功能 | 说明 | 你的场景需要吗 |
+|---|---|---|
+| **生命周期** | connect/disconnect 自动管理 | ✅ 有用 |
+| **声明式事件绑定** | `data-action` 替代 addEventListener | ❌ 你已用 InlineEdit 类管理 |
+| **Target 引用** | `data-*-target` 声明式获取 DOM 元素 | ❌ 你用 `querySelector` 够了 |
+| **Values 系统** | `data-*-value` 响应式状态 + 变更回调 | ❌ 你用 dataset 直接读 |
+| **Outlet 通信** | 跨 controller 引用 | ❌ 只有一个 editor 单例 |
+| **CSS 类管理** | 自动切换 class | ❌ 你手动控制 |
+| **自动清理** | disconnect 时自动解绑事件 | ✅ 有用，但 AbortController 也能做 |
+
+---
+
+### 结论
+
+对于 **inline-edit 这种单一职责组件**，Stimulus 的优势不大：
+
+```
+Stimulus 方式：
+  HTML: data-controller + data-action + data-target + data-value
+  JS:   Controller 类，依赖 Stimulus API
+
+原生类方式：
+  HTML: class="editable" + data-edit-* 配置
+  JS:   InlineEdit 类，纯 DOM，可移植
+
+你的需求 → 原生类更合适
+```
+
+---
+
+### Stimulus 真正有价值的场景
+
+- **多个 controller 交互**：Outlet 系统，比如 `modal` 和 `form` controller 互相引用
+- **复杂状态管理**：Values 的类型转换和变更回调
+- **团队规范**：强制声明式写法，代码风格统一
+- **大型项目**：多个独立组件需要统一管理
+
+---
+
+### 建议
+
+对于 inline-edit，**直接用原生 JS**：
+
+```javascript
+class InlineEdit {
+  constructor() { /* ... */ }
+  bind(scope) { /* addEventListener */ }
+  open(target) { /* ... */ }
+  save() { /* fetch + 更新 DOM */ }
+  cancel() { /* ... */ }
+  destroy() { /* 清理 */ }
+}
+
+// 初始化
+const editor = new InlineEdit()
+document.querySelectorAll(".card").forEach(card => editor.bind(card))
+```
+
+简单、可移植、不依赖框架。以后换框架？不需要换——这个类本身就是框架无关的。

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inline Edit — Framework Agnostic</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 40px 20px;
+    }
+
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: #666; margin-bottom: 32px; }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    /* 可编辑文字 */
+    .editable {
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px dashed transparent;
+      transition: all 0.2s;
+      font-size: 16px;
+      display: inline-block;
+    }
+
+    .editable:hover {
+      background: #f0f7ff;
+      border-color: #4a9eff;
+    }
+
+    .editable.editing { opacity: 0.3; }
+
+    .editable-block {
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px dashed transparent;
+      transition: all 0.2s;
+      line-height: 1.5;
+      display: block;
+    }
+
+    .editable-block:hover {
+      background: #f0f7ff;
+      border-color: #4a9eff;
+    }
+
+    .editable-block.editing { opacity: 0.3; }
+
+    /* 表格 */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; }
+    th { font-weight: 600; color: #666; font-size: 13px; text-transform: uppercase; }
+    td .editable { display: inline-block; }
+
+    /* 全局浮动编辑框 */
+    .inline-edit-overlay {
+      position: fixed;
+      z-index: 1000;
+      display: none;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      padding: 8px;
+    }
+
+    .inline-edit-overlay.active {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .inline-edit-overlay input,
+    .inline-edit-overlay textarea {
+      font-size: 16px;
+      padding: 4px 8px;
+      border: 2px solid #4a9eff;
+      border-radius: 4px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .inline-edit-overlay input:focus,
+    .inline-edit-overlay textarea:focus {
+      border-color: #2d7ed9;
+      box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
+    }
+
+    .inline-edit-overlay input { width: 250px; }
+    .inline-edit-overlay textarea { width: 350px; min-height: 80px; resize: vertical; display: none; }
+
+    .inline-edit-overlay .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .inline-edit-overlay .actions button {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inline-edit-overlay .actions .confirm-btn {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .inline-edit-overlay .actions .confirm-btn:hover { background: #c8e6c9; }
+
+    .inline-edit-overlay .actions .cancel-btn {
+      background: #ffebee;
+      color: #c62828;
+    }
+    .inline-edit-overlay .actions .cancel-btn:hover { background: #ffcdd2; }
+
+    /* 加载状态 */
+    .inline-edit-overlay.saving .actions button { opacity: 0.5; pointer-events: none; }
+    .inline-edit-overlay.saving input,
+    .inline-edit-overlay.saving textarea { border-color: #999; }
+
+    /* 错误提示 */
+    .inline-edit-error {
+      position: fixed;
+      z-index: 1001;
+      background: #ffebee;
+      color: #c62828;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      display: none;
+    }
+    .inline-edit-error.active { display: block; }
+
+    .hint { font-size: 12px; color: #999; margin-top: 8px; }
+    .toast {
+      display: none;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Inline Edit — 无框架绑定</h1>
+    <p class="subtitle">HTML 只放 class 和 data 配置，JS 用 API 初始化，与任何框架无关</p>
+
+    <!-- 示例 1: 基础文本 -->
+    <div class="card">
+      <h2>1. 基础文本编辑</h2>
+      <span class="editable" data-edit-url="/api/user/name" data-edit-value="张三">张三</span>
+      <div class="toast">✓ 已保存</div>
+      <p class="hint">点击文字 → 编辑 → ✓ 确认 → AJAX 保存</p>
+    </div>
+
+    <!-- 示例 2: 表格多字段 -->
+    <div class="card">
+      <h2>2. 表格多字段</h2>
+      <table>
+        <thead><tr><th>字段</th><th>值</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>姓名</td>
+            <td><span class="editable" data-edit-url="/api/user/name" data-edit-value="李四">李四</span></td>
+          </tr>
+          <tr>
+            <td>邮箱</td>
+            <td><span class="editable" data-edit-url="/api/user/email" data-edit-value="lisi@example.com">lisi@example.com</span></td>
+          </tr>
+          <tr>
+            <td>电话</td>
+            <td><span class="editable" data-edit-url="/api/user/phone" data-edit-value="138-0000-0000">138-0000-0000</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 示例 3: 多行文本 -->
+    <div class="card">
+      <h2>3. 多行文本编辑</h2>
+      <span class="editable editable-block" data-edit-url="/api/user/bio" data-edit-value="这是一段可以编辑的多行文本。点击这里进入编辑模式。" data-edit-multiline="true">这是一段可以编辑的多行文本。点击这里进入编辑模式。</span>
+      <p class="hint">Ctrl+Enter 保存</p>
+    </div>
+
+    <!-- 示例 4: 模拟失败 -->
+    <div class="card">
+      <h2>4. 模拟保存失败（输入 "error" 触发）</h2>
+      <span class="editable" data-edit-url="/api/user/name" data-edit-value="试试输入 error" data-edit-fail-on="error">试试输入 error</span>
+      <div class="toast">✓ 已保存</div>
+      <p class="hint">输入 "error" 模拟服务器拒绝</p>
+    </div>
+  </div>
+
+  <!-- 全局共享编辑框 -->
+  <div class="inline-edit-overlay">
+    <input type="text">
+    <textarea></textarea>
+    <div class="actions">
+      <button class="confirm-btn">✓</button>
+      <button class="cancel-btn">✗</button>
+    </div>
+  </div>
+
+  <!-- 全局错误提示 -->
+  <div class="inline-edit-error"></div>
+
+  <script type="module">
+    // ============================================
+    // InlineEdit — 纯 JS 实现，不依赖任何框架
+    // ============================================
+    class InlineEdit {
+      constructor(options = {}) {
+        // 默认配置
+        this.options = {
+          selector: ".editable",
+          overlaySelector: ".inline-edit-overlay",
+          errorSelector: ".inline-edit-error",
+          onSave: null,        // 自定义保存函数 (url, value) => Promise<{success, value?, message?}>
+          onSuccess: null,     // 保存成功回调 (value, target) => void
+          onError: null,       // 保存失败回调 (message, target) => void
+          ...options
+        }
+
+        this.overlay = document.querySelector(this.options.overlaySelector)
+        this.input = this.overlay.querySelector("input")
+        this.textarea = this.overlay.querySelector("textarea")
+        this.confirmBtn = this.overlay.querySelector(".confirm-btn")
+        this.cancelBtn = this.overlay.querySelector(".cancel-btn")
+        this.errorEl = document.querySelector(this.options.errorSelector)
+
+        this.activeTarget = null
+        this.originalValue = ""
+        this.isMultiline = false
+        this.saving = false
+
+        this._bindOverlayEvents()
+        this._bindEditables()
+      }
+
+      // ---------- 初始化绑定 ----------
+
+      _bindEditables() {
+        document.querySelectorAll(this.options.selector).forEach(el => {
+          el.addEventListener("click", () => this.open(el))
+        })
+      }
+
+      _bindOverlayEvents() {
+        // 按钮
+        this.confirmBtn.addEventListener("click", () => this.save())
+        this.cancelBtn.addEventListener("click", () => this.cancel())
+
+        // 键盘
+        this.input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); this.save() }
+          if (e.key === "Escape") { e.preventDefault(); this.cancel() }
+        })
+        this.textarea.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") { e.preventDefault(); this.cancel() }
+          if (e.key === "Enter" && e.ctrlKey) { e.preventDefault(); this.save() }
+        })
+
+        // 失焦 → 取消
+        const handleBlur = () => {
+          setTimeout(() => {
+            if (!this.saving && !this.overlay.contains(document.activeElement)) {
+              this.cancel()
+            }
+          }, 150)
+        }
+        this.input.addEventListener("blur", handleBlur)
+        this.textarea.addEventListener("blur", handleBlur)
+      }
+
+      // ---------- 公开 API ----------
+
+      // 打开编辑框
+      open(target) {
+        if (this.activeTarget && this.activeTarget !== target) this.cancel()
+
+        this.activeTarget = target
+        this.originalValue = target.dataset.editValue || target.textContent.trim()
+        this.isMultiline = target.dataset.editMultiline === "true"
+
+        this.input.value = this.originalValue
+        this.textarea.value = this.originalValue
+        this.input.style.display = this.isMultiline ? "none" : "block"
+        this.textarea.style.display = this.isMultiline ? "block" : "none"
+
+        target.classList.add("editing")
+        this._positionOverlay(target)
+        this.overlay.classList.add("active")
+
+        requestAnimationFrame(() => {
+          const field = this.isMultiline ? this.textarea : this.input
+          field.focus()
+          field.select()
+        })
+      }
+
+      // 保存
+      async save() {
+        if (this.saving) return
+
+        const newValue = this.isMultiline
+          ? this.textarea.value.trim()
+          : this.input.value.trim()
+
+        if (newValue === this.originalValue) {
+          this.close()
+          return
+        }
+
+        this.saving = true
+        this.overlay.classList.add("saving")
+        this._hideError()
+
+        try {
+          const url = this.activeTarget.dataset.editUrl
+          const failOn = this.activeTarget.dataset.editFailOn
+
+          // 调用保存函数（优先用自定义的，否则用内置模拟）
+          const saveFn = this.options.onSave || this._defaultSave.bind(this)
+          const result = await saveFn(url, newValue, failOn)
+
+          if (result.success) {
+            const serverValue = result.value ?? newValue
+            this.activeTarget.textContent = serverValue
+            this.activeTarget.dataset.editValue = serverValue
+            if (this.options.onSuccess) {
+              this.options.onSuccess(serverValue, this.activeTarget)
+            }
+            this.close()
+          } else {
+            this._showError(result.message || "保存失败")
+            if (this.options.onError) {
+              this.options.onError(result.message, this.activeTarget)
+            }
+          }
+        } catch (e) {
+          this._showError("网络错误，请重试")
+        } finally {
+          this.saving = false
+          this.overlay.classList.remove("saving")
+        }
+      }
+
+      // 取消
+      cancel() {
+        this._hideError()
+        this.close()
+      }
+
+      // 关闭
+      close() {
+        if (this.activeTarget) this.activeTarget.classList.remove("editing")
+        this.overlay.classList.remove("active")
+        this.activeTarget = null
+      }
+
+      // 刷新绑定（动态添加新 .editable 元素后调用）
+      refresh() {
+        this._bindEditables()
+      }
+
+      // 销毁
+      destroy() {
+        this.close()
+        // 移除事件监听（简化版，实际可用 AbortController）
+      }
+
+      // ---------- 内部方法 ----------
+
+      _positionOverlay(target) {
+        const rect = target.getBoundingClientRect()
+        this.overlay.style.top = `${rect.top - 4}px`
+        this.overlay.style.left = `${rect.right + 8}px`
+        if (rect.right + 8 + 350 > window.innerWidth) {
+          this.overlay.style.left = `${rect.left}px`
+          this.overlay.style.top = `${rect.bottom + 4}px`
+        }
+      }
+
+      // 内置模拟 AJAX（可被 options.onSave 替换）
+      async _defaultSave(url, value, failOn) {
+        console.log(`[AJAX] POST ${url} → { value: "${value}" }`)
+        await new Promise(r => setTimeout(r, 600))
+
+        if (failOn && value === failOn) {
+          return { success: false, message: `"${value}" 不合法，服务器拒绝` }
+        }
+        return { success: true, value }
+
+        // ===== 实际项目替换为：=====
+        // const res = await fetch(url, {
+        //   method: "PATCH",
+        //   headers: { "Content-Type": "application/json" },
+        //   body: JSON.stringify({ value })
+        // })
+        // const data = await res.json()
+        // return res.ok
+        //   ? { success: true, value: data.value }
+        //   : { success: false, message: data.message }
+      }
+
+      _showError(message) {
+        const rect = this.overlay.getBoundingClientRect()
+        this.errorEl.textContent = message
+        this.errorEl.style.top = `${rect.bottom + 4}px`
+        this.errorEl.style.left = `${rect.left}px`
+        this.errorEl.classList.add("active")
+      }
+
+      _hideError() {
+        this.errorEl.classList.remove("active")
+      }
+    }
+
+    // ============================================
+    // 初始化 — 一行代码启动
+    // ============================================
+    const editor = new InlineEdit({
+      // 可选：自定义保存函数
+      // onSave: async (url, value) => {
+      //   const res = await fetch(url, {
+      //     method: "PATCH",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ value })
+      //   })
+      //   const data = await res.json()
+      //   return res.ok ? { success: true, value: data.value } : { success: false, message: data.message }
+      // },
+
+      // 可选：保存成功回调
+      onSuccess: (value, target) => {
+        const toast = target.closest(".card")?.querySelector(".toast")
+        if (toast) {
+          toast.style.display = "block"
+          setTimeout(() => { toast.style.display = "none" }, 2000)
+        }
+      }
+    })
+
+    // 暴露到全局，方便调试
+    window.inlineEdit = editor
+  </script>
+</body>
+</html>

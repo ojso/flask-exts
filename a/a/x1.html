@@ -1,0 +1,178 @@
+## 一个页面只有一个 Application
+
+```
+Application（单例）
+  ├── Controller A（来自 a_controller.js）
+  ├── Controller B（来自 b_controller.js）
+  └── Controller C（来自 c_controller.js）
+```
+
+多个 Application 会导致冲突，**不推荐**。
+
+---
+
+## 项目结构
+
+```
+src/
+├── controllers/
+│   ├── index.js          ← 统一导出
+│   ├── inline_edit_controller.js
+│   ├── modal_controller.js
+│   └── dropdown_controller.js
+├── application.js        ← 启动 Stimulus
+└── app.js                ← 入口
+```
+
+---
+
+## 各文件写法
+
+### 1. 每个 Controller 单独文件
+
+```javascript
+// controllers/inline_edit_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["display", "input"]
+  
+  connect() {
+    console.log("inline-edit connected")
+  }
+  
+  edit() { /* ... */ }
+  save() { /* ... */ }
+}
+```
+
+```javascript
+// controllers/modal_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  connect() {
+    console.log("modal connected")
+  }
+  
+  open() { /* ... */ }
+  close() { /* ... */ }
+}
+```
+
+---
+
+### 2. 统一注册（index.js）
+
+```javascript
+// controllers/index.js
+import { Application } from "@hotwired/stimulus"
+
+// 导入所有 controllers
+import InlineEditController from "./inline_edit_controller"
+import ModalController from "./modal_controller"
+import DropdownController from "./dropdown_controller"
+
+// 启动（全局只有一个）
+const application = Application.start()
+
+// 注册
+application.register("inline-edit", InlineEditController)
+application.register("modal", ModalController)
+application.register("dropdown", DropdownController)
+
+export { application }
+```
+
+---
+
+### 3. 入口文件
+
+```javascript
+// application.js 或 app.js
+import "./controllers"  // 导入即启动
+
+// 或如果需要访问 application
+import { application } from "./controllers"
+window.app = application
+```
+
+---
+
+## 自动加载（Stimulus 约定）
+
+如果文件多，手动注册麻烦，可以用 **Stimulus Autoloader**（需要构建工具）：
+
+```javascript
+// controllers/index.js
+import { Application } from "@hotwired/stimulus"
+
+const application = Application.start()
+
+// 自动加载所有 *_controller.js
+const controllers = import.meta.glob("./*_controller.js", { eager: true })
+
+Object.entries(controllers).forEach(([path, module]) => {
+  const name = path
+    .replace("./", "")
+    .replace("_controller.js", "")
+    .replace(/_/g, "-")
+  application.register(name, module.default)
+})
+```
+
+文件名约定：
+- `inline_edit_controller.js` → `data-controller="inline-edit"`
+- `modal_controller.js` → `data-controller="modal"`
+
+---
+
+## HTML 中使用
+
+```html
+<!-- 不同 controller 独立工作 -->
+<div data-controller="inline-edit">
+  <span class="editable">文本</span>
+</div>
+
+<div data-controller="modal">
+  <button data-action="click->modal#open">打开</button>
+</div>
+
+<!-- 一个元素多个 controller -->
+<div data-controller="inline-edit dropdown">
+  <span class="editable">文本</span>
+</div>
+```
+
+---
+
+## 跨 Controller 通信（Outlet）
+
+```javascript
+// modal_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static outlets = ["inline-edit"]  // 声明依赖
+  
+  connect() {
+    // 可以访问同页面内的 inline-edit controller
+    this.inlineEditOutlets.forEach(outlet => {
+      console.log(outlet.element)
+    })
+  }
+}
+```
+
+---
+
+## 总结
+
+| 问题 | 答案 |
+|---|---|
+| 多个 controller 文件 | 每个文件 `export default class` |
+| 多个 application | **不行**，全局只有一个 |
+| 引入方式 | `import` + `application.register()` |
+| 自动加载 | 用 `import.meta.glob` + 约定命名 |
+| 跨 controller 通信 | 用 `static outlets` |

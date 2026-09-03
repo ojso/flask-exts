@@ -1,0 +1,193 @@
+## Flask + 动态 JS 入口
+
+### 方案 1：模板变量控制
+
+```python
+# app.py
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return render_template("home.html", js_entry="home")
+
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html", js_entry="dashboard")
+
+@app.route("/settings")
+def settings():
+    return render_template("settings.html", js_entry="settings")
+```
+
+```html
+<!-- base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My App</title>
+</head>
+<body>
+  {% block content %}{% endblock %}
+
+  <!-- 公共 JS -->
+  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+  <!-- 页面专属 JS（由变量控制） -->
+  {% if js_entry %}
+  <script type="module" src="{{ url_for('static', filename='js/pages/' ~ js_entry ~ '.js') }}"></script>
+  {% endif %}
+</body>
+</html>
+```
+
+```html
+<!-- home.html -->
+{% extends "base.html" %}
+{% block content %}
+  <div data-controller="inline-edit">
+    <span class="editable">首页内容</span>
+  </div>
+{% endblock %}
+```
+
+```html
+<!-- dashboard.html -->
+{% extends "base.html" %}
+{% block content %}
+  <div data-controller="modal chart">
+    <button data-action="click->modal#open">打开</button>
+  </div>
+{% endblock %}
+```
+
+---
+
+### 方案 2：多页面入口配置
+
+```
+static/js/
+├── app.js              ← 公共：Stimulus 初始化 + 通用 controller
+└── pages/
+    ├── home.js         ← 首页专属
+    ├── dashboard.js    ← 仪表盘专属
+    └── settings.js     ← 设置专属
+```
+
+```javascript
+// static/js/app.js — 公共入口（每个页面都加载）
+import { Application } from "@hotwired/stimulus"
+import InlineEditController from "../controllers/inline_edit_controller.js"
+
+const application = Application.start()
+application.register("inline-edit", InlineEditController)
+```
+
+```javascript
+// static/js/pages/dashboard.js — 仪表盘专属
+import ModalController from "../controllers/modal_controller.js"
+import ChartController from "../controllers/chart_controller.js"
+
+// 获取全局 application（由 app.js 挂载）
+const application = window.Stimulus
+
+application.register("modal", ModalController)
+application.register("chart", ChartController)
+```
+
+---
+
+### 方案 3：Flask 传 controller 列表，JS 动态加载
+
+```python
+# app.py
+@app.route("/dashboard")
+def dashboard():
+    return render_template(
+        "dashboard.html",
+        controllers=["modal", "chart"]  # 告诉前端需要哪些 controller
+    )
+```
+
+```html
+<!-- dashboard.html -->
+{% extends "base.html" %}
+{% block content %}
+  <script>
+    window.__page_controllers__ = {{ controllers | tojson }}
+  </script>
+  <div data-controller="modal chart">
+    ...
+  </div>
+{% endblock %}
+```
+
+```javascript
+// static/js/app.js
+import { Application } from "@hotwired/stimulus"
+
+const application = Application.start()
+window.Stimulus = application
+
+// 公共 controller
+import InlineEditController from "./controllers/inline_edit_controller.js"
+application.register("inline-edit", InlineEditController)
+
+// 页面专属 controller — 动态加载
+const pageControllers = window.__page_controllers__ || []
+
+const controllerMap = {
+  modal: () => import("./controllers/modal_controller.js").then(m => m.default),
+  chart: () => import("./controllers/chart_controller.js").then(m => m.default),
+  dropdown: () => import("./controllers/dropdown_controller.js").then(m => m.default),
+}
+
+pageControllers.forEach(name => {
+  const loader = controllerMap[name]
+  if (loader) {
+    loader().then(Controller => application.register(name, Controller))
+  }
+})
+```
+
+---
+
+### 方案 4：构建工具自动生成（Vite）
+
+如果用 Vite 构建，可以自动按模板生成多入口：
+
+```javascript
+// vite.config.js
+import { defineConfig } from "vite"
+import glob from "glob"
+
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        app: "./static/js/app.js",
+        ...Object.fromEntries(
+          glob.sync("./static/js/pages/*.js").map(f => [
+            f.split("/").pop().replace(".js", ""),
+            f
+          ])
+        )
+      }
+    }
+  }
+})
+```
+
+---
+
+## 总结
+
+| 方案 | 复杂度 | 适用场景 |
+|---|---|---|
+| **模板变量** | 简单 | Flask + 少量页面 |
+| **多入口文件** | 中等 | 页面间 controller 差异大 |
+| **Flask 传列表 + JS 动态加载** | 中等 | 灵活控制，按需下载 |
+| **Vite 构建** | 复杂 | 大型项目，需要代码分割优化 |
+
+推荐**方案 1**（模板变量）起步，简单直接。需要优化时再升级到方案 3。

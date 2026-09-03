@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stimulus Inline Edit Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    /* Inline Edit Styles */
+    .inline-edit-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+    }
+
+    .inline-edit-display {
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px dashed transparent;
+      transition: all 0.2s;
+      font-size: 16px;
+    }
+
+    .inline-edit-display:hover {
+      background: #f0f7ff;
+      border-color: #4a9eff;
+    }
+
+    .inline-edit-input {
+      font-size: 16px;
+      padding: 4px 8px;
+      border: 2px solid #4a9eff;
+      border-radius: 4px;
+      outline: none;
+      width: 300px;
+      transition: border-color 0.2s;
+    }
+
+    .inline-edit-input:focus {
+      border-color: #2d7ed9;
+      box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
+    }
+
+    /* 确认/取消按钮组 */
+    .inline-edit-actions {
+      display: inline-flex;
+      gap: 4px;
+      margin-left: 4px;
+    }
+
+    .inline-edit-actions button {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .inline-edit-actions .confirm-btn {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .inline-edit-actions .confirm-btn:hover {
+      background: #c8e6c9;
+    }
+
+    .inline-edit-actions .cancel-btn {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .inline-edit-actions .cancel-btn:hover {
+      background: #ffcdd2;
+    }
+
+    .inline-edit-spinner {
+      color: #4a9eff;
+      font-size: 13px;
+    }
+
+    /* Table inline edit */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      font-weight: 600;
+      color: #666;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    td .inline-edit-display {
+      display: inline-block;
+    }
+
+    /* Rich text area */
+    .inline-edit-textarea {
+      font-size: 15px;
+      padding: 8px 12px;
+      border: 2px solid #4a9eff;
+      border-radius: 4px;
+      outline: none;
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+
+    .inline-edit-textarea:focus {
+      border-color: #2d7ed9;
+      box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
+    }
+
+    .inline-edit-display-block {
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px dashed transparent;
+      transition: all 0.2s;
+      line-height: 1.5;
+    }
+
+    .inline-edit-display-block:hover {
+      background: #f0f7ff;
+      border-color: #4a9eff;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stimulus Inline Edit Demo</h1>
+    <p class="subtitle">点击文本即可编辑 — 纯前端演示，无需后端</p>
+
+    <!-- 示例 1: 基础文本编辑 -->
+    <div class="card">
+      <h2>1. 基础文本编辑（点击即编辑）</h2>
+      <div data-controller="inline-edit">
+        <div class="inline-edit-wrapper">
+          <span class="inline-edit-display"
+                data-inline-edit-target="display"
+                data-action="click->inline-edit#edit">
+            张三
+          </span>
+          <input type="text"
+                 class="inline-edit-input"
+                 data-inline-edit-target="input"
+                 data-action="keydown.enter->inline-edit#save keydown.escape->inline-edit#cancel blur->inline-edit#blur"
+                 hidden>
+          <span class="inline-edit-spinner" data-inline-edit-target="spinner" hidden>保存中...</span>
+          <div class="inline-edit-actions" data-inline-edit-target="actions" hidden>
+            <button class="confirm-btn" data-action="click->inline-edit#save">✓</button>
+            <button class="cancel-btn" data-action="click->inline-edit#cancel">✗</button>
+          </div>
+          <button class="inline-edit-btn" data-inline-edit-target="editBtn" data-action="click->inline-edit#edit">✏️</button>
+        </div>
+        <p class="hint">点击文字进入编辑，✓ 确认 / ✗ 取消，回车确认，Esc 取消，点击其他区域取消</p>
+      </div>
+    </div>
+
+    <!-- 示例 2: 多字段编辑 -->
+    <div class="card">
+      <h2>2. 多字段编辑（每个字段独立）</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>字段</th>
+            <th>值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>姓名</td>
+            <td>
+              <div data-controller="inline-edit">
+                <div class="inline-edit-wrapper">
+                  <span class="inline-edit-display"
+                        data-inline-edit-target="display"
+                        data-action="click->inline-edit#edit">
+                    李四
+                  </span>
+                  <input type="text"
+                         class="inline-edit-input"
+                         data-inline-edit-target="input"
+                         data-action="keydown.enter->inline-edit#save keydown.escape->inline-edit#cancel blur->inline-edit#blur"
+                         hidden>
+                  <div class="inline-edit-actions" data-inline-edit-target="actions" hidden>
+                    <button class="confirm-btn" data-action="click->inline-edit#save">✓</button>
+                    <button class="cancel-btn" data-action="click->inline-edit#cancel">✗</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>邮箱</td>
+            <td>
+              <div data-controller="inline-edit">
+                <div class="inline-edit-wrapper">
+                  <span class="inline-edit-display"
+                        data-inline-edit-target="display"
+                        data-action="click->inline-edit#edit">
+                    lisi@example.com
+                  </span>
+                  <input type="email"
+                         class="inline-edit-input"
+                         data-inline-edit-target="input"
+                         data-action="keydown.enter->inline-edit#save keydown.escape->inline-edit#cancel blur->inline-edit#blur"
+                         hidden>
+                  <div class="inline-edit-actions" data-inline-edit-target="actions" hidden>
+                    <button class="confirm-btn" data-action="click->inline-edit#save">✓</button>
+                    <button class="cancel-btn" data-action="click->inline-edit#cancel">✗</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>电话</td>
+            <td>
+              <div data-controller="inline-edit">
+                <div class="inline-edit-wrapper">
+                  <span class="inline-edit-display"
+                        data-inline-edit-target="display"
+                        data-action="click->inline-edit#edit">
+                    138-0000-0000
+                  </span>
+                  <input type="tel"
+                         class="inline-edit-input"
+                         data-inline-edit-target="input"
+                         data-action="keydown.enter->inline-edit#save keydown.escape->inline-edit#cancel blur->inline-edit#blur"
+                         hidden>
+                  <div class="inline-edit-actions" data-inline-edit-target="actions" hidden>
+                    <button class="confirm-btn" data-action="click->inline-edit#save">✓</button>
+                    <button class="cancel-btn" data-action="click->inline-edit#cancel">✗</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 示例 3: 多行文本编辑 -->
+    <div class="card">
+      <h2>3. 多行文本编辑</h2>
+      <div data-controller="inline-edit">
+        <div class="inline-edit-display-block"
+             data-inline-edit-target="display"
+             data-action="click->inline-edit#edit">
+          这是一段可以编辑的多行文本。点击这里可以进入编辑模式。支持多行内容的修改，失焦后自动保存。
+        </div>
+        <textarea class="inline-edit-textarea"
+                  data-inline-edit-target="input"
+                  data-action="keydown.escape->inline-edit#cancel blur->inline-edit#blur"
+                  hidden></textarea>
+        <div style="margin-top: 8px;">
+          <span class="inline-edit-spinner" data-inline-edit-target="spinner" hidden>保存中...</span>
+          <div class="inline-edit-actions" data-inline-edit-target="actions" hidden>
+            <button class="confirm-btn" data-action="click->inline-edit#save">✓</button>
+            <button class="cancel-btn" data-action="click->inline-edit#cancel">✗</button>
+          </div>
+        </div>
+        <p class="hint">点击文本区域进入编辑，✓ 确认 / ✗ 取消，点击其他区域取消</p>
+      </div>
+    </div>
+
+    <!-- 示例 4: 带回调通知 -->
+    <div class="card">
+      <h2>4. 带保存通知</h2>
+      <div data-controller="inline-edit"
+           data-inline-edit-on-save-value="notify">
+        <div class="inline-edit-wrapper">
+          <span class="inline-edit-display"
+                data-inline-edit-target="display"
+                data-action="click->inline-edit#edit">
+            编辑我会弹出保存提示
+          </span>
+          <input type="text"
+                 class="inline-edit-input"
+                 data-inline-edit-target="input"
+                 data-action="keydown.enter->inline-edit#save keydown.escape->inline-edit#cancel blur->inline-edit#blur"
+                 hidden>
+          <span class="inline-edit-spinner" data-inline-edit-target="spinner" hidden>保存中...</span>
+          <div class="inline-edit-actions" data-inline-edit-target="actions" hidden>
+            <button class="confirm-btn" data-action="click->inline-edit#save">✓</button>
+            <button class="cancel-btn" data-action="click->inline-edit#cancel">✗</button>
+          </div>
+        </div>
+        <div data-inline-edit-target="toast"
+             style="display:none; margin-top:12px; padding:8px 16px; background:#e8f5e9; color:#2e7d32; border-radius:4px; font-size:14px;">
+          ✓ 已保存
+        </div>
+        <p class="hint">保存后会显示成功提示（2秒后消失）</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stimulus from CDN -->
+  <script type="module">
+    import { Application, Controller } from "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+
+    const application = Application.start()
+
+    // ========================================
+    // Inline Edit Controller
+    // ========================================
+    class InlineEditController extends Controller {
+      static targets = ["display", "input", "spinner", "toast", "actions", "editBtn"]
+      static values = {
+        url: { type: String, default: "" },
+        original: String,
+        onSave: { type: String, default: "" }
+      }
+
+      connect() {
+        this.originalValue = this.displayTarget.textContent.trim()
+      }
+
+      // 进入编辑模式
+      edit() {
+        this.originalValue = this.displayTarget.textContent.trim()
+        this.inputTarget.value = this.originalValue
+        this.displayTarget.hidden = true
+        this.inputTarget.hidden = false
+        if (this.hasActionsTarget) this.actionsTarget.hidden = false
+        if (this.hasEditBtnTarget) this.editBtnTarget.hidden = true
+        this.inputTarget.focus()
+        this.inputTarget.select?.()
+      }
+
+      // 保存
+      async save() {
+        const newValue = this.inputTarget.value.trim()
+
+        // 值没变，直接退出
+        if (newValue === this.originalValue) {
+          this.cancel()
+          return
+        }
+
+        // 显示加载状态
+        if (this.hasSpinnerTarget) {
+          this.spinnerTarget.hidden = false
+        }
+
+        try {
+          // 模拟保存延迟
+          await this._fakeSave()
+
+          // 更新显示
+          this.displayTarget.textContent = newValue
+          this.originalValue = newValue
+
+          // 显示成功提示
+          if (this.onSaveValue === "notify" && this.hasToastTarget) {
+            this._showToast()
+          }
+        } catch (e) {
+          alert("保存失败：" + e.message)
+          this.displayTarget.textContent = this.originalValue
+        } finally {
+          this._exitEditMode()
+        }
+      }
+
+      // 取消
+      cancel() {
+        this.displayTarget.textContent = this.originalValue
+        this._exitEditMode()
+      }
+
+      // 失焦 → 默认取消
+      blur() {
+        // 用 setTimeout 让按钮点击事件先触发
+        setTimeout(() => {
+          // 如果焦点不在 input 或 actions 内，才取消
+          const active = document.activeElement
+          if (this.hasActionsTarget && this.actionsTarget.contains(active)) return
+          if (this.inputTarget === active) return
+          this.cancel()
+        }, 150)
+      }
+
+      // 退出编辑模式
+      _exitEditMode() {
+        this.inputTarget.hidden = true
+        this.displayTarget.hidden = false
+        if (this.hasActionsTarget) this.actionsTarget.hidden = true
+        if (this.hasEditBtnTarget) this.editBtnTarget.hidden = false
+        if (this.hasSpinnerTarget) this.spinnerTarget.hidden = true
+      }
+
+      // 模拟保存请求
+      _fakeSave() {
+        return new Promise(resolve => setTimeout(resolve, 500))
+      }
+
+      // 显示 toast 通知
+      _showToast() {
+        if (!this.hasToastTarget) return
+        this.toastTarget.style.display = "block"
+        setTimeout(() => {
+          this.toastTarget.style.display = "none"
+        }, 2000)
+      }
+    }
+
+    // 注册 controller
+    application.register("inline-edit", InlineEditController)
+  </script>
+</body>
+</html>

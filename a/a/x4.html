@@ -1,0 +1,17 @@
+mcp 文档 https://modelcontextprotocol.io/
+
+失去焦点后，keydown 不触发了。
+
+input 有焦点 → keydown 有效（Enter/Escape 能用）
+input 失焦   → keydown 无效（按键不会触发这个 input 的事件）
+当前代码的事件流
+用户点击文字 → 打开编辑框，input 获得焦点
+                ↓
+input 有焦点时：
+  - 按 Enter  → keydown 触发 → save()
+  - 按 Esc    → keydown 触发 → cancel()
+                ↓
+用户点击编辑框外 → blur 触发 → 150ms 后 → cancel()
+                ↓
+input 失焦 → keydown 不再触发（但 blur 已经处理了关闭）
+

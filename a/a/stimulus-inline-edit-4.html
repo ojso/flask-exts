@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stimulus Inline Edit Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 40px 20px;
+    }
+
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: #666; margin-bottom: 32px; }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    /* 可编辑文字 */
+    .editable {
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px dashed transparent;
+      transition: all 0.2s;
+      font-size: 16px;
+      display: inline-block;
+    }
+
+    .editable:hover {
+      background: #f0f7ff;
+      border-color: #4a9eff;
+    }
+
+    .editable.editing {
+      opacity: 0.3;
+    }
+
+    .editable-block {
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px dashed transparent;
+      transition: all 0.2s;
+      line-height: 1.5;
+      display: block;
+    }
+
+    .editable-block:hover {
+      background: #f0f7ff;
+      border-color: #4a9eff;
+    }
+
+    .editable-block.editing {
+      opacity: 0.3;
+    }
+
+    /* 表格 */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; }
+    th { font-weight: 600; color: #666; font-size: 13px; text-transform: uppercase; }
+    td .editable { display: inline-block; }
+
+    /* 全局浮动编辑框 */
+    .inline-edit-overlay {
+      position: fixed;
+      z-index: 1000;
+      display: none;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      padding: 8px;
+    }
+
+    .inline-edit-overlay.active {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .inline-edit-overlay textarea.active {
+      display: block;
+    }
+
+    .inline-edit-overlay input,
+    .inline-edit-overlay textarea {
+      font-size: 16px;
+      padding: 4px 8px;
+      border: 2px solid #4a9eff;
+      border-radius: 4px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .inline-edit-overlay input:focus,
+    .inline-edit-overlay textarea:focus {
+      border-color: #2d7ed9;
+      box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
+    }
+
+    .inline-edit-overlay input { width: 250px; }
+    .inline-edit-overlay textarea { width: 350px; min-height: 80px; resize: vertical; display: none; }
+
+    .inline-edit-overlay .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .inline-edit-overlay .actions button {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inline-edit-overlay .actions .confirm-btn {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .inline-edit-overlay .actions .confirm-btn:hover { background: #c8e6c9; }
+
+    .inline-edit-overlay .actions .cancel-btn {
+      background: #ffebee;
+      color: #c62828;
+    }
+    .inline-edit-overlay .actions .cancel-btn:hover { background: #ffcdd2; }
+
+    .hint { font-size: 12px; color: #999; margin-top: 8px; }
+    .toast {
+      display: none;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stimulus Inline Edit Demo</h1>
+    <p class="subtitle">点击文字即可编辑 — 共享编辑框，动态定位</p>
+
+    <!-- 示例 1: 基础文本 -->
+    <div class="card">
+      <h2>1. 基础文本编辑</h2>
+      <div data-controller="inline-edit">
+        <span class="editable" data-action="click->inline-edit#edit" data-inline-edit-value="张三">张三</span>
+        <div class="toast" data-inline-edit-target="toast">✓ 已保存</div>
+        <p class="hint">点击文字 → 编辑框出现 → ✓ 确认 / ✗ 取消 / 回车确认 / Esc 取消</p>
+      </div>
+    </div>
+
+    <!-- 示例 2: 表格多字段 -->
+    <div class="card">
+      <h2>2. 表格多字段（共享同一个编辑框）</h2>
+      <div data-controller="inline-edit">
+        <table>
+          <thead><tr><th>字段</th><th>值</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>姓名</td>
+              <td><span class="editable" data-action="click->inline-edit#edit" data-inline-edit-value="李四">李四</span></td>
+            </tr>
+            <tr>
+              <td>邮箱</td>
+              <td><span class="editable" data-action="click->inline-edit#edit" data-inline-edit-value="lisi@example.com">lisi@example.com</span></td>
+            </tr>
+            <tr>
+              <td>电话</td>
+              <td><span class="editable" data-action="click->inline-edit#edit" data-inline-edit-value="138-0000-0000">138-0000-0000</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 示例 3: 多行文本 -->
+    <div class="card">
+      <h2>3. 多行文本编辑</h2>
+      <div data-controller="inline-edit">
+        <span class="editable-block" data-action="click->inline-edit#edit" data-inline-edit-value="这是一段可以编辑的多行文本。点击这里进入编辑模式。支持多行内容修改。" data-inline-edit-multiline="true">这是一段可以编辑的多行文本。点击这里进入编辑模式。支持多行内容修改。</span>
+        <p class="hint">点击文本区域 → textarea 编辑框出现</p>
+      </div>
+    </div>
+
+    <!-- 示例 4: 带保存通知 -->
+    <div class="card">
+      <h2>4. 带保存通知</h2>
+      <div data-controller="inline-edit" data-inline-edit-notify-value="true">
+        <span class="editable" data-action="click->inline-edit#edit" data-inline-edit-value="编辑我会有提示">编辑我会有提示</span>
+        <div class="toast" data-inline-edit-target="toast">✓ 已保存</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全局共享编辑框（只此一个） -->
+  <div class="inline-edit-overlay" data-inline-edit-overlay>
+    <input type="text" data-inline-edit-input>
+    <textarea data-inline-edit-textarea></textarea>
+    <div class="actions">
+      <button class="confirm-btn" data-inline-edit-confirm>✓</button>
+      <button class="cancel-btn" data-inline-edit-cancel>✗</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Application, Controller } from "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+
+    const application = Application.start()
+
+    // ========================================
+    // 全局编辑框管理器（单例）
+    // ========================================
+    class EditorOverlay {
+      constructor() {
+        this.el = document.querySelector("[data-inline-edit-overlay]")
+        this.input = this.el.querySelector("[data-inline-edit-input]")
+        this.textarea = this.el.querySelector("[data-inline-edit-textarea]")
+        this.confirmBtn = this.el.querySelector("[data-inline-edit-confirm]")
+        this.cancelBtn = this.el.querySelector("[data-inline-edit-cancel]")
+
+        this.activeTarget = null   // 当前编辑的 .editable 元素
+        this.originalValue = ""
+        this.isMultiline = false
+        this.onSave = null         // 保存回调
+
+        // 失焦 → 取消编辑（延迟判断，让按钮点击先触发）
+        const handleBlur = () => {
+          setTimeout(() => {
+            if (!this.el.contains(document.activeElement)) {
+              this.cancel()
+            }
+          }, 150)
+        }
+        this.input.addEventListener("blur", handleBlur)
+        this.textarea.addEventListener("blur", handleBlur)
+
+        // 绑定按钮事件
+        this.confirmBtn.addEventListener("click", () => this.save())
+        this.cancelBtn.addEventListener("click", () => this.cancel())
+
+        // 键盘事件
+        this.input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); this.save() }
+          if (e.key === "Escape") { e.preventDefault(); this.cancel() }
+        })
+        this.textarea.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") { e.preventDefault(); this.cancel() }
+          // Ctrl+Enter 保存多行
+          if (e.key === "Enter" && e.ctrlKey) { e.preventDefault(); this.save() }
+        })
+      }
+
+      // 打开编辑框，定位到目标元素旁
+      open(target) {
+        // 如果之前有编辑中的，先保存
+        if (this.activeTarget && this.activeTarget !== target) {
+          this.cancel()
+        }
+
+        this.activeTarget = target
+        this.originalValue = target.dataset.inlineEditValue || target.textContent.trim()
+        this.isMultiline = target.dataset.inlineEditMultiline === "true"
+
+        // 填入当前值
+        this.input.value = this.originalValue
+        this.textarea.value = this.originalValue
+
+        // 显示对应的输入控件
+        this.input.style.display = this.isMultiline ? "none" : "block"
+        this.textarea.style.display = this.isMultiline ? "block" : "none"
+
+        // 标记原元素为编辑中
+        target.classList.add("editing")
+
+        // 定位编辑框到目标元素旁边
+        const rect = target.getBoundingClientRect()
+        this.el.style.top = `${rect.top - 4}px`
+        this.el.style.left = `${rect.right + 8}px`
+
+        // 如果超出右边界，放到下方
+        if (rect.right + 8 + 350 > window.innerWidth) {
+          this.el.style.left = `${rect.left}px`
+          this.el.style.top = `${rect.bottom + 4}px`
+        }
+
+        this.el.classList.add("active")
+
+        // 聚焦
+        requestAnimationFrame(() => {
+          if (this.isMultiline) {
+            this.textarea.focus()
+            this.textarea.select()
+          } else {
+            this.input.focus()
+            this.input.select()
+          }
+        })
+      }
+
+      // 保存
+      save() {
+        const newValue = this.isMultiline
+          ? this.textarea.value.trim()
+          : this.input.value.trim()
+
+        if (newValue !== this.originalValue) {
+          this.activeTarget.textContent = newValue
+          this.activeTarget.dataset.inlineEditValue = newValue
+          if (this.onSave) this.onSave(newValue)
+        }
+
+        this.close()
+      }
+
+      // 取消
+      cancel() {
+        this.close()
+      }
+
+      // 关闭编辑框
+      close() {
+        if (this.activeTarget) {
+          this.activeTarget.classList.remove("editing")
+        }
+        this.el.classList.remove("active")
+        this.activeTarget = null
+      }
+    }
+
+    // 全局单例
+    const editor = new EditorOverlay()
+
+    // ========================================
+    // Inline Edit Controller（每个区域一个）
+    // ========================================
+    class InlineEditController extends Controller {
+      static targets = ["toast"]
+      static values = { notify: { type: Boolean, default: false } }
+
+      connect() {
+        // 设置保存回调
+        editor.onSave = () => {
+          if (this.notifyValue && this.hasToastTarget) {
+            this.showToast()
+          }
+        }
+      }
+
+      // 点击可编辑元素时触发
+      edit(event) {
+        const target = event.currentTarget
+        editor.open(target)
+      }
+
+      showToast() {
+        if (!this.hasToastTarget) return
+        this.toastTarget.style.display = "block"
+        setTimeout(() => {
+          this.toastTarget.style.display = "none"
+        }, 2000)
+      }
+    }
+
+    application.register("inline-edit", InlineEditController)
+  </script>
+</body>
+</html>
