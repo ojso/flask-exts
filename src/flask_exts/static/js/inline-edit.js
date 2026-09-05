@@ -13,8 +13,7 @@ class FieldPluginRegistry {
   }
 
   _resolve(type) {
-    const key = String(type ?? "text").toLowerCase()
-    return this.plugins.get(key) || this.plugins.get("text")
+    return this.plugins.get(type) || this.plugins.get("text")
   }
 
   normalizeType(type) {
@@ -37,10 +36,10 @@ class FieldPluginRegistry {
     return plugin.getValue(field)
   }
 
-  buildOptions(type, target, field, originalValue) {
+  buildOptions(type, field, options, originalValue) {
     const plugin = this._resolve(type)
     if (typeof plugin.buildOptions === "function") {
-      plugin.buildOptions(target, field, originalValue)
+      plugin.buildOptions(field, options, originalValue)
     }
   }
 }
@@ -171,8 +170,8 @@ const builtinFieldPlugins = [
     getValue(field) {
       return field.value
     },
-    buildOptions(target, field, originalValue) {
-      const raw = target.dataset.options || ""
+    buildOptions(field, options, originalValue) {
+      const raw = options || ""
       if (!raw) {
         field.innerHTML = ""
         const fallback = document.createElement("option")
@@ -202,10 +201,10 @@ const builtinFieldPlugins = [
         }).filter(Boolean)
       }
 
-      const options = parseOptions(raw)
+      const rawptions = parseOptions(raw)
       field.innerHTML = ""
 
-      if (!options.length) {
+      if (!rawptions.length) {
         const fallback = document.createElement("option")
         fallback.value = String(originalValue ?? "")
         fallback.textContent = String(originalValue ?? "")
@@ -213,7 +212,7 @@ const builtinFieldPlugins = [
         return
       }
 
-      options.forEach(({ label, value }) => {
+      rawptions.forEach(({ label, value }) => {
         const option = document.createElement("option")
         option.value = value
         option.textContent = label
@@ -228,7 +227,56 @@ const builtinFieldPlugins = [
   },
 ]
 
+function createOverlay(title = "", cancelText = "✗", saveText = "✓") {
+  const overlay = document.createElement("div");
+  overlay.className = "modal fade";
+  overlay.tabIndex = -1;
 
+  const dialog = document.createElement('div');
+  dialog.className = 'modal-dialog';
+  overlay.appendChild(dialog);
+
+  const content = document.createElement('div');
+  content.className = 'modal-content';
+  dialog.appendChild(content);
+
+  if (title) {
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    content.appendChild(header);
+    const modalTitle = document.createElement('h5');
+    modalTitle.className = 'modal-title';
+    modalTitle.textContent = title;
+    header.appendChild(modalTitle);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+  content.appendChild(body);
+
+  const error = document.createElement('div');
+  error.className = 'alert alert-danger d-none';
+  body.appendChild(error);
+
+  const footer = document.createElement('div');
+  footer.className = 'modal-footer';
+  content.appendChild(footer);
+
+  const cancelButton = document.createElement('button');
+  cancelButton.type = 'button';
+  cancelButton.className = 'btn btn-secondary';
+  cancelButton.setAttribute('data-bs-dismiss', 'modal');
+  cancelButton.textContent = cancelText;
+  footer.appendChild(cancelButton);
+
+  const saveButton = document.createElement('button');
+  saveButton.type = 'button';
+  saveButton.className = 'btn btn-primary';
+  saveButton.textContent = saveText;
+  footer.appendChild(saveButton);
+
+  return { overlay, body, error, cancelButton, saveButton };
+}
 
 // ================================================================
 // InlineEdit — Pure JS implementation, framework-agnostic
@@ -241,30 +289,32 @@ class InlineEdit {
       overlaySelector: ".inline-edit-overlay",
       errorSelector: ".inline-edit-error",
       onSave: null,        // Custom save handler (url, value) => Promise<{success, value?, message?}>
-      onSuccess: null,     // Success callback (value, target) => void
-      onError: null,       // Error callback  (message, target) => void
+      onSuccess: null,     // Success callback (target, value) => void
       ...options
     }
 
     this.fieldPluginRegistry = new FieldPluginRegistry()
-    this.fieldPluginRegistry.registerMany(builtinFieldPlugins)
+    this.fieldPluginRegistry.registerMany(builtinFieldPlugins);
 
-    this.overlay = this.createOverlay()
+    const { overlay, body, error, cancelButton, saveButton } = createOverlay()
+    this.overlay = overlay
+    this.modalBody = body
+    this.errorAlert = error
+    this.cancelButton = cancelButton
+    this.saveButton = saveButton
     document.body.appendChild(this.overlay)
 
-    // this.actions = this.createActions()
-    // this.overlay.appendChild(this.actions)
+    this.bindEvents()
 
-    this.errorEl = this.createErrorEl()
-    document.body.appendChild(this.errorEl)
-
+    this.originalValue = ""
     this.activeTarget = null
     this.fieldType = "text"
     this.field = null
-    this.originalValue = ""
     this.saving = false
-    this.bindEvents()
+    // 
     this.bindEditables()
+    // Initialize Bootstrap modal
+    this.modal = new bootstrap.Modal(this.overlay)
   }
 
   // --------- Field management ----------
@@ -272,285 +322,179 @@ class InlineEdit {
     return this.fieldPluginRegistry.normalizeType(this.activeTarget.dataset?.type)
   }
 
-  createFieldByType() {
-    return this.fieldPluginRegistry.createField(this.fieldType)
-  }
-
-  setFieldValue(value) {
-    this.fieldPluginRegistry.setValue(this.fieldType, this.field, value)
-  }
-
-  buildFieldOptions() {
-    this.fieldPluginRegistry.buildOptions(this.fieldType, this.activeTarget, this.field, this.originalValue)
+  createField() {
+    const field = this.fieldPluginRegistry.createField(this.fieldType)
+    this.fieldPluginRegistry.setValue(this.fieldType, field, this.originalValue)
+    this.fieldPluginRegistry.buildOptions(this.fieldType, field, this.activeTarget.dataset.options, this.originalValue)
+    return field
   }
 
   getFieldValue() {
     return this.fieldPluginRegistry.getValue(this.fieldType, this.field)
   }
 
-
-  createOverlay(title="Inline Edit") {
-    const overlay = document.createElement("div");
-    // overlay.className = "inline-edit-overlay"
-    overlay.className = "modal fade";
-    overlay.tabIndex = -1;
-
-    const dialog = document.createElement('div');
-    dialog.className = 'modal-dialog';
-
-    overlay.appendChild(dialog);
-
-    const content = document.createElement('div');
-    content.className = 'modal-content';
-
-    dialog.appendChild(content);
-
-    const header = document.createElement('div');
-    header.className = 'modal-header';
-
-    content.appendChild(header);
-
-    const modal_title = document.createElement('h5');
-    modal_title.className = 'modal-title';
-    modal_title.textContent = title;
-
-    header.appendChild(modal_title);
-
-    const body = document.createElement('div');
-    body.className = 'modal-body';
-
-    content.appendChild(body);
-
-    this.overlay_body=body;
-
-    const footer = document.createElement('div');
-    footer.className = 'modal-footer';
-
-    content.appendChild(footer);
-
-    const closeButton = document.createElement('button');
-    closeButton.type = 'button';
-    closeButton.className = 'btn btn-secondary';
-    closeButton.setAttribute('data-bs-dismiss', 'modal');
-    closeButton.textContent = "✗";
-
-    const saveButton = document.createElement('button');
-    saveButton.type = 'button';
-    saveButton.className = 'btn btn-primary';
-    saveButton.textContent = "✓";
-
-    footer.appendChild(closeButton);
-    footer.appendChild(saveButton);
-
-    return overlay
+  _showError(message) {
+    this.errorAlert.textContent = message
+    this.errorAlert.classList.remove('d-none');
   }
 
-  setActiveField() {
-    const existingField = this.overlay_body.querySelector(".inline-edit-field")
-    if (existingField) {
-      existingField.remove()
-    }
-    this.field = this.createFieldByType()
-    this.setFieldValue(this.originalValue)
-    this.buildFieldOptions()
-    this.overlay_body.append(this.field)
-  }
-
-  createActions() {
-    const actions = document.createElement("div")
-    actions.className = "actions"
-
-    const confirmBtn = document.createElement("button")
-    confirmBtn.className = "confirm-btn"
-    confirmBtn.textContent = "✓"
-
-    const cancelBtn = document.createElement("button")
-    cancelBtn.className = "cancel-btn"
-    cancelBtn.textContent = "✗"
-
-    actions.append(confirmBtn, cancelBtn)
-
-    confirmBtn.addEventListener("click", () => this.save())
-    cancelBtn.addEventListener("click", () => this.cancel())
-
-    return actions
-  }
-
-  createErrorEl() {
-    const errorEl = document.createElement("div")
-    errorEl.className = "inline-edit-error"
-    return errorEl
+  _hideError() {
+    this.errorAlert.textContent = ""
+    this.errorAlert.classList.add('d-none');
   }
 
   // ---------- Initialize bindings ----------
 
   bindEditables() {
     document.querySelectorAll(this.options.selector).forEach(el => {
-      if (el.dataset.inlineBound === "true") return
-      el.dataset.inlineBound = "true"
       el.addEventListener("click", () => this.open(el))
     })
   }
 
   bindEvents() {
-    if (this.overlay.dataset.inlineBound === "true") return
-    this.overlay.dataset.inlineBound = "true"
+    this.overlay.addEventListener("keydown", (e) => this.handleKeydown(e))
+    this.cancelButton.addEventListener("click", (e) => { e.preventDefault(); this.close() })
+    this.saveButton.addEventListener("click", (e) => { e.preventDefault(); this.save() })
 
-    const handleKeydown = (e) => {
-      if (e.key === "Escape") { e.preventDefault(); this.cancel() }
-      if (e.key === "Enter") {
-        if (this.fieldType === "textarea" && e.ctrlKey) {
-          e.preventDefault(); this.save()
-        } else if (this.fieldType !== "textarea" && this.fieldType !== "select") {
-          e.preventDefault(); this.save()
-        }
+    // Blur the active element when the modal is hidden to prevent focus issues
+    this.overlay.addEventListener('hide.bs.modal', () => {
+      if (this.overlay.contains(document.activeElement)) {
+        document.activeElement.blur();
       }
+    });
+    this.overlay.addEventListener('hidden.bs.modal', () => {
+      if (this.activeTarget) {
+        this.activeTarget.focus();
+      }
+      this._hideError();
+    });
+  }
+
+  // --------- Open / Close / Save ----------
+  open(target) {
+    target.classList.add("editing")
+    this.originalValue = target.dataset.editValue ?? target.textContent.trim()
+
+    if (this.activeTarget && this.activeTarget == target) {
+    } else {
+      this.activeTarget = target
+      if (this.field) {
+        this.field.remove()
+      }
+      this.fieldType = this.resolveFieldType()
+      this.field = this.createField()
+      this.modalBody.prepend(this.field)
     }
 
-    this.overlay.addEventListener("keydown", handleKeydown)
-
-    // const handleBlur = () => {
-    //   setTimeout(() => {
-    //     if (!this.saving && !this.overlay.contains(document.activeElement)) {
-    //       this.cancel()
-    //     }
-    //   }, 150)
-    // }
-
-    
-    // this.overlay.addEventListener("blur", handleBlur)
-
-    // if (this.fieldType === "bool") {
-    //   field.addEventListener("change", () => {
-    //     this.setFieldValue(String(field.checked))
-    //   })
-    // }
+    this.modal.show();
+    this.field.focus();
   }
 
-  open(target) {
-    if (this.activeTarget && this.activeTarget !== target) this.cancel()
-    this.activeTarget = target
-    target.classList.add("editing")
-    // this._positionOverlay(target)
-    this.overlay.classList.add("active")
-
-    this.fieldType = this.resolveFieldType()
-    this.originalValue = target.dataset.editValue ?? target.textContent.trim()
-    this.setActiveField()
-
-    const myModal = new bootstrap.Modal(this.overlay)
-    myModal.show()
-
-    // requestAnimationFrame(() => {
-    //   const field = this.field
-    //   field.focus()
-    //   if (field.tagName !== "INPUT" || field.type !== "checkbox") {
-    //     field.select?.()
-    //   }
-    // })
+  close() {
+    if (this.saving) return
+    this.activeTarget.classList.remove("editing")
+    this.modal.hide()
   }
-
-
 
   async save() {
-    if (this.saving) return
+    if (this.saving) return;
 
-    const newValue = this.getFieldValue()
-    const originalValue = this.fieldType === "bool"
-      ? String(this.originalValue ?? "").toLowerCase() === "true"
-      : this.originalValue
-
-    if (newValue === originalValue) {
+    const fieldValue = this.getFieldValue()
+    if (fieldValue === this.originalValue) {
       this.close()
-      return
+      return;
     }
 
-    this.saving = true
+
     this.overlay.classList.add("saving")
     this._hideError()
 
+    const url = this.activeTarget.dataset.editUrl
+    const saveFn = this.options.onSave || this._defaultSave
+
     try {
-      const url = this.activeTarget.dataset.editUrl
-      const failOn = this.activeTarget.dataset.editFailOn
-      const saveFn = this.options.onSave || this._defaultSave.bind(this)
-      const result = await saveFn(url, newValue, failOn)
+      this.saving = true
+      const result = await saveFn(url, fieldValue)
+      this.saving = false
 
       if (result.success) {
-        const serverValue = result.value ?? newValue
-        const displayValue = typeof serverValue === "boolean" ? String(serverValue) : serverValue
+        const newValue = result.value
+        const displayValue = String(newValue)
         this.activeTarget.textContent = displayValue
-        this.activeTarget.dataset.editValue = String(displayValue)
+        this.activeTarget.dataset.editValue = displayValue
         if (this.options.onSuccess) {
-          this.options.onSuccess(serverValue, this.activeTarget)
+          this.options.onSuccess(this.activeTarget, newValue)
         }
         this.close()
       } else {
-        this._showError(result.message || "Save failed")
-        if (this.options.onError) {
-          this.options.onError(result.message, this.activeTarget)
-        }
+        this._showError(result.message)
       }
     } catch (e) {
       this._showError("Network error, please retry")
     } finally {
-      this.saving = false
+
       this.overlay.classList.remove("saving")
     }
   }
 
-  cancel() {
-    this._hideError()
-    this.close()
-  }
-
-  close() {
-    if (this.activeTarget) this.activeTarget.classList.remove("editing")
-    this.overlay.classList.remove("active")
-    this.activeTarget = null
-  }
-
-  _positionOverlay(target) {
-    const rect = target.getBoundingClientRect()
-    this.overlay.style.top = `${rect.top - 4}px`
-    this.overlay.style.left = `${rect.right + 8}px`
-    if (rect.right + 8 + 350 > window.innerWidth) {
-      this.overlay.style.left = `${rect.left}px`
-      this.overlay.style.top = `${rect.bottom + 4}px`
+  handleKeydown = (e) => {
+    if (e.key === "Escape") { e.preventDefault(); this.close() }
+    if (e.key === "Enter") {
+      if (this.fieldType === "textarea" && e.ctrlKey) {
+        e.preventDefault(); this.save()
+      } else if (this.fieldType !== "textarea" && this.fieldType !== "select") {
+        e.preventDefault(); this.save()
+      }
     }
   }
 
-  // Built-in mock AJAX (can be replaced by options.onSave) 
-  async _defaultSave(url, value, failOn) {
-    console.log(`[AJAX] POST ${url} → { value: "${value}" }`)
-    await new Promise(r => setTimeout(r, 600))
 
-    if (failOn && value === failOn) {
-      return { success: false, message: `"${value}" is invalid and rejected by the server` }
+  // Default save function (can be replaced by options.onSave)  
+  async _defaultSave(url, value, options = {}) {
+    if (!url) {
+      return { success: true, value }
     }
-    return { success: true, value }
 
-    // ===== Replace with actual project code ===== 
-    // const res = await fetch(url, {
-    //   method: "PATCH",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ value })
-    // })
-    // const data = await res.json()
-    // return res.ok
-    //   ? { success: true, value: data.value }
-    //   : { success: false, message: data.message }
-  }
+    const {
+      method = 'POST',
+      headers = {},
+      timeout = 10000,
+    } = options;
 
-  _showError(message) {
-    const rect = this.overlay.getBoundingClientRect()
-    this.errorEl.textContent = message
-    this.errorEl.style.top = `${rect.bottom + 4}px`
-    this.errorEl.style.left = `${rect.left}px`
-    this.errorEl.classList.add("active")
-  }
+    const fetchOptions = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      body: JSON.stringify({ value }),
+      signal: AbortSignal.timeout(timeout)
+    };
 
-  _hideError() {
-    this.errorEl.classList.remove("active")
+    try {
+      const response = await fetch(url, fetchOptions);
+      let responseData;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json();
+      } else {
+        responseData = await response.text();
+      }
+
+      if (!response.ok) {
+        const message = `${response.status} ${response.statusText}`;
+        return { success: false, message };
+      }
+
+      return { success: true, value: responseData };
+
+    } catch (error) {
+      console.error('_defaultSave error:', error);
+      return {
+        success: false,
+        message: error.message || 'Network error',
+      };
+    }
   }
 }
 

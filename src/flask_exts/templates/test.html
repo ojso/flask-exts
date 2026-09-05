@@ -9,17 +9,6 @@
 <style>
 
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f5f5f5;
-      color: #333;
-      padding: 40px 20px;
-    }
-
-    .container { max-width: 700px; margin: 0 auto; }
-    h1 { font-size: 24px; margin-bottom: 8px; }
-    .subtitle { color: #666; margin-bottom: 32px; }
-
     .card {
       background: white;
       border-radius: 8px;
@@ -86,21 +75,6 @@
     th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; }
     th { font-weight: 600; color: #666; font-size: 13px; text-transform: uppercase; }
     td .editable { display: inline-block; }
-
-    /* Global floating editor / 全局浮动编辑框 */
-    .inline-edit-overlay {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
-      border: 1px solid #dfeaf7;
-      border-color: #c7dfff;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.98);      
-      transform: translateY(1px);
-      transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-    }
 
 
 
@@ -239,14 +213,13 @@
 {% endblock %}
 
 {% block body %}
-  <div class="container">
     <h1>Inline Edit — 无框架绑定</h1>
     <p class="subtitle">HTML 只放 class 和 data 配置，JS 用 API 初始化，与任何框架无关</p>
 
     <!-- 示例 1: 基础文本 -->
     <div class="card">
       <h2>1. 基础文本编辑</h2>
-      <span class="editable" data-type="text" data-edit-url="/api/user/name" data-edit-value="张三">张三</span>
+      <span class="editable" data-type="text" data-edit-value="张三">张三</span>
       <div class="toast">✓ 已保存</div>
       <p class="hint">点击文字 → 编辑 → ✓ 确认 → AJAX 保存</p>
     </div>
@@ -319,7 +292,7 @@
       <div class="toast">✓ 已保存</div>
       <p class="hint">点击切换真实/虚假状态，保存为布尔值</p>
     </div>
-  </div>
+
 {% endblock %}
 
 {% block tail %}
@@ -332,19 +305,8 @@
     // Initialize / 初始化 — 一行代码启动
     // ============================================
     const editor = new InlineEdit({
-      // Optional: custom save function / 可选：自定义保存函数
-      // onSave: async (url, value) => {
-      //   const res = await fetch(url, {
-      //     method: "PATCH",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({ value })
-      //   })
-      //   const data = await res.json()
-      //   return res.ok ? { success: true, value: data.value } : { success: false, message: data.message }
-      // },
-
-      // Optional: success callback / 可选：保存成功回调
-      onSuccess: (value, target) => {
+        
+      onSuccess: (target,value, ) => {
         const toast = target.closest(".card")?.querySelector(".toast")
         if (toast) {
           toast.style.display = "block"
