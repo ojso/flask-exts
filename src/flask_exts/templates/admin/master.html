@@ -29,6 +29,7 @@
   <div class="container">
     {% block head %}{% endblock %}
     {% block messages %}{{ render_messages() }}{% endblock %}
+    {% block toast%} <div id="toast-container"></div> {% endblock %}
     {% block main %}{% endblock %}
   </div>
 {% endblock %}

@@ -29,3 +29,6 @@ class PluginBase:
 
     def js(self):
         return ""
+
+    def script(self):
+        return ""

@@ -4,4 +4,7 @@
 
 {% block styles %}{{ _template.plugin_manager.load_css() }}{% endblock %}
 
-{% block scripts %}{{ _template.plugin_manager.load_js() }}{% endblock %}
+{% block scripts %}
+{{ _template.plugin_manager.load_js() }}
+{{ _template.plugin_manager.load_scripts() }}
+{% endblock %}

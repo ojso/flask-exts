@@ -65,6 +65,20 @@ class PluginManager:
         js = "\n".join(js_links)
         return Markup(js)
 
+    def load_scripts(self):
+        plugins = [
+            self._registry.get(name)
+            for name in self._default_plugins + self.get_request_plugins()
+            if name in self._registry
+        ]
+        script_parts = [
+            script
+            for plugin in sorted(plugins, key=attrgetter("weight"), reverse=True)
+            if (script := plugin.script())
+        ]
+        scripts = "\n".join(script_parts)
+        return Markup(scripts)
+
     def register_plugin(self, plugin):
         self._registry[plugin.name] = plugin
 
