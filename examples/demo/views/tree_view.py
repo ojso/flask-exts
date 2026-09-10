@@ -1,4 +1,4 @@
-from flask_exts.admin.sqla.view import SqlaModelView
+from flask_exts.web.sqla.view import SqlaModelView
 from ..models.tree import Tree
 
 

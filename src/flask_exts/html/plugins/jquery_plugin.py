@@ -6,5 +6,6 @@ class jQueryPlugin(PluginBase):
     def __init__(self):
         super().__init__("jquery", weight=99)
 
-    def js(self):
-        return url_for("_template.static", filename="vendor/jquery/jquery.min.js")
+    def script(self):
+        url = url_for("_template.static", filename="vendor/jquery/jquery.min.js")
+        return f'<script src="{url}"></script>'

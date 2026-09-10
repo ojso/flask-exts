@@ -6,5 +6,6 @@ class AdminModalPlugin(PluginBase):
     def __init__(self):
         super().__init__("modal")
 
-    def js(self):
-        return url_for("_template.static", filename="js/modal.js")
+    def script(self):
+        url = url_for("_template.static", filename="js/modal.js")
+        return f'<script src="{url}"></script>'

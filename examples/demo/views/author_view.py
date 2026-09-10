@@ -2,8 +2,8 @@ from markupsafe import Markup
 from wtforms import validators
 from flask_babel import gettext
 from sqlalchemy import select
-from flask_exts.admin.sqla.view import SqlaModelView
-from flask_exts.admin.sqla.form.inline_model_convert import InlineForm
+from flask_exts.web.sqla.view import SqlaModelView
+from flask_exts.web.sqla.form.inline_model_convert import InlineForm
 from ..models.author import Author, AVAILABLE_USER_TYPES
 from ..models.post import Post
 

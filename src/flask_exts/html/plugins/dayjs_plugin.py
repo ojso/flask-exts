@@ -26,7 +26,7 @@ class DayjsPlugin(PluginBase):
         super().__init__("dayjs", weight=40)
         self.version = "1.11.10"
 
-    def load_js(self):
+    def script(self):
         """Load Day.js JavaScript and common plugins"""
         js_url = f'https://cdn.jsdelivr.net/npm/dayjs@{self.version}/dayjs.min.js'
         utc_plugin = f'https://cdn.jsdelivr.net/npm/dayjs@{self.version}/plugin/utc.js'

@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from .extension.manager import ExtensionManager
     from .usercenter.user_store import UserStore
     from .security.core import Security
-    from .admin import Admin
+    from .web import Admin
 
 
 current_exts: "ExtensionManager" = LocalProxy(lambda: current_app.extensions["exts"])

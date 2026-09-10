@@ -6,5 +6,6 @@ class AdminFiltersPlugin(PluginBase):
     def __init__(self):
         super().__init__("filters")
 
-    def js(self):
-        return url_for("_template.static", filename="js/filters.js")
+    def script(self):
+        url = url_for("_template.static", filename="js/filters.js")
+        return f'<script src="{url}"></script>'

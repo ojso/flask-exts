@@ -24,22 +24,20 @@ class TomSelectPlugin(PluginBase):
         super().__init__("tom_select", weight=50)
         self.version = "2.6.2"
 
-    def load_css(self):
-        return url_for(
+    def style(self):
+        url = url_for(
             "_template.static", filename="vendor/tom-select/tom-select.default.min.css"
         )
-        # return [
-        #     f'<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@{self.version}/dist/css/tom-select.bootstrap5.min.css">'
-        # ]
+        return f'<link rel="stylesheet" href="{url}">'
 
-    def load_js(self):
+    def script(self):
         """Load Tom Select JavaScript and initialization"""
-        return url_for(
+        url = url_for(
             "_template.static", filename="vendor/tom-select/tom-select.complete.min.js"
         )
+        return f'<script src="{url}"></script>'
 
         return Markup(f"""
-            <script src="{js_url}"></script>
             <script>
                 // Auto-initialize Tom Select for select elements with data-tom-select
                 document.addEventListener('DOMContentLoaded', function() {{

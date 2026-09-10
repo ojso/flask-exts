@@ -1,4 +1,4 @@
-import { createModal, showToast } from './ui-factory.js'
+import { createModal } from './ui-factory.js'
 import FieldRegistry from './field-registry.js';
 
 /* ================================================================
@@ -6,11 +6,7 @@ InlineEdit — Pure JS implementation, framework-agnostic
 Example:
   const editor = new Editable({
     onSuccess: (target, value,) => {
-      const toast = target.closest(".card")?.querySelector(".toast")
-      if (toast) {
-        toast.style.display = "block"
-        setTimeout(() => { toast.style.display = "none" }, 2000)
-      }
+      console.log()
     }
   })
 // ================================================================*/
@@ -22,6 +18,7 @@ class Editable {
       selector: ".editable",
       onSave: null,        // Custom save handler (url, value) => Promise<{success, value?, message?}>
       onSuccess: null,     // Success callback (target, value) => void
+      saveOptions: {},     // Default save options, e.g. { transport: 'form' }
       ...options
     }
 
@@ -29,14 +26,14 @@ class Editable {
     this.fieldPluginRegistry.registerBuiltins();
 
     // Create modal and overlay elements
-    const { modal, overlay, titleEl, body, errorEl, cancelButton, saveButton } = createModal()
-    this.modal = modal
+    const { overlay, titleEl, body, errorEl, cancelButton, saveButton } = createModal()
     this.overlay = overlay
     this.modalTitle = titleEl
     this.modalBody = body
     this.errorAlert = errorEl
     this.cancelButton = cancelButton
     this.saveButton = saveButton
+    this.modal = new bootstrap.Modal(overlay, { backdrop: true, keyboard: true, focus: true });
     document.body.appendChild(this.overlay)
 
     this.bindEvents()
@@ -120,11 +117,11 @@ class Editable {
 
   // --------- Open / Close / Save ----------
   open(target) {
-    this.originalValue = target.dataset.editValue ?? target.textContent.trim()
+    this.originalValue = target.dataset.Value ?? target.textContent.trim()
     if (this.activeTarget && this.activeTarget == target) {
     } else {
       this.activeTarget = target
-      this.modalTitle.textContent = target.dataset.editTitle ?? "✎"
+      this.modalTitle.textContent = target.dataset.Title ?? "✎"
       if (this.field) {
         this.field.remove()
       }
@@ -153,27 +150,31 @@ class Editable {
     this.overlay.classList.add("saving")
     this._hideError()
 
-    const url = this.activeTarget.dataset.editUrl
-    const saveFn = this.options.onSave || this._defaultSave
+    const url = this.activeTarget.dataset.url
+    const saveFn = this.options.onSave || this.defaultSave
     this.saving = true
     try {
-      const result = await saveFn(url, fieldValue)
+      const data = {
+        list_form_pk:this.activeTarget.dataset.pk,
+        [this.activeTarget.dataset.name]:fieldValue,
+        csrf_token:this.activeTarget.dataset.csrf_token
+      }
+      const result = await saveFn(url, data, this.options.saveOptions)
       if (result.success) {
         const newValue = result.value
         const displayValue = String(newValue)
-        this.activeTarget.dataset.editValue = displayValue
+        this.activeTarget.dataset.value = newValue
         if (this.fieldType === "select") {
           const label = this.getSelectLabel(newValue)
           this.activeTarget.textContent = label
         } else {
           this.activeTarget.textContent = displayValue
         }
+        this.saving = false
+        this.close()
         if (this.options.onSuccess) {
           this.options.onSuccess(this.activeTarget, newValue)
         }
-        this.saving = false
-        this.close()
-        showToast("saving ok","success",20000)
       } else {
         this._showError(result.message)
       }
@@ -198,14 +199,33 @@ class Editable {
   }
 
   // Default save function (can be replaced by options.onSave)  
-  async _defaultSave(url, value, options = {}) {
-    if (!url) return { success: true, value }
+  async defaultSave(url, data, options = {}) {
+    if (!url) return { success: true, value: data }
 
-    const { method = 'POST', headers = {}, timeout = 10000 } = options;
+    const { transport = 'fetch', method = 'POST', headers = {}, timeout = 10000 } = options;
+
+    if (transport === 'form') {
+      const form = document.createElement('form')
+      form.method = method
+      form.action = url
+
+      Object.entries(data).forEach(([name, value]) => {
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = name
+        input.value = value
+        form.appendChild(input)
+      })
+
+      document.body.appendChild(form)
+      HTMLFormElement.prototype.submit.call(form)
+      return { success: true, value: Object.values(data)[0] }
+    }
+
     const fetchOptions = {
       method,
       headers: { 'Content-Type': 'application/json', ...headers },
-      body: JSON.stringify({ value }),
+      body: JSON.stringify(data ),
       signal: AbortSignal.timeout(timeout)
     };
 

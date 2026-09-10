@@ -2,9 +2,6 @@
 
 {% do _template.plugin_manager.add_request_plugins(["jquery","bootstrap5"]) %}
 
-{% block styles %}{{ _template.plugin_manager.load_css() }}{% endblock %}
+{% block styles %}{{ _template.plugin_manager.load_styles() }}{% endblock %}
 
-{% block scripts %}
-{{ _template.plugin_manager.load_js() }}
-{{ _template.plugin_manager.load_scripts() }}
-{% endblock %}
+{% block scripts %}{{ _template.plugin_manager.load_scripts() }}{% endblock %}

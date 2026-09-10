@@ -6,5 +6,6 @@ class AdminListActionPlugin(PluginBase):
     def __init__(self):
         super().__init__("list_action")
 
-    def js(self):
-        return url_for("_template.static", filename="js/list_action.js")
+    def script(self):
+        url = url_for("_template.static", filename="js/list_action.js")
+        return f'<script src="{url}"></script>'

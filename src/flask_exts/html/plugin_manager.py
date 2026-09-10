@@ -4,8 +4,6 @@ from operator import attrgetter
 import os
 import importlib
 from flask import g
-
-# import inspect
 from .plugin_base import PluginBase
 
 
@@ -30,40 +28,22 @@ class PluginManager:
             g._request_plugins = []
         return g._request_plugins
 
-    def add_request_plugins(self, names: List[str] | str) -> None:
+    def add_request_plugins(self, names: List[str]) -> None:
         """
         Add plugins to the current request plugins in flask.g.
         """
-        if not isinstance(names, list):
-            names = [names]
-
         request_plugins = self.get_request_plugins()
         for name in names:
             if name not in self._default_plugins and name not in request_plugins:
                 request_plugins.append(name)
 
-    def load_css(self):
-        css_links = [
-            f'<link rel="stylesheet" href="{css}">'
+    def load_styles(self):
+        css_parts = [
+            part
             for name in (self._default_plugins + self.get_request_plugins())
-            if (plugin := self._registry.get(name)) and (css := plugin.css())
+            if (plugin := self._registry.get(name)) and (part := plugin.style())
         ]
-        css = "\n".join(css_links)
-        return Markup(css)
-
-    def load_js(self):
-        plugins = [
-            self._registry.get(name)
-            for name in self._default_plugins + self.get_request_plugins()
-            if name in self._registry
-        ]
-        js_links = [
-            f'<script src="{js}"></script>'
-            for plugin in sorted(plugins, key=attrgetter("weight"), reverse=True)
-            if (js := plugin.js())
-        ]
-        js = "\n".join(js_links)
-        return Markup(js)
+        return Markup("\n".join(css_parts))
 
     def load_scripts(self):
         plugins = [
@@ -72,12 +52,11 @@ class PluginManager:
             if name in self._registry
         ]
         script_parts = [
-            script
+            part
             for plugin in sorted(plugins, key=attrgetter("weight"), reverse=True)
-            if (script := plugin.script())
+            if (part := plugin.script())
         ]
-        scripts = "\n".join(script_parts)
-        return Markup(scripts)
+        return Markup("\n".join(script_parts))
 
     def register_plugin(self, plugin):
         self._registry[plugin.name] = plugin

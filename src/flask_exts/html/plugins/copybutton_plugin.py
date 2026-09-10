@@ -8,5 +8,6 @@ class CopyButtonPlugin(PluginBase):
     def __init__(self):
         super().__init__("copybutton")
 
-    def js(self):
-        return url_for("_template.static", filename="js/copybutton.js")
+    def script(self):
+        url = url_for("_template.static", filename="js/copybutton.js")
+        return f'<script src="{url}"></script>'

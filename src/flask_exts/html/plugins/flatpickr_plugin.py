@@ -26,16 +26,14 @@ class FlatpickrPlugin(PluginBase):
         super().__init__("flatpickr", weight=55)
         self.version = "4.6.13"
 
-    def load_css(self):
+    def style(self):
         """Load Flatpickr CSS from CDN"""
-        return [
-            f'<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@{self.version}/dist/flatpickr.min.css">'
-        ]
+        return f'<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@{self.version}/dist/flatpickr.min.css">'
 
-    def load_js(self):
+    def script(self):
         """Load Flatpickr JavaScript and initialization"""
-        js_url = f'https://cdn.jsdelivr.net/npm/flatpickr@{self.version}/dist/flatpickr.min.js'
-        return Markup(f'''
+        js_url = f"https://cdn.jsdelivr.net/npm/flatpickr@{self.version}/dist/flatpickr.min.js"
+        return Markup(f"""
             <script src="{js_url}"></script>
             <script>
                 // Initialize Flatpickr for date inputs
@@ -68,4 +66,4 @@ class FlatpickrPlugin(PluginBase):
                     return flatpickr(selector, options || {{}});
                 }};
             </script>
-        ''')
+        """)

@@ -6,12 +6,14 @@ class DaterangepickerPlugin(PluginBase):
     def __init__(self):
         super().__init__("daterangepicker")
 
-    def css(self):
-        return url_for(
+    def style(self):
+        url = url_for(
             "_template.static", filename="vendor/daterangepicker/daterangepicker.css"
         )
+        return f'<link rel="stylesheet" href="{url}">'
 
     def js(self):
-        return url_for(
+        url = url_for(
             "_template.static", filename="vendor/daterangepicker/daterangepicker.js"
         )
+        return f'<script src="{url}"></script>'

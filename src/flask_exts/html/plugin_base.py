@@ -24,11 +24,9 @@ class PluginBase:
         self.weight = weight
         self.version = version
 
-    def css(self):
-        return ""
-
-    def js(self):
+    def style(self):
         return ""
 
     def script(self):
         return ""
+

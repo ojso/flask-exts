@@ -6,7 +6,7 @@ from .userstore_ext import UserStoreExtension
 from .usercenter_ext import UserCenterExtension
 from .login_ext import LoginExtension
 from .security_ext import SecurityExtension
-from .admin_ext import AdminExtension
+from .web_ext import WebExtension
 from .startup_ext import StartupExtension
 
 __all__ = [
@@ -18,6 +18,6 @@ __all__ = [
     "UserCenterExtension",
     "LoginExtension",
     "SecurityExtension",
-    "AdminExtension",
+    "WebExtension",
     "StartupExtension",
 ]

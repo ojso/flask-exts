@@ -6,5 +6,6 @@ class AdminFormPlugin(PluginBase):
     def __init__(self):
         super().__init__("form")
 
-    def js(self):
-        return url_for("_template.static", filename="js/form.js")
+    def script(self):
+        url = url_for("_template.static", filename="js/form.js")
+        return f'<script src="{url}"></script>'

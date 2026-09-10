@@ -3,7 +3,7 @@ from flask_login import user_logged_out
 from ..extension.base import Extension
 from ..signals import user_registered
 from ..proxies import current_security
-from ..admin.default_views.index_view import IndexView
+from ..web.default_views.index_view import IndexView
 from ..usercenter.user_view import UserView
 
 

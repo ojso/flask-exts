@@ -62,10 +62,7 @@ function createSwitchField({ className = "", attrs = {} } = {}) {
 function createModal({
     title = "✎",
     cancelText = "✗",
-    saveText = "✓",
-    backdrop = true,
-    keyboard = true,
-    focus = true
+    saveText = "✓"
 } = {}) {
     const overlay = createEl({ tag: 'div', className: 'modal fade', attributes: { tabindex: -1 } });
 
@@ -108,11 +105,10 @@ function createModal({
     const saveButton = createEl({ tag: 'button', className: 'btn btn-primary', attributes: { type: 'button' }, textContent: saveText });
     footer.appendChild(saveButton);
 
-    const modal = new bootstrap.Modal(overlay, { backdrop, keyboard, focus });
-    return { modal, overlay, titleEl, body, errorEl, cancelButton, saveButton };
+    return { overlay, titleEl, body, errorEl, cancelButton, saveButton };
 }
 
- function showToast(message, type = 'success', delay = 5000) {
+ function createToast(message, type = 'success') {
     const colors = {
       success: 'bg-success',
       danger: 'bg-danger',
@@ -144,14 +140,7 @@ function createModal({
     `;
 
     container.appendChild(toast);
-
-    const bsToast = new bootstrap.Toast(toast, { delay });
-    bsToast.show();
-
-    // toast.addEventListener('hidden.bs.toast', function () {
-    //   toast.remove();
-    //   if (container.children.length === 0) container.remove();
-    // });
+    return toast;
   }
 
 export {
@@ -160,5 +149,5 @@ export {
     createSelectField,
     createSwitchField,
     createModal,
-    showToast,
+    createToast,
 }

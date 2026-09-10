@@ -10,7 +10,7 @@ from flask_login import current_user
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
-from ..admin import View, expose_url
+from ..web import View, expose_url
 from .forms.login import LoginForm
 from .forms.register import RegisterForm
 from .forms.change_password import ChangePasswordForm

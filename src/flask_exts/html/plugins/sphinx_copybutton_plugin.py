@@ -6,8 +6,15 @@ class SphinxCopyButtonPlugin(PluginBase):
     def __init__(self):
         super().__init__("sphinx_copybutton")
 
-    def css(self):
-        return url_for("_template.static", filename="vendor/sphinx_copybutton/sphinx_copybutton.css")
+    def style(self):
+        url = url_for(
+            "_template.static",
+            filename="vendor/sphinx_copybutton/sphinx_copybutton.css",
+        )
+        return f'<link rel="stylesheet" href="{url}">'
 
-    def js(self):
-        return url_for("_template.static", filename="vendor/sphinx_copybutton/sphinx_copybutton.js")
+    def script(self):
+        url = url_for(
+            "_template.static", filename="vendor/sphinx_copybutton/sphinx_copybutton.js"
+        )
+        return f'<script src="{url}"></script>'

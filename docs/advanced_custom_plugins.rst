@@ -29,11 +29,11 @@ To create a custom plugin, inherit from ``PluginBase``::
             """Initialize the plugin with the Flask application"""
             pass
 
-        def load_css(self):
+        def load_style(self):
             """Return CSS links or tags"""
-            return []
+            return ""
 
-        def load_js(self):
+        def load_script(self):
             """Return JavaScript code"""
             return ""
 
@@ -53,13 +53,13 @@ Here's a complete example of a custom notification plugin::
             """Initialize plugin"""
             self.app = app
 
-        def load_css(self):
+        def style(self):
             """Load Toast.js CSS"""
             return [
                 '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">'
             ]
 
-        def load_js(self):
+        def script(self):
             """Load Toast.js JavaScript and initialization"""
             return '''
                 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -99,7 +99,7 @@ Load plugins only when specific conditions are met::
             # Only enable in production
             self.enabled = app.config.get('ENV') == 'production'
 
-        def load_js(self):
+        def load_script(self):
             if not self.enabled:
                 return ""
             return "// Plugin code"
@@ -233,7 +233,7 @@ Plugin not loading
 CSS/JS not appearing
 ~~~~~~~~~~~~~~~~~~~~
 
-- Check ``load_css()`` and ``load_js()`` methods
+- Check ``load_styles()`` and ``load_scripts()`` methods
 - Verify return values are correct
 - Check browser console for errors
 - Verify template includes plugin outputs
