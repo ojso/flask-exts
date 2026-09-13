@@ -40,9 +40,9 @@ class EditablePlugin(PluginBase):
         import Editable from '%(url_editable)s'
         import { createToast } from '%(url_ui)s'
         const editor = new Editable({                
-            onSuccess: (target,value, ) => {
-                const toast = createToast("saving with ${value} ok!")
-                const bsToast = new bootstrap.Toast(toast, { delay:500000 });
+            onSuccess: (target,value,message) => {
+                const toast = createToast(message)
+                const bsToast = new bootstrap.Toast(toast, { delay:5000 });
                 bsToast.show();
                 toast.addEventListener('hidden.bs.toast', function () {
                     toast.remove();

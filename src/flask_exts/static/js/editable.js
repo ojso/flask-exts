@@ -17,8 +17,8 @@ class Editable {
     this.options = {
       selector: ".editable",
       onSave: null,        // Custom save handler (url, value) => Promise<{success, value?, message?}>
-      onSuccess: null,     // Success callback (target, value) => void
-      saveOptions: {},     // Default save options, e.g. { transport: 'form' }
+      onSuccess: null,     // Success callback (target, value, message) => void
+      saveOptions: {},     // Default save options, e.g. { method: 'POST', dataType: 'json' }
       ...options
     }
 
@@ -35,15 +35,15 @@ class Editable {
     this.saveButton = saveButton
     this.modal = new bootstrap.Modal(overlay, { backdrop: true, keyboard: true, focus: true });
     document.body.appendChild(this.overlay)
-
+    // bind events to the modal buttons
     this.bindEvents()
-
+    // set up initial state of the editor u
     this.originalValue = ""
     this.activeTarget = null
     this.fieldType = "text"
     this.field = null
     this.saving = false
-
+    // bind events to the editable elements
     this.bindEditables()
   }
 
@@ -155,13 +155,13 @@ class Editable {
     this.saving = true
     try {
       const data = {
-        list_form_pk:this.activeTarget.dataset.pk,
-        [this.activeTarget.dataset.name]:fieldValue,
-        csrf_token:this.activeTarget.dataset.csrf_token
+        pk: this.activeTarget.dataset.pk,
+        [this.activeTarget.dataset.name]: fieldValue,
+        csrf_token: this.activeTarget.dataset.csrf
       }
       const result = await saveFn(url, data, this.options.saveOptions)
       if (result.success) {
-        const newValue = result.value
+        const newValue = fieldValue
         const displayValue = String(newValue)
         this.activeTarget.dataset.value = newValue
         if (this.fieldType === "select") {
@@ -173,7 +173,7 @@ class Editable {
         this.saving = false
         this.close()
         if (this.options.onSuccess) {
-          this.options.onSuccess(this.activeTarget, newValue)
+          this.options.onSuccess(this.activeTarget, newValue, result.message)
         }
       } else {
         this._showError(result.message)
@@ -202,30 +202,12 @@ class Editable {
   async defaultSave(url, data, options = {}) {
     if (!url) return { success: true, value: data }
 
-    const { transport = 'fetch', method = 'POST', headers = {}, timeout = 10000 } = options;
-
-    if (transport === 'form') {
-      const form = document.createElement('form')
-      form.method = method
-      form.action = url
-
-      Object.entries(data).forEach(([name, value]) => {
-        const input = document.createElement('input')
-        input.type = 'hidden'
-        input.name = name
-        input.value = value
-        form.appendChild(input)
-      })
-
-      document.body.appendChild(form)
-      HTMLFormElement.prototype.submit.call(form)
-      return { success: true, value: Object.values(data)[0] }
-    }
+    const { method = 'POST', headers = { 'Content-Type': 'application/json' }, timeout = 10000 } = options;
 
     const fetchOptions = {
       method,
       headers: { 'Content-Type': 'application/json', ...headers },
-      body: JSON.stringify(data ),
+      body: JSON.stringify(data),
       signal: AbortSignal.timeout(timeout)
     };
 
@@ -244,7 +226,7 @@ class Editable {
         return { success: false, message };
       }
 
-      return { success: true, value: responseData?.value ?? responseData };
+      return { success: true, message: responseData?.message ?? responseData };
     } catch (error) {
       return { success: false, message: error.message || 'Network error', };
     }

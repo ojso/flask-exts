@@ -12,7 +12,7 @@ admin/model/view.py 重构统计
   - 总行数：1591
   - 文件大小：~47 KB
   - 方法数：68
-  - 混入数：5 (ActionsMixin, RowActionMixin, FilterMixin, FormMixin + View)
+  - 混入数：5 (ActionsMixin, RowActionMixin, FilterMixin, View)
 
 重构后：
   - 文件数：15（13 个新模块 + 修改的 view.py + base.py + __init__.py）

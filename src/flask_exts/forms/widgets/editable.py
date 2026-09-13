@@ -18,15 +18,9 @@ class EditableWidget:
         kwargs.setdefault('data-url', './ajax/update/')
         # data_url = kwargs.pop("data_url", "")
         # kwargs.setdefault("data-url", data_url)
-
-        kwargs.setdefault("id", field.id)
         kwargs.setdefault("data-name", field.name)
         kwargs.setdefault("href", "#")
-
-        if not kwargs.get("pk"):
-            raise Exception("pk required")
         kwargs["data-pk"] = str(kwargs.pop("pk"))
-
         kwargs["data-csrf"] = kwargs.pop("csrf", "")
         kwargs = self.get_kwargs(field, kwargs)
 
@@ -44,8 +38,8 @@ class EditableWidget:
         elif field.type == "BooleanField":
             kwargs["data-type"] = "select2"
             kwargs["data-value"] = "1" if field.data else ""
-            # data-source = dropdown options
-            kwargs["data-source"] = json.dumps(
+            # data-options = dropdown options
+            kwargs["data-options"] = json.dumps(
                 [
                     {"value": "", "text": field.gettext("No")},
                     {"value": "1", "text": field.gettext("Yes")},
@@ -53,15 +47,15 @@ class EditableWidget:
             )
             kwargs["data-role"] = "x-editable-boolean"
         elif field.type in ["Select2Field", "SelectField"]:
-            kwargs["data-type"] = "select2"
-            choices = [{"value": x, "text": y} for x, y in field.choices]
+            kwargs["data-type"] = "select"
+            choices = [{"value": x, "label": y} for x, y in field.choices]
 
             # prepend a blank field to choices if allow_blank = True
             if getattr(field, "allow_blank", False):
-                choices.insert(0, {"value": "__None", "text": ""})
+                choices.insert(0, {"value": "__None", "label": ""})
 
             # json.dumps fixes issue with unicode strings not loading correctly
-            kwargs["data-source"] = json.dumps(choices)
+            kwargs["data-options"] = json.dumps(choices)
         elif field.type == "DateField":
             kwargs["data-type"] = "combodate"
             kwargs["data-format"] = "YYYY-MM-DD"
@@ -90,21 +84,21 @@ class EditableWidget:
             "KeyPropertyField",
         ]:
             # QuerySelectField and ModelSelectField are for relations
-            kwargs["data-type"] = "select2"
+            kwargs["data-type"] = "select"
 
             choices = []
             selected_ids = []
             for field_choices in field.iter_choices():
-                if len(field_choices) == 3:  # wtforms <3.1, >=3.1.1, <3.2
+                if len(field_choices) == 3:
                     value, label, selected = field_choices
                 else:
                     value, label, selected, _ = field_choices
-                choices.append({"value": value, "text": label})
+                choices.append({"value": value, "label": label})
                 if selected:
                     selected_ids.append(value)
 
             # blank field is already included if allow_blank
-            kwargs["data-source"] = json.dumps(choices,default=str)
+            kwargs["data-options"] = json.dumps(choices,default=str)
 
             if field.type == "QuerySelectMultipleField":
                 kwargs["data-role"] = "x-editable-select2-multiple"

@@ -18,7 +18,6 @@ from .operations import (
 from .actions_mixin import ActionsMixin
 from .row_actions import RowActionMixin
 from .filter_mixin import FilterMixin
-from .form_mixin import FormMixin
 
 
 class BaseModelView(
@@ -36,7 +35,6 @@ class BaseModelView(
     ActionsMixin,
     RowActionMixin,
     FilterMixin,
-    FormMixin,
 ):
     """
 

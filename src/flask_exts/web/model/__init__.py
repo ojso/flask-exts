@@ -54,7 +54,6 @@ from .operations import (
 from .actions_mixin import ActionsMixin
 from .row_actions import RowActionMixin
 from .filter_mixin import FilterMixin
-from .form_mixin import FormMixin
 
 __all__ = [
     'ModelView',
@@ -75,5 +74,4 @@ __all__ = [
     'ActionsMixin',
     'RowActionMixin',
     'FilterMixin',
-    'FormMixin',
 ]

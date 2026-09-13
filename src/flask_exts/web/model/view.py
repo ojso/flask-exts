@@ -27,12 +27,19 @@ Architecture:
         ├── ActionsMixin (actions management) / ActionsMixin（动作管理）
         ├── RowActionMixin (row actions) / RowActionMixin（行动作）
         ├── FilterMixin (filter management) / FilterMixin（过滤管理）
-        └── FormMixin (form mixin) / FormMixin（表单混入）
 """
 
 from typing import Optional
 from math import ceil
-from flask import request, redirect, flash, abort, Response, jsonify, get_flashed_messages
+from flask import (
+    request,
+    redirect,
+    flash,
+    abort,
+    Response,
+    jsonify,
+    get_flashed_messages,
+)
 from flask_babel import gettext, ngettext
 from werkzeug.utils import secure_filename
 
@@ -133,11 +140,11 @@ class ModelView(BaseModelView):
         self._export_columns = self.get_export_columns()
 
         # English: initialize Mixin / 初始化 Mixin
-        if hasattr(self, 'init_actions'):
+        if hasattr(self, "init_actions"):
             self.init_actions()
-        if hasattr(self, 'init_row_actions'):
+        if hasattr(self, "init_row_actions"):
             self.init_row_actions()
-        if hasattr(self, 'init_filters'):
+        if hasattr(self, "init_filters"):
             self.init_filters()
 
         self._init_forms()
@@ -150,7 +157,6 @@ class ModelView(BaseModelView):
             self.column_formatters_detail = self.column_formatters
 
         # English: comment / 导入类型格式化器的默认值
-        
 
         if self.column_type_formatters is None:
             self.column_type_formatters = dict(BASE_FORMATTERS)
@@ -178,8 +184,6 @@ class ModelView(BaseModelView):
         # English: comment / 列表视图内联编辑
         if self.column_editable_list:
             self._list_form_class = self.get_list_form()
-        else:
-            self.column_editable_list = {}
 
     def is_editable(self, name: str) -> bool:
         """
@@ -196,13 +200,21 @@ class ModelView(BaseModelView):
         Returns:
             bool: 如果列可编辑返回 True
         """
-        return name in self.column_editable_list and self.can_edit
+        return (
+            self.can_edit
+            and self.column_editable_list is not None
+            and name in self.column_editable_list
+        )
 
     def is_action_allowed(self, name: str) -> bool:
         """English: comment / 验证操作是否被允许"""
         if name == "delete" and not self.can_delete:
             return False
-        return super().is_action_allowed(name) if hasattr(super(), 'is_action_allowed') else True
+        return (
+            super().is_action_allowed(name)
+            if hasattr(super(), "is_action_allowed")
+            else True
+        )
 
     def _process_ajax_references(self):
         """
@@ -318,7 +330,11 @@ class ModelView(BaseModelView):
             search=view_args.search,
             # filter
             active_filters=view_args.filters,
-            filter_args=self.get_active_filters_kwargs(view_args.filters) if hasattr(self, 'get_active_filters_kwargs') else {},
+            filter_args=(
+                self.get_active_filters_kwargs(view_args.filters)
+                if hasattr(self, "get_active_filters_kwargs")
+                else {}
+            ),
             # misc
             return_url=self._get_list_url(view_args),
             extra_args=view_args.extra_args,
@@ -462,7 +478,7 @@ class ModelView(BaseModelView):
                 )
                 return redirect(return_url)
         else:
-            if hasattr(form, 'flash_errors'):
+            if hasattr(form, "flash_errors"):
                 form.flash_errors(message="Failed to delete record. %(error)s")
 
         return redirect(return_url)
@@ -488,19 +504,16 @@ class ModelView(BaseModelView):
             abort(404)
 
         form = self.list_form()
-        for field in list(form):
-            print(field)
-            print(field.name,field._value)
 
-        # English: comment / 防止验证问题 - 删除未提交的字段
+        # Delete non-submitted fields to prevent validation issues.
         for field in list(form):
-            if (field.name in request.form) or (field.name == "csrf_token"):
+            if (field.name in request.form) or (field.name in request.get_json()):
                 pass
             else:
                 form.__delitem__(field.name)
 
         if form.validate_on_submit():
-            pk = form.list_form_pk.data
+            pk = form.pk.data
             record = self.get_one(pk)
 
             if record is None:

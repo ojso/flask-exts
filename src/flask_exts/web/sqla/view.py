@@ -295,7 +295,7 @@ class SqlaModelView(ModelView):
         `self.column_editable_list`.
 
         :param widget:
-            WTForms widget class. Defaults to `XEditableWidget`.
+            WTForms widget class. Defaults to `EditableWidget`.
         :param validators:
             `form_args` dict with only validators
             {'name': {'validators': [required()]}}
