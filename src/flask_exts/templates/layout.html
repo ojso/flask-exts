@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% do _template.plugin_manager.add_request_plugins(["jquery","bootstrap5"]) %}
+{% do _template.plugin_manager.add_request_plugins(["bootstrap5"]) %}
 
 {% block styles %}{{ _template.plugin_manager.load_styles() }}{% endblock %}
 

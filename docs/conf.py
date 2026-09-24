@@ -22,7 +22,6 @@ copyright = '2024, David Hua'
 author = 'David Hua'
 
 # -- General configuration ---------------------------------------------------
-# -- General configuration
 
 extensions = [
     "sphinx.ext.duration",

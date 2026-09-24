@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', function (cb = null) {
     }
 
     // Listen for the Bootstrap 'show.bs.modal' event
-    // modalElement.addEventListener('show.bs.modal', function (event) {
-    $('#fa_modal_window').on('show.bs.modal', function (event) {
+    modalElement.addEventListener('show.bs.modal', function (event) {
         // 1. Get the element that triggered the modal (the button/link clicked)
         const relatedTarget = event.relatedTarget;
 

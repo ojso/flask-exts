@@ -1,7 +1,7 @@
 {% extends "admin/master.html" %}
 {% from "macro/form.html" import render_form %}
 
-{% do _template.plugin_manager.add_request_plugins(["select2","form","daterangepicker","moment"]) %}
+{% do _template.plugin_manager.add_request_plugins(["tom_select","form","flatpickr"]) %}
 
 {% block main %}
   <ul class="nav nav-tabs">

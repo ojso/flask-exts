@@ -89,7 +89,7 @@ Customizing Templates
 ---------------------
 
 Template Override Directory Structure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create custom templates in your application::
 
@@ -401,7 +401,7 @@ When upgrading Flask-Exts, update your themes::
 See Also
 --------
 
-- :doc:`admin_modelview` - Admin customization
-- :doc:`advanced_custom_fields` - Field theming
+- :doc:`modelview` - Admin customization
+- :doc:`custom_fields` - Field theming
 - `Bootstrap 5 Customization <https://getbootstrap.com/docs/5.0/customize/overview/>`_
 - ``flask_exts.theme`` - Theme module source

@@ -3,7 +3,6 @@ import {
   createTextareaField,
   createSelectField,
   createSwitchField,
-  createModal,
 } from './ui-factory.js'
 
 class FieldRegistry {
@@ -56,6 +55,95 @@ class FieldRegistry {
   }
 }
 
+// Native input types do not support datetime; the combodate widget format
+// (moment-style) tells us which native field to use.
+function combodateKind(format) {
+  const f = String(format || "")
+  const hasDate = /[YD]/.test(f)
+  const hasTime = f.includes("HH")
+  if (hasTime && hasDate) return "datetime"
+  if (hasTime) return "time"
+  return "date"
+}
+
+function normalizeSelectOptions(parsed) {
+  return parsed
+    .map(o => {
+      if (typeof o === "string") return { label: o, value: o }
+      if (!o || typeof o !== "object") return null
+      const label = o.label != null ? String(o.label) : o.text != null ? String(o.text) : ""
+      const value = o.value != null ? String(o.value) : label
+      return { label, value }
+    })
+    .filter(Boolean)
+}
+
+const selectFieldPlugin = {
+  createField({ options = [] } = {}) {
+    return createSelectField({ options })
+  },
+  setValue(field, value) {
+    const options = Array.from(field.options).map(option => option.value)
+    const v = String(value ?? "")
+    if (options.includes(v)) {
+      field.value = v
+    } else if (field.options.length > 0) {
+      field.value = field.options[0].value
+    }
+  },
+  getValue(field) {
+    return field.value
+  },
+  parseOptions(source) {
+    if (!source) return []
+    try {
+      const parsed = JSON.parse(source)
+      if (Array.isArray(parsed)) return normalizeSelectOptions(parsed)
+    } catch (e) {
+      // Fallback to string parsing below
+    }
+    return source.split(",").map(item => {
+      const trimmed = item.trim()
+      if (!trimmed) return null
+      if (trimmed.includes("|")) {
+        const [label, value] = trimmed.split("|").map(part => part.trim())
+        return { label: label || value, value: value || label }
+      }
+      return { label: trimmed, value: trimmed }
+    }).filter(Boolean)
+  }
+}
+
+const combodateFieldPlugin = {
+  createField({ format } = {}) {
+    const kind = combodateKind(format)
+    let field
+    if (kind === "datetime") {
+      field = createInputField({ type: "datetime-local" })
+    } else if (kind === "time") {
+      field = createInputField({ type: "time" })
+    } else {
+      field = createInputField({ type: "date" })
+    }
+    field.dataset.combodateKind = kind
+    return field
+  },
+  setValue(field, value) {
+    let v = String(value ?? "")
+    if (field.dataset.combodateKind === "datetime") {
+      v = v.replace(" ", "T")
+    }
+    field.value = v
+  },
+  getValue(field) {
+    let v = field.value
+    if (field.dataset.combodateKind === "datetime" && v) {
+      v = v.replace("T", " ")
+    }
+    return v
+  }
+}
+
 const builtinFieldPlugins = [
   {
     type: "text",
@@ -78,7 +166,7 @@ const builtinFieldPlugins = [
       field.value = String(value ?? "")
     },
     getValue(field) {
-      return Number(field.value)
+      return field.value === "" ? "" : Number(field.value)
     }
   },
   {
@@ -120,8 +208,7 @@ const builtinFieldPlugins = [
   {
     type: "check",
     createField(params = {}) {
-      const field = createInputField({ type: "checkbox" })
-      return field
+      return createInputField({ type: "checkbox" })
     },
     setValue(field, value) {
       field.checked = String(value ?? "").toLowerCase() === "true"
@@ -144,41 +231,11 @@ const builtinFieldPlugins = [
       return checkbox.checked
     }
   },
-  {
-    type: "select",
-    createField({ options = [] } = {}) {
-      return createSelectField({ options })
-    },
-    setValue(field, value) {
-      const options = Array.from(field.options).map(option => option.value)
-      if (options.includes(String(value ?? ""))) {
-        field.value = String(value ?? "")
-      } else if (field.options.length > 0) {
-        field.value = field.options[0].value
-      }
-    },
-    getValue(field) {
-      return field.value
-    },
-    parseOptions(source) {
-      if (!source) return []
-      try {
-        const parsed = JSON.parse(source)
-        if (Array.isArray(parsed)) return parsed
-      } catch (e) {
-        // Fallback to string parsing below
-      }
-      return source.split(",").map(item => {
-        const trimmed = item.trim()
-        if (!trimmed) return null
-        if (trimmed.includes("|")) {
-          const [label, value] = trimmed.split("|").map(part => part.trim())
-          return { label: label || value, value: value || label }
-        }
-        return { label: trimmed, value: trimmed }
-      }).filter(Boolean)
-    }
-  }
+  { ...selectFieldPlugin, type: "select" },
+  // BooleanField in the editable widgets renders data-type="select2"
+  { ...selectFieldPlugin, type: "select2" },
+  // DateField / DateTimeField / TimeField render data-type="combodate"
+  combodateFieldPlugin
 ]
 
 export default FieldRegistry;

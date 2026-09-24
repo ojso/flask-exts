@@ -384,7 +384,7 @@ Data not persisting
 See Also
 --------
 
-- :doc:`api` - Field API reference
+- :doc:`../api` - Field API reference
 - `WTForms documentation <https://wtforms.readthedocs.io/>`_
-- :doc:`admin_modelview` - Admin field configuration
+- :doc:`modelview` - modelview configuration
 - ``flask_exts.forms`` - Forms module source

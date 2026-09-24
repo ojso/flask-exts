@@ -53,6 +53,7 @@ function createSelectField({ className = "", attrs = {}, options = [] } = {}) {
 
 function createSwitchField({ className = "", attrs = {} } = {}) {
     const field = createEl({ tag: 'div', className });
+    field.classList.add("form-check");
     field.classList.add("form-switch");
     const checkbox = createEl({ tag: 'input', className: "form-check-input", attributes: { type: 'checkbox', ...attrs } });
     field.appendChild(checkbox);
@@ -131,13 +132,22 @@ function createModal({
     toast.setAttribute('aria-live', 'assertive');
     toast.setAttribute('aria-atomic', 'true');
 
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" 
-                    data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    `;
+    const dFlex = document.createElement('div');
+    dFlex.className = 'd-flex';
+
+    const toastBody = document.createElement('div');
+    toastBody.className = 'toast-body';
+    toastBody.textContent = message;
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close btn-close-white me-2 m-auto';
+    closeButton.setAttribute('data-bs-dismiss', 'toast');
+    closeButton.setAttribute('aria-label', 'Close');
+
+    dFlex.appendChild(toastBody);
+    dFlex.appendChild(closeButton);
+    toast.appendChild(dFlex);
 
     container.appendChild(toast);
     return toast;

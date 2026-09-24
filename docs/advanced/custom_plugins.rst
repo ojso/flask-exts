@@ -249,6 +249,6 @@ Plugin conflicts
 See Also
 --------
 
-- :doc:`api` - Plugin API reference
-- :doc:`getting_started` - Flask-Exts basics
+- :doc:`../api` - Plugin API reference
+- :doc:`../getting_started` - Flask-Exts basics
 - ``flask_exts.plugins`` - Plugin module source

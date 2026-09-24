@@ -3,73 +3,134 @@
     // Field converters
     var fieldConverters = [];
 
+    // convert moment-style date format to flatpickr format tokens
+    function toFlatpickrFormat(fmt) {
+      if (!fmt) return fmt;
+      return fmt
+        .replace(/YYYY/g, 'Y')
+        .replace(/MM/g, 'm')
+        .replace(/DD/g, 'd')
+        .replace(/HH/g, 'H')
+        .replace(/mm/g, 'i')
+        .replace(/ss/g, 'S');
+    }
+
+    function hasSeconds(fmt) {
+      return !!fmt && fmt.indexOf('ss') !== -1;
+    }
+
+    function notifyFilterChange() {
+      document.querySelectorAll('.filter-val').forEach(function (el) {
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+
     /**
-    * Process AJAX fk-widget
+    * Process AJAX fk-widget (Tom Select with remote data)
     */
-    function processAjaxWidget($el, name,$parent) {
-      var multiple = $el.attr('data-multiple') == '1';
+    function processAjaxWidget(el, name, parent) {
+      if (!window.TomSelect) {
+        console.error('Tom Select is required for select2-ajax fields');
+        return false;
+      }
+      var multiple = el.getAttribute('data-multiple') == '1';
+      var minimumInputLength = parseInt(el.getAttribute('data-minimum-input-length'), 10) || 1;
+      var placeholder = el.getAttribute('data-placeholder');
+      var separator = el.getAttribute('data-separator') || ',';
+      var allowBlank = el.getAttribute('data-allow-blank') === '1';
+      var url = el.getAttribute('data-url');
+      var initialJson = el.getAttribute('data-json');
 
-      var opts = {
-        width: 'resolve',
-        minimumInputLength: $el.attr('data-minimum-input-length'),
-        placeholder: 'data-placeholder',
-        separator: $el.attr('data-separator'),
-        ajax: {
-          url: $el.attr('data-url'),
-          data: function (params) {
-            return {
-              query: params.term,
-              offset: (params.page||1 - 1) * 10,
-              limit: 10
-            };
-          },
-          processResults: function (data, page) {
-            var results = [];
-            for (var k in data) {
-              var v = data[k];
-              results.push({ id: v[0], text: v[1] });
-            }
-            return {
-              results: results,
-              pagination:{
-                more: results.length == 10
-              }              
-            };
-          }
-        },
-      };
+      if (allowBlank && !multiple) {
+        var blankOpt = document.createElement('option');
+        blankOpt.value = '';
+        blankOpt.textContent = '';
+        el.appendChild(blankOpt);
+      }
 
-      if ($el.attr('data-allow-blank'))
-        opts['allowClear'] = true;
-
-      opts['multiple'] = multiple;
-
-      if($parent){opts['dropdownParent'] = $parent}
-
-      $el.select2(opts);
-
-      if ($el.attr('data-json')){
-        var value = JSON.parse($el.attr('data-json'));
+      // pre-populate initial (already selected) values
+      if (initialJson) {
+        var value = JSON.parse(initialJson);
         if (value) {
           if (multiple) {
-            for (var k in value) {
-              var v = value[k];
-              var newOption = new Option(v[1], v[0], true, true);
-              $el.append(newOption).trigger('change');
-            }
+            value.forEach(function (v) {
+              var opt = document.createElement('option');
+              opt.value = String(v[0]);
+              opt.textContent = v[1];
+              opt.selected = true;
+              el.appendChild(opt);
+            });
           } else {
-            var newOption = new Option(value[1], value[0], true, true);
-            $el.append(newOption).trigger('change');
+            var first = value[0] !== undefined ? value[0] : (Array.isArray(value) ? value[0] : value);
+            var text = value[1] !== undefined ? value[1] : value;
+            var opt2 = document.createElement('option');
+            opt2.value = String(first);
+            opt2.textContent = text;
+            opt2.selected = true;
+            el.appendChild(opt2);
           }
         }
       }
-      
+
+      function loadAjaxOptions(query, offset) {
+        var sep = url.indexOf('?') > -1 ? '&' : '?';
+        return fetch(
+          url + sep + 'query=' + encodeURIComponent(query) + '&offset=' + offset + '&limit=10'
+        )
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            var results = [];
+            for (var k in data) {
+              var v = data[k];
+              results.push({ id: String(v[0]), text: v[1] });
+            }
+            return results;
+          });
+      }
+
+      var page = 0;
+
+      var opts = {
+        valueField: 'id',
+        labelField: 'text',
+        searchField: 'text',
+        maxItems: multiple ? null : 1,
+        placeholder: placeholder || undefined,
+        allowEmptyOption: allowBlank,
+        create: false,
+        shouldLoad: function (query) {
+          return query.length >= minimumInputLength;
+        },
+        load: function (query, callback) {
+          page = 0;
+          loadAjaxOptions(query, 0)
+            .then(function (results) {
+              callback(results);
+            })
+            .catch(function () {
+              callback();
+            });
+        },
+        onDropdownOpen: function () {
+          // load first page when dropdown opens with an empty query
+          if (this.lastQuery && this.lastQuery.length >= minimumInputLength) return;
+        }
+      };
+
+      if (parent) opts.dropdownParent = parent;
+
+      new TomSelect(el, opts);
+      return true;
     }
 
     /**
      * Process Leaflet (map) widget
      */
-    function processLeafletWidget($el, name) {
+    function processLeafletWidget(el, name) {
+      if (!window.L) {
+        console.error('Leaflet library is not loaded. Add the leaflet plugin to use the map widget.');
+        return false;
+      }
       if (!window.FLASK_EXTS_MAPS) {
         console.error("You must set FLASK_EXTS_MAPS in your Flask settings to use the map widget");
         return false;
@@ -79,35 +140,40 @@
         return false;
       }
 
-      var geometryType = $el.data("geometry-type")
+      var geometryType = el.getAttribute('data-geometry-type');
       if (geometryType) {
         geometryType = geometryType.toUpperCase();
       } else {
-        geometryType = "GEOMETRY";
+        geometryType = 'GEOMETRY';
       }
-      var multiple = geometryType.lastIndexOf("MULTI", geometryType) === 0;
-      var editable = !$el.is(":disabled");
+      var multiple = geometryType.lastIndexOf('MULTI', geometryType) === 0;
+      var editable = !el.disabled;
 
-      var $map = $("<div>").width($el.data("width")).height($el.data("height"));
-      $el.after($map).hide();
+      var mapDiv = document.createElement('div');
+      mapDiv.style.width = el.getAttribute('data-width') + 'px';
+      mapDiv.style.height = el.getAttribute('data-height') + 'px';
+      el.insertAdjacentElement('afterend', mapDiv);
+      el.style.display = 'none';
 
       var center = null;
-      if ($el.data("lat") && $el.data("lng")) {
-        center = L.latLng($el.data("lat"), $el.data("lng"));
+      if (el.getAttribute('data-lat') && el.getAttribute('data-lng')) {
+        center = L.latLng(el.getAttribute('data-lat'), el.getAttribute('data-lng'));
       }
 
       var maxBounds = null;
-      if ($el.data("max-bounds-sw-lat") && $el.data("max-bounds-sw-lng") &&
-        $el.data("max-bounds-ne-lat") && $el.data("max-bounds-ne-lng")) {
+      if (
+        el.getAttribute('data-max-bounds-sw-lat') && el.getAttribute('data-max-bounds-sw-lng') &&
+        el.getAttribute('data-max-bounds-ne-lat') && el.getAttribute('data-max-bounds-ne-lng')
+      ) {
         maxBounds = L.latLngBounds(
-          L.latLng($el.data("max-bounds-sw-lat"), $el.data("max-bounds-sw-lng")),
-          L.latLng($el.data("max-bounds-ne-lat"), $el.data("max-bounds-ne-lng"))
-        )
+          L.latLng(el.getAttribute('data-max-bounds-sw-lat'), el.getAttribute('data-max-bounds-sw-lng')),
+          L.latLng(el.getAttribute('data-max-bounds-ne-lat'), el.getAttribute('data-max-bounds-ne-lng'))
+        );
       }
 
       var editableLayers;
-      if ($el.val()) {
-        editableLayers = new L.geoJson(JSON.parse($el.val()));
+      if (el.value) {
+        editableLayers = new L.geoJson(JSON.parse(el.value));
         center = center || editableLayers.getBounds().getCenter();
       } else {
         editableLayers = new L.geoJson();
@@ -115,11 +181,11 @@
 
       var mapOptions = {
         center: center,
-        zoom: $el.data("zoom") || 12,
-        minZoom: $el.data("min-zoom"),
-        maxZoom: $el.data("max-zoom"),
+        zoom: parseInt(el.getAttribute('data-zoom'), 10) || 12,
+        minZoom: parseInt(el.getAttribute('data-min-zoom'), 10) || undefined,
+        maxZoom: parseInt(el.getAttribute('data-max-zoom'), 10) || undefined,
         maxBounds: maxBounds
-      }
+      };
 
       if (!editable) {
         mapOptions.dragging = false;
@@ -134,16 +200,18 @@
 
       // only show attributions if the map is big enough
       // (otherwise, it gets in the way)
-      if ($map.width() * $map.height() < 10000) {
+      var mapW = parseInt(el.getAttribute('data-width'), 10) || 0;
+      var mapH = parseInt(el.getAttribute('data-height'), 10) || 0;
+      if (mapW * mapH < 10000) {
         mapOptions.attributionControl = false;
       }
 
-      var map = L.map($map.get(0), mapOptions)
+      var map = L.map(mapDiv, mapOptions);
       map.addLayer(editableLayers);
 
       if (center) {
         // if we have more than one point, make the map show everything
-        var bounds = editableLayers.getBounds()
+        var bounds = editableLayers.getBounds();
         if (!bounds.getNorthEast().equals(bounds.getSouthWest())) {
           map.fitBounds(bounds);
         }
@@ -153,8 +221,8 @@
       }
 
       // set up tiles
-      var mapboxHostnameAndPath = $el.data('tile-layer-url') || 'api.mapbox.com/styles/v1/mapbox/' + window.FLASK_EXTS_MAPBOX_MAP_ID + '/tiles/{z}/{x}/{y}?access_token={accessToken}';
-      var attribution = $el.data('tile-layer-attribution') || 'Map data &copy; <a href="//openstreetmap.org">OpenStreetMap</a> contributors, <a href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//mapbox.com">Mapbox</a>';
+      var mapboxHostnameAndPath = el.getAttribute('data-tile-layer-url') || 'api.mapbox.com/styles/v1/mapbox/' + window.FLASK_EXTS_MAPBOX_MAP_ID + '/tiles/{z}/{x}/{y}?access_token={accessToken}';
+      var attribution = el.getAttribute('data-tile-layer-attribution') || 'Map data &copy; <a href="//openstreetmap.org">OpenStreetMap</a> contributors, <a href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//mapbox.com">Mapbox</a>';
       L.tileLayer('//' + mapboxHostnameAndPath, {
         // Attributes from https://docs.mapbox.com/help/troubleshooting/migrate-legacy-static-tiles-api/
         attribution: attribution,
@@ -180,17 +248,17 @@
         edit: {
           featureGroup: editableLayers
         }
-      }
+      };
 
-      if ($.inArray(geometryType, ["POINT", "MULTIPOINT"]) > -1) {
+      if (['POINT', 'MULTIPOINT'].indexOf(geometryType) > -1) {
         drawOptions.draw.polyline = false;
         drawOptions.draw.polygon = false;
         drawOptions.draw.rectangle = false;
-      } else if ($.inArray(geometryType, ["LINESTRING", "MULTILINESTRING"]) > -1) {
+      } else if (['LINESTRING', 'MULTILINESTRING'].indexOf(geometryType) > -1) {
         drawOptions.draw.marker = false;
         drawOptions.draw.polygon = false;
         drawOptions.draw.rectangle = false;
-      } else if ($.inArray(geometryType, ["POLYGON", "MULTIPOLYGON"]) > -1) {
+      } else if (['POLYGON', 'MULTIPOLYGON'].indexOf(geometryType) > -1) {
         drawOptions.draw.marker = false;
         drawOptions.draw.polyline = false;
       }
@@ -198,17 +266,22 @@
       map.addControl(drawControl);
       if (window.FLASK_EXTS_MAPS_SEARCH) {
         var circle = L.circleMarker([0, 0]);
-        var $autocompleteEl = $('<input style="position: absolute; z-index: 9999; display: block; margin: -42px 0 0 10px; width: 50%">');
-        var $form = $($el.get(0).form);
+        var autocompleteEl = document.createElement('input');
+        autocompleteEl.style.position = 'absolute';
+        autocompleteEl.style.zIndex = '9999';
+        autocompleteEl.style.display = 'block';
+        autocompleteEl.style.margin = '-42px 0 0 10px';
+        autocompleteEl.style.width = '50%';
+        var form = el.form;
 
-        $autocompleteEl.insertAfter($map);
-        $form.on('submit', function (evt) {
-          if ($autocompleteEl.is(':focus')) {
+        mapDiv.insertAdjacentElement('afterend', autocompleteEl);
+        form.addEventListener('submit', function (evt) {
+          if (document.activeElement === autocompleteEl) {
             evt.preventDefault();
             return false;
           }
         });
-        var autocomplete = new google.maps.places.Autocomplete($autocompleteEl.get(0));
+        var autocomplete = new google.maps.places.Autocomplete(autocompleteEl);
         autocomplete.addListener('place_changed', function () {
           var place = autocomplete.getPlace();
           var loc = place.geometry.location;
@@ -227,27 +300,26 @@
         });
       }
 
-
       // save when the editableLayers are edited
       var saveToTextArea = function () {
         var geo = editableLayers.toGeoJSON();
         if (geo.features.length === 0) {
-          $el.val("");
-          return true
+          el.value = '';
+          return true;
         }
         if (multiple) {
-          var coords = $.map(geo.features, function (feature) {
+          var coords = geo.features.map(function (feature) {
             return [feature.geometry.coordinates];
-          })
+          });
           geo = {
-            "type": geometryType,
-            "coordinates": coords
-          }
+            'type': geometryType,
+            'coordinates': coords
+          };
         } else {
           geo = geo.features[0].geometry;
         }
-        $el.val(JSON.stringify(geo));
-      }
+        el.value = JSON.stringify(geo);
+      };
 
       // handle creation
       map.on('draw:created', function (e) {
@@ -256,301 +328,217 @@
         }
         editableLayers.addLayer(e.layer);
         saveToTextArea();
-      })
+      });
       map.on('draw:edited', saveToTextArea);
-      map.on('draw:deleted', saveToTextArea);
+      map.on('draw:deleted', saveToTextArea);    
     }
 
     /**
     * Process data-role attribute for the given input element. Feel free to override
     *
-    * @param {Selector} $el jQuery selector
+    * @param {Element} el DOM element
     * @param {String} name data-role value
-    * @param {Element} $parent 
+    * @param {Element} parent 
     */
-    this.applyStyle = function ($el, name, $parent=null) {
+    this.applyStyle = function (el, name, parent) {
       // Process converters first
       for (var conv in fieldConverters) {
         var fieldConv = fieldConverters[conv];
 
-        if (fieldConv($el, name))
+        if (fieldConv(el, name))
           return true;
       }
 
-      // make x-editable's POST compatible with WTForms
-      // for x-editable, x-editable-combodate, and x-editable-boolean cases
-      var overrideXeditableParams = function (params) {
-        var newParams = {};
-        newParams['list_form_pk'] = params.pk;
-        newParams[params.name] = params.value;
-        if ($(this).data('csrf')) {
-          newParams['csrf_token'] = $(this).data('csrf');
-        }
-        return newParams;
-      }
+      if (el.dataset && el.dataset.faInitialized) return true;
+
+      // guard for non-browser environments / unsupported roles
+      if (!(el instanceof Element)) return false;
 
       switch (name) {
         case 'select2':
-          var opts = {
-            width: '100%'
+          if (!window.TomSelect) return true;
+          var opts2 = {
+            valueField: 'value',
+            labelField: 'text',
+            searchField: 'text',
+            maxItems: el.multiple ? null : 1,
+            placeholder: el.getAttribute('data-placeholder') || undefined,
+            allowEmptyOption: el.getAttribute('data-allow-blank') !== null || el.getAttribute('data-allow-blank') === '1'
           };
 
-          if ($el.attr('data-allow-blank'))
-            opts['allowClear'] = true;
-
-          opts['minimumInputLength'] = $el.attr('data-minimum-input-length');
-
-          if ($el.attr('data-tags')) {
-            $.extend(opts, {
-              tokenSeparators: [','],
-              tags: []
-            });
+          if (el.getAttribute('data-tags')) {
+            opts2.create = true;
+            opts2.delimiter = ',';
+            try {
+              opts2.options = JSON.parse(el.getAttribute('data-tags'));
+            } catch (e) { /* ignore malformed tags */ }
           }
 
-          $el.select2(opts);
+          if (opts2.allowEmptyOption) {
+            var hasEmpty = false;
+            el.querySelectorAll('option').forEach(function (o) {
+              if (o.value === '') hasEmpty = true;
+            });
+            if (!hasEmpty) {
+              var emptyOpt = document.createElement('option');
+              emptyOpt.value = '';
+              emptyOpt.textContent = '';
+              el.insertBefore(emptyOpt, el.firstChild);
+            }
+          }
+
+          if (parent) opts2.dropdownParent = parent;
+          new TomSelect(el, opts2);
+          el.dataset.faInitialized = '1';
           return true;
         case 'select2-tags':
-          // get tags from element
-          if ($el.attr('data-tags')) {
-            var tags = JSON.parse($el.attr('data-tags'));
-          } else {
-            var tags = [];
+          if (!window.TomSelect) return true;
+          var tags = [];
+          var tagsAttr = el.getAttribute('data-tags');
+          if (tagsAttr) {
+            try { tags = JSON.parse(tagsAttr); } catch (e) { /* ignore malformed tags */ }
           }
 
           // default to a comma for separating list items
-          // allows using spaces as a token separator
-          if ($el.attr('data-token-separators')) {
-            var tokenSeparators = JSON.parse($el.attr('data-tags'));
-          } else {
-            var tokenSeparators = [','];
+          var tokenSeparators = [','];
+          var sepAttr = el.getAttribute('data-token-separators');
+          if (sepAttr) {
+            try { tokenSeparators = JSON.parse(sepAttr); } catch (e) { /* ignore */ }
           }
 
-          if ($el.attr('data-allow-duplicate-tags')) {
-            var allowDuplicateTags = JSON.parse($el.attr('data-allow-duplicate-tags'));
-          } else {
-            var allowDuplicateTags = false;
+          var allowDuplicateTags = false;
+          var dupAttr = el.getAttribute('data-allow-duplicate-tags');
+          if (dupAttr) {
+            allowDuplicateTags = dupAttr === 'true' || dupAttr === '1';
           }
 
-          if (allowDuplicateTags) {
-            // To allow duplicate tags, we need to have a unique ID for each entry.
-            // The easiest way to do this is appending the current Unix timestamp.
-            // However, this causes the ID to change (the ID is what flask receives later on).
-            // We separate the date with a '#' and put a space at the end of the ID
-            // (something the user can't do due to 'trim') to specially mark these entries.
-            var createSearchChoice = function (term) {
-              return {
-                id: $.trim(term) + "#" + new Date().getTime() + " ",
-                text: $.trim(term)
-              };
-            };
-          } else {
-            var createSearchChoice = undefined;
-          }
-
-          var opts = {
-            width: 'resolve',
-            tags: tags,
-            tokenSeparators: tokenSeparators,
-            createSearchChoice: createSearchChoice,
-            formatNoMatches: function () {
-              return 'Enter comma separated values';
+          var optsTags = {
+            create: true,
+            createOnBlur: true,
+            delimiter: (tokenSeparators || [',' ]).join(''),
+            duplicates: allowDuplicateTags,
+            options: tags,
+            placeholder: el.getAttribute('data-placeholder') || undefined,
+            render: {
+              no_results: function () {
+                return 'Enter comma separated values';
+              }
             }
           };
 
-          $el.select2(opts);
-
-          // submit on ENTER
-          $el.parent().find('input.select2-input').on('keyup', function (e) {
-            if (e.keyCode === 13)
-              $(this).closest('form').submit();
-          });
+          if (parent) optsTags.dropdownParent = parent;
+          new TomSelect(el, optsTags);
+          el.dataset.faInitialized = '1';
           return true;
         case 'select2-ajax':
-          processAjaxWidget($el, name,$parent);
+          processAjaxWidget(el, name, parent);
+          el.dataset.faInitialized = '1';
           return true;
         case 'datetimepicker':
-          $el.daterangepicker({
-            singleDatePicker: true,
-            timePicker: true,
-            showDropdowns: true,
-            timePickerIncrement: 1,
-            timePicker24Hour: true,
-            locale: {
-              format: $el.attr('data-date-format'),
+          if (!window.flatpickr) return true;
+          flatpickr(el, {
+            enableTime: true,
+            time_24hr: true,
+            enableSeconds: hasSeconds(el.getAttribute('data-date-format')),
+            minuteIncrement: 1,
+            dateFormat: toFlatpickrFormat(el.getAttribute('data-date-format')) || 'Y-m-d H:i:S',
+            onOpen: function (selectedDates, dateStr, instance) {
+              if (!el.value) {
+                var now = new Date();
+                now.setSeconds(0, 0);
+                instance.setDate(now, true);
+              }
             },
-          },
-            function (start, end) {
-              $('.filter-val').trigger("change");
-            });
-          $el.on('show.daterangepicker', function (event, data) {
-            if ($el.val() == "") {
-              var now = moment().seconds(0); // set seconds to 0
-              // change datetime to current time if field is blank
-              $el.data('daterangepicker').setCustomDates(now, now);
+            onChange: function () {
+              notifyFilterChange();
             }
           });
+          el.dataset.faInitialized = '1';
           return true;
         case 'datepicker':
-          $el.daterangepicker({
-            singleDatePicker: true,
-            timePicker: false,
-            showDropdowns: true,            
-            "locale": { format: $el.attr('data-date-format') },
-          },
-            function (start, end) {
-              $('.filter-val').trigger("change");
-            });
+          if (!window.flatpickr) return true;
+          flatpickr(el, {
+            enableTime: false,
+            dateFormat: toFlatpickrFormat(el.getAttribute('data-date-format')) || 'Y-m-d',
+            onChange: function () {
+              notifyFilterChange();
+            }
+          });
+          el.dataset.faInitialized = '1';
           return true;
         case 'timepicker':
-          $el.daterangepicker({
-            singleDatePicker: true,
-            timePicker: true,
-            showDropdowns: true,
-            timePicker24Hour: true,
-            timePickerIncrement: 1,            
-            locale: {
-              format: $el.attr('data-date-format'),
-            },
-          },
-            function (start, end) {
-              $('.filter-val').trigger("change");
-            });
-          // hack to hide calendar to create a time-only picker
-          $el.data('daterangepicker').container.find('.calendar-date').hide();
-          $el.on('showCalendar.daterangepicker', function (event, data) {
-            var $container = data.container;
-            $container.find('.calendar-date').remove();
+          if (!window.flatpickr) return true;
+          flatpickr(el, {
+            enableTime: true,
+            noCalendar: true,
+            time_24hr: true,
+            enableSeconds: hasSeconds(el.getAttribute('data-date-format')),
+            minuteIncrement: 1,
+            dateFormat: toFlatpickrFormat(el.getAttribute('data-date-format')) || 'H:i:S',
+            onChange: function () {
+              notifyFilterChange();
+            }
           });
+          el.dataset.faInitialized = '1';
           return true;
         case 'datetimerangepicker':
-          $el.daterangepicker({
-            timePicker: true,
-            showDropdowns: true,
-            timePickerIncrement: 1,
-            timePicker24Hour: true,
-            locale: {
-              format: $el.attr('data-date-format'),
-              separator: ' - ',
-            },
-          },
-            function (start, end) {
-              $('.filter-val').trigger("change");
-            });
+          if (!window.flatpickr) return true;
+          flatpickr(el, {
+            mode: 'range',
+            enableTime: true,
+            time_24hr: true,
+            enableSeconds: hasSeconds(el.getAttribute('data-date-format')),
+            minuteIncrement: 1,
+            dateFormat: toFlatpickrFormat(el.getAttribute('data-date-format')) || 'Y-m-d H:i:S',
+            locale: { rangeSeparator: ' - ' },
+            onChange: function () {
+              notifyFilterChange();
+            }
+          });
+          el.dataset.faInitialized = '1';
           return true;
         case 'daterangepicker':
-          $el.daterangepicker({
-            timePicker: false,
-            showDropdowns: true,
-            locale: {
-              format: $el.attr('data-date-format'),
-              separator: ' - ',
-            },
-          },
-            function (start, end) {
-              $('.filter-val').trigger("change");
-            });
-          return true;
-
-        case 'timerangepicker':
-          $el.daterangepicker({
-            "locale": { format: $el.attr('data-date-format') },
-            timePicker: true,
-            showDropdowns: true,
-            timePicker24Hour: true,
-            timePickerIncrement: 1,
-            locale: {
-              format: $el.attr('data-date-format'),
-              separator: ' - ',
-            },
-          },
-            function (start, end) {
-              $('.filter-val').trigger("change");
-            });
-          // hack - hide calendar + range inputs
-          $el.data('daterangepicker').container.find('.calendar-date').hide();
-          $el.data('daterangepicker').container.find('.daterangepicker_start_input').hide();
-          $el.data('daterangepicker').container.find('.daterangepicker_end_input').hide();
-          // hack - add TO between time inputs
-          $el.data('daterangepicker').container.find('.left').before($('<div style="float: right; margin-top: 20px; padding-left: 5px; padding-right: 5px;"> to </span>'));
-          $el.on('showCalendar.daterangepicker', function (event, data) {
-            var $container = data.container;
-            $container.find('.calendar-date').remove();
+          if (!window.flatpickr) return true;
+          flatpickr(el, {
+            mode: 'range',
+            enableTime: false,
+            dateFormat: toFlatpickrFormat(el.getAttribute('data-date-format')) || 'Y-m-d',
+            locale: { rangeSeparator: ' - ' },
+            onChange: function () {
+              notifyFilterChange();
+            }
           });
+          el.dataset.faInitialized = '1';
+          return true;
+        case 'timerangepicker':
+          if (!window.flatpickr) return true;
+          flatpickr(el, {
+            mode: 'range',
+            enableTime: true,
+            noCalendar: true,
+            time_24hr: true,
+            enableSeconds: hasSeconds(el.getAttribute('data-date-format')),
+            minuteIncrement: 1,
+            dateFormat: toFlatpickrFormat(el.getAttribute('data-date-format')) || 'H:i:S',
+            locale: { rangeSeparator: ' - ' },
+            onChange: function () {
+              notifyFilterChange();
+            }
+          });
+          el.dataset.faInitialized = '1';
           return true;
         case 'leaflet':
-          processLeafletWidget($el, name);
+          processLeafletWidget(el, name);
+          el.dataset.faInitialized = '1';
           return true;
+        // x-editable* widgets are handled natively by editable.js (Editable module).
+        // The old jQuery x-editable cases are intentionally no-ops.
         case 'x-editable':
-          $el.editable({
-            processResult: overrideXeditableParams,
-            combodate: {
-              // prevent minutes from showing in 5 minute increments
-              minuteStep: 1,
-              maxYear: 2030,
-            }
-          });
-          return true;
         case 'x-editable-combodate':
-          let template = $el.data('template');
-          $el.removeAttr('data-template');
-          $el.editable({
-            processResult: overrideXeditableParams,
-            template: template,
-            combodate: {
-              // prevent minutes from showing in 5 minute increments
-              minuteStep: 1,
-              maxYear: 2030,
-            }
-          });
-          return true;
         case 'x-editable-select2-multiple':
-          $el.editable({
-            processResult: overrideXeditableParams,
-            ajaxOptions: {
-              // prevents keys with the same value from getting converted into arrays
-              traditional: true
-            },
-            select2: {
-              multiple: true
-            },
-            display: function (value) {
-              // override to display text instead of ids on list view
-              var html = [];
-              // temporary patch to provide bs3 & bs4 compatibility
-              var data = $.fn.editableutils.itemsByValue(value, $el.data('source'), 'id').concat(
-                $.fn.editableutils.itemsByValue(value, $el.data('source'), 'value'));
-
-              if (data.length) {
-                $.each(data, function (i, v) { html.push($.fn.editableutils.escape(v.text)); });
-                $(this).html(html.join(', '));
-              } else {
-                $(this).empty();
-              }
-            }
-          });
-          return true;
         case 'x-editable-boolean':
-          $el.editable({
-            processResult: overrideXeditableParams,
-            display: function (value, response) {
-              // display boolean value as an icon
-              var glyph = (value == '1') ? 'ok-circle' : 'minus-sign';
-              var fa = (value == '1') ? 'fa-check' : 'fa-minus-circle';
-              $(this).empty().append($('<span />', {
-                'class': `fa ${fa} glyphicon glyphicon-${glyph} icon-${glyph}`,
-                'title': $(this).parent().data('title'),
-              }));
-            },
-            success: function (response, newValue) {
-              // update display
-              var glyph = (newValue == '1') ? 'ok-circle' : 'minus-sign';
-              var fa = (newValue == '1') ? 'fa-check' : 'fa-minus-circle';
-              $(this).empty().append($('<span />', {
-                'class': `fa ${fa} glyphicon glyphicon-${glyph} icon-${glyph}`,
-                'title': $(this).parent().data('title'),
-              }));
-            }
-          });
+          el.dataset.faInitialized = '1';
+          return true;
       }
     };
 
@@ -563,27 +551,29 @@
     */
     this.addInlineField = function (el, elID) {
       // Get current inline field
-      var $el = $(el).closest('.inline-field');
+      var $el = el.closest('.inline-field');
+      if (!$el) return;
       // Figure out new field ID
       var id = elID;
 
-      var $parentForm = $el.parent().closest('.inline-field');
+      var parentField = $el.parentElement ? $el.parentElement.closest('.inline-field') : null;
 
-      if ($parentForm.hasClass('fresh')) {
-        id = $parentForm.attr('id');
+      if (parentField && parentField.classList.contains('fresh')) {
+        id = parentField.getAttribute('id');
         if (elID) {
           id += '-' + elID;
         }
       }
 
-      var $fieldList = $el.find('> .inline-field-list');
+      var fieldList = $el.querySelector(':scope > .inline-field-list');
+      var templateEl = $el.querySelector(':scope > .inline-field-template');
+      if (!fieldList || !templateEl) return;
+
       var maxId = 0;
 
-      $fieldList.children('.inline-field').each(function (idx, field) {
-        var $field = $(field);
-
-        var parts = $field.attr('id').split('-');
-        idx = parseInt(parts[parts.length - 1], 10) + 1;
+      fieldList.querySelectorAll(':scope > .inline-field').forEach(function (field) {
+        var parts = field.getAttribute('id').split('-');
+        var idx = parseInt(parts[parts.length - 1], 10) + 1;
 
         if (idx > maxId) {
           maxId = idx;
@@ -593,65 +583,56 @@
       var prefix = id + '-' + maxId;
 
       // Get template
-      var $template = $($el.find('> .inline-field-template').text());
+      var holder = document.createElement('div');
+      holder.innerHTML = templateEl.textContent;
+      var template = holder.firstElementChild;
 
       // Set form ID
-      $template.attr('id', prefix);
+      template.setAttribute('id', prefix);
 
       // Mark form that we just created
-      $template.addClass('fresh');
+      template.classList.add('fresh');
 
       // Fix form IDs
-      $('[name]', $template).each(function (e) {
-        var me = $(this);
+      template.querySelectorAll('[name]').forEach(function (me) {
+        var meId = me.getAttribute('id') || '';
+        var name = me.getAttribute('name');
 
-        var id = me.attr('id');
-        var name = me.attr('name');
-
-        id = prefix + (id !== '' ? '-' + id : '');
+        meId = prefix + (meId !== '' ? '-' + meId : '');
         name = prefix + (name !== '' ? '-' + name : '');
 
-        me.attr('id', id);
-        me.attr('name', name);
+        me.setAttribute('id', meId);
+        me.setAttribute('name', name);
       });
 
-      $template.appendTo($fieldList);
+      fieldList.appendChild(template);
 
       // Select first field
-      $('input:first', $template).focus();
+      var firstInput = template.querySelector('input');
+      if (firstInput) firstInput.focus();
 
       // Apply styles
-      this.applyGlobalStyles($template);
+      this.applyGlobalStyles(template);
     };
 
     /**
     * Apply global input styles.
     *
     * @method applyGlobalStyles
-    * @param {Selector} jQuery element
+    * @param {Element} parent DOM element
     */
-    this.applyGlobalStyles = function (parent,isModal=false) {
+    this.applyGlobalStyles = function (parent, isModal) {
       var self = this;
-
-      if(isModal){
-        $(':input[data-role], a[data-role]', parent).each(function () {
-          var $el = $(this);
-          self.applyStyle($el, $el.attr('data-role'),parent);
-        });
-      }else{
-        $(':input[data-role], a[data-role]', parent).each(function () {
-          var $el = $(this);
-          self.applyStyle($el, $el.attr('data-role'));
-        });
-      }
-      
+      parent.querySelectorAll('input[data-role], select[data-role], textarea[data-role], button[data-role], a[data-role]').forEach(function (el) {
+        self.applyStyle(el, el.getAttribute('data-role'), isModal ? parent : null);
+      });
     };
 
     /**
     * Add a field converter for customizing styles
     *
     * @method addFieldConverter
-    * @param {converter} function($el, name)
+    * @param {converter} function(el, name)
     */
     this.addFieldConverter = function (converter) {
       fieldConverters.push(converter);
@@ -659,21 +640,34 @@
   };
 
   // Add on event handler
-  $('body').on('click', '.inline-remove-field', function (e) {
-    e.preventDefault();
-    var r = confirm($('.inline-remove-field').attr('value'));
-    var form = $(this).closest('.inline-field');
-    if (r == true) {
-      form.remove();
+  document.addEventListener('click', function (e) {
+    var target = e.target;
+    while (target && target !== document) {
+      if (target.classList && target.classList.contains('inline-remove-field')) {
+        e.preventDefault();
+        var valueEl = document.querySelector('.inline-remove-field');
+        var msg = valueEl ? valueEl.getAttribute('value') : '';
+        var form = target.closest('.inline-field');
+        if (window.confirm(msg)) {
+          if (form) form.remove();
+        }
+        return;
+      }
+      target = target.parentNode;
     }
   });
 
   // Expose faForm globally
   var faForm = window.faForm = new AdminForm();
-  $(document).trigger('adminFormReady')
+  document.dispatchEvent(new Event('adminFormReady'));
 
   // Apply global styles for current page after page loaded
-  $(function () {
+  function applyOnReady() {
     faForm.applyGlobalStyles(document);
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyOnReady);
+  } else {
+    applyOnReady();
+  }
 })();

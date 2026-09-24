@@ -1,11 +1,5 @@
-Admin ModelView Tutorial
+ModelView Tutorial
 ========================
-
-English / 中文
-----------------
-This page is provided in English with a Chinese summary for easier reading.
-中文说明：本页面保留英文原文，并附带中文说明，便于中英文对照阅读。
-
 
 The ``SqlaModelView`` class is the core component for building admin panels with Flask-Exts.
 It automatically generates CRUD (Create, Read, Update, Delete) views for your database models

@@ -5,7 +5,7 @@
 {% from "macro/modal.html" import add_modal_button,add_modal_window %}
 {% from "macro/form.html" import render_form_fields %}
 
-{% do _template.plugin_manager.add_request_plugins(["modal","filters","select2","form","editable","daterangepicker","moment"]) %}
+{% do _template.plugin_manager.add_request_plugins(["modal","filters","tom_select","form","editable","flatpickr"]) %}
 
 {% set actions = view.get_list_actions() %}
 {% set row_actions = view.get_row_actions() %}

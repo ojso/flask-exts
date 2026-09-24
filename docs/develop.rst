@@ -1,17 +1,10 @@
-=======
 Develop
 =======
 
-English / 中文
-----------------
-This page is provided in English with a Chinese summary for easier reading.
-中文说明：本页面保留英文原文，并附带中文说明，便于中英文对照阅读。
-
-English summary: This guide explains how to install the project for development, run the test suite, build the docs, and manage translations with Babel.
-中文说明：本指南说明如何在开发环境中安装项目、运行测试、构建文档以及使用 Babel 管理国际化翻译。
+This guide explains how to install the project for development, run the test suite, build the docs, and manage translations with Babel.
 
 Install
-=======
+---------
 
 .. code-block:: console
 
@@ -19,7 +12,8 @@ Install
     $ pip install -r requirements/develop.in
 
 Test
-====
+------
+
 Tests are run with `pytest <https://pytest.org/>`_.
 To run the tests, from the project directory:
 
@@ -28,15 +22,11 @@ To run the tests, from the project directory:
     # requirements
     $ pip install -r requirements/test.in    
 
-    # update translation
-    $ pybabel compile -d src/flask_exts/translations -D messages
-    $ pybabel compile -d tests/translations
-    
     # test
     $ pytest
 
 Docs
-====
+----
 
 .. code-block:: console
 
@@ -45,7 +35,7 @@ Docs
     $ make html
 
 Publish
-=======
+--------
 
 .. code-block:: console
 
@@ -53,10 +43,7 @@ Publish
     $ python -m build
 
 Translation
-=============
-
-pybabel
--------------
+--------------
 
 .. code-block:: console
 

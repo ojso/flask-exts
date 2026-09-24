@@ -1,11 +1,5 @@
-Advanced Security
-==================
-
-English / 中文
-----------------
-This page is provided in English with a Chinese summary for easier reading.
-中文说明：本页面保留英文原文，并附带中文说明，便于中英文对照阅读。
-
+Security
+===========
 
 In-depth security guide for Flask-Exts applications with best practices and advanced patterns.
 
@@ -402,7 +396,7 @@ CORS and CSRF Protection
         return jsonify({'data': []})
 
 Content Security Policy
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Prevent XSS attacks::
 
@@ -502,4 +496,4 @@ See Also
 - `Flask Security <https://flask-security-too.readthedocs.io/>`_
 - `Flask-JWT-Extended <https://flask-jwt-extended.readthedocs.io/>`_
 - `Cryptography <https://cryptography.io/>`_
-- :doc:`getting_started` - Basic setup
+- :doc:`../getting_started` - Basic setup

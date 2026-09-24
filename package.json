@@ -1,0 +1,22 @@
+{
+  "name": "flask-exts",
+  "version": "1.0.0",
+  "description": "Flask extensions monorepo (front-end assets managed via npm, symlinked into src/flask_exts/static/vendor)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "clipboard": "^2.0.11",
+    "tom-select": "^2.6.2"
+  }
+}

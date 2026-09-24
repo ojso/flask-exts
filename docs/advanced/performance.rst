@@ -430,7 +430,7 @@ Deployment Optimization
 ------------------------
 
 Web Server Configuration
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use production WSGI server::
 
@@ -496,4 +496,4 @@ See Also
 - `SQLAlchemy Performance <https://docs.sqlalchemy.org/performance.html>`_
 - `Flask Best Practices <https://flask.palletsprojects.com/>`_
 - `nginx Configuration <https://nginx.org/en/docs/>`_
-- :doc:`admin_modelview` - Admin optimization
+- :doc:`modelview` - Admin optimization
