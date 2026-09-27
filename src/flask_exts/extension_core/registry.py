@@ -15,7 +15,6 @@ class ExtensionRegistry:
     - Dynamic registration and discovery
     - Dependency resolution
     - Priority-based initialization order
-    - Selective extension loading
     - Circular dependency detection
 
     Example:
@@ -23,9 +22,6 @@ class ExtensionRegistry:
         registry.register(DatabaseExtension)
         registry.register(TemplateExtension)
         registry.init_all(app)
-
-        # Or selectively load
-        registry.init_all(app, enabled=['database', 'template'])
     """
 
     def __init__(self):
@@ -115,9 +111,7 @@ class ExtensionRegistry:
 
         return extensions
 
-    def _check_dependencies(
-        self, name: str, enabled: list[str] | None = None
-    ) -> None:
+    def _check_dependencies(self, name: str, enabled: list[str] | None = None) -> None:
         """
         Check if all dependencies of an extension are available.
 
@@ -175,16 +169,12 @@ class ExtensionRegistry:
             if ext.name not in visited:
                 visit(ext.name, [])
 
-    def init_all(
-        self, app, skip_missing: bool = False
-    ) -> None:
+    def init_all(self, app) -> None:
         """
-        Initialize all or selected extensions.
+        Initialize all registered extensions in priority order.
 
         Args:
             app: Flask application
-            enabled: List of extension names to enable (None = all)
-            skip_missing: If True, skip disabled extensions without error
 
         Raises:
             ExtensionDependencyError: If dependencies not satisfied
@@ -199,8 +189,6 @@ class ExtensionRegistry:
         # Validate all requested extensions
         for name in to_initialize:
             if name not in self._instances:
-                if skip_missing:
-                    continue
                 raise ExtensionNotFoundError(f"Extension '{name}' not found")
 
             self._check_dependencies(name, to_initialize)
@@ -266,7 +254,7 @@ class ExtensionRegistry:
             if hasattr(ext, "shutdown"):
                 try:
                     ext.shutdown(app)
-                except Exception as e:
+                except ExtensionError as e:
                     # Log but don't raise during shutdown
                     import warnings
 

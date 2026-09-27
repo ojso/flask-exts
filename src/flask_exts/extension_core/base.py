@@ -50,7 +50,7 @@ class Extension(ABC):
         Returns:
             str: Extension name (lowercase, no spaces)
         """
-        pass
+        ...
 
     @property
     @abstractmethod
@@ -64,7 +64,7 @@ class Extension(ABC):
         Returns:
             int: Priority value (0-100+)
         """
-        pass
+        ...
 
     @property
     def dependencies(self) -> list[str]:
@@ -100,7 +100,7 @@ class Extension(ABC):
             ValueError: If configuration is invalid
             RuntimeError: If dependencies are missing
         """
-        pass
+        ...
 
     def shutdown(self, app=None):
         """
@@ -109,28 +109,19 @@ class Extension(ABC):
         Args:
             app: Flask application instance (optional)
         """
-        pass
 
 
 class ExtensionError(Exception):
     """Base exception for extension-related errors"""
 
-    pass
-
 
 class ExtensionNotFoundError(ExtensionError):
     """Raised when required extension is not found"""
-
-    pass
 
 
 class ExtensionDependencyError(ExtensionError):
     """Raised when extension dependency cannot be satisfied"""
 
-    pass
-
 
 class ExtensionInitError(ExtensionError):
     """Raised when extension initialization fails"""
-
-    pass

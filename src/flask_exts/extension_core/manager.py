@@ -1,4 +1,3 @@
-from ..builtin_extensions import BUILTIN_EXTENSIONS
 from .base import Extension
 from .registry import ExtensionRegistry
 
@@ -7,55 +6,39 @@ class ExtensionManager:
     """
     Composable Flask-Exts extension manager.
 
-    This class orchestrates initialization of Flask-Exts components
-    using a registry-based composition pattern instead of the God Object
-    pattern. It remains 100% backward compatible with existing code.
+    This class orchestrates initialization of registered extensions through a
+    registry-based composition pattern. It keeps the extension lifecycle
+    separate from the concrete extension implementations.
 
     Usage:
-        # Basic usage (backward compatible)
         exts = ExtensionManager(app)
-
-        # With selective extension loading
-        exts = ExtensionManager(app, extensions=['database', 'template', 'admin'])
-
-        # Add custom extensions
         exts.register_extension(MyCustomExtension)
     """
 
     def __init__(
         self,
         app=None,
-        skip_missing: bool = False,
     ):
         """
-        Initialize Exts manager.
+        Initialize the extension manager.
 
         Args:
-            app: Flask application (optional, call init_app later if not provided)
-            extensions: List of extension names to enable (None = enable all)
-            skip_missing: Skip missing extensions without error
+            app: Flask application (optional; call init_app later if not provided)
 
         Example:
-            # Load all extensions
             exts = ExtensionManager(app)
-
-            # Load specific extensions only
-            exts = ExtensionManager(app, extensions=['database', 'template'])
-
-            # Defer initialization
             exts = ExtensionManager()
             exts.init_app(app)
         """
         self.app = app
         self._registry = ExtensionRegistry()
-        self._skip_missing = skip_missing
 
         # Register default extension classes
         self.register_default_extensions()
 
         # Initialize if app provided
         if app is not None:
-            self.init_app(app, skip_missing)
+            self.init_app(app)
 
     def register_default_extensions(self) -> None:
         """Register all built-in extensions"""
@@ -95,15 +78,13 @@ class ExtensionManager:
 
 
     def init_app(
-        self, app, skip_missing: bool = False
+        self, app
     ) -> None:
         """
-        Initialize extensions with Flask application.
+        Initialize all registered extensions for a Flask application.
 
         Args:
             app: Flask application
-            extensions: Extension names to enable (None = use init time setting or all)
-            skip_missing: Skip missing extensions without error
         """
         self.app = app
 
@@ -116,9 +97,8 @@ class ExtensionManager:
 
         app.extensions["exts"] = self
 
-
         # Initialize all extensions
-        self._registry.init_all(app, skip_missing)
+        self._registry.init_all(app)
 
     def get_extension(self, name: str) -> Extension | None:
         """
