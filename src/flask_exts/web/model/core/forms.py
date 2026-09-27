@@ -65,7 +65,7 @@ class FormsMixin:
         """
         return None
 
-    def scaffold_list_form(self, widget=None, validators=None) -> Type:
+    def scaffold_list_form(self, widget=None, validators=None) -> type:
         """
         Create form for the `index_view` using only the columns from
         `self.column_editable_list`.
@@ -93,7 +93,7 @@ class FormsMixin:
         """
         raise NotImplementedError("Please implement scaffold_list_form method")
 
-    def get_list_form(self) -> Type:
+    def get_list_form(self) -> type:
         """
         Get form class for the editable list view.
 
@@ -120,15 +120,15 @@ class FormsMixin:
         中文说明：获取可编辑列表视图的表单类。仅使用 form_args 中的验证器来构建表单类，并允许重写可编辑列表视图的字段/小部件。
 
         Returns:
-            Type: Form class / 表单类
+            Type: Form class
         """
         if self.form_args:
             # English: form_args FieldList / 仅获取验证器，其他 form_args 可能会破坏 FieldList 包装
-            validators = dict(
-                (key, {"validators": value["validators"]})
+            validators = {
+                key: {"validators": value["validators"]}
                 for key, value in self.form_args.items()
                 if value.get("validators")
-            )
+            }
         else:
             validators = None
 
@@ -255,12 +255,7 @@ class FormsMixin:
 
     def list_form(self, *args, **kwargs) -> Any:
         """
-        Instantiate model editing form for list view and return it.
-
-        Override to implement custom behavior.
-
-        English summary: Instantiate and return the list-edit form for the index view; override to customize behavior.
-        中文说明：实例化模型编辑表单（用于列表视图）并返回，覆盖以实现自定义行为。
+        Instantiate and return the list-edit form for the index view; override to customize behavior.
 
         Returns:
             Any: Form instance / 表单实例

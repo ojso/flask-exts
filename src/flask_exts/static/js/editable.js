@@ -154,10 +154,11 @@ class Editable {
     const saveFn = this.options.onSave || this.defaultSave
     this.saving = true
     try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content?.trim() || null;
       const data = {
         pk: this.activeTarget.dataset.pk,
         [this.activeTarget.dataset.name]: fieldValue,
-        csrf_token: this.activeTarget.dataset.csrf
+        ...(csrfToken && { csrf_token: csrfToken })
       }
       const result = await saveFn(url, data, this.options.saveOptions)
       if (result.success) {

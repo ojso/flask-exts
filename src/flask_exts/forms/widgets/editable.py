@@ -21,7 +21,6 @@ class EditableWidget:
         kwargs.setdefault("data-name", field.name)
         kwargs.setdefault("href", "#")
         kwargs["data-pk"] = str(kwargs.pop("pk"))
-        kwargs["data-csrf"] = kwargs.pop("csrf", "")
         kwargs = self.get_kwargs(field, kwargs)
 
         return Markup("<a %s>%s</a>" % (html_params(**kwargs), escape(display_value)))

@@ -9,15 +9,19 @@ from .usercenter_ext import UserCenterExtension
 from .userstore_ext import UserStoreExtension
 from .web_ext import WebExtension
 
+BUILTIN_EXTENSIONS = (
+    BabelExtension,
+    DatabaseExtension,
+    EmailExtension,
+    HtmlExtension,
+    LoginExtension,
+    SecurityExtension,
+    StartupExtension,
+    UserCenterExtension,
+    UserStoreExtension,
+    WebExtension,
+)
+
 __all__ = [
-    "BabelExtension",
-    "DatabaseExtension",
-    "EmailExtension",
-    "HtmlExtension",
-    "LoginExtension",
-    "SecurityExtension",
-    "StartupExtension",
-    "UserCenterExtension",
-    "UserStoreExtension",
-    "WebExtension",
+    "BUILTIN_EXTENSIONS",
 ]

@@ -167,11 +167,7 @@
                 <td class="col-{{ c }}">
                   {% set display_value = view.get_list_value(row, c) %}
                   {% if view.is_editable(c) %}
-                    {% if list_form.csrf_token %}
-                      {{ list_form[c](pk=view.get_pk_value(row) , display_value=display_value, csrf=list_form.csrf_token._value()) }}
-                    {% else %}
-                      {{ list_form[c](pk=view.get_pk_value(row) , display_value=display_value) }}
-                    {% endif %}
+                    {{ list_form[c](pk=view.get_pk_value(row) , display_value=display_value) }}
                   {% else %}
                     {{ display_value }}
                   {% endif %}

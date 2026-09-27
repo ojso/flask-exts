@@ -1,15 +1,17 @@
+import json
+from datetime import date, datetime, time
+
 import pytest
-from datetime import datetime, time, date
 from wtforms import fields, validators
-from flask_exts.forms.form.base_form import BaseForm
-from flask_exts.forms.fields import Select2Field
-from flask_exts.web.sqla.view import SqlaModelView
-from flask_exts.datastore.sqla.query import Query
+
 from flask_exts.datastore.sqla import db
-from tests.models.demo import EnumChoices
-from tests.models.demo import Model1, Model2
-from tests.models.demo import StringTestModel
+from flask_exts.datastore.sqla.query import Query
+from flask_exts.forms.fields import Select2Field
+from flask_exts.forms.form.base_form import BaseForm
+from flask_exts.web.sqla.view import SqlaModelView
+from tests.models.demo import EnumChoices, Model1, Model2, StringTestModel
 from tests.models.relations import ManyToManyLeft, ManyToManyRight
+
 from .custom_sqla_model_view import CustomSqlaModelView
 
 
@@ -363,8 +365,8 @@ def test_column_editable_list(app, client, admin):
         # Form - Test basic in-line edit functionality
         rv = client.post(
             "/admin/model1/ajax/update/",
-            data={
-                "list_form_pk": "1",
+            json={
+                "pk": "1",
                 "test1": "change-success-1",
             },
         )
@@ -377,18 +379,19 @@ def test_column_editable_list(app, client, admin):
         # Test validation error
         rv = client.post(
             "/admin/model1/ajax/update/",
-            data={
-                "list_form_pk": "1",
+            json={
+                "pk": "1",
                 "enum_field": "problematic-input",
             },
+
         )
         assert rv.status_code == 500
 
         # Test invalid primary key
         rv = client.post(
             "/admin/model1/ajax/update/",
-            data={
-                "list_form_pk": "1000",
+            json={
+                "pk": "1000",
                 "test1": "problematic-input",
             },
         )
@@ -397,8 +400,8 @@ def test_column_editable_list(app, client, admin):
         # Test editing column not in column_editable_list
         rv = client.post(
             "/admin/model1/ajax/update/",
-            data={
-                "list_form_pk": "1",
+            json={
+                "pk": "1",
                 "test2": "problematic-input",
             },
         )
@@ -406,8 +409,8 @@ def test_column_editable_list(app, client, admin):
 
         rv = client.post(
             "/admin/model2/ajax/update/",
-            data={
-                "list_form_pk": "1",
+            json={
+                "pk": "1",
                 "model1": "3",
             },
         )

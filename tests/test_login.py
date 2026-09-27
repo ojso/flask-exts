@@ -2,7 +2,7 @@ import pytest
 from jwt import ExpiredSignatureError
 from flask_login import current_user
 from flask_exts.datastore.sqla import db
-from flask_exts.extensions.login_ext import jwt_encode, authorization_decoder
+from flask_exts.builtin_extensions.login_ext import jwt_encode, authorization_decoder
 from flask_exts.proxies import current_userstore
 
 

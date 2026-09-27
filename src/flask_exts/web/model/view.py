@@ -1,61 +1,25 @@
-"""
-ModelView - admin model view core / ModelView - 管理模型视图主类
-
-English summary: This module provides the streamlined ModelView class, which inherits BaseModelView to gain the full admin feature set.
-中文说明：这个模块提供了简化后的 ModelView 类，通过继承 BaseModelView 来获得所有功能。BaseModelView 组合了所有核心功能模块和操作模块。
-
-Improvements:
-- Separation of responsibilities: core features moved into dedicated modules / 职责分离：核心功能分离到独立模块
-- Easier to test and maintain / 更易于测试和维护
-- 100% backward compatibility retained / 保持 100% 向后兼容性
-
-Architecture:
-    ModelView (this file, < 300 lines)
-    ├── view routes such as index_view, create_view, etc. / 视图路由方法（index_view, create_view 等）
-    └── inherits BaseModelView / 继承自 BaseModelView
-        ├── View (Flask base view) / View（基础 Flask 视图）
-        ├── ColumnsMixin (column management) / ColumnsMixin（列管理）
-        ├── SortingMixin (sorting management) / SortingMixin（排序管理）
-        ├── PaginationMixin (pagination management) / PaginationMixin（分页管理）
-        ├── ValuesMixin (value handling) / ValuesMixin（值处理）
-        ├── FormsMixin (form management) / FormsMixin（表单管理）
-        ├── ReadOperationsMixin (read operations) / ReadOperationsMixin（读取操作）
-        ├── CreateOperationsMixin (create operations) / CreateOperationsMixin（创建操作）
-        ├── UpdateOperationsMixin (update operations) / UpdateOperationsMixin（更新操作）
-        ├── DeleteOperationsMixin (delete operations) / DeleteOperationsMixin（删除操作）
-        ├── ExportOperationsMixin (export operations) / ExportOperationsMixin（导出操作）
-        ├── ActionsMixin (actions management) / ActionsMixin（动作管理）
-        ├── RowActionMixin (row actions) / RowActionMixin（行动作）
-        ├── FilterMixin (filter management) / FilterMixin（过滤管理）
-"""
-
-from typing import Optional
 from math import ceil
+
 from flask import (
-    request,
-    redirect,
-    flash,
     abort,
-    Response,
-    jsonify,
+    flash,
     get_flashed_messages,
+    jsonify,
+    redirect,
+    request,
 )
 from flask_babel import gettext, ngettext
-from werkzeug.utils import secure_filename
 
 from ..exposer import expose_url
 from .base import BaseModelView
-from .type_formatters import BASE_FORMATTERS, EXPORT_FORMATTERS, DETAIL_FORMATTERS
+from .type_formatters import BASE_FORMATTERS, DETAIL_FORMATTERS, EXPORT_FORMATTERS
 
 
 class ModelView(BaseModelView):
     """
-    Model view / 模型视图
+    Model view
 
-    English summary: This view does not make assumptions about the backing store, but expects a standard model API with listing, retrieval, creation, update, deletion, and form scaffolding.
-    中文说明：此视图不假设底层数据存储方式，但要求遵循标准模型接口，支持列表、查询、创建、更新、删除和表单脚手架。
-
-    This view does not make any assumptions on how models are stored or managed, but expects the following:
+    This view does not make assumptions about the backing store, but expects a standard model API with listing, retrieval, creation, update, deletion, and form scaffolding.
 
         1. The provided model is an object
         2. The model contains properties
@@ -500,14 +464,19 @@ class ModelView(BaseModelView):
     @expose_url("/ajax/update/", methods=("POST",))
     def ajax_update(self):
         """Ajax update. Edits a single column of a record in list view."""
+
         if not self.column_editable_list:
             abort(404)
+        if not request.is_json:
+            abort(404)
+            
+        json_data = request.get_json()
 
         form = self.list_form()
 
         # Delete non-submitted fields to prevent validation issues.
         for field in list(form):
-            if (field.name in request.form) or (field.name in request.get_json()):
+            if field.name in json_data or field.name == "csrf_token":
                 pass
             else:
                 form.__delitem__(field.name)

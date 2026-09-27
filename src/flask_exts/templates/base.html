@@ -3,8 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block head_meta -%}
     <meta name="description" content="{%- block description -%}{%- endblock -%}">
     <meta name="keywords" content="{%- block keywords -%}{%- endblock -%}">
+    {%- endblock %}
     <title>{%- block title -%}{%- endblock -%}</title>
     {% block icon %}<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">{% endblock %}
     {% block styles %}{% endblock %}

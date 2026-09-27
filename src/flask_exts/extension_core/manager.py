@@ -1,4 +1,4 @@
-from ..extensions import *
+from ..builtin_extensions import BUILTIN_EXTENSIONS
 from .base import Extension
 from .registry import ExtensionRegistry
 
@@ -61,7 +61,7 @@ class ExtensionManager:
 
     def register_default_extensions(self) -> None:
         """Register all built-in extensions"""
-        for _, ext_class in Extension.get_exts().items():
+        for ext_class in BUILTIN_EXTENSIONS:
             self._registry.register(ext_class)
 
     def register_extension(

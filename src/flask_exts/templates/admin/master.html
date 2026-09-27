@@ -6,6 +6,13 @@
 
 {% do _template.plugin_manager.add_request_plugins(["admin"]) %}
 
+{% block head_meta -%}
+    {{ super() }}
+    {%- if config.get('CSRF_ENABLED', True) %}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {%- endif %}
+{%- endblock %}
+
 {% block body %}
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">

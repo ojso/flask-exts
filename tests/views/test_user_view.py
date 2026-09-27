@@ -1,12 +1,10 @@
 import pytest
-from flask import url_for
-from flask import session
-from flask_exts.datastore.sqla import db
-from flask_exts.forms.form.csrf import get_csrf_token
-from flask_exts.email.sender import Sender
-from flask_exts.proxies import current_security
-from flask_exts.proxies import current_userstore
+from flask import session, url_for
 
+from flask_exts.datastore.sqla import db
+from flask_exts.email.sender import Sender
+from flask_exts.forms.form.csrf import get_csrf_token
+from flask_exts.proxies import current_security, current_userstore
 
 mail_data = []
 

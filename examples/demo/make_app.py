@@ -16,6 +16,7 @@ def create_app():
     )
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + app.config["DATABASE_FILE"]
     app.config["ADMIN_ALLOW_ACCESS"] = False
+    # app.config["CSRF_ENABLED"] = False
     init_app(app)
     return app
 
