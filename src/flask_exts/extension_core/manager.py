@@ -25,7 +25,6 @@ class ExtensionManager:
     def __init__(
         self,
         app=None,
-        extensions: list[str] | None = None,
         skip_missing: bool = False,
     ):
         """
@@ -49,7 +48,6 @@ class ExtensionManager:
         """
         self.app = app
         self._registry = ExtensionRegistry()
-        self._enabled_extensions = None
         self._skip_missing = skip_missing
 
         # Register default extension classes
@@ -57,11 +55,11 @@ class ExtensionManager:
 
         # Initialize if app provided
         if app is not None:
-            self.init_app(app, extensions, skip_missing)
+            self.init_app(app, skip_missing)
 
     def register_default_extensions(self) -> None:
         """Register all built-in extensions"""
-        for ext_class in BUILTIN_EXTENSIONS:
+        for ext_class in Extension.get_all().values():
             self._registry.register(ext_class)
 
     def register_extension(
@@ -95,30 +93,9 @@ class ExtensionManager:
 
         return ext
 
-    def enable_extension(self, name: str) -> None:
-        """
-        Enable an extension.
-
-        Args:
-            name: Extension name
-        """
-        if self._enabled_extensions is None:
-            self._enabled_extensions = []
-        if name not in self._enabled_extensions:
-            self._enabled_extensions.append(name)
-
-    def disable_extension(self, name: str) -> None:
-        """
-        Disable an extension.
-
-        Args:
-            name: Extension name
-        """
-        if self._enabled_extensions and name in self._enabled_extensions:
-            self._enabled_extensions.remove(name)
 
     def init_app(
-        self, app, extensions: list[str] | None = None, skip_missing: bool = False
+        self, app, skip_missing: bool = False
     ) -> None:
         """
         Initialize extensions with Flask application.
@@ -139,11 +116,9 @@ class ExtensionManager:
 
         app.extensions["exts"] = self
 
-        # Determine which extensions to enable
-        enabled = self._enabled_extensions
 
         # Initialize all extensions
-        self._registry.init_all(app, enabled, skip_missing)
+        self._registry.init_all(app, skip_missing)
 
     def get_extension(self, name: str) -> Extension | None:
         """

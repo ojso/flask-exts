@@ -34,11 +34,11 @@ class Extension(ABC):
         Extension._registry[cls.__name__] = cls
 
     @classmethod
-    def get_ext(cls, name):
+    def get(cls, name):
         return Extension._registry.get(name)
 
     @classmethod
-    def get_exts(cls):
+    def get_all(cls):
         return Extension._registry
 
     @property

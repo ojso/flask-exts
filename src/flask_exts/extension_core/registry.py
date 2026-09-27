@@ -176,7 +176,7 @@ class ExtensionRegistry:
                 visit(ext.name, [])
 
     def init_all(
-        self, app, enabled: list[str] | None = None, skip_missing: bool = False
+        self, app, skip_missing: bool = False
     ) -> None:
         """
         Initialize all or selected extensions.
@@ -194,10 +194,7 @@ class ExtensionRegistry:
         self._detect_circular_dependencies()
 
         # Determine which extensions to initialize
-        if enabled is None:
-            to_initialize = [e.name for e in self.get_all()]
-        else:
-            to_initialize = enabled
+        to_initialize = [e.name for e in self.get_all()]
 
         # Validate all requested extensions
         for name in to_initialize:
