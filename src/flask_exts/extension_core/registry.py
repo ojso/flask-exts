@@ -1,10 +1,9 @@
-from typing import Dict, List, Optional, Set, Type
 from .base import (
     Extension,
-    ExtensionError,
-    ExtensionNotFoundError,
     ExtensionDependencyError,
+    ExtensionError,
     ExtensionInitError,
+    ExtensionNotFoundError,
 )
 
 
@@ -31,11 +30,11 @@ class ExtensionRegistry:
 
     def __init__(self):
         """Initialize empty registry"""
-        self._extension_classes: Dict[str, Type[Extension]] = {}
-        self._instances: Dict[str, Extension] = {}
-        self._initialized: Set[str] = set()
+        self._extension_classes: dict[str, type[Extension]] = {}
+        self._instances: dict[str, Extension] = {}
+        self._initialized: set[str] = set()
 
-    def register(self, extension_class: Type[Extension]) -> Extension:
+    def register(self, extension_class: type[Extension]) -> Extension:
         """
         Register an extension class.
 
@@ -87,7 +86,7 @@ class ExtensionRegistry:
             return True
         return False
 
-    def get(self, name: str) -> Optional[Extension]:
+    def get(self, name: str) -> Extension | None:
         """
         Get extension instance by name.
 
@@ -99,7 +98,7 @@ class ExtensionRegistry:
         """
         return self._instances.get(name)
 
-    def list(self, sorted_by_priority: bool = True) -> List[Extension]:
+    def get_all(self, sorted_by_priority: bool = True) -> list[Extension]:
         """
         Get all registered extensions.
 
@@ -117,7 +116,7 @@ class ExtensionRegistry:
         return extensions
 
     def _check_dependencies(
-        self, name: str, enabled: Optional[List[str]] = None
+        self, name: str, enabled: list[str] | None = None
     ) -> None:
         """
         Check if all dependencies of an extension are available.
@@ -152,10 +151,10 @@ class ExtensionRegistry:
         Raises:
             ExtensionDependencyError: If circular dependency detected
         """
-        visited: Set[str] = set()
-        rec_stack: Set[str] = set()
+        visited: set[str] = set()
+        rec_stack: set[str] = set()
 
-        def visit(name: str, path: List[str]) -> None:
+        def visit(name: str, path: list[str]) -> None:
             visited.add(name)
             rec_stack.add(name)
 
@@ -172,12 +171,12 @@ class ExtensionRegistry:
 
             rec_stack.discard(name)
 
-        for ext in self.list():
+        for ext in self.get_all():
             if ext.name not in visited:
                 visit(ext.name, [])
 
     def init_all(
-        self, app, enabled: Optional[List[str]] = None, skip_missing: bool = False
+        self, app, enabled: list[str] | None = None, skip_missing: bool = False
     ) -> None:
         """
         Initialize all or selected extensions.
@@ -196,7 +195,7 @@ class ExtensionRegistry:
 
         # Determine which extensions to initialize
         if enabled is None:
-            to_initialize = [e.name for e in self.list()]
+            to_initialize = [e.name for e in self.get_all()]
         else:
             to_initialize = enabled
 
@@ -210,7 +209,7 @@ class ExtensionRegistry:
             self._check_dependencies(name, to_initialize)
 
         # Initialize in priority order
-        for ext in self.list(sorted_by_priority=True):
+        for ext in self.get_all(sorted_by_priority=True):
             if ext.name not in to_initialize:
                 continue
 
@@ -222,7 +221,7 @@ class ExtensionRegistry:
                 self._initialized.add(ext.name)
             except Exception as e:
                 raise ExtensionInitError(
-                    f"Failed to initialize extension '{ext.name}': {str(e)}"
+                    f"Failed to initialize extension '{ext.name}': {e!s}"
                 ) from e
 
     def init(self, name: str, app) -> None:
@@ -245,7 +244,7 @@ class ExtensionRegistry:
             ext.init_app(app)
             self._initialized.add(name)
         except Exception as e:
-            raise ExtensionInitError(f"Failed to initialize '{name}': {str(e)}") from e
+            raise ExtensionInitError(f"Failed to initialize '{name}': {e!s}") from e
 
     def is_initialized(self, name: str) -> bool:
         """
@@ -266,7 +265,7 @@ class ExtensionRegistry:
         Args:
             app: Flask application (optional)
         """
-        for ext in reversed(self.list()):
+        for ext in reversed(self.get_all()):
             if hasattr(ext, "shutdown"):
                 try:
                     ext.shutdown(app)

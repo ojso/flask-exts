@@ -1,5 +1,4 @@
 from flask_exts.proxies import current_exts
-from flask import g
 
 
 class TestBase:
@@ -26,6 +25,4 @@ class TestBase:
             # print(css)
             assert "bootstrap.min.css" in str(css)
             js = plugin_manager.load_scripts()
-            # print(js)
-            assert "jquery.min.js" in str(js)
             assert "bootstrap.bundle.min.js" in str(js)

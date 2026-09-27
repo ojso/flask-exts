@@ -1,11 +1,13 @@
 import operator
+
+from sqlalchemy.orm.util import identity_key
 from wtforms.fields import SelectFieldBase
 from wtforms.validators import ValidationError
-from .inline import InlineFieldList, InlineModelFormField
-from ..widgets.select import Select2Widget
-from ..widgets.checkbox import CheckboxListInput
-from sqlalchemy.orm.util import identity_key
+
 from ...datastore.sqla.utils import get_model_primary_key
+from ..widgets.checkbox import CheckboxListInput
+from ..widgets.select import Select2Widget
+from .inline import InlineFieldList, InlineModelFormField
 
 
 class QuerySelectField(SelectFieldBase):
@@ -96,14 +98,14 @@ class QuerySelectField(SelectFieldBase):
 
     def iter_choices(self):
         if self.allow_blank:
-            yield ("__None", self.blank_text, self.data is None, {})
+            yield ("", self.blank_text, self.data is None, {})
 
         for pk, obj in self._get_object_list():
             yield (pk, self.get_label(obj), obj == self.data, {})
 
     def process_formdata(self, valuelist):
         if valuelist:
-            if self.allow_blank and valuelist[0] == "__None":
+            if self.allow_blank and valuelist[0] == "":
                 self.data = None
             else:
                 self._data = None
@@ -169,7 +171,7 @@ class QuerySelectMultipleField(QuerySelectField):
         if self._invalid_formdata:
             raise ValidationError(self.gettext("Not a valid choice"))
         elif self.data:
-            obj_list = list(x[1] for x in self._get_object_list())
+            obj_list = [x[1] for x in self._get_object_list()]
             for v in self.data:
                 if v not in obj_list:
                     raise ValidationError(self.gettext("Not a valid choice"))
@@ -231,7 +233,7 @@ class InlineModelFormListField(InlineFieldList):
         self._pk = get_model_primary_key(model)
 
         # Generate inline form field
-        form_opts = dict(widget_args=getattr(inline_view, "form_widget_args", None))
+        form_opts = {"widget_args": getattr(inline_view, "form_widget_args", None)}
 
         form_field = self.form_field_type(form, self._pk, form_opts=form_opts)
 
@@ -247,7 +249,7 @@ class InlineModelFormListField(InlineFieldList):
             return
 
         # Create primary key map
-        pk_map = dict((get_obj_pk(v, self._pk), v) for v in values)
+        pk_map = {get_obj_pk(v, self._pk): v for v in values}
 
         # Handle request data
         for field in self.entries:
@@ -278,7 +280,7 @@ class InlineModelOneToOneField(InlineModelFormField):
         self._pk = get_model_primary_key(model)
 
         # Generate inline form field
-        form_opts = dict(widget_args=getattr(inline_view, "form_widget_args", None))
+        form_opts = {"widget_args": getattr(inline_view, "form_widget_args", None)}
         super().__init__(form, self._pk, form_opts=form_opts, **kwargs)
 
     @staticmethod
@@ -289,18 +291,13 @@ class InlineModelOneToOneField(InlineModelFormField):
         if field is None:
             return True
 
-        if isinstance(field, str) and not field:
-            return True
-
-        return False
+        return bool(isinstance(field, str) and not field)
 
     def populate_obj(self, model, field_name):
         inline_model = getattr(model, field_name, None)
-        is_created = False
         form_is_empty = True
 
         if not inline_model:
-            is_created = True
             inline_model = self.model()
 
         # iterate all inline form fields and fill model

@@ -3,21 +3,17 @@ from flask import Flask
 from flask_exts import ExtensionManager
 
 
-def get_sqlite_path():
-    app_dir = op.realpath(op.dirname(__file__))
-    database_path = op.join(app_dir, "sample.sqlite")
-    return database_path
-
-
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.config["SECRET_KEY"] = "dev"
-    app.config.from_pyfile('config.py',silent=True)
-    app.config.from_pyfile('config_prod.py',silent=True)
+    app.config.from_pyfile("config.py", silent=True)
+    app.config.from_pyfile("config_prod.py", silent=True)
     # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
     # app.config["SQLALCHEMY_ECHO"] = True
-    app.config["DATABASE_FILE"] = get_sqlite_path()
+    app.config["DATABASE_FILE"] = op.join(
+        op.realpath(op.dirname(__file__)), "demo.sqlite"
+    )
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + app.config["DATABASE_FILE"]
     app.config["ADMIN_ALLOW_ACCESS"] = False
     init_app(app)

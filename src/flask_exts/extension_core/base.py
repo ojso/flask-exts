@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Type, List
+from typing import ClassVar
 
 
 class Extension(ABC):
@@ -27,7 +27,7 @@ class Extension(ABC):
                 pass
     """
 
-    _registry: Dict[str, Type["Extension"]] = {}
+    _registry: ClassVar[dict[str, type["Extension"]]] = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -67,7 +67,7 @@ class Extension(ABC):
         pass
 
     @property
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         """
         List of extension names this extension depends on.
 
@@ -77,7 +77,7 @@ class Extension(ABC):
         return []
 
     @property
-    def optional_dependencies(self) -> List[str]:
+    def optional_dependencies(self) -> list[str]:
         """
         List of extension names this extension optionally uses.
 

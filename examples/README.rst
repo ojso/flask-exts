@@ -1,6 +1,3 @@
-Examples
-========================
-
 This page lists runnable examples for Flask-Exts and shows how to run them locally.
 
 Download

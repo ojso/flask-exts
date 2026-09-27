@@ -144,12 +144,12 @@ def test_model(app, client, admin):
         # edit the record
         rv = client.post(
             url,
-            data=dict(
-                test1="test1small",
-                test2="test2large",
-                choice_field="__None",
-                enum_field="__None",
-            ),
+            data={
+                "test1": "test1small",
+                "test2": "test2large",
+                "choice_field": "",
+                "enum_field": "",
+            },
         )
         assert rv.status_code == 302
 
@@ -354,12 +354,11 @@ def test_column_editable_list(app, client, admin):
         # Test in-line edit field rendering
         rv = client.get("/admin/model1/")
         assert rv.status_code == 200
-        assert 'data-role="x-editable"' in rv.text
+        assert 'editable' in rv.text
 
         rv = client.get("/admin/model2/")
         assert rv.status_code == 200
-        assert 'data-role="x-editable"' in rv.text
-        assert 'data-role="x-editable"' in rv.text
+        assert 'editable' in rv.text
 
         # Form - Test basic in-line edit functionality
         rv = client.post(

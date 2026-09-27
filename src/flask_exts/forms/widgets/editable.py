@@ -7,7 +7,7 @@ class EditableWidget:
     """
     WTForms widget that provides in-line editing for the list view.
 
-    Determines how to display the x-editable/ajax form based on the
+    Determines how to display the editable/ajax form based on the
     field inside of the FieldList (StringField, IntegerField, etc).
     """
 
@@ -52,7 +52,7 @@ class EditableWidget:
 
             # prepend a blank field to choices if allow_blank = True
             if getattr(field, "allow_blank", False):
-                choices.insert(0, {"value": "__None", "label": ""})
+                choices.insert(0, {"value": "", "label": ""})
 
             # json.dumps fixes issue with unicode strings not loading correctly
             kwargs["data-options"] = json.dumps(choices)

@@ -1,23 +1,23 @@
 from .babel_ext import BabelExtension
 from .database_ext import DatabaseExtension
-from .html_ext import HtmlExtension
 from .email_ext import EmailExtension
-from .userstore_ext import UserStoreExtension
-from .usercenter_ext import UserCenterExtension
+from .html_ext import HtmlExtension
 from .login_ext import LoginExtension
 from .security_ext import SecurityExtension
-from .web_ext import WebExtension
 from .startup_ext import StartupExtension
+from .usercenter_ext import UserCenterExtension
+from .userstore_ext import UserStoreExtension
+from .web_ext import WebExtension
 
 __all__ = [
-    "DatabaseExtension",
     "BabelExtension",
-    "HtmlExtension",
+    "DatabaseExtension",
     "EmailExtension",
-    "UserStoreExtension",
-    "UserCenterExtension",
+    "HtmlExtension",
     "LoginExtension",
     "SecurityExtension",
-    "WebExtension",
     "StartupExtension",
+    "UserCenterExtension",
+    "UserStoreExtension",
+    "WebExtension",
 ]

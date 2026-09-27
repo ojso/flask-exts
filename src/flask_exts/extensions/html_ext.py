@@ -1,5 +1,5 @@
 from flask import Blueprint
-from ..extension.base import Extension
+from ..extension_core.base import Extension
 from ..html.template import Template
 from ..forms.form.csrf import get_csrf_token
 

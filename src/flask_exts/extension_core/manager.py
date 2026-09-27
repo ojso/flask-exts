@@ -1,7 +1,6 @@
-from typing import Optional, List, Type
+from ..extensions import *
 from .base import Extension
 from .registry import ExtensionRegistry
-from ..extensions import *
 
 
 class ExtensionManager:
@@ -26,7 +25,7 @@ class ExtensionManager:
     def __init__(
         self,
         app=None,
-        extensions: Optional[List[str]] = None,
+        extensions: list[str] | None = None,
         skip_missing: bool = False,
     ):
         """
@@ -66,7 +65,7 @@ class ExtensionManager:
             self._registry.register(ext_class)
 
     def register_extension(
-        self, extension_class: Type[Extension], enable: bool = True
+        self, extension_class: type[Extension], enable: bool = True
     ) -> Extension:
         """
         Register a custom extension.
@@ -119,7 +118,7 @@ class ExtensionManager:
             self._enabled_extensions.remove(name)
 
     def init_app(
-        self, app, extensions: Optional[List[str]] = None, skip_missing: bool = False
+        self, app, extensions: list[str] | None = None, skip_missing: bool = False
     ) -> None:
         """
         Initialize extensions with Flask application.
@@ -146,7 +145,7 @@ class ExtensionManager:
         # Initialize all extensions
         self._registry.init_all(app, enabled, skip_missing)
 
-    def get_extension(self, name: str) -> Optional[Extension]:
+    def get_extension(self, name: str) -> Extension | None:
         """
         Get extension by name (modern API).
 
@@ -158,7 +157,7 @@ class ExtensionManager:
         """
         return self._registry.get(name)
 
-    def list_extensions(self, sorted_by_priority: bool = True) -> List[Extension]:
+    def list_extensions(self, sorted_by_priority: bool = True) -> list[Extension]:
         """
         List all registered extensions (modern API).
 
@@ -168,7 +167,7 @@ class ExtensionManager:
         Returns:
             List of extensions
         """
-        return self._registry.list(sorted_by_priority)
+        return self._registry.get_all(sorted_by_priority)
 
     def is_extension_enabled(self, name: str) -> bool:
         """

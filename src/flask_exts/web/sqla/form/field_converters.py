@@ -163,15 +163,13 @@ class TemporalFieldConverter:
 
 class SpecialFieldConverter:
     """
-    Special field converter / 特殊类型字段转换器
-
-    English summary: Converts enum and JSON-like fields to compatible WTForms widgets and field types.
-    中文说明：提供枚举、JSON 等特殊字段的转换。
+    Special field converter.
+    Converts enum and JSON-like fields to compatible WTForms widgets and field types.
     """
 
     @convert_form_field("Enum")
     def convert_enum(self, column, field_args, **extra):
-        """English: convert Enum field / 转换 Enum 字段"""
+        """convert Enum field"""
         from enum import Enum
         from ....forms.fields import Select2Field
 

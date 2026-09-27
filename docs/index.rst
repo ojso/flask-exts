@@ -20,21 +20,11 @@ To use Flask-Exts, first install it using pip:
 
    (.venv) $ pip install flask-exts
 
-Examples
---------------
-
-``python simple.py`` to run a simple example.
-
-.. literalinclude:: ../examples/simple/__init__.py
-  :language: python
-
-More examples, please click :doc:`examples`.
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   getting_started
+   quickstart
    configure
    examples
    advanced/index

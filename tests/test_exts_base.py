@@ -2,7 +2,7 @@ import pytest
 
 
 def test_exts_extensions(exts):
-    registries = exts._registry.list()
+    registries = exts._registry.get_all()
     assert len(registries) == 10
     registry_names = [r.name for r in registries]
     # print(registry_names)

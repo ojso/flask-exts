@@ -1,6 +1,6 @@
 from flask import session
 from flask_login import user_logged_out
-from ..extension.base import Extension
+from ..extension_core.base import Extension
 from ..signals import user_registered
 from ..proxies import current_security
 from ..web.default_views.index_view import IndexView

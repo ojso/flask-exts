@@ -1,4 +1,4 @@
-from ..extension.base import Extension
+from ..extension_core.base import Extension
 from ..email.base import Email
 
 

@@ -2,7 +2,7 @@ import jwt
 import datetime
 from flask import current_app
 from flask_login import LoginManager
-from ..extension.base import Extension
+from ..extension_core.base import Extension
 from ..proxies import current_userstore
 
 

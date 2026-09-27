@@ -1,11 +1,10 @@
 import inspect
+
+from flask import flash, redirect, request
+from flask_babel import lazy_gettext, ngettext
 from wtforms.fields import HiddenField
-from flask import request
-from flask import redirect
-from flask import flash
-from flask_babel import gettext, ngettext, lazy_gettext
-from ..exposer import expose_url
-from ..exposer import expose_action
+
+from ..exposer import expose_action, expose_url
 
 
 class ActionsMixin:
@@ -18,7 +17,7 @@ class ActionsMixin:
                 pass
     """
 
-    action_disallowed_list = []
+    action_disallowed_list: list[str] = []
     """
         Set of disallowed action names. For example, if you want to disable
         mass model deletion, do something like this:

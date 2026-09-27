@@ -49,7 +49,7 @@ class AjaxSelectField(SelectFieldBase):
 
     def process_formdata(self, valuelist):
         if valuelist:
-            if self.allow_blank and valuelist[0] == "__None":
+            if self.allow_blank and valuelist[0] == "":
                 self.data = None
             else:
                 self._data = None

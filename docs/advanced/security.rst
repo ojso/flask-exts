@@ -496,4 +496,3 @@ See Also
 - `Flask Security <https://flask-security-too.readthedocs.io/>`_
 - `Flask-JWT-Extended <https://flask-jwt-extended.readthedocs.io/>`_
 - `Cryptography <https://cryptography.io/>`_
-- :doc:`../getting_started` - Basic setup

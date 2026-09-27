@@ -1,12 +1,13 @@
-# simple.py
+# app.py
 import os.path as op
-from flask import Flask
-from flask import render_template
-from flask_exts import ExtensionManager
-from flask_exts.web import expose_url
-from flask_exts.web import View
-from flask_exts.datastore.sqla import db
 import textwrap
+
+from flask import Flask
+
+from flask_exts import ExtensionManager
+from flask_exts.datastore.sqla import db
+from flask_exts.web import View, expose_url
+
 
 class MockView(View):
     @expose_url("/")
@@ -23,13 +24,14 @@ class MockView(View):
 
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev"
-# app.config["SQLALCHEMY_ECHO"] = True
+app.config["SECRET_KEY"] = "change-this-in-production"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + op.join(
-    op.realpath(op.dirname(__file__)), "simple.sqlite"
+    op.realpath(op.dirname(__file__)), "app.sqlite"
 )
+
 exts = ExtensionManager()
 exts.init_app(app)
+
 # Register a mock view
 admin = app.extensions["exts"].get_extension("admin").get_admin()
 admin.register_view(MockView())

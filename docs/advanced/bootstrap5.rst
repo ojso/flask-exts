@@ -8,11 +8,9 @@ Overview
 
 This migration replaces jQuery and its dependent libraries with native JavaScript alternatives:
 
-- **jQuery** → Removed (use native JS APIs)
 - **Select2** → **Tom Select** (lightweight select component)
 - **daterangepicker** → **Flatpickr** (lightweight date picker)
 - **Moment.js** → **Day.js** (lightweight date library)
-- **X-Editable** → **Inline Edit** (native inline editing)
 
 Phase Completion Status
 -----------------------
@@ -26,7 +24,6 @@ Phase Completion Status
   - Tom Select for Select2
   - Flatpickr for daterangepicker
   - Day.js for Moment.js
-  - Inline Edit for X-Editable
 
 Detailed Changes
 ----------------

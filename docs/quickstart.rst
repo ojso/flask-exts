@@ -1,5 +1,5 @@
-Getting Started
-===============
+Quickstart
+==========
 
 This guide walks you through building a complete Flask application with Flask-Exts,
 including user authentication, an admin panel, and database-driven management features.
@@ -22,27 +22,17 @@ Quick Start
 
 The simplest Flask-Exts application looks like this:
 
-.. code-block:: python
+Examples
+--------------
 
-   # app.py
-   from flask import Flask
-   from flask_exts import ExtensionManager
-   from flask_exts.datastore.sqla import db
+``python app.py`` to run a simple example with a mock view.
 
-   app = Flask(__name__)
-   app.config["SECRET_KEY"] = "change-this-in-production"
-   app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
-
-   exts = ExtensionManager()
-   exts.init_app(app)
-
-   with app.app_context():
-       db.create_all()
-
-   if __name__ == "__main__":
-       app.run(debug=True)
+.. literalinclude:: ../examples/simple/__init__.py
+  :language: python
 
 Run this and visit ``http://localhost:5000/admin/`` to see the admin panel.
+
+More examples, please click :doc:`examples`.
 
 Configuration
 -------------
