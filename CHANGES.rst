@@ -1,3 +1,11 @@
+v0.2.8
+------
+
+Released 2026-09-27
+
+- rewrite extension
+- rewrite editable.js
+
 v0.2.7
 ------
 

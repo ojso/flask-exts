@@ -1,9 +1,10 @@
 from sqlalchemy.sql import select
-from ..usercenter.user_store import UserStore
+
 from ..datastore.sqla import db
 from .models.user import User
 from .models.role import Role
 from .models.user_profile import UserProfile
+from .store import UserStore
 
 
 class SqlaUserStore(UserStore):

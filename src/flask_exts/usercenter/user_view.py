@@ -1,26 +1,26 @@
-from flask import current_app
-from flask import url_for
-from flask import request
-from flask import redirect
-from flask import flash
-from flask import abort
-from flask import jsonify
-from flask import session
-from flask_login import current_user
-from flask_login import login_user
-from flask_login import logout_user
-from flask_login import login_required
+from flask import (
+    abort,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    request,
+    session,
+    url_for,
+)
+from flask_login import current_user, login_required, login_user, logout_user
+
+from ..constants import NO_CACHE_HEADER
+from ..proxies import current_security, current_userstore
+from ..signals import user_registered
 from ..web import View, expose_url
-from .forms.login import LoginForm
-from .forms.register import RegisterForm
 from .forms.change_password import ChangePasswordForm
 from .forms.forgot_password import ForgotPasswordForm
+from .forms.login import LoginForm
+from .forms.recovery import RecoveryForm
+from .forms.register import RegisterForm
 from .forms.reset_password import ResetPasswordForm
 from .forms.two_factor import TwoFactorForm
-from .forms.recovery import RecoveryForm
-from ..proxies import current_userstore,current_security
-from ..signals import user_registered
-from ..constants import NO_CACHE_HEADER
 
 
 class UserView(View):

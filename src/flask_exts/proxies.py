@@ -4,7 +4,7 @@ from werkzeug.local import LocalProxy
 
 if TYPE_CHECKING:
     from .extension_core.manager import ExtensionManager
-    from .usercenter.user_store import UserStore
+    from .userstore.store import UserStore
     from .security.core import Security
     from .web import Admin
 

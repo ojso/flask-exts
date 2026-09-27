@@ -1,6 +1,3 @@
-from .user_store import UserStore
-
-
 class UserCenter:
     def __init__(self, app=None):
         self.app = app
