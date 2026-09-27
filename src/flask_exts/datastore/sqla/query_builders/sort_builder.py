@@ -1,34 +1,30 @@
-"""
-English: Sort builder / 排序构建器
-
-English: Used to build sorting conditions. / 用于构建排序条件。
-"""
+"""Builder for composing SQLAlchemy sort clauses."""
 
 
 class SortBuilder:
-    """English: Build sorting conditions / 构建排序条件"""
+    """Build and apply ordering conditions to a query."""
 
     def __init__(self):
         self.sorts = []
 
     def add_sort(self, column, desc=False):
-        """English: Add a sort condition / 添加排序条件
+        """Add a sort condition.
 
         Args:
-            column: SQLAlchemy column / SQLAlchemy 列
-            desc: whether to sort in descending order / 是否降序
+            column: SQLAlchemy column to sort by.
+            desc: Whether to sort in descending order.
         """
         self.sorts.append((column, desc))
         return self
 
     def build(self, query):
-        """English: Apply all sort conditions to the query / 应用所有排序条件到查询
+        """Apply all sort conditions to the query.
 
         Args:
-            query: SQLAlchemy query object / SQLAlchemy 查询对象
+            query: SQLAlchemy query object.
 
         Returns:
-            Query with sorting applied / 应用排序后的查询
+            Query with sorting applied.
         """
         for column, desc in self.sorts:
             if desc:
@@ -39,6 +35,6 @@ class SortBuilder:
         return query
 
     def reset(self):
-        """English: Reset sort conditions / 重置排序条件"""
+        """Clear all configured sort conditions."""
         self.sorts = []
         return self

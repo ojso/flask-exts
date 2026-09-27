@@ -1,46 +1,24 @@
-"""
-Delete operations / 删除操作
-
-English summary: This module defines the mixin for deleting model records.
-中文说明：这个模块定义了用于删除模型记录的混入类。
-"""
+"""Delete-operation mixin for model-backed admin views."""
 
 from typing import Any
 
 
 class DeleteOperationsMixin:
-    """
-    Delete operations mixin / 删除操作功能混入类
-
-    English summary: Provides the delete_model method for removing model instances.
-    中文说明：提供 delete_model 方法，用于删除模型实例。
-    """
+    """Mixin that defines the delete-model hook used by admin views."""
 
     def delete_model(self, model: Any) -> bool:
-        """
-        Delete model.
+        """Delete a model instance.
 
-        Returns `True` if operation succeeded.
-
-        Must be implemented in the child class.
-
-        :param model:
-            Model instance
-
-        删除模型。
-
-        如果操作成功则返回 True。
-
-        必须在子类中实现。
+        This method must be implemented by the subclass.
 
         Args:
-            model (Any): 要删除的模型实例
+            model: Model instance to remove.
 
         Returns:
-            bool: 如果操作成功返回 True，否则返回 False
+            bool: ``True`` if the delete operation succeeded, otherwise ``False``.
 
         Raises:
-            NotImplementedError: 必须在子类中实现
+            NotImplementedError: If the subclass does not implement the hook.
 
         Example:
             ```python

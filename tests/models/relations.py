@@ -1,19 +1,22 @@
-from typing import List
-from typing import Set
-from . import db
-from . import Mapped
-from . import mapped_column
-from . import ForeignKey
-from . import relationship
-from . import Table
-from . import Column
-from . import Integer
+from typing import List, Set
+
+from . import (
+    Column,
+    ForeignKey,
+    Integer,
+    Mapped,
+    Table,
+    db,
+    mapped_column,
+    relationship,
+)
 
 
 class TrainModel1(db.Model):
     __tablename__ = "train_model1"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
+
 
 class TrainModel2(db.Model):
     __tablename__ = "train_model2"
@@ -22,12 +25,14 @@ class TrainModel2(db.Model):
     model1_id: Mapped[int] = mapped_column(ForeignKey("train_model1.id"))
     model1: Mapped[TrainModel1] = relationship()
 
+
 class TrainModel3(db.Model):
     __tablename__ = "train_model3"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     model2_id: Mapped[int] = mapped_column(ForeignKey("train_model2.id"))
     model2: Mapped[TrainModel2] = relationship()
+
 
 class OneToManyParent(db.Model):
     __tablename__ = "one_to_many_parent"
@@ -55,6 +60,7 @@ class ManyToOneChild3(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     parent_id: Mapped[int] = mapped_column(ForeignKey("one_to_many_parent.id"))
     parent3: Mapped["OneToManyParent"] = relationship(back_populates="children3")
+
 
 class OneToOneParent(db.Model):
     __tablename__ = "one_to_one_parent"
@@ -112,7 +118,6 @@ class ModelB(db.Model):
     name: Mapped[str]
     type: Mapped[str]
 
-    # A 通过多个路径关联到 B
     a_first = relationship(
         "ModelA", foreign_keys="ModelA.b_first_id", back_populates="first_b"
     )
@@ -131,11 +136,9 @@ class ModelA(db.Model):
     b_first_id: Mapped[int] = mapped_column(ForeignKey("model_b.id"))
     b_second_id: Mapped[int] = mapped_column(ForeignKey("model_b.id"))
 
-    # A.a 指向 B
     first_b = relationship(
         "ModelB", foreign_keys=[b_first_id], back_populates="a_first"
     )
-    # A.b 也指向 B
     second_b = relationship(
         "ModelB", foreign_keys=[b_second_id], back_populates="a_second"
     )

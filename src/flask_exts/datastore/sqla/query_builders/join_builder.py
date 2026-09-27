@@ -1,44 +1,40 @@
-"""
-English: Join builder / 连接构建器
-
-English: Used to build SQLAlchemy JOIN conditions. / 用于构建 SQLAlchemy JOIN 条件。
-"""
+"""Builder for composing SQLAlchemy join clauses."""
 
 
 class JoinBuilder:
-    """English: Build JOIN conditions / 构建 JOIN 条件"""
+    """Build and apply JOIN conditions to a query."""
 
     def __init__(self):
         self.joins = []
 
     def add_join(self, target, onclause=None, isouter=False):
-        """English: Add a JOIN condition / 添加 JOIN 条件
+        """Add a JOIN condition.
 
         Args:
-            target: target table/model to join / 要连接的目标表/模型
-            onclause: JOIN condition / JOIN 条件
-            isouter: whether to use an outer join / 是否外连接
+            target: Target table or model to join.
+            onclause: JOIN condition.
+            isouter: Whether to use an outer join.
         """
         self.joins.append((target, onclause, isouter))
         return self
 
     def add_joinedload(self, relationship):
-        """English: Add joinedload / 添加 joinedload（用于优化加载关系）
+        """Add a joinedload instruction for relationship eager loading.
 
         Args:
-            relationship: relationship object / 关系对象
+            relationship: SQLAlchemy relationship object.
         """
         self.joins.append(('joinedload', relationship, None))
         return self
 
     def build(self, query):
-        """English: Apply all JOIN conditions to the query / 应用所有 JOIN 条件到查询
+        """Apply all JOIN conditions to the query.
 
         Args:
-            query: SQLAlchemy query object / SQLAlchemy 查询对象
+            query: SQLAlchemy query object.
 
         Returns:
-            Query with JOINs applied / 应用 JOIN 后的查询
+            Query with joins applied.
         """
         for item in self.joins:
             if item[0] == 'joinedload':
@@ -50,6 +46,6 @@ class JoinBuilder:
         return query
 
     def reset(self):
-        """English: Reset JOIN conditions / 重置 JOIN 条件"""
+        """Clear all configured joins."""
         self.joins = []
         return self

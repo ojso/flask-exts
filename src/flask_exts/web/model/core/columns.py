@@ -47,29 +47,27 @@ class ColumnsMixin:
     _export_columns: List[Tuple[str, str]] = []
 
     def scaffold_list_columns(self) -> List[str]:
-        """
-        Return list of the model field names.
+        """Return the list of model field names to display in list views.
 
-        Expected return format is list of strings of the field names. For example::
-
-            ['name', 'first_name', 'last_name']
+        Expected output is a list of column names, for example
+        ``['name', 'first_name', 'last_name']``.
 
         Returns:
-            List[str]: Field name list / 字段名称列表
+            List[str]: A list of field names.
         """
         return []
 
     def get_column_label(self, column_name: str) -> str:
-        """
-        Return a human-readable column name.
-        English summary: If a label is defined in column_labels, use it; otherwise format the field name into a display label.
-        中文说明：如果在 column_labels 中定义了标签，使用该标签；否则使用格式化的列名。
+        """Return a human-readable column label.
 
-        :param column_name:
-            Model field name.
+        If a label is defined in ``column_labels``, it is used; otherwise, the
+        field name is converted into a display label.
+
+        Args:
+            column_name: Model field name.
 
         Returns:
-            str: Formatted column label / 格式化的列标签
+            str: A formatted display label.
         """
         if self.column_labels and column_name in self.column_labels:
             return self.column_labels[column_name]
@@ -77,92 +75,76 @@ class ColumnsMixin:
             return self._prettify_name(column_name)
 
     def _prettify_name(self, name: str) -> str:
-        """
-        English summary: Convert a field name into a friendlier display name such as user_name -> User name.
-        中文说明：将字段名转换为友好的显示名，例如：user_name -> User name。
+        """Convert a field name into a readable display label.
+
+        For example, ``user_name`` becomes ``User Name``.
 
         Args:
-            name (str): Field name / 字段名
+            name: Field name.
 
         Returns:
-            str: Formatted name / 格式化后的名称
+            str: Human-readable label.
         """
-        # English: comment / This method should be defined in the parent class.
-        # English: comment / Here we assume it exists or should be implemented in a subclass.
         return name.replace("_", " ").title()
 
     def get_column_names(self, columns: List[str]) -> List[Tuple[str, str]]:
-        """
-        Returns a list of tuples with the model field name and formatted field name.
-
-        :param columns:
-            List of columns to include in the results.
+        """Return column pairs of ``(field_name, label)`` for the given columns.
 
         Args:
-            columns (List[str]): Column names / 列名列表
+            columns: List of columns to include.
 
         Returns:
-            List[Tuple[str, str]]: (field name, formatted name) tuples / (字段名, 格式化名称) 的元组列表
+            List[Tuple[str, str]]: A list of ``(field_name, label)`` tuples.
         """
         return [(c, self.get_column_label(c)) for c in columns]
 
     def get_list_columns(self) -> List[Tuple[str, str]]:
-        """
-        Get a list of tuples with the model field name and formatted name for the columns in `column_list`.
+        """Return the columns displayed in the list view.
 
-        If `column_list` is not set, the columns from `scaffold_list_columns` will be used.
-
-        English summary: Return the columns used by the list view.
-        中文说明：获取列表视图中使用的列。如果设置了 column_list，使用它；否则使用 scaffold_list_columns() 返回的列。
+        If ``column_list`` is set, that list is used; otherwise, the method falls
+        back to ``scaffold_list_columns()``.
 
         Returns:
-            List[Tuple[str, str]]: (field name, label) tuples / (字段名, 标签) 的元组列表
+            List[Tuple[str, str]]: ``(field_name, label)`` pairs for the list view.
         """
         return self.get_column_names(self.column_list or self.scaffold_list_columns())
 
     def get_details_columns(self) -> List[Tuple[str, str]]:
-        """
-        Get a list of tuples with the model field name and formatted name for the columns in `column_details_list`.
-        If `column_details_list` is not set, the columns from `scaffold_list_columns` will be used.
+        """Return the columns displayed in the detail view.
 
-        English summary: Return the columns shown in the detail view.
-        中文说明：获取详情视图中使用的列。如果设置了 column_details_list，使用它；否则使用 scaffold_list_columns() 返回的列。
+        If ``column_details_list`` is set, that list is used; otherwise,
+        ``scaffold_list_columns()`` is used as the fallback.
 
         Returns:
-            List[Tuple[str, str]]: (field name, label) tuples / (字段名, 标签) 的元组列表
+            List[Tuple[str, str]]: ``(field_name, label)`` pairs for the detail
+                view.
         """
         return self.get_column_names(
             self.column_details_list or self.scaffold_list_columns()
         )
 
     def get_export_columns(self) -> List[Tuple[str, str]]:
-        """
-        Get a list of tuples with the model field name and formatted name for the columns in `column_export_list`.
-        If `column_export_list` is not set, it will attempt to use the columns from `column_list`
-        or finally the columns from `scaffold_list_columns` will be used.
+        """Return the columns used in export output.
 
-        English summary: Return the columns used by the export view.
-        中文说明：获取导出视图中使用的列。首先尝试使用 column_export_list，然后 column_list，最后使用 scaffold_list_columns()。
+        The method prefers ``column_export_list``, then ``column_list``, and
+        finally ``scaffold_list_columns()``.
 
         Returns:
-            List[Tuple[str, str]]: (field name, label) tuples / (字段名, 标签) 的元组列表
+            List[Tuple[str, str]]: ``(field_name, label)`` pairs for export.
         """
         return self.get_column_names(
             self.column_export_list or self.column_list or self.scaffold_list_columns()
         )
 
     def _get_column_by_idx(self, idx: Optional[int]) -> Optional[Tuple[str, str]]:
-        """
-        Return column index by idx.
-
-        English summary: Look up a column tuple by index in the list view columns.
-        中文说明：通过索引获取列。
+        """Return a column tuple by index.
 
         Args:
-            idx (Optional[int]): Column index / 列索引
+            idx: Column index in the list view.
 
         Returns:
-            Optional[Tuple[str, str]]: (field name, label) tuple or None when the index is invalid / (字段名, 标签) 的元组，或 None 如果索引无效
+            Optional[Tuple[str, str]]: A ``(field_name, label)`` tuple or
+                ``None`` if the index is invalid.
         """
         if idx is None or idx < 0 or idx >= len(self._list_columns):
             return None
@@ -170,22 +152,11 @@ class ColumnsMixin:
         return self._list_columns[idx]
 
     def search_placeholder(self) -> Optional[str]:
-        """
-        Return search placeholder.
-
-        For example, if set column_labels and column_searchable_list:
-
-        class MyModelView(BaseModelView):
-            column_labels = dict(name='Name', last_name='Last Name')
-            column_searchable_list = ('name', 'last_name')
-
-        placeholder is: "Name, Last Name"
-
-        English summary: Build a search placeholder text from the searchable column labels.
-        中文说明：返回搜索占位符文本。基于 column_searchable_list 和 column_labels 生成，例如，如果 column_searchable_list = ('name', 'email')，则返回 "Name, Email"。
+        """Build a search placeholder from the searchable column labels.
 
         Returns:
-            Optional[str]: Search placeholder or None / 搜索占位符或 None
+            Optional[str]: A label string such as ``"Name, Email"`` or ``None``
+                when no searchable columns are configured.
         """
         if not self.column_searchable_list:
             return None

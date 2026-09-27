@@ -5,8 +5,8 @@ The ``SqlaModelView`` class is the core component for building admin panels with
 It automatically generates CRUD (Create, Read, Update, Delete) views for your database models
 with rich filtering, searching, and customization options.
 
-中文说明：``SqlaModelView`` 是 Flask-Exts 中最核心的后台视图组件，用于快速生成数据库模型的增删改查页面，并支持筛选、搜索和自定义配置。
-English summary: ``SqlaModelView`` is the core admin view component in Flask-Exts. It automatically builds CRUD pages for your models and supports filtering, search, custom forms, and inline editing.
+This view layer is the central admin component in Flask-Exts. It builds CRUD pages for your models
+and supports filtering, searching, custom forms, and inline editing.
 
 Basic Setup
 -----------

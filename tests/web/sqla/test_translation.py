@@ -1,9 +1,10 @@
-from flask_babel import gettext
-from flask_babel import force_locale
-from flask_exts.web.sqla.view import SqlaModelView
+from flask_babel import force_locale, gettext
+
 from flask_exts.datastore.sqla import db
+from flask_exts.web.sqla.view import SqlaModelView
 from tests.models.demo import Model1
 from tests.models.unique import UniqueModel
+
 from .test_basic import CustomSqlaModelView
 
 

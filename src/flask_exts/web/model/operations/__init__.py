@@ -1,8 +1,7 @@
-"""
-Admin ModelView operations / Admin ModelView 操作模块
+"""Operation mixins for admin model views.
 
-English summary: This package contains the CRUD and related operation mixins for the Admin ModelView layer.
-中文说明：这个包包含 Admin ModelView 层的 CRUD 及其相关操作混入类。
+This package contains the CRUD and related helper mixins used by the admin
+model-view layer.
 """
 
 from .read import ReadOperationsMixin

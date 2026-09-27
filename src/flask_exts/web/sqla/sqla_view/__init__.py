@@ -1,14 +1,14 @@
-"""
-SQLAlchemy view processing module / SQLAlchemy 视图处理模块
+"""SQLAlchemy view helper modules.
 
-English summary: This package separates the view-processing logic from ModelView into dedicated handler modules to improve maintainability and testability.
-中文说明：将 view.py 中的各个处理逻辑分离为独立的处理器模块，提高代码的可维护性和可测试性。
+This package separates the model-view processing logic into small handler
+classes to keep the main view implementation easier to maintain and test.
 
-Module structure:
-- QueryHandler: handles query building and filters / 处理查询的构建和过滤
-- SortingHandler: handles sorting logic / 处理排序逻辑
-- PaginationHandler: handles pagination logic / 处理分页逻辑
-- RelationshipsHandler: handles relationship joins and loading / 处理关系连接和加载
+The package includes:
+
+- QueryHandler: builds queries and applies filters.
+- SortingHandler: handles sorting operations.
+- PaginationHandler: handles pagination logic.
+- RelationshipsHandler: handles relationship loading and joins.
 """
 
 from .query_handler import QueryHandler

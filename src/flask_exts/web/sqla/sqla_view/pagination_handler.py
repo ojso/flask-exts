@@ -1,18 +1,14 @@
-"""
-分页处理器
-
-处理查询结果的分页逻辑。
-"""
+"""Pagination handler for SQLAlchemy-backed admin queries."""
 
 
 class PaginationHandler:
-    """English: comment / 处理分页逻辑"""
+    """Apply pagination to a SQLAlchemy query."""
 
     def __init__(self, view):
         self.view = view
 
     def apply_pagination(self, query, page, page_size):
-        """English: comment / 应用分页"""
+        """Apply offset and limit to the query."""
         if page and page_size:
             offset = (page - 1) * page_size
             query = query.offset(offset).limit(page_size)
@@ -20,7 +16,7 @@ class PaginationHandler:
         return query
 
     def get_page_count(self, total_count, page_size):
-        """English: comment / 获取总页数"""
+        """Return the total page count for the given result size."""
         if page_size == 0:
             return 1
         return (total_count + page_size - 1) // page_size

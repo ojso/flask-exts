@@ -1,18 +1,14 @@
-"""
-排序处理器
-
-处理查询结果的排序逻辑。
-"""
+"""Sorting handler for SQLAlchemy-backed model views."""
 
 
 class SortingHandler:
-    """English: comment / 处理排序逻辑"""
+    """Apply sorting logic to a SQLAlchemy query."""
 
     def __init__(self, view):
         self.view = view
 
     def apply_sorting(self, query, sort_column, sort_desc):
-        """English: comment / 应用排序"""
+        """Apply sorting to the query when a sortable column is selected."""
         if sort_column:
             if sort_column in self.view.column_sortable_list:
                 column = self.view.model_admin.get_column_for_field_name(

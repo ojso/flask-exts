@@ -1,35 +1,32 @@
-"""
-Filter builder / 过滤器构建器
-
-Used to build complex filter conditions. / 用于构建复杂的过滤条件。
-"""
+"""Builder for composing SQLAlchemy filter clauses."""
 
 
 class FilterBuilder:
-    """English: Build filter conditions / 构建过滤条件"""
+    """Build and apply filter conditions to a query."""
 
     def __init__(self):
         self.filters = []
 
     def add_filter(self, column, operator, value):
-        """English: Add a filter condition / 添加过滤条件
+        """Add a filter condition.
 
         Args:
-            column: SQLAlchemy column / SQLAlchemy 列
-            operator: comparison operator / 操作符（'=', '!=', '>', '<', 'like', 'in'）
-            value: filter value / 过滤值
+            column: SQLAlchemy column to filter on.
+            operator: Comparison operator such as ``=``, ``!=``, ``>``,
+                ``<``, ``like``, or ``in``.
+            value: Filter value.
         """
         self.filters.append((column, operator, value))
         return self
 
     def build(self, query):
-        """English: Apply all filter conditions to the query / 应用所有过滤条件到查询
+        """Apply all filter conditions to the query.
 
         Args:
-            query: SQLAlchemy query object / SQLAlchemy 查询对象
+            query: SQLAlchemy query object.
 
         Returns:
-            Query with filters applied / 应用过滤后的查询
+            Query with filters applied.
         """
         for column, operator, value in self.filters:
             if operator == '=':
@@ -48,6 +45,6 @@ class FilterBuilder:
         return query
 
     def reset(self):
-        """English: Reset filter conditions / 重置过滤条件"""
+        """Clear all configured filter conditions."""
         self.filters = []
         return self

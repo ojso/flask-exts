@@ -1,14 +1,18 @@
-"""
-SQLAlchemy filters - optimized version / SQLAlchemy 过滤器 - 优化版本
+"""SQLAlchemy-specific filter implementations.
 
-English summary: This module provides SQLAlchemy-specific filter implementations and uses factory functions to generate type-specific filters with less duplicated code.
-中文说明：这个模块提供了 SQLAlchemy 特定的过滤器实现，并使用工厂函数动态生成类型特定的过滤器，减少重复代码。
+This module provides filter primitives for SQLAlchemy-backed models and uses a
+factory pattern to generate type-specific filter classes with minimal duplicated
+logic.
 
-Architecture:
-  - BaseSQLAFilter: base filter class / 基础过滤器类
-  - Basic operation filters: FilterEqual, FilterNotEqual, FilterGreater, FilterSmaller, FilterLike, FilterNotLike, FilterEmpty, FilterInList, FilterNotInList / 基础操作过滤器：FilterEqual, FilterNotEqual, FilterGreater, FilterSmaller, FilterLike, FilterNotLike, FilterEmpty, FilterInList, FilterNotInList
-  - Factory function: create_type_filters() dynamically generates type-specific filters / 工厂函数：create_type_filters() 动态生成类型特定的过滤器
-  - FilterConverter: converts column types to the proper filter / FilterConverter：转换器，根据列类型返回适当的过滤器
+The module contains:
+
+- BaseSQLAFilter: the base filter class.
+- FilterEqual, FilterNotEqual, FilterGreater, FilterSmaller, FilterLike,
+  FilterNotLike, FilterEmpty, FilterInList, and FilterNotInList: concrete
+  filter operations.
+- create_type_filters(): factory for generating type-specific filters.
+- FilterConverter: conversion logic that maps column types to the appropriate
+  filter class.
 """
 
 from flask_babel import lazy_gettext
@@ -27,9 +31,7 @@ from ...model.filter import (
     BaseTimeBetweenFilter,
 )
 
-# ===============================================
-# English: comment / 基础过滤器类
-# ===============================================
+# Base SQLAlchemy filter class.
 
 
 class BaseSQLAFilter(BaseFilter):
@@ -148,30 +150,26 @@ class FilterNotInList(FilterInList):
         return query.add_filter(self.column, "not_in", value)
 
 
-# ===============================================
-# English: comment / 工厂函数 - 动态生成类型特定的过滤器
-# ===============================================
+# Factory for dynamically generating type-specific filters.
 
 
 def create_type_filters(base_filter_classes, type_mixin, type_prefix):
-    """
-    工厂函数：为特定类型动态生成过滤器类
+    """Create generated filter classes for a specific type.
 
     Args:
-        base_filter_classes: 基础过滤器类列表，如 [FilterEqual, FilterNotEqual, ...]
-        type_mixin: 类型混入类，如 BaseIntFilter, BaseDateFilter
-        type_prefix: 类型前缀，用于生成类名，如 'Int', 'Date'
+        base_filter_classes: Base filter classes such as
+            ``[FilterEqual, FilterNotEqual, ...]``.
+        type_mixin: Type mixin such as ``BaseIntFilter`` or ``BaseDateFilter``.
+        type_prefix: Prefix used to build generated class names.
 
     Returns:
-        dict: {class_name: generated_class, ...}
+        dict: A mapping of generated class names to classes.
     """
     result = {}
 
     for base_filter in base_filter_classes:
-        # English: DateEqualFilter IntGreaterFilter / 生成类名：DateEqualFilter, IntGreaterFilter 等
         class_name = f"{type_prefix}{base_filter.__name__}"
 
-        # English: comment / 动态创建类
         new_class = type(class_name, (base_filter, type_mixin), {})
 
         result[class_name] = new_class
@@ -179,9 +177,7 @@ def create_type_filters(base_filter_classes, type_mixin, type_prefix):
     return result
 
 
-# ===============================================
-# English: comment / 特殊过滤器 - 枚举和选择类型
-# ===============================================
+# Specialized filters for enum and choice-column types.
 
 
 class EnumEqualFilter(FilterEqual):
@@ -275,17 +271,13 @@ class ChoiceTypeNotLikeFilter(FilterNotLike):
             return query.add_filter(self.column, "not_like", value)
 
 
-# ===============================================
-# English: comment / 类型特定的过滤器（使用工厂函数生成）
-# ===============================================
+# Type-specific filters generated via the factory pattern.
 
-# English: Boolean filter / Boolean 过滤器
 BooleanEqualFilter = type("BooleanEqualFilter", (FilterEqual, BaseBooleanFilter), {})
 BooleanNotEqualFilter = type(
     "BooleanNotEqualFilter", (FilterNotEqual, BaseBooleanFilter), {}
 )
 
-# English: Int filter / Int 过滤器
 IntEqualFilter = type("IntEqualFilter", (FilterEqual, BaseIntFilter), {})
 IntNotEqualFilter = type("IntNotEqualFilter", (FilterNotEqual, BaseIntFilter), {})
 IntGreaterFilter = type("IntGreaterFilter", (FilterGreater, BaseIntFilter), {})
@@ -295,7 +287,6 @@ IntNotInListFilter = type(
     "IntNotInListFilter", (FilterNotInList, BaseIntListFilter), {}
 )
 
-# English: Float filter / Float 过滤器
 FloatEqualFilter = type("FloatEqualFilter", (FilterEqual, BaseFloatFilter), {})
 FloatNotEqualFilter = type("FloatNotEqualFilter", (FilterNotEqual, BaseFloatFilter), {})
 FloatGreaterFilter = type("FloatGreaterFilter", (FilterGreater, BaseFloatFilter), {})
@@ -305,7 +296,6 @@ FloatNotInListFilter = type(
     "FloatNotInListFilter", (FilterNotInList, BaseFloatListFilter), {}
 )
 
-# English: Date filter / Date 过滤器
 DateEqualFilter = type("DateEqualFilter", (FilterEqual, BaseDateFilter), {})
 DateNotEqualFilter = type("DateNotEqualFilter", (FilterNotEqual, BaseDateFilter), {})
 DateGreaterFilter = type("DateGreaterFilter", (FilterGreater, BaseDateFilter), {})
@@ -335,7 +325,6 @@ class DateNotBetweenFilter(DateBetweenFilter):
         return query.add_filter(self.column, "not_between", value)
 
 
-# English: DateTime filter / DateTime 过滤器
 DateTimeEqualFilter = type("DateTimeEqualFilter", (FilterEqual, BaseDateTimeFilter), {})
 DateTimeNotEqualFilter = type(
     "DateTimeNotEqualFilter", (FilterNotEqual, BaseDateTimeFilter), {}
@@ -371,7 +360,6 @@ class DateTimeNotBetweenFilter(DateTimeBetweenFilter):
         return query.add_filter(self.column, "not_between", value)
 
 
-# English: Time filter / Time 过滤器
 TimeEqualFilter = type("TimeEqualFilter", (FilterEqual, BaseTimeFilter), {})
 TimeNotEqualFilter = type("TimeNotEqualFilter", (FilterNotEqual, BaseTimeFilter), {})
 TimeGreaterFilter = type("TimeGreaterFilter", (FilterGreater, BaseTimeFilter), {})

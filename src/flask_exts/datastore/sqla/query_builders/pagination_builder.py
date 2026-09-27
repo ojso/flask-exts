@@ -1,36 +1,32 @@
-"""
-English: Pagination builder / 分页构建器
-
-English: Used to build pagination conditions. / 用于构建分页条件。
-"""
+"""Builder for composing SQLAlchemy pagination clauses."""
 
 
 class PaginationBuilder:
-    """English: Build pagination conditions / 构建分页条件"""
+    """Build and apply pagination to a query."""
 
     def __init__(self):
         self.page = None
         self.page_size = None
 
     def set_page(self, page, page_size):
-        """English: Set pagination / 设置分页
+        """Set the page number and page size.
 
         Args:
-            page: page number starting from 1 / 页码（从 1 开始）
-            page_size: number of rows per page / 每页大小
+            page: Page number starting from 1.
+            page_size: Number of rows per page.
         """
         self.page = page
         self.page_size = page_size
         return self
 
     def build(self, query):
-        """English: Apply pagination to the query / 应用分页到查询
+        """Apply pagination to the query.
 
         Args:
-            query: SQLAlchemy query object / SQLAlchemy 查询对象
+            query: SQLAlchemy query object.
 
         Returns:
-            Query with pagination applied / 应用分页后的查询
+            Query with pagination applied.
         """
         if self.page and self.page_size:
             offset = (self.page - 1) * self.page_size
@@ -39,7 +35,7 @@ class PaginationBuilder:
         return query
 
     def reset(self):
-        """English: Reset pagination conditions / 重置分页条件"""
+        """Clear the configured pagination state."""
         self.page = None
         self.page_size = None
         return self

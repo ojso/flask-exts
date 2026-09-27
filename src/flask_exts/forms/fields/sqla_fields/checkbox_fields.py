@@ -1,11 +1,8 @@
-"""
-复选框字段
+"""Checkbox field types.
 
-包含 CheckboxListField 等复选框相关的字段类型。
+This module holds checkbox-related field implementations that are separated from
+higher-level SQLAlchemy field definitions.
 """
-
-# English: note sqla py / 注意：实际的字段实现应从 sqla.py 中提取到这里
-# English: comment / 此文件是字段模块化的占位符
 
 __all__ = [
     'CheckboxListField',

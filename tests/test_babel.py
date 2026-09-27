@@ -1,16 +1,21 @@
-import pytest
 from datetime import datetime
+
+import pytest
 from flask import session
-from flask_babel import get_locale, ngettext
-from flask_babel import get_timezone
-from flask_babel import format_datetime
-from flask_babel import refresh
-from flask_babel import gettext
-from flask_babel import get_translations
+from flask_babel import (
+    format_datetime,
+    get_locale,
+    get_timezone,
+    get_translations,
+    gettext,
+    ngettext,
+    refresh,
+)
 from wtforms.fields import StringField
 from wtforms.validators import DataRequired
-from flask_exts.forms.form.flask_form import FlaskForm
+
 from flask_exts.forms.fields import JSONField
+from flask_exts.forms.form.flask_form import FlaskForm
 
 
 def test_locale(app):

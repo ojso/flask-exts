@@ -16,45 +16,21 @@ from .type_formatters import BASE_FORMATTERS, DETAIL_FORMATTERS, EXPORT_FORMATTE
 
 
 class ModelView(BaseModelView):
-    """
-    Model view
+    """Base admin view for model-backed resources.
 
-    This view does not make assumptions about the backing store, but expects a standard model API with listing, retrieval, creation, update, deletion, and form scaffolding.
+    This class expects a standard model API with listing, retrieval, creation,
+    update, deletion, and form scaffolding support. It does not assume a
+    specific backend store, but it does require the implementation of the common
+    model operations described by the admin layer.
 
-        1. The provided model is an object
-        2. The model contains properties
-        3. Each model contains an attribute which uniquely identifies it (i.e. a primary key for a database model)
-        4. It is possible to retrieve a list of sorted models with pagination applied from a data source
-        5. You can get one model by its identifier from the data source
+    Typical subclass responsibilities include:
 
-    Essentially, if you want to support a new data store, all you have to do is:
+    1. Implementing data operations such as ``get_list`` and ``get_one``.
+    2. Providing form generation via ``scaffold_form``.
+    3. Defining column metadata and display configuration.
 
-        1. Derive from the `ModelView` class
-        2. Implement various data-related methods (`get_list`, `get_one`, `create_model`, etc)
-        3. Implement automatic form generation from the model representation (`scaffold_form`)
-
-    Provides complete admin interface functionality, including list, create, edit, delete, detail, and export features / 提供完整的 Admin 界面功能，包括列表、创建、编辑、删除、详情和导出。
-
-    This class is a direct extension of BaseModelView, which composes all functional modules / 这个类是 BaseModelView 的直接扩展，后者组合了所有功能模块。
-    ModelView mainly defines route methods and initialization logic / ModelView 只定义了路由视图方法和初始化逻辑。
-
-    Attributes:
-        base_form_class: base form class / 表单基类
-        can_create: whether creation is allowed / 是否允许创建
-        can_edit: whether editing is allowed / 是否允许编辑
-        can_delete: whether deletion is allowed / 是否允许删除
-
-    Example:
-        ```python
-        from flask_exts.admin.model import ModelView
-
-        class UserAdmin(ModelView):
-            column_list = ['id', 'username', 'email', 'created_at']
-            column_sortable_list = ['username', 'created_at']
-
-            def scaffold_list_columns(self):
-                return ['id', 'username', 'email', 'created_at']
-        ```
+    The class is primarily responsible for route methods and view setup while
+    the composed mixins supply the individual admin features.
     """
 
     def __init__(
@@ -97,13 +73,12 @@ class ModelView(BaseModelView):
         self._init_view()
 
     def _init_view(self):
-        """English: comment / 初始化视图配置"""
+        """Initialize the list, sort, detail, export, and form metadata."""
         self._list_columns = self.get_list_columns()
         self._sortable_columns = self.get_sortable_columns()
         self._details_columns = self.get_details_columns()
         self._export_columns = self.get_export_columns()
 
-        # English: initialize Mixin / 初始化 Mixin
         if hasattr(self, "init_actions"):
             self.init_actions()
         if hasattr(self, "init_row_actions"):
@@ -113,14 +88,11 @@ class ModelView(BaseModelView):
 
         self._init_forms()
 
-        # English: comment / 设置默认的格式化器
         if self.column_formatters_export is None:
             self.column_formatters_export = self.column_formatters
 
         if self.column_formatters_detail is None:
             self.column_formatters_detail = self.column_formatters
-
-        # English: comment / 导入类型格式化器的默认值
 
         if self.column_type_formatters is None:
             self.column_type_formatters = dict(BASE_FORMATTERS)
@@ -135,7 +107,7 @@ class ModelView(BaseModelView):
             self.column_descriptions = dict()
 
     def _init_forms(self):
-        """English: comment / 初始化表单"""
+        """Initialize the form classes used by the view."""
         self._form_ajax_refs = self._process_ajax_references()
 
         if self.form_widget_args is None:
@@ -145,24 +117,17 @@ class ModelView(BaseModelView):
         self._edit_form_class = self.get_edit_form()
         self._delete_form_class = self.get_delete_form()
 
-        # English: comment / 列表视图内联编辑
         if self.column_editable_list:
             self._list_form_class = self.get_list_form()
 
     def is_editable(self, name: str) -> bool:
-        """
-        Verify if column is editable.
-
-        :param name:
-            Column name.
-
-        验证列是否可编辑。
+        """Return whether the given column is editable.
 
         Args:
-            name (str): 列名
+            name: Column name.
 
         Returns:
-            bool: 如果列可编辑返回 True
+            bool: ``True`` when the column is editable.
         """
         return (
             self.can_edit
@@ -171,7 +136,7 @@ class ModelView(BaseModelView):
         )
 
     def is_action_allowed(self, name: str) -> bool:
-        """English: comment / 验证操作是否被允许"""
+        """Return whether an action is allowed for the current view."""
         if name == "delete" and not self.can_delete:
             return False
         return (
@@ -181,10 +146,7 @@ class ModelView(BaseModelView):
         )
 
     def _process_ajax_references(self):
-        """
-        处理 AJAX 参考配置
-        Process `form_ajax_refs` and generate model loaders that will be used by the `ajax_lookup` view.
-        """
+        """Process AJAX reference configuration into model loaders."""
         result = {}
 
         if self.form_ajax_refs:
@@ -198,14 +160,14 @@ class ModelView(BaseModelView):
         return result
 
     def _create_ajax_loader(self, name, options):
-        """English: create AJAX Model backend will override / 创建 AJAX 加载器 Model backend will override this to implement AJAX model loading."""
+        """Create an AJAX model loader for an AJAX-backed form field."""
         raise NotImplementedError()
 
     def get_redirect_target(self, param_name="url", endpoint=".index_view"):
-        """English: URL / 获取重定向目标 URL"""
+        """Return the target URL used for redirects."""
         return request.values.get(param_name) or self.get_url(endpoint)
 
-    # English: comment / =========== 视图路由方法 ===========
+    # Route methods.
 
     @expose_url("/")
     def index_view(self):
@@ -214,18 +176,12 @@ class ModelView(BaseModelView):
         # Grab parameters from URL
         view_args = self._get_list_args()
 
-        # English: comment / 根据列索引映射列名
-        # Map column index to column name
         sort_column = self._get_column_by_idx(view_args.sort)
         if sort_column is not None:
             sort_column = sort_column[0]
 
-        # English: comment / 获取安全的页大小
-        # Get page size
         page_size = self.get_safe_page_size(view_args.page_size)
 
-        # English: comment / 获取数据
-        # Get count and data
         count, data = self.get_list(
             view_args.page,
             sort_column,
@@ -235,17 +191,12 @@ class ModelView(BaseModelView):
             page_size=page_size,
         )
 
-        # English: comment / 计算页数
-        # Calculate number of pages
         if count is not None and page_size:
             num_pages = int(ceil(count / float(page_size)))
         elif not page_size:
-            num_pages = 0  # 隐藏分页器 hide pager for unlimited page_size
+            num_pages = 0
         else:
-            num_pages = None  # 使用简单分页器 use simple pager
-
-        # English: URL / URL 生成辅助函数
-        # Various URL generation helpers
+            num_pages = None
         def pager_url(p):
             # Do not add page number if it is first page
             if p == 0:

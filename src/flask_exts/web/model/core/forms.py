@@ -1,8 +1,7 @@
-"""
-Form management / 表单管理
+"""Form management utilities for admin model views.
 
-English summary: This module manages admin model-view forms, including scaffolding, generation, instantiation, and URL handling.
-中文说明：负责管理 Admin 模型视图中的表单，包括表单脚手架、表单生成、表单实例化和返回 URL 处理。
+This module handles form scaffolding, generation, instantiation, and URL-aware
+form setup for list and detail views.
 """
 
 from typing import Optional, Type, Any, Dict, Callable
@@ -14,36 +13,29 @@ from ....forms.widgets import EditableWidget
 
 
 class FormsMixin:
-    """
-    Form management mixin / 表单管理功能混入类
-
-    English summary: Provides form scaffolding, creation, retrieval, and handling utilities for model views.
-    中文说明：提供表单脚手架、创建、获取和处理功能。
-    """
+    """Mixin for form scaffolding and management in admin views."""
 
     base_form_class = FlaskForm
-    """English: comment / 表单基类"""
+    """Base WTForms form class used for generated forms."""
 
-    # English: ModelView / 表单配置属性（继承自 ModelView）
     form_args: Dict[str, Dict[str, Any]] = {}
-    """English: comment / 表单字段参数"""
+    """Configuration for individual form fields."""
 
     form_columns: Optional[list] = None
-    """English: comment / 表单字段列表"""
+    """List of form fields to include."""
 
     form_excluded_columns: Optional[list] = None
-    """English: comment / 排除的表单字段"""
+    """List of form fields to exclude."""
 
     form_widget_args: Optional[Dict[str, Dict[str, Any]]] = None
-    """English: comment / 表单小部件参数"""
+    """WTForms widget arguments for generated forms."""
 
     form_extra_fields: Optional[Dict[str, Any]] = None
-    """English: comment / 额外的表单字段"""
+    """Additional field definitions for the form."""
 
     form_ajax_refs: Optional[Dict[str, Any]] = None
-    """English: AJAX / AJAX 参考配置"""
+    """AJAX-related form references."""
 
-    # English: comment / 缓存的表单类
     _create_form_class: Optional[Type] = None
     _edit_form_class: Optional[Type] = None
     _delete_form_class: Optional[Type] = None
@@ -51,79 +43,43 @@ class FormsMixin:
     _form_ajax_refs: Dict[str, Any] = {}
 
     def scaffold_form(self) -> Type:
-        """
-        Create `form.BaseForm` inherited class from the model. Must be implemented in the child class.
+        """Build a form class from the model.
 
-        English summary: Build a form class from the model; child classes must implement this method.
-        中文说明：从模型创建表单类，必须在子类中实现。
+        This method must be implemented by subclasses.
 
         Returns:
-            Type: Form class / 表单类
+            Type: A form class for the model.
 
         Raises:
-            NotImplementedError: must be implemented in subclass / 必须在子类中实现
+            NotImplementedError: If the subclass does not implement this hook.
         """
         return None
 
     def scaffold_list_form(self, widget=None, validators=None) -> type:
-        """
-        Create form for the `index_view` using only the columns from
-        `self.column_editable_list`.
-
-        :param widget:
-            WTForms widget class. Defaults to `EditableWidget`.
-        :param validators:
-            `form_args` dict with only validators
-            {'name': {'validators': [DataRequired()]}}
-
-        Must be implemented in the child class.
-
-        English summary: Build a form for the list view, using only editable columns defined for the index view.
-        中文说明：为 index_view（列表视图）创建表单，仅使用 column_editable_list 中的列。
+        """Build the editable list form for the index view.
 
         Args:
-            widget (Optional[Any]): WTForms widget class, default is EditableWidget / WTForms 小部件类，默认为 EditableWidget
-            validators (Optional[Dict]): Form argument dict containing only validators / 表单参数字典，仅包含验证器，例如 {'name': {'validators': [DataRequired()]}}
+            widget: WTForms widget class. Defaults to ``EditableWidget``.
+            validators: Form configuration containing only validator metadata.
 
         Returns:
-            Type: Form class / 表单类
+            type: A WTForms form class.
 
         Raises:
-            NotImplementedError: must be implemented in subclass / 必须在子类中实现
+            NotImplementedError: If the subclass does not implement this hook.
         """
         raise NotImplementedError("Please implement scaffold_list_form method")
 
     def get_list_form(self) -> type:
-        """
-        Get form class for the editable list view.
+        """Return the editable list form for the index view.
 
-        Uses only validators from `form_args` to build the form class.
-
-        Allows overriding the editable list view field/widget. For example::
-
-            from .model.widgets import EditableWidget
-
-            class CustomWidget(EditableWidget):
-                def get_kwargs(self, subfield, kwargs):
-                    if subfield.type == 'TextAreaField':
-                        kwargs['data-type'] = 'textarea'
-                        kwargs['data-rows'] = '20'
-                    # elif: kwargs for other fields
-
-                    return kwargs
-
-            class MyModelView(BaseModelView):
-                def get_list_form(self):
-                    return self.scaffold_list_form(widget=CustomWidget)
-
-        English summary: Return the editable list form, using only validators from form_args and allowing widget overrides.
-        中文说明：获取可编辑列表视图的表单类。仅使用 form_args 中的验证器来构建表单类，并允许重写可编辑列表视图的字段/小部件。
+        The method only propagates validator metadata from ``form_args`` and
+        allows subclasses to override the widget used for inline editing.
 
         Returns:
-            Type: Form class
+            type: A WTForms form class.
         """
         if self.form_args:
-            # English: form_args FieldList / 仅获取验证器，其他 form_args 可能会破坏 FieldList 包装
             validators = {
                 key: {"validators": value["validators"]}
                 for key, value in self.form_args.items()
@@ -166,44 +122,32 @@ class FormsMixin:
         return ListForm
 
     def get_create_form(self) -> Type:
-        """
-        Create form class for model creation view.
+        """Return the form used by the create view.
 
-        Override to implement customized behavior.
-
-        English summary: Return the form used for the create view; override this method to customize behavior.
-        中文说明：创建模型创建视图的表单类，覆盖以实现自定义行为。
+        Subclasses can override this method to customize behavior.
 
         Returns:
-            Type: Form class / 表单类
+            Type: A WTForms form class.
         """
         return self.scaffold_form()
 
     def get_edit_form(self) -> Type:
-        """
-        Create form class for model editing view.
+        """Return the form used by the edit view.
 
-        Override to implement customized behavior.
-
-        English summary: Return the form used for the edit view; override this method to customize behavior.
-        中文说明：创建模型编辑视图的表单类，覆盖以实现自定义行为。
+        Subclasses can override this method to customize behavior.
 
         Returns:
-            Type: Form class / 表单类
+            Type: A WTForms form class.
         """
         return self.scaffold_form()
 
     def get_delete_form(self) -> Type:
-        """
-        Create form class for model delete view.
+        """Return the form used by the delete view.
 
-        Override to implement customized behavior.
-
-        English summary: Return the delete form; override this method to customize behavior.
-        中文说明：创建模型删除视图的表单类，覆盖以实现自定义行为。
+        Subclasses can override this method to customize behavior.
 
         Returns:
-            Type: Form class / 表单类
+            Type: A WTForms form class.
         """
 
         class DeleteForm(self.base_form_class):
@@ -212,83 +156,64 @@ class FormsMixin:
         return DeleteForm
 
     def create_form(self, *args, **kwargs) -> Any:
-        """
-        Instantiate model creation form and return it.
+        """Instantiate the form used by the create view.
 
-        Override to implement custom behavior.
-
-        English summary: Instantiate and return the create form; override to customize behavior.
-        中文说明：实例化模型创建表单并返回，覆盖以实现自定义行为。
+        Args:
+            *args: Positional arguments forwarded to the form.
+            **kwargs: Keyword arguments forwarded to the form.
 
         Returns:
-            Any: Form instance / 表单实例
+            Any: A form instance.
         """
         return self._create_form_class(*args, **kwargs)
 
     def edit_form(self, *args, **kwargs) -> Any:
-        """
-        Instantiate model editing form and return it.
+        """Instantiate the form used by the edit view.
 
-        Override to implement custom behavior.
-
-        English summary: Instantiate and return the edit form; override to customize behavior.
-        中文说明：实例化模型编辑表单并返回，覆盖以实现自定义行为。
+        Args:
+            *args: Positional arguments forwarded to the form.
+            **kwargs: Keyword arguments forwarded to the form.
 
         Returns:
-            Any: Form instance / 表单实例
+            Any: A form instance.
         """
         return self._edit_form_class(*args, **kwargs)
 
     def delete_form(self, *args, **kwargs) -> Any:
-        """
-        Instantiate model delete form and return it.
+        """Instantiate the form used by the delete view.
 
-        Override to implement custom behavior.
-
-        English summary: Instantiate and return the delete form; override to customize behavior.
-        中文说明：实例化模型删除表单并返回，覆盖以实现自定义行为。
+        Args:
+            *args: Positional arguments forwarded to the form.
+            **kwargs: Keyword arguments forwarded to the form.
 
         Returns:
-            Any: Form instance / 表单实例
+            Any: A form instance.
         """
         return self._delete_form_class(*args, **kwargs)
 
     def list_form(self, *args, **kwargs) -> Any:
-        """
-        Instantiate and return the list-edit form for the index view; override to customize behavior.
+        """Instantiate and return the list-edit form for the index view.
+
+        Args:
+            *args: Positional arguments forwarded to the form.
+            **kwargs: Keyword arguments forwarded to the form.
 
         Returns:
-            Any: Form instance / 表单实例
+            Any: A form instance.
         """
         return self._list_form_class(*args, **kwargs)
 
     def get_save_return_url(self, model: Any, is_created: bool = False) -> str:
-        """
-        Return url where user is redirected after successful form save.
-
-        :param model:
-            Saved object
-        :param is_created:
-            Whether new object was created or existing one was updated
-
-        For example, redirect use to object details view after form save::
-
-            class MyModelView(ModelView):
-                def get_save_return_url(self, model, is_created):
-                    return self.get_url('.details_view', id=model.id)
-
-        返回成功保存表单后用户被重定向到的 URL。
+        """Return the URL the user is redirected to after a successful save.
 
         Args:
-            model (Any): 保存的对象
-            is_created (bool): 是否创建了新对象（True）或更新了现有对象（False）
+            model: Saved object.
+            is_created: Whether the object was newly created.
 
         Returns:
-            str: 重定向 URL
+            str: A redirect URL.
 
         Example:
-            重定向到对象详情视图：
-
             ```python
             class MyModelView(ModelView):
                 def get_save_return_url(self, model, is_created):
