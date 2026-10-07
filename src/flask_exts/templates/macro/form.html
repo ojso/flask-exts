@@ -1,0 +1,137 @@
+{% macro render_field_label(field, class) -%}
+  {{ field.label(class_=class) }}
+  {%- if field.flags.required %}<strong class="text-danger">*</strong>{% endif %}
+{%- endmacro %}
+
+{% macro render_field_description(field) %}
+  {%- if field.errors %}
+    <div class="invalid-feedback">
+      <ul class="form-text text-muted">
+        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+      </ul>
+    </div>
+  {%- elif field.description %}
+    <small class="form-text text-muted">{{ field.description }}</small>
+  {%- endif %}
+{% endmacro %}
+
+{% macro render_field(field) %}
+  {%- if field.widget.input_type == "submit" or field.widget.input_type == "hidden" %}
+    {{ field(**kwargs) }}
+  {%- else %}
+    {%- if field.widget.input_type == "checkbox" %}
+      {%- set group_class = "mb-3 form-check" %}
+      {%- set input_class = "form-check-input" %}
+      {%- set label_class = "form-check-label" %}
+    {%- else %}
+      {%- set group_class = "mb-3" %}
+      {%- set input_class = "form-control" %}
+      {%- set label_class = "form-label" %}
+    {%- endif %}
+    {%- if field.errors %}
+      {%- set input_class = input_class ~ " is-invalid" %}
+    {%- endif %}
+    <div class="{{ group_class }}">
+      {%- if field.widget.input_type == "checkbox" %}
+        {{ field(class_=input_class,**kwargs) | safe }}
+        {{ render_field_label(field, label_class) }}
+      {%- else %}
+        {{ render_field_label(field, label_class) }}
+        {{ field(class_=input_class,**kwargs) | safe }}
+      {%- endif %}
+      {{ render_field_description(field) }}
+    </div>
+  {%- endif %}
+{% endmacro %}
+
+{% macro render_form_fields(form, form_opts=None, view=None) %}
+  {% for f in form if f.widget.input_type != 'hidden' %}
+    {% if f.widget.input_type == 'inline' %}
+      {% set parent = form._obj if form._obj is defined else none %}
+      {% set parent_id = view.get_pk_value(parent) if view and parent else none %}
+      {{ render_inline_fields(f, parent_id) }}
+    {% elif form_opts %}
+      {% set kwargs = (form_opts.widget_args or {}).get(f.short_name, {}) %}
+      {{ render_field(f,**kwargs) }}
+    {% else %}
+      {% set kwargs = {} %}
+      {{ render_field(f,**kwargs) }}
+    {% endif %}
+  {% endfor %}
+  {% for f in form if f.widget.input_type == 'hidden' %}{{ f }}{% endfor %}
+{% endmacro %}
+
+{% macro render_inline_row(field, child, index) %}
+  {% set prefix = field.get_prefix(index) %}
+  {% set child_form = field.form_class(obj=child, prefix=prefix) %}
+  <div class="inline-model-row card card-body bg-light mb-3"
+       data-inline-row data-child-id="{{ field.get_pk(child)|tojson|forceescape }}"
+       data-prefix="{{ prefix }}">
+    <div class="inline-model-row-fields">
+      {{ render_form_fields(child_form, form_opts=field.form_opts) }}
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="button" data-inline-save>{{ gettext("Save") }}</button>
+      <button class="btn btn-outline-danger" type="button" data-inline-delete>{{ gettext("Delete") }}</button>
+      <span class="inline-model-status" role="status"></span>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro render_inline_fields(field, parent_id) %}
+  {% set rows = field.data if field.is_collection else ([field.data] if field.data else []) %}
+  <section id="{{ field.id }}" class="inline-model-field"
+           data-inline-model data-url="{{ url_for('.ajax_inline_model', relationship_name=field.name) }}"
+           data-relationship="{{ field.relationship_name }}"
+           data-is-collection="{{ 'true' if field.is_collection else 'false' }}"
+           data-csrf-field="{{ config.get('CSRF_FIELD_NAME', 'csrf_token') }}"
+           data-delete-message="{{ gettext('Are you sure you want to delete this record?') }}"
+           {% if parent_id is not none %}data-parent-id="{{ parent_id }}"{% endif %}
+           {% if parent_id is none %}data-parent-unsaved="true"{% endif %}>
+    <h3 class="h5">{{ field.label.text }}</h3>
+    <div class="inline-model-rows">
+      {% for child in rows %}
+        {{ render_inline_row(field, child, loop.index0) }}
+      {% endfor %}
+    </div>
+    <template class="inline-model-row-template">
+      {% set prefix = field.get_prefix("__prefix__") %}
+      {% set child_form = field.form_class(prefix=prefix) %}
+      <div class="inline-model-row card card-body bg-light mb-3"
+           data-inline-row data-child-id="" data-prefix="{{ prefix }}">
+        <div class="inline-model-row-fields">
+          {{ render_form_fields(child_form, form_opts=field.form_opts) }}
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" type="button" data-inline-save>{{ gettext("Save") }}</button>
+          <button class="btn btn-outline-danger" type="button" data-inline-delete>{{ gettext("Delete") }}</button>
+          <span class="inline-model-status" role="status"></span>
+        </div>
+      </div>
+    </template>
+    <button class="btn btn-primary" type="button" data-inline-add
+            {% if parent_id is none or (not field.is_collection and rows) %}disabled{% endif %}>
+      {{ gettext("Add") }} {{ field.label }}
+    </button>
+    {% if parent_id is none %}
+      <small class="form-text text-muted">{{ gettext("Save the parent record before managing related records.") }}</small>
+    {% endif %}
+    {% if field.errors %}
+      <div class="invalid-feedback d-block">{% for error in field.errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+  </section>
+{% endmacro %}
+
+{% macro render_form(form, action=None, form_opts=None, multipart=False, view=None, ajax_create_url=None) %}
+  <form method="post" {% if action %}action="{{ action }}"{% endif %}
+        {% if multipart %}enctype="multipart/form-data"{% endif %}
+        {% if ajax_create_url %}data-ajax-create-url="{{ ajax_create_url }}"{% endif %}>
+    {{ render_form_fields(form, form_opts=form_opts, view=view) }}
+    <button class="btn btn-primary" type="submit">{{ gettext("Save") }}</button>
+  </form>
+{% endmacro %}
+
+{% macro extra(view) %}
+  {% if view.can_create %}<input class="btn btn-secondary" name="_add_another" type="submit" value="{{ gettext('Save and Add Another') }}" />{% endif %}
+  {% if view.can_edit %}<input class="btn btn-secondary" name="_continue_editing" type="submit" value="{{ gettext('Save and Continue Editing') }}" />{% endif %}
+{% endmacro %}

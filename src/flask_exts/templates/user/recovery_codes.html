@@ -1,0 +1,44 @@
+{% extends "admin/master.html" %}
+
+{% block title %}recovery codes{% endblock %}
+
+{% do _template.plugin_manager.add_request_plugins(["copybutton"]) %}
+
+{% block main %}
+  <div class="container border p-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div>
+        <b>Recovery Codes (save these!):</b>
+      </div>
+      <div>
+        <button id="copyButton" class="btn btn-primary" title="copy" type="button">⧉</button>
+        <button id="downloadButton" class="btn btn-primary" title="download" type="button">⭳</button>
+      </div>
+    </div>
+    <div class="highlight border">
+      <pre id="recoveryCodes">{{ recovery_codes | join("\n") }}</pre>
+    </div>
+  </div>
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script>
+  document.getElementById("copyButton").addEventListener("click", function () {
+    copyNextPreCodes(this);
+  });
+  document.getElementById("downloadButton").addEventListener("click", function () {
+    downloadNextPreCodes(this);
+  });
+  function copyNextPreCodes(btn) {
+    const preElement = btn.parentNode.parentNode.nextElementSibling.querySelector("pre");
+    copyToClipboard(preElement.textContent, function () {
+      temporarilyBtnChangeSuccess(btn);
+    });
+  }
+  function downloadNextPreCodes(btn) {
+    const preElement = btn.parentNode.parentNode.nextElementSibling.querySelector("pre");
+    downloadTextToFile(preElement.textContent, "recovery_codes.txt");
+  }
+  </script>
+{% endblock %}

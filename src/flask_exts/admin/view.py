@@ -1,0 +1,259 @@
+import inspect
+from functools import wraps
+from re import sub
+
+from flask import Blueprint, abort, url_for
+
+
+class AlreadyWrappedError(Exception):
+    """Raised when a view function is wrapped with access control twice."""
+
+
+def _wrap_view_func_with_access(f):
+    if hasattr(f, "_wrapped_access"):
+        raise AlreadyWrappedError(
+            f"View function {f.__name__} has already been wrapped with access control"
+        )
+
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if not self.allow(f, *args, **kwargs):
+            return self.inaccessible_callback(f, *args, **kwargs)
+        return f(self, *args, **kwargs)
+
+    wrapper._wrapped_access = True
+    return wrapper
+
+
+class ViewMeta(type):
+    def __new__(cls, name, bases, attrs):
+        for key, value in attrs.items():
+            if callable(value) and not key.startswith("__") and hasattr(value, "_urls"):
+                attrs[key] = _wrap_view_func_with_access(value)
+        return super().__new__(cls, name, bases, attrs)
+
+
+class View(metaclass=ViewMeta):
+    """
+    Base form class. Will be used by form scaffolding function when creating model form.
+    Useful if you want to have custom constructor or override some fields.
+    """
+
+    allow_access = False
+
+    def __init__(
+        self,
+        name=None,
+        endpoint=None,
+        url=None,
+        template_folder=None,
+        static_folder=None,
+        static_url_path=None,
+        **kwargs,
+    ):
+        """
+        Constructor.
+
+        Args:
+            name:
+                Name of this view. If not provided, will default to the class name.
+            endpoint:
+                Base endpoint name for the view. For example, if there's a view method called "index" and
+                endpoint is set to "admin", you can use `url_for('admin.index')` to get the URL to the
+                view method. Defaults to the class name in lower case.
+            url:
+                Base URL. If provided, affects how URLs are generated. For example, if the url parameter
+                is "test", the resulting URL will look like "/admin/test/". If not provided, will
+                use endpoint as a base url. However, if URL starts with '/', absolute path is assumed
+                and '/admin/' prefix won't be applied.
+            template_folder:
+                Template folder for this view. If not provided, default admin template folder will be used.
+            static_folder:
+                Static folder for this view. If provided, will be used to serve static files for this view.
+            static_url_path:
+                Static URL Path. If provided, this specifies the path to the static url directory.
+        """
+
+        self.name = name or self._prettify_class_name(self.__class__.__name__)
+        self.endpoint = endpoint or self._get_endpoint()
+        self.url = url
+        self.template_folder = template_folder
+        self.static_folder = static_folder
+        self.static_url_path = static_url_path
+        # Initialized from create_blueprint
+        self.admin = None
+        self.blueprint = None
+
+        # initialize URLs
+        self._urls = []
+        self._default_view = None
+        self.collect_urls()
+        # print(self._urls)
+        # print(self._default_view)
+
+        # Default view
+        if self._default_view is None:
+            raise Exception(
+                "Attempted to instantiate admin view %s without default view"
+                % self.__class__.__name__
+            )
+
+        super().__init__(**kwargs)
+
+    def collect_urls(self):
+        for name, attr in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(attr, "_urls"):
+                for url, methods in attr._urls:
+                    self._urls.append((url, name, methods))
+                    if url == "/":
+                        self._default_view = name
+                    elif url == "/index/" and self._default_view is None:
+                        self._default_view = name
+
+    def _get_endpoint(self):
+        """
+        Generate Flask endpoint name. By default converts class name to lower case if endpoint is
+        not explicitly provided.
+        """
+        return self.__class__.__name__.lower()
+
+    def _get_url_prefix(self):
+        """
+        Generate URL for the view. Override to change default behavior.
+        """
+        if self.url is None:
+            url_prefix = self.admin.url.rstrip("/") + "/" + self.endpoint
+        elif self.url.startswith("/"):
+            # index_view.url which has already been set startswith("/")
+            url_prefix = self.url
+        else:
+            url_prefix = self.admin.url.rstrip("/") + "/" + self.url
+
+        return url_prefix
+
+    def create_blueprint(self):
+        """
+        Create Flask blueprint.
+        """
+        # Generate URL
+        self.url_prefix = self._get_url_prefix()
+
+        # If we're working from the root of the site, set prefix to None
+        if self.url_prefix == "/":
+            self.url_prefix = None
+
+        # Create blueprint and register rules
+        self.blueprint = Blueprint(
+            self.endpoint,
+            __name__,
+            url_prefix=self.url_prefix,
+            template_folder=self.template_folder,
+            static_folder=self.static_folder,
+            static_url_path=self.static_url_path,
+        )
+
+        for url, name, methods in self._urls:
+            self.blueprint.add_url_rule(url, name, getattr(self, name), methods=methods)
+
+        return self.blueprint
+
+    def get_url(self, endpoint, **kwargs):
+        """
+        Generate URL for the endpoint. If you want to customize URL generation
+        logic (persist some query string argument, for example), this is
+        right place to do it.
+
+        Args:
+            endpoint:
+                Flask endpoint name
+            kwargs:
+                Arguments for `url_for`
+        """
+        return url_for(endpoint, **kwargs)
+
+    def render(self, template, **kwargs):
+        """
+        Render template
+
+        Args:
+            template:
+                Template path to render
+            kwargs:
+                Template arguments
+        """
+        # Store self as admin_view
+        kwargs["view"] = self
+
+        return self.admin.render(template, **kwargs)
+
+    def render_string(self, source, **kwargs):
+        """
+        Render source string as template
+
+        Args:
+            source:
+                Source string to render as template
+            kwargs:
+                Template arguments
+        """
+        # Store self as admin_view
+        kwargs["view"] = self
+
+        return self.admin.render_string(source, **kwargs)
+
+    def _prettify_class_name(self, name):
+        """
+        Split words in PascalCase string into separate words.
+        For example, 'HelloWorld' will be converted to 'Hello World'
+
+        Args:
+            name:
+                String to prettify
+        """
+        return sub(r"(?<=.)([A-Z])", r" \1", name)
+
+    def _prettify_name(self, name):
+        """
+        Prettify pythonic variable name.
+
+        For example, 'hello_world' will be converted to 'Hello World'
+
+        Args:
+            name:
+                Name to prettify
+        """
+        return name.replace("_", " ").title()
+
+    def allow(self, fn, *args, **kwargs):
+        """
+        This method will be executed before calling any view method.
+
+        Args:
+            fn:
+                View function
+            kwargs:
+                View function arguments
+
+        """
+        if self.admin is None:
+            return True
+
+        return self.admin.allow(*args, view=self, fn=fn, **kwargs)
+
+    def is_accessible(self):
+        """
+        Check if the view is accessible.
+        """
+        if self.admin is None:
+            return True
+
+        return self.admin.allow(view=self)
+
+    def inaccessible_callback(self, fn, *args, **kwargs):
+        """
+        Handle the response to inaccessible views.
+
+        By default, it throw HTTP 403 error. Override this method to
+        customize the behaviour.
+        """
+        return abort(403)

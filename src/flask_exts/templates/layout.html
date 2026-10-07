@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% do _template.plugin_manager.set_default_plugins(["bootstrap5"]) %}
+
+{% block styles %}{{ _template.plugin_manager.load_styles() }}{% endblock %}
+
+{% block scripts %}{{ _template.plugin_manager.load_scripts() }}{% endblock %}

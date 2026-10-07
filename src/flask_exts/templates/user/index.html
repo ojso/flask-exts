@@ -1,0 +1,42 @@
+{% extends "admin/master.html" %}
+
+{% block main %}
+  <div class="container mt-5">
+    <div class="col-md-8 mx-auto card shadow-sm p-3">
+      <h1 class="h4 mb-4">{{ _("Account Overview") }}</h1>
+      {% if not current_user.is_active %}
+        <div class="alert alert-warning" role="alert">
+          {{ _("Please verify your email address to activate your account.") }}
+          {% if current_user.email %}{{ current_user.email }}{% endif %}
+        </div>
+      {% endif %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <section class="border rounded p-3 h-100">
+            <h2 class="h5">{{ _("Profile") }}</h2>
+            <p class="mb-1">{{ current_user.username }}</p>
+            <p class="text-muted mb-3">{{ current_user.email or _("No email address") }}</p>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('.profile') }}">{{ _("View Profile") }}</a>
+          </section>
+        </div>
+
+        <div class="col-md-6">
+          <section class="border rounded p-3 h-100">
+            <h2 class="h5">{{ _("Account Security") }}</h2>
+            <p>{{ _("Email") }}: {{ _("Verified") if current_user.email_verified else _("Pending") }}</p>
+            <p>{{ _("Two-Factor Auth") }}: {{ _("Enabled") if current_user.tfa_enabled else _("Disabled") }}</p>
+            <p>{{ _("Security Status") }}: {{ _("Verified") if session.get('tfa_verified') else _("Pending Verification") }}</p>
+          </section>
+        </div>
+
+        <div class="col-md-6">
+          <section class="border rounded p-3 h-100">
+            <h2 class="h5">{{ _("Session") }}</h2>
+            <a class="btn btn-sm btn-outline-danger" href="{{ url_for('.logout') }}">{{ _("Log Out") }}</a>
+          </section>
+        </div>
+      </div>
+
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,25 @@
+from flask import flash
+from flask_babel import gettext
+from wtforms import Form
+
+from .utils import is_submitted
+
+
+class BaseForm(Form):
+    """Subclass of WTForms :class:`~wtforms.form.Form`."""
+
+    def __init__(self, formdata=None, obj=None, **kwargs):
+        if obj is not None:
+            self._obj = obj
+        super().__init__(formdata=formdata, obj=obj, **kwargs)
+
+    def is_submitted(self):
+        return is_submitted()
+
+    def validate_on_submit(self):
+        return is_submitted() and self.validate()
+
+    def flash_errors(self, message):
+        for field_name, errors in self.errors.items():
+            err = self[field_name].label.text + ": " + ", ".join(errors)
+            flash(gettext(message, error=str(err)), "error")

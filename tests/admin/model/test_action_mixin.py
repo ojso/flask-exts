@@ -1,0 +1,34 @@
+from flask_exts.admin import View, expose_url
+from flask_exts.admin.model.actions_mixin import ActionsMixin
+from flask_exts.forms.form.flask_form import FlaskForm
+
+
+class MockView(View, ActionsMixin):
+    base_form_class = FlaskForm
+
+    @expose_url("/")
+    def index(self):
+        return "Success!"
+
+    @expose_url("/test/")
+    def test(self):
+        return self.render("mock.html")
+
+
+def test_view():
+    view = MockView()
+
+    # print(view._urls)
+    # print(view._default_view)
+    assert len(view._urls) == 3
+    assert ("/", "index", ("GET",)) in view._urls
+    assert ("/test/", "test", ("GET",)) in view._urls
+    assert ("/action/", "action_view", ("POST",)) in view._urls
+
+    assert view._default_view == "index"
+    assert view.name == "Mock View"
+    assert view.endpoint == "mockview"
+    assert view.url is None
+    assert view.static_folder is None
+    assert view.admin is None
+    assert view.blueprint is None

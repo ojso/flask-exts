@@ -1,0 +1,29 @@
+{% extends "admin/master.html" %}
+{% from "macro/form.html" import render_form_fields %}
+
+{% block title %}login{% endblock %}
+
+{% block main %}
+  <div class="container mt-5">
+    <div class="col-md-6 mx-auto card shadow-sm p-4">
+
+      <!-- Login form area -->
+      <form method="post">
+        {{ render_form_fields(form) }}
+      </form>
+
+      <!-- Auxiliary links section -->
+      <div class="mt-3 text-center">
+        <div class="mb-2">
+          {{ _("Don't have an account?") }}
+          <a href="{{ url_for('.register') | safe }}">{{ _("Sign Up") }}</a>
+        </div>
+        <div>
+          {{ _("Forgot your password?") }}
+          <a href="{{ url_for('.forgot_password') | safe }}">{{ _("Reset It") }}</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,13 @@
+.editable::after {
+    content: "✎";
+    opacity: 0.5;
+}
+
+.editable:hover::after {
+    opacity: 1;
+}
+
+.editable.editing {
+    border: 2px solid black;
+    color: blue;
+}

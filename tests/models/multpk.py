@@ -1,0 +1,14 @@
+from . import Mapped, db, mapped_column
+
+
+class Singlepk(db.Model):
+    __tablename__ = "singlepk"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data: Mapped[str]
+
+
+class Multpk(db.Model):
+    __tablename__ = "multpk"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    id2: Mapped[int] = mapped_column(primary_key=True)
+    data: Mapped[str]

@@ -1,0 +1,51 @@
+import smtplib
+from email.message import EmailMessage
+
+from .sender import Sender
+
+_SMTP_ERRORS = (
+    smtplib.SMTPException,
+    OSError,
+)
+
+
+class SmtpError(Exception):
+    """Raised when sending an email via SMTP fails."""
+
+
+class SmtpSSL(Sender):
+    def __init__(self, host, port, user, password, timeout=10):
+        self.host = host
+        self.port = port
+        self.user = user
+        self.password = password
+        self.timeout = timeout
+
+    def create_emsg(self, data):
+        emsg = EmailMessage()
+        emsg["Subject"] = data["subject"]
+        emsg.set_content(data["content"])
+
+        if data.get("From") is None:
+            emsg["From"] = self.user
+
+        emsg["To"] = data["to"]
+
+        if "cc" in data:
+            emsg["Cc"] = data["cc"]
+
+        if "bcc" in data:
+            emsg["Bcc"] = data["bcc"]
+
+        return emsg
+
+    def send(self, data):
+        emsg = self.create_emsg(data)
+        try:
+            with smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout) as smtp:
+                # smtp.set_debuglevel(1)
+                smtp.login(self.user, self.password)
+                senderrs = smtp.send_message(emsg)
+                return senderrs
+        except _SMTP_ERRORS as e:
+            raise SmtpError(f"send mail to {data.get('to')!r} failed") from e

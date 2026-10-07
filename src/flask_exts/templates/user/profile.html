@@ -1,0 +1,77 @@
+{% extends "admin/master.html" %}
+
+{% block title %}profile{% endblock %}
+
+{% block main %}
+  <div class="container mt-5">
+    <div class="col-md-8 mx-auto card shadow-sm p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">{{ _("Profile") }}</h1>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('.index') }}">{{ _("Account Overview") }}</a>
+      </div>
+
+      <table class="table table-bordered">
+        <tbody>
+          <tr>
+            <td class="text-muted w-25">{{ _("User ID") }}</td>
+            <td>{{ current_user.id }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted w-25">{{ _("Account Name") }}</td>
+            <td>{{ current_user.username }}</td>
+          </tr>
+          {% if current_user.profile %}
+            {% if current_user.profile.name %}
+              <tr>
+                <td class="text-muted w-25">{{ _("Name") }}</td>
+                <td>{{ current_user.profile.name }}</td>
+              </tr>
+            {% endif %}
+            {% if current_user.profile.display_name %}
+              <tr>
+                <td class="text-muted w-25">{{ _("Display Name") }}</td>
+                <td>{{ current_user.profile.display_name }}</td>
+              </tr>
+            {% endif %}
+          {% endif %}
+          <tr>
+            <td class="text-muted w-25">{{ _("Email Address") }}</td>
+            <td>{{ current_user.email or _("Not set") }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted w-25">{{ _("Email Status") }}</td>
+            <td>{{ _("Verified") if current_user.email_verified else _("Pending") }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted w-25">{{ _("Phone Number") }}</td>
+            <td>{{ current_user.phone_number or _("Not set") }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted w-25">{{ _("Phone Status") }}</td>
+            <td>{{ _("Verified") if current_user.phone_verified else _("Pending") }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div>
+        <a class="btn btn-primary" href="{{ url_for('.email_change') }}">{{ _("Change Email") }}</a>
+      </div>
+
+      <hr>
+      <h2 class="h5">{{ _("Account Security") }}</h2>
+      <div class="d-flex flex-wrap gap-2">
+        {% if not current_user.email_verified and current_user.email %}
+          <form method="post" action="{{ url_for('.resend_verification') }}">
+            {{ resend_form.csrf_token }}
+            {{ resend_form.submit(class_="btn btn-sm btn-outline-warning") }}
+          </form>
+        {% endif %}
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('.change_password') }}">{{ _("Change Password") }}</a>
+        <a class="btn btn-sm btn-outline-info" href="{{ url_for('.setup_tfa') }}">{{ _("Set Up 2FA") }}</a>
+        {% if current_user.tfa_enabled and not session.get("tfa_verified", false) %}
+          <a class="btn btn-sm btn-warning" href="{{ url_for('.verify_tfa') }}">{{ _("Verify Now") }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

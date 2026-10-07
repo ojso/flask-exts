@@ -1,0 +1,22 @@
+{% extends "admin/master.html" %}
+
+{% from "macro/form.html" import render_form_fields %}
+
+{% block title %}change email{% endblock %}
+
+{% block main %}
+  <div class="container mt-5">
+    <div class="col-md-8 mx-auto card shadow-sm p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">{{ _("Change Email") }}</h1>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('.profile') }}">{{ _("Back to Profile") }}</a>
+      </div>
+      <p>
+        {{ _("A confirmation link will be sent to your new address. Your current email remains active until you confirm it.") }}
+      </p>
+      <form method="post">
+        {{ render_form_fields(form) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

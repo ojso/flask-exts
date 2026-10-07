@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  {% block head_meta -%}
+    <meta content="{%- block description -%}{%- endblock -%}" name="description">
+    <meta content="{%- block keywords -%}{%- endblock -%}" name="keywords">
+  {%- endblock %}
+  <title>{%- block title -%}{%- endblock -%}</title>
+  {% block icon %}<link href="{{ url_for('static', filename='favicon.ico') }}" rel="icon" type="image/x-icon">{% endblock %}
+  {% block styles %}{% endblock %}
+</head>
+<body>
+  {% block body %}{% endblock %}
+  {% block scripts %}{% endblock %}
+  {% block tail %}{% endblock %}
+</body>
+</html>

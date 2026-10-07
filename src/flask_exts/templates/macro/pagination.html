@@ -1,0 +1,90 @@
+{% macro render_pager(page, pages, generator) -%}
+  {% if pages > 1 %}
+    <ul class="pagination">
+      {% set min = page - 3 %}
+      {% set max = page + 3 + 1 %}
+      {% if min < 0 %}
+        {% set max = max - min %}
+      {% endif %}
+      {% if max >= pages %}
+        {% set min = min - max + pages %}
+      {% endif %}
+      {% if min < 0 %}
+        {% set min = 0 %}
+      {% endif %}
+      {% if max >= pages %}
+        {% set max = pages %}
+      {% endif %}
+      {% if min > 0 %}
+        <li class="page-item">
+          <a class="page-link" href="{{ generator(0) }}">«</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <a class="page-link" href="#">«</a>
+        </li>
+      {% endif %}
+      {% if page > 0 %}
+        <li class="page-item">
+          <a class="page-link" href="{{ generator(page-1) }}"><</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <a class="page-link" href="#"><</a>
+        </li>
+      {% endif %}
+      {% for p in range(min, max) %}
+        {% if page == p %}
+          <li class="page-item active">
+            <a class="page-link" href="#">{{ p + 1 }}</a>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link" href="{{ generator(p) }}">{{ p + 1 }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+      {% if page + 1 < pages %}
+        <li class="page-item">
+          <a class="page-link" href="{{ generator(page + 1) }}">></a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <a class="page-link" href="#">></a>
+        </li>
+      {% endif %}
+      {% if max < pages %}
+        <li class="page-item">
+          <a class="page-link" href="{{ generator(pages - 1) }}">»</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled">
+          <a class="page-link" href="#">»</a>
+        </li>
+      {% endif %}
+    </ul>
+  {% endif %}
+{%- endmacro %}
+
+{% macro render_simple_pager(page, have_next, generator) -%}
+  <ul class="pagination">
+    {% if page > 0 %}
+      <li class="page-item">
+        <a href="{{ generator(page - 1) }}"><</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <a href="{{ generator(0) }}"><</a>
+      </li>
+    {% endif %}
+    {% if have_next %}
+      <li class="page-item">
+        <a href="{{ generator(page + 1) }}">></a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <a href="{{ generator(page) }}">></a>
+      </li>
+    {% endif %}
+  </ul>
+{%- endmacro %}

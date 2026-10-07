@@ -1,0 +1,26 @@
+{% extends "admin/master.html" %}
+
+{% block title %}verify email{% endblock %}
+
+{% block main %}
+  <div class="container mt-5">
+    {% if result == "verified" %}
+      <div class="alert alert-success" role="alert">
+        {{ _("Your email address has been verified.") }}
+      </div>
+    {% elif result == "already_verified" %}
+      <div class="alert alert-info" role="alert">
+        {{ _("This email address has already been verified.") }}
+      </div>
+    {% elif result == "email_exists" %}
+      <div class="alert alert-danger" role="alert">
+        {{ _("This email address is already associated with another account.") }}
+      </div>
+    {% else %}
+      <div class="alert alert-warning" role="alert">
+        {{ _("This email confirmation link is invalid or has expired.") }}
+      </div>
+    {% endif %}
+    <a class="btn btn-primary" href="{{ url_for('user.index') }}">{{ _("Back to account") }}</a>
+  </div>
+{% endblock %}

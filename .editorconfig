@@ -1,0 +1,69 @@
+# EditorConfig is awesome: https://EditorConfig.org
+# Team style guide blending Google and Microsoft conventions
+
+# Mark as root so EditorConfig stops searching parent directories
+root = true
+
+# ============================================================
+# General defaults (common to Google and Microsoft)
+# ============================================================
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# ============================================================
+# JavaScript / TypeScript (Google style: 2 spaces)
+# Ref: Google JavaScript Style Guide - Block indentation
+# ============================================================
+[*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}]
+indent_size = 2
+
+# ============================================================
+# JSON / YAML / HTML / CSS (industry common: 2 spaces)
+# ============================================================
+[*.{json,jsonc,yml,yaml,html,css,scss,less,vue,svelte}]
+indent_size = 2
+
+# ============================================================
+# Python (Google style: 4 spaces, never tabs)
+# Ref: Google Python Style Guide - Indentation
+# ============================================================
+[*.py]
+indent_size = 4
+
+# ============================================================
+# Go (gofmt enforces tabs)
+# Ref: gofmt specification
+# ============================================================
+[*.go]
+indent_style = tab
+
+# ============================================================
+# C# / .NET (Microsoft style: 4 spaces, UTF-8 BOM)
+# Ref: dotnet/roslyn .editorconfig
+# ============================================================
+[*.{cs,csx,vb,vbx}]
+indent_size = 4
+charset = utf-8-bom
+
+# ============================================================
+# Shell scripts
+# ============================================================
+[*.sh]
+indent_size = 2
+
+# ============================================================
+# Markdown (do not trim trailing whitespace; preserves line breaks)
+# ============================================================
+[*.md]
+trim_trailing_whitespace = false
+
+# ============================================================
+# Makefile (must use tabs)
+# ============================================================
+[Makefile]
+indent_style = tab

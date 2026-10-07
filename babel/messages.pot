@@ -1,0 +1,342 @@
+# Translations template for Flask-Exts.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Flask-Exts project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Flask-Exts VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-03 19:07+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: src/flask_exts/admin/model/actions_mixin.py:113
+msgid "Delete"
+msgstr ""
+
+#: src/flask_exts/admin/model/actions_mixin.py:114
+msgid "Are you sure you want to delete selected records?"
+msgstr ""
+
+#: src/flask_exts/admin/model/actions_mixin.py:120
+#: src/flask_exts/admin/model/view.py:387
+#, python-format
+msgid "Record was successfully deleted."
+msgid_plural "%(count)s records were successfully deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/flask_exts/admin/model/filter.py:124
+#: src/flask_exts/forms/widgets/editable.py:45
+msgid "Yes"
+msgstr ""
+
+#: src/flask_exts/admin/model/filter.py:124
+#: src/flask_exts/forms/widgets/editable.py:44
+msgid "No"
+msgstr ""
+
+#: src/flask_exts/admin/model/filter.py:214
+#: src/flask_exts/admin/sqla/filter/filters.py:313
+#: src/flask_exts/admin/sqla/filter/filters.py:348
+#: src/flask_exts/admin/sqla/filter/filters.py:377
+msgid "between"
+msgstr ""
+
+#: src/flask_exts/admin/model/filter_mixin.py:186
+#, python-format
+msgid "Invalid Filter Value: %(value)s"
+msgstr ""
+
+#: src/flask_exts/admin/model/row_actions.py:15
+#: src/flask_exts/admin/model/row_actions.py:22
+msgid "View Record"
+msgstr ""
+
+#: src/flask_exts/admin/model/row_actions.py:29
+#: src/flask_exts/admin/model/row_actions.py:36
+#: src/flask_exts/templates/admin/model/modals/edit.html:2
+msgid "Edit Record"
+msgstr ""
+
+#: src/flask_exts/admin/model/row_actions.py:43
+msgid "Delete Record"
+msgstr ""
+
+#: src/flask_exts/admin/model/row_actions.py:45
+msgid "Are you sure you want to delete this record?"
+msgstr ""
+
+#: src/flask_exts/admin/model/view.py:271
+msgid "Record was successfully created."
+msgstr ""
+
+#: src/flask_exts/admin/model/view.py:312
+#: src/flask_exts/admin/model/view.py:353
+#: src/flask_exts/admin/model/view.py:380
+#: src/flask_exts/admin/model/view.py:440
+msgid "Record does not exist."
+msgstr ""
+
+#: src/flask_exts/admin/model/view.py:319
+#: src/flask_exts/admin/model/view.py:443
+msgid "Record was successfully saved."
+msgstr ""
+
+#: src/flask_exts/admin/model/view.py:446
+#: src/flask_exts/admin/model/view.py:453
+#: src/flask_exts/admin/model/view.py:460 src/flask_exts/admin/sqla/view.py:482
+#, python-format
+msgid "Failed to update record. %(error)s"
+msgstr ""
+
+#: src/flask_exts/admin/model/view.py:464
+msgid "Validation failed."
+msgstr ""
+
+#: src/flask_exts/admin/model/operations/export.py:146
+#, python-format
+msgid "Export type \"%(type)s\" not supported."
+msgstr ""
+
+#: src/flask_exts/admin/model/operations/export.py:172
+msgid "Permission denied."
+msgstr ""
+
+#: src/flask_exts/admin/sqla/view.py:461
+#, python-format
+msgid "Failed to create record. %(error)s"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/view.py:495
+#, python-format
+msgid "Failed to delete record. %(error)s"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:59
+msgid "equals"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:69
+msgid "not equal"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:79
+msgid "greater than"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:89
+msgid "smaller than"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:99
+msgid "contains"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:109
+msgid "not contains"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:119
+msgid "empty"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:135
+msgid "in list"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:148
+msgid "not in list"
+msgstr ""
+
+#: src/flask_exts/admin/sqla/filter/filters.py:323
+#: src/flask_exts/admin/sqla/filter/filters.py:358
+#: src/flask_exts/admin/sqla/filter/filters.py:387
+msgid "not between"
+msgstr ""
+
+#: src/flask_exts/forms/fields/ajax_select.py:60
+#: src/flask_exts/forms/fields/ajax_select.py:109
+#: src/flask_exts/forms/fields/sqla.py:120
+#: src/flask_exts/forms/fields/sqla.py:172
+#: src/flask_exts/forms/fields/sqla.py:177
+msgid "Not a valid choice"
+msgstr ""
+
+#: src/flask_exts/forms/fields/datetime.py:103
+msgid "Invalid time format"
+msgstr ""
+
+#: src/flask_exts/forms/fields/file.py:68
+#: src/flask_exts/forms/fields/file.py:78
+#, python-format
+msgid "File \"%s\" already exists."
+msgstr ""
+
+#: src/flask_exts/forms/fields/json.py:15
+msgid "Invalid JSON"
+msgstr ""
+
+#: src/flask_exts/forms/fields/select.py:64
+msgid "Invalid Choice: could not coerce"
+msgstr ""
+
+#: src/flask_exts/forms/form/csrf.py:54
+msgid "CSRF token expired."
+msgstr ""
+
+#: src/flask_exts/forms/validators/field_list.py:13
+msgid "This field requires at least one item."
+msgstr ""
+
+#: src/flask_exts/forms/validators/file.py:18
+msgid "This field is required."
+msgstr ""
+
+#: src/flask_exts/forms/validators/file.py:50
+#, python-brace-format
+msgid "File does not have an approved extension: {extensions}"
+msgstr ""
+
+#: src/flask_exts/forms/validators/file.py:85
+#, python-brace-format
+msgid "File must be between {min_size} and {max_size} bytes."
+msgstr ""
+
+#: src/flask_exts/forms/validators/sqla.py:38
+msgid "Already exists."
+msgstr ""
+
+#: src/flask_exts/forms/validators/sqla.py:56
+#, python-format
+msgid "At least %(num)d item is required"
+msgid_plural "At least %(num)d items are required"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/flask_exts/forms/widgets/select.py:71
+msgid "Please select model"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/create.html:8
+msgid "List"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/create.html:11
+msgid "Create"
+msgstr ""
+
+#: src/flask_exts/templates/admin/model/modals/create.html:2
+msgid "Create New Record"
+msgstr ""
+
+#: src/flask_exts/templates/macro/form.html:62
+#: src/flask_exts/templates/macro/form.html:75
+msgid "Save"
+msgstr ""
+
+#: src/flask_exts/templates/macro/form.html:74
+msgid "Cancel"
+msgstr ""
+
+#: src/flask_exts/templates/macro/form.html:81
+msgid "Save and Add Another"
+msgstr ""
+
+#: src/flask_exts/templates/macro/form.html:82
+msgid "Save and Continue Editing"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:4
+#: src/flask_exts/templates/macro/layout.html:7
+#: src/flask_exts/templates/macro/layout.html:13
+msgid "Export"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:20
+msgid "Add Filter"
+msgstr ""
+
+#: src/flask_exts/templates/macro/layout.html:29
+msgid "items"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:10
+msgid "User ID"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:11
+msgid "Account Name"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:12
+msgid "Email Address"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:14
+msgid "Security Status"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:15
+msgid "Verified"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:15
+msgid "Pending Verification"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:26
+msgid "Action Required"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:27
+msgid "Verify Now"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:33
+msgid "Password Management"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:34
+msgid "Change Password"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:39
+msgid "Two-Factor Auth"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:40
+msgid "Set Up 2FA"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:45
+msgid "Session Control"
+msgstr ""
+
+#: src/flask_exts/templates/user/index.html:46
+msgid "Log Out"
+msgstr ""
+
+#: src/flask_exts/templates/user/login.html:18
+msgid "Don't have an account?"
+msgstr ""
+
+#: src/flask_exts/templates/user/login.html:19
+msgid "Sign Up"
+msgstr ""
+
+#: src/flask_exts/templates/user/login.html:22
+msgid "Forgot your password?"
+msgstr ""
+
+#: src/flask_exts/templates/user/login.html:23
+msgid "Reset It"
+msgstr ""
+

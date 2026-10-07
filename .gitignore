@@ -1,0 +1,41 @@
+### JupyterNotebooks ###
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+venv/
+
+# Distribution / packaging
+dist/
+build/
+
+# Unit test / coverage reports
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# djlint
+.djlint_cache/
+
+# Translations
+# *.mo
+
+# Sphinx documentation
+docs/_build/
+
+# sqlite db
+*.sqlite
+
+# npm front-end deps (symlinked into src/flask_exts/static/vendor; install via `npm ci`)
+node_modules/
+package-lock.json
+
+# production config
+**/config_prod.py

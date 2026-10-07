@@ -1,0 +1,126 @@
+from flask_babel import gettext
+from markupsafe import Markup
+from sqlalchemy import select
+from wtforms import validators
+
+from flask_exts.admin.sqla.form.inline_model_convert import InlineForm
+from flask_exts.admin.sqla.view import SqlaModelView
+
+from ..models.author import AVAILABLE_USER_TYPES, Author
+from ..models.post import Post
+
+
+# Customized User model admin
+def phone_number_formatter(view, model, name):
+    return (
+        Markup(f"<nobr>{model.phone_number}</nobr>")
+        if model.phone_number
+        else None
+    )
+
+
+def is_numberic_validator(form, field):
+    if field.data and not field.data.isdigit():
+        raise validators.ValidationError(gettext("Only numbers are allowed."))
+
+
+class AuthorView(SqlaModelView):
+    can_set_page_size = False
+    can_export = True
+    page_size = 5
+    page_size_options = (5, 10, 15)
+    action_disallowed_list = ["delete"]
+
+    # Inline model: edit Posts directly within the Author form
+    inline_models = (
+        InlineForm(
+            Post,
+            form_columns=("title", "text", "color", "date"),
+            form_args={"title": {"label": "Post Title"}},
+        ),
+    )
+
+    form_choices = {
+        "type": AVAILABLE_USER_TYPES,
+    }
+    form_args = {
+        "dialling_code": {"label": "Dialling code"},
+        "local_phone_number": {
+            "label": "Phone number",
+            "validators": [is_numberic_validator],
+        },
+    }
+    form_widget_args = {"id": {"readonly": True}}
+    column_list = [
+        "id",
+        "type",
+        "first_name",
+        "last_name",
+        "email",
+        "ip_address",
+        "currency",
+        "timezone",
+        # "phone_number",
+        "enum_choice_field",
+        "posts",
+    ]
+    column_searchable_list = [
+        "first_name",
+        "last_name",
+        # "phone_number",
+        "email",
+    ]
+    column_editable_list = ["type", "currency", "timezone"]
+    column_details_list = [
+        "id",
+        "featured_post",
+        "website",
+        "enum_choice_field",
+    ] + column_list
+    form_columns = [
+        "id",
+        "type",
+        "featured_post",
+        "enum_choice_field",
+        "last_name",
+        "first_name",
+        "email",
+        "website",
+        "dialling_code",
+        "local_phone_number",
+    ]
+    column_default_sort = [
+        ("last_name", False),
+        ("first_name", False),
+    ]  # sort on multiple columns
+
+    # custom filter: each filter in the list is a filter operation (equals, not equals, etc)
+    # filters with the same name will appear as operations under the same filter
+    column_filters = [
+        "first_name",
+        "last_name",
+        # "phone_number",
+        "email",
+        "ip_address",
+        "currency",
+        "timezone",
+        "enum_choice_field",
+    ]
+    # column_formatters = {"phone_number": phone_number_formatter}
+
+    # setup edit forms so that only posts created by this author can be selected as 'featured'
+    def edit_form(self, obj):
+        return self._filtered_posts(super().edit_form(obj))
+
+    def _filtered_posts(self, form):
+        form.featured_post.query_factory = (
+            lambda: self.session.execute(
+                select(Post).where(Post.author_id == form.id._value())
+            )
+            .scalars()
+            .all()
+        )
+        return form
+
+
+authorview = AuthorView(Author)

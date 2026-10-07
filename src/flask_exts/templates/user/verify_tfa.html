@@ -1,0 +1,14 @@
+{% extends "admin/master.html" %}
+
+{% from "macro/form.html" import render_form_fields %}
+
+{% block title %}verify 2FA{% endblock %}
+
+{% block main %}
+  <form method="post">
+    {{ render_form_fields(form) }}
+  </form>
+  <div>
+    or use a recovery code: <a href="{{ url_for('.recovery') }}">here</a>
+  </div>
+{% endblock %}

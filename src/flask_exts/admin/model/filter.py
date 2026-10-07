@@ -1,0 +1,260 @@
+import datetime
+import time
+import types
+
+from flask_babel import lazy_gettext
+
+
+def convert_filter(*args):
+    """Decorator for field to filter conversion routine."""
+
+    def decorator(func):
+        func._converter_for_filter = list(map(lambda x: x.lower(), args))
+        return func
+
+    return decorator
+
+
+class BaseFilterConverter:
+    """Base filter converter."""
+
+    _converters = dict()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        converters = {}
+        for base in cls.__bases__:
+            base_map = getattr(base, "_converters", {})
+            converters.update(base_map)
+        for name, method in cls.__dict__.items():
+            if callable(method) and hasattr(method, "_converter_for_filter"):
+                for type_name in method._converter_for_filter:
+                    converters[type_name] = method
+        cls._converters = converters
+
+    def get_filters(self, column_type, column, name, **kwargs):
+        column_type_name = column_type.__class__.__name__.lower()
+        filters = self._converters.get(column_type_name, None)
+        if filters:
+            return types.MethodType(filters, self)(column_type, column, name, **kwargs)
+
+
+class BaseFilter:
+    def __init__(self, name, data_type=None, options=None):
+        """
+        Constructor.
+
+        Args:
+            name:
+                Displayed name
+            data_type:
+                Client-side widget type to use.
+            options:
+                List of fixed options. If provided, will use drop down instead of textbox.
+        """
+        self.name = name
+        self.data_type = data_type
+        self.options = options
+
+    def operation(self):
+        """
+        Return readable operation name.
+
+        For example: 'equals'
+        """
+        raise NotImplementedError()
+
+    def get_options(self):
+        """
+        Return list of predefined options.
+
+        Args:
+            view:
+                Associated administrative view class.
+        """
+        if self.options and callable(self.options):
+            return self.options()
+        else:
+            return self.options
+
+    def clean(self, value):
+        """
+        Parse value into python format. Occurs before .apply()
+
+        Args:
+            value:
+                Value to parse
+        """
+        return value
+
+    def validate(self, value):
+        """
+        Validate value.
+
+        If value is valid, returns `True` and `False` otherwise.
+
+        Args:
+            value:
+                Value to validate
+        """
+        try:
+            self.clean(value)
+            return True
+        except ValueError:
+            return False
+
+    def apply(self, query, value):
+        """
+        Apply search criteria to the query and return new query.
+
+        Args:
+            query:
+                Query
+            value:
+                Search criteria
+        """
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return f"filter<{self.name}:{self.operation()}>"
+
+
+class BaseBooleanFilter(BaseFilter):
+    """
+    Base boolean filter, uses fixed list of options.
+    """
+
+    def __init__(self, name, data_type=None, options=None):
+        super().__init__(
+            name, data_type, (("1", lazy_gettext("Yes")), ("0", lazy_gettext("No")))
+        )
+
+    def validate(self, value):
+        return value in ("0", "1")
+
+
+class BaseIntFilter(BaseFilter):
+    """
+    Base Int filter. Adds validation and changes value to python int.
+    """
+
+    def clean(self, value):
+        return int(value)
+
+
+class BaseFloatFilter(BaseFilter):
+    """
+    Base Float filter. Adds validation and changes value to python float.
+    """
+
+    def clean(self, value):
+        return float(value)
+
+
+class BaseIntListFilter(BaseFilter):
+    """
+    Base Integer list filter. Adds validation for int "In List" filter.
+
+    Avoid using int(float(value)) to also allow using decimals, because it
+    causes precision issues with large numbers.
+    """
+
+    def clean(self, value):
+        return [int(v.strip()) for v in value.split(",") if v.strip()]
+
+
+class BaseFloatListFilter(BaseFilter):
+    """
+    Base Float list filter. Adds validation for float "In List" filter.
+    """
+
+    def clean(self, value):
+        return [float(v.strip()) for v in value.split(",") if v.strip()]
+
+
+class BaseDateTimeFilter(BaseFilter):
+    """
+    Base DateTime filter. Uses client-side date time picker control.
+    """
+
+    def __init__(self, name, data_type=None, options=None):
+        super().__init__(name, "datetimepicker", options)
+
+    def clean(self, value):
+        return datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+
+
+class BaseDateFilter(BaseFilter):
+    """
+    Base Date filter. Uses client-side date picker control.
+    """
+
+    def __init__(self, name, data_type=None, options=None):
+        super().__init__(name, "datepicker", options)
+
+    def clean(self, value):
+        return datetime.datetime.strptime(value, "%Y-%m-%d").date()
+
+
+class BaseTimeFilter(BaseFilter):
+    """
+    Base Time filter. Uses client-side time picker control.
+    """
+
+    def __init__(self, name, data_type=None, options=None):
+        super().__init__(name, "timepicker", options)
+
+    def clean(self, value):
+        timetuple = time.strptime(value, "%H:%M:%S")
+        return datetime.time(timetuple.tm_hour, timetuple.tm_min, timetuple.tm_sec)
+
+
+class BaseDateTimeBetweenFilter(BaseFilter):
+    """
+    Base DateTime Between filter. Consolidates logic for validation and clean.
+    Apply method is different for each back-end.
+    """
+
+    def operation(self):
+        return lazy_gettext("between")
+
+    def clean(self, value):
+        return [
+            datetime.datetime.strptime(range, "%Y-%m-%d %H:%M:%S")
+            for range in value.split(" - ")
+        ]
+
+    def validate(self, value):
+        try:
+            value = self.clean(value)
+            if (len(value) == 2) and (value[0] <= value[1]):
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
+
+
+class BaseDateBetweenFilter(BaseDateTimeBetweenFilter):
+    """
+    Base Date Between filter.
+    """
+
+    def clean(self, value):
+        return [
+            datetime.datetime.strptime(range, "%Y-%m-%d").date()
+            for range in value.split(" - ")
+        ]
+
+
+class BaseTimeBetweenFilter(BaseDateTimeBetweenFilter):
+    """
+    Base Time Between filter.
+    """
+
+    def clean(self, value):
+        timetuples = [time.strptime(range, "%H:%M:%S") for range in value.split(" - ")]
+        return [
+            datetime.time(timetuple.tm_hour, timetuple.tm_min, timetuple.tm_sec)
+            for timetuple in timetuples
+        ]

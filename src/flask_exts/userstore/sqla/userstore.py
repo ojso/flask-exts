@@ -1,0 +1,107 @@
+from sqlalchemy.sql import select
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from ..base import UserStore
+from ..exceptions import InvalidCredentialsError, UserAlreadyExistsError
+from . import db
+from .models import Role, User
+
+_DUMMY_PASSWORD_HASH = generate_password_hash("dummy-password", method="scrypt")
+
+
+class SqlaUserStore(UserStore):
+    user_class = User
+    role_class = Role
+
+    def user_loader(self, user_id):
+        u = db.session.get(self.user_class, int(user_id))
+        return u
+
+    def get_users(self, **kwargs):
+        stmt = select(self.user_class).order_by("id")
+        users = db.session.execute(stmt).scalars()
+        return users
+
+    def create_user(self, **kwargs):
+        username = kwargs.get("username")
+        password = kwargs.get("password")
+        email = kwargs.get("email")
+        if username:
+            stmt_filter_username = select(self.user_class).filter_by(username=username)
+            user_exist_username = db.session.execute(stmt_filter_username).scalar()
+            if user_exist_username is not None:
+                raise UserAlreadyExistsError("username")
+        if email:
+            stmt_filter_email = select(self.user_class).filter_by(email=email)
+            user_exist_email = db.session.execute(stmt_filter_email).scalar()
+            if user_exist_email is not None:
+                raise UserAlreadyExistsError("email")
+        user = self.user_class()
+        if username:
+            user.username = username
+        if password:
+            user.password = user.hash_password(password)
+        if email:
+            user.email = email
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    def get_user_by_id(self, id: int):
+        user = db.session.get(self.user_class, id)
+        return user
+
+    def get_user_by_identity(self, identity_id, identity_name=None):
+        if identity_name is None:
+            identity_name = self.identity_name
+        stmt = select(self.user_class).filter_by(**{identity_name: identity_id})
+        user = db.session.execute(stmt).scalar()
+        return user
+
+    def get_user_by_uuid(self, uuid):
+        stmt = select(self.user_class).filter_by(uuid=uuid)
+        user = db.session.execute(stmt).scalar()
+        return user
+
+    def get_user_by_username(self, username):
+        stmt = select(self.user_class).filter_by(username=username)
+        user = db.session.execute(stmt).scalar()
+        return user
+
+    def login_user_by_username_password(self, username, password):
+        """Return a matching user or raise InvalidCredentialsError."""
+        password = password if isinstance(password, str) else ""
+        stmt = select(self.user_class).filter_by(username=username)
+        user = db.session.execute(stmt).scalar()
+        if user is None or not user.password:
+            check_password_hash(_DUMMY_PASSWORD_HASH, password)
+            raise InvalidCredentialsError
+        if not user.check_password(password):
+            raise InvalidCredentialsError
+        return user
+
+    def create_role(self, name):
+        r = self.role_class(name=name)
+        db.session.add(r)
+        db.session.commit()
+        return r
+
+    def user_set(self, user, **kwargs):
+        for key, value in kwargs.items():
+            setattr(user, key, value)
+        db.session.commit()
+
+    def user_add_role(self, user, role):
+        user.roles.append(role)
+        db.session.commit()
+
+    def remove_user(self, user_id):
+        return NotImplementedError
+
+    def get_user_identity(self, user):
+        return getattr(user, self.identity_name)
+
+    def save_user(self, user):
+        if user.id is not None:
+            db.session.add(user)
+        db.session.commit()
