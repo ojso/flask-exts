@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from ..admin import View
+
 
 class Extension(ABC):
     """
@@ -50,6 +52,13 @@ class Extension(ABC):
             RuntimeError: If dependencies are missing
         """
         ...
+
+    def get_admin_views(self) -> list[tuple[View, bool]]:
+        """
+        Views this extension wants registered on the admin instance.
+        Returns a list of (view_instance, is_menu) tuples.
+        """
+        return []
 
     def shutdown(self):
         """

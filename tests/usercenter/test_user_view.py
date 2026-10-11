@@ -242,15 +242,12 @@ class TestUserView:
         rv = client.get(self.user_index_url)
         assert "View Profile" in rv.text
         assert "Log Out" in rv.text
-        assert "Resend Verification Email" not in rv.text
-        assert "Change Password" not in rv.text
-        assert "Set Up 2FA" not in rv.text
 
         rv = client.get(self.user_profile_url)
         assert "Resend Verification Email" in rv.text
         assert "Change Email" in rv.text
         assert "Change Password" in rv.text
-        assert "Set Up 2FA" in rv.text
+        assert "Two-Factor" in rv.text
 
         sent_before = len(mail_data)
         rv = client.post(
@@ -334,25 +331,23 @@ class TestUserView:
         assert "Invalid email address." in rv.text
         assert len(mail_data) == sent_before
 
-    def test_tfa(self, app, client, register_user):
+    def test_tfa(self, app, client, register_user, monkeypatch):
         # get tfa_enabled status
         rv = client.get(self.user_enable_tfa_url)
         assert rv.status_code == 200
         assert rv.json["tfa_enabled"] is False
 
-        # get verify_tfa modal page
-        rv = client.get(
-            self.user_verify_tfa_url,
-            query_string={"modal": True, "action": self.user_enable_tfa_url},
-        )
-        assert rv.status_code == 200
-        # print(rv.text)
-        assert "form" in rv.text
-        assert self.user_enable_tfa_url in rv.text
-
         # when tfa is not enabled, setup_tfa
         rv = client.get(self.user_setup_tfa_url)
         assert rv.status_code == 200
+        assert "data-modal-form" in rv.text
+        assert "data-fields=" in rv.text
+        assert "&#34;code&#34;" in rv.text
+        assert "fa_modal_window" not in rv.text
+        assert "enable_tfa" in rv.text
+        assert 'data-csrf-required="false"' in rv.text
+        assert 'type="module"' in rv.text
+        assert "import ModalForm" in rv.text
         # for key, value in rv.headers.items():
         # print(f"{key}: {value}")
         assert (
@@ -372,28 +367,56 @@ class TestUserView:
         assert rv.status_code == 200
         assert rv.json["tfa_enabled"] is False
 
-        # enable tfa with code
+        # With CSRF disabled, JSON submission needs no CSRF token. Invalid
+        # codes return the field-error shape expected by ModalForm.
         rv = client.post(
             self.user_enable_tfa_url,
             query_string={"enable": True},
-            data={"csrf_token": self.csrf_token, "code": totp_code},
+            json={"code": "ABCDEF"},
+        )
+        assert rv.status_code == 422
+        assert rv.json["errors"]["code"] == "Invalid code"
+        assert "ok" not in rv.json
+
+        monkeypatch.setitem(app.config, "CSRF_ENABLED", True)
+        rv = client.post(
+            self.user_enable_tfa_url,
+            query_string={"enable": True},
+            json={"code": totp_code},
+        )
+        assert rv.status_code == 400
+
+        # enable tfa with a valid code
+        rv = client.post(
+            self.user_enable_tfa_url,
+            query_string={"enable": True},
+            json={"csrf_token": self.csrf_token, "code": totp_code},
         )
         assert rv.status_code == 200
         with client.session_transaction() as sess:
             assert "_user_id" in sess
         assert rv.json["tfa_enabled"] is True
+        assert "ok" not in rv.json
         with client.session_transaction() as sess:
             assert "_user_id" in sess
             assert SESSION_KEY_TFA_VERIFIED in sess and sess[SESSION_KEY_TFA_VERIFIED] is True
 
+        rv = client.get(self.user_setup_tfa_url)
+        assert rv.status_code == 200
+        assert "Disable 2FA" in rv.text
+        assert "data-modal-form" in rv.text
+
         # disable tfa
+        with client.session_transaction() as sess:
+            sess.pop(SESSION_KEY_TFA_VERIFIED, None)
         rv = client.post(
             self.user_enable_tfa_url,
             query_string={"enable": False},
-            data={"csrf_token": self.csrf_token, "code": totp_code},
+            json={"csrf_token": self.csrf_token, "code": totp_code},
         )
         assert rv.status_code == 200
         assert rv.json["tfa_enabled"] is False
+        assert "ok" not in rv.json
         with client.session_transaction() as sess:
             assert "_user_id" in sess
             assert SESSION_KEY_TFA_VERIFIED not in sess

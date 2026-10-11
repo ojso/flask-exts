@@ -11,6 +11,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user, logout_user
+from werkzeug.datastructures import MultiDict
 
 from ..admin import View, expose_url
 from ..constants import NO_CACHE_HEADER
@@ -209,24 +210,53 @@ class UserView(View):
         enable = request.args.get("enable")
         if enable is None:
             return jsonify({"tfa_enabled": current_user.tfa_enabled})
+        if request.method == "GET":
+            return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
-        enable = False if str(enable).lower() in ["0", "false"] else True
+        enable = not str(enable).lower() in ["0", "false"]
         if current_user.tfa_enabled == enable:
             return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
-        form = TwoFactorForm()
-        if form.validate_on_submit():
-            tfa = current_security.get_plugin("two_factor_authentication")
-            if tfa.verify_totp(current_user.totp_secret, form.code.data):
-                current_userstore.user_set(current_user, tfa_enabled=enable)
-                if current_user.tfa_enabled and not session.get(SESSION_KEY_TFA_VERIFIED):
-                    session[SESSION_KEY_TFA_VERIFIED] = True
-                elif not current_user.tfa_enabled and SESSION_KEY_TFA_VERIFIED in session:
-                    session.pop(SESSION_KEY_TFA_VERIFIED)
-                    # clear totp_secret
-                    current_userstore.user_set(current_user, totp_secret=None)
-            else:
-                return jsonify({"error": "Invalid code"})
+        if request.is_json:
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({"message": "Invalid form submission"}), 400
+            form = TwoFactorForm(formdata=MultiDict(data))
+        else:
+            form = TwoFactorForm()
+
+        if not form.validate_on_submit():
+            csrf_field = current_app.config.get("CSRF_FIELD_NAME", "csrf_token")
+            errors = {
+                name: messages[0]
+                for name, messages in form.errors.items()
+                if name != csrf_field and messages
+            }
+            if errors:
+                return jsonify(
+                    {
+                        "message": "Invalid form submission",
+                        "errors": errors,
+                    }
+                ), 422
+            return jsonify({"message": "Invalid form submission"}), 400
+
+        tfa = current_security.get_plugin("two_factor_authentication")
+        if not tfa.verify_totp(current_user.totp_secret, form.code.data):
+            return jsonify(
+                {
+                    "message": "Invalid code",
+                    "errors": {"code": "Invalid code"},
+                }
+            ), 422
+
+        current_userstore.user_set(current_user, tfa_enabled=enable)
+        if enable:
+            session[SESSION_KEY_TFA_VERIFIED] = True
+        else:
+            session.pop(SESSION_KEY_TFA_VERIFIED, None)
+            current_userstore.user_set(current_user, totp_secret=None)
+
         return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
     @login_required
@@ -253,15 +283,11 @@ class UserView(View):
     @login_required
     @expose_url("/verify_tfa/", methods=("GET", "POST"))
     def verify_tfa(self):
-        if request.method == "GET" and "modal" in request.args:
-            action = request.args.get("action")
-            return self.render(
-                "user/verify_tfa_modal.html", form=TwoFactorForm(), action=action
-            )
         if not current_user.tfa_enabled:
             abort(403)
         if session.get(SESSION_KEY_TFA_VERIFIED):
             abort(403)
+
         form = TwoFactorForm()
         if form.validate_on_submit():
             tfa = current_security.get_plugin("two_factor_authentication")
@@ -271,8 +297,8 @@ class UserView(View):
                     request.args.get("next"), url_for(".index")
                 )
                 return redirect(next_page)
-            else:
-                flash("Invalid code", "error")
+            flash("Invalid code", "error")
+
         return self.render("user/verify_tfa.html", form=form)
 
     @login_required

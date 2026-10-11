@@ -33,7 +33,7 @@ docs/_build/
 # sqlite db
 *.sqlite
 
-# npm front-end deps (symlinked into src/flask_exts/static/vendor; install via `npm ci`)
+# npm front-end deps
 node_modules/
 package-lock.json
 

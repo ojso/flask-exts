@@ -4,7 +4,6 @@ from flask_exts.extension_core.base import (
     Extension,
     ExtensionDependencyError,
     ExtensionError,
-    ExtensionInitError,
     ExtensionNotFoundError,
 )
 from flask_exts.extension_core.registry import ExtensionRegistry
@@ -114,7 +113,7 @@ def test_self_dependency_raises(registry):
 def test_register_duplicate_name_raises_actionable_message(registry):
     """A6: duplicate registration must give an actionable message."""
     registry.register(make_extension("a"))
-    with pytest.raises(ExtensionError, match="already registered"):
+    with pytest.raises(ExtensionError, match="Duplicate name"):
         registry.register(make_extension("a", dependencies=["b"]))
 
 

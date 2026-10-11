@@ -52,7 +52,7 @@ class ExtensionRegistry:
 
         # Check for duplicates
         if name in self._extension_classes:
-            raise ExtensionError(f"Extension '{name}' already registered")
+            raise ExtensionError(f"Duplicate name '{name}' for Extension '{extension_class.__name__}'.")
 
         # Validate name
         if not name or not name.isascii() or not name.replace("_", "").isalnum():

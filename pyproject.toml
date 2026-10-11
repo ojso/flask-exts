@@ -5,10 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "Flask-Exts"
 dynamic = ["version"]
-description = 'Flask extensions with admin, SQLAlchemy, babel, forms, fields, widgets, and so on.'
+description = "Flask extensions with admin, SQLAlchemy, Babel, forms, fields, widgets, and more."
 readme = "README.rst"
-license = { file = "LICENSE.rst" }
-keywords = ["flask","babel", "admin", "form", "widget", "sql"]
+license = "MIT"
+license-files = ["LICENSE.rst"]
+keywords = ["flask", "admin", "sqlalchemy", "babel", "form", "widget"]
 authors = [
   { name = "David Hua", email = "david.dong.hua@gmail.com" },
 ]
@@ -17,8 +18,9 @@ classifiers = [
   "Environment :: Web Environment",
   "Framework :: Flask",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
-  "Topic :: Software Development :: Build Tools",
+  "Operating System :: OS Independent",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
@@ -28,40 +30,49 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "Flask>=3.0",
-    "WTForms>=3.0",
-    "SQLAlchemy>=2.0",
-    "flask-babel>=4.0",
-    "Flask-Login>=0.6",
-    "tablib>=3.0",
-    "PyJWT>=2.0",
-    "pyotp>=2.0",
-    "email-validator>=2.0",
+  "Flask>=3.0",
+  "WTForms>=3.0",
+  "SQLAlchemy>=2.0",
+  "flask-babel>=4.0",
+  "Flask-Login>=0.6",
+  "tablib>=3.0",
+  "PyJWT>=2.0",
+  "pyotp>=2.0",
+  "email-validator>=2.0",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest", "djlint", "ruff"]
 
 [project.urls]
 Documentation = "https://flask-exts.readthedocs.io"
 Source = "https://github.com/ojso/flask-exts"
 Homepage = "https://github.com/ojso/flask-exts"
 Issues = "https://github.com/ojso/flask-exts/issues"
-
-[tool.hatch.version]
-path = "src/flask_exts/__about__.py"
+Changelog = "https://flask-exts.readthedocs.io/en/latest/changes.html"
 
 [project.entry-points."flask.commands"]
 security = "flask_exts.commands:security_cli"
 datastore = "flask_exts.commands:datastore_cli"
 
+[tool.hatch.version]
+path = "src/flask_exts/__about__.py"
+source = "code"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/flask_exts"]
+
 [tool.djlint]
-profile="jinja"
-indent=2
-no_indent_inner_html=true
-max_attribute_length=180
-max_line_length=180
-sort_attributes=true
-preserve_blank_lines=true
-ignore="T003"
+profile = "jinja"
+indent = 2
+no_indent_inner_html = true
+max_attribute_length = 180
+max_line_length = 180
+sort_attributes = true
+preserve_blank_lines = true
+ignore = "T003"
 
 [tool.pytest.ini_options]
+minversion = "8.0"
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra --strict-markers --strict-config"

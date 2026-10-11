@@ -67,10 +67,29 @@
           </form>
         {% endif %}
         <a class="btn btn-sm btn-outline-primary" href="{{ url_for('.change_password') }}">{{ _("Change Password") }}</a>
-        <a class="btn btn-sm btn-outline-info" href="{{ url_for('.setup_tfa') }}">{{ _("Set Up 2FA") }}</a>
-        {% if current_user.tfa_enabled and not session.get("tfa_verified", false) %}
-          <a class="btn btn-sm btn-warning" href="{{ url_for('.verify_tfa') }}">{{ _("Verify Now") }}</a>
-        {% endif %}
+      </div>
+
+      <section class="border rounded p-3 mt-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h3 class="h6 mb-1">{{ _("Two-Factor Authentication") }}</h3>
+            <p class="mb-0">
+              {{ _("Status") }}:
+              <span class="{{ 'text-success' if current_user.tfa_enabled else 'text-muted' }}">
+                {{ _("Enabled") if current_user.tfa_enabled else _("Disabled") }}
+              </span>
+            </p>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-sm btn-outline-info" href="{{ url_for('.setup_tfa') }}">
+              {{ _("Manage Two-Factor Authentication") if current_user.tfa_enabled else _("Set Up Two-Factor Authentication") }}
+            </a>
+            {% if current_user.tfa_enabled and not session.get("tfa_verified", false) %}
+              <a class="btn btn-sm btn-warning" href="{{ url_for('.verify_tfa') }}">{{ _("Verify Now") }}</a>
+            {% endif %}
+          </div>
+        </div>
+      </section>
       </div>
     </div>
   </div>

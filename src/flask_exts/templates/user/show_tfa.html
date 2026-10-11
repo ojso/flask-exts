@@ -1,20 +1,23 @@
 {% extends "admin/master.html" %}
 
-{% from "macro/modal.html" import add_modal_button,add_modal_window %}
+{% from "macro/modal.html" import add_modal_button %}
 
 {% do _template.plugin_manager.add_request_plugins(["modal"]) %}
 
-{% block title %}show 2fa{% endblock %}
+{% block title %}{{ gettext("Two-Factor Authentication") }}{% endblock %}
 
 {% block main %}
   <div>
     Two-Factor Authentication (2FA) is currently <b>enabled</b> for your account.
   </div>
   <div>
-    {{ add_modal_button(url=get_url(".verify_tfa",modal=True,action=url_for(".enable_tfa",enable=False) ),
+    {{ add_modal_button(
+      url=url_for(".enable_tfa", enable=False),
       title=gettext("Disable 2FA"),
-      content=gettext("Disable 2FA")) }}
-    {{ add_modal_window() }}
+      content=gettext("Disable 2FA"),
+      fields=[{"name": "code", "label": gettext("2FA Code"), "type": "text", "required": true}],
+      success_url=url_for(".profile")
+    ) }}
   </div>
   <div>
     recover codes can be used if you lose access to your authenticator app.

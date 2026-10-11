@@ -31,7 +31,7 @@ class ExtensionManager:
 
             exts = ExtensionManager()
             exts.init_app(app)
-            
+
             exts = ExtensionManager(register_builtin=False)
         """
         self.app = app
@@ -105,6 +105,17 @@ class ExtensionManager:
 
         # Initialize all extensions
         self._registry.init_all(app)
+
+        # Register all views
+        self.register_all_admin_views()
+
+    def register_all_admin_views(self):
+        admin_ext = self.get_extension("admin")
+        if admin_ext is not None:
+            admin = admin_ext.get_admin()
+            for ext in self.list_extensions():
+                for view, is_menu in ext.get_admin_views():
+                    admin.register_view(view, is_menu=is_menu)
 
     def shutdown(self) -> None:
         """

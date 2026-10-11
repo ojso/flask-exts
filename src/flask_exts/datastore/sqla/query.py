@@ -1,6 +1,6 @@
 import operator
 
-from sqlalchemy import inspect
+from sqlalchemy import String, cast, inspect
 from sqlalchemy.orm import aliased, joinedload, selectinload
 from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql import and_, delete, desc, func, or_, select, tuple_
@@ -206,12 +206,13 @@ class Query:
     def _like_pattern(self, column_attr, pattern: str) -> ColumnElement:
         if pattern.startswith("="):
             return column_attr == pattern[1:]
-        elif pattern.startswith("^"):
+        column_attr = cast(column_attr, String)
+        if pattern.startswith("^"):
             return column_attr.ilike(f"{pattern[1:]}%")
         elif pattern.endswith("$"):
             return column_attr.ilike(f"%{pattern[:-1]}")
         else:
-            return column_attr.like(f"%{pattern}%")
+            return column_attr.ilike(f"%{pattern}%")
 
     def _apply(self, stmt):
         # 1. Apply JOIN operations

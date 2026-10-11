@@ -87,14 +87,3 @@ def test_builtin_graph_initializes_in_valid_order():
             assert order.index(dep) < order.index(name), (
                 f"'{dep}' must be initialized before '{name}', got order: {order}"
             )
-
-    # Specific constraint: startup needs to register views with admin, so admin must be initialized first
-    assert order.index("startup") > order.index("admin")
-
-
-def test_startup_runs_after_admin():
-    """A concrete version of test_builtin_graph, with a more direct failure message."""
-    exts = ExtensionManager()
-    order = exts.get_registry().initialization_order()
-    assert "startup" in order and "admin" in order
-    assert order.index("startup") > order.index("admin")

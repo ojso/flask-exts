@@ -119,7 +119,6 @@ class FilterMixin:
             name:
                 Name of the field
         """
-        return None
 
     def _get_filter_arg(self, index, flt):
         """
@@ -148,8 +147,8 @@ class FilterMixin:
 
         if active_filters:
             for i, pair in enumerate(active_filters):
-                idx, flt_name, value = pair
-                key = "flt%d_%s" % (i, self._get_filter_arg(idx, self._filters[idx]))
+                idx, _flt_name, value = pair
+                key = f"flt{i}_{self._get_filter_arg(idx, self._filters[idx])}"
                 kwargs[key] = value
 
         return kwargs

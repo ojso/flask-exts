@@ -10,8 +10,8 @@ from flask import (
 )
 from flask_babel import gettext, ngettext
 
-from ..exposer import expose_url
 from ...security.urls import safe_redirect_target
+from ..exposer import expose_url
 from .base import BaseModelView
 from .type_formatters import BASE_FORMATTERS, DETAIL_FORMATTERS, EXPORT_FORMATTERS
 
@@ -315,17 +315,16 @@ class ModelView(BaseModelView):
 
         form = self._edit_form_class(obj=model)
 
-        if form.validate_on_submit():
-            if self.update_model(form, model):
-                flash(gettext("Record was successfully saved."), "success")
-                if "_add_another" in request.form:
-                    return redirect(self.get_url(".create_view", url=return_url))
-                elif "_continue_editing" in request.form:
-                    return redirect(
-                        self.get_url(".edit_view", id=self.get_pk_value(model))
-                    )
-                else:
-                    return redirect(self.get_save_return_url(model, is_created=False))
+        if form.validate_on_submit() and self.update_model(form, model):
+            flash(gettext("Record was successfully saved."), "success")
+            if "_add_another" in request.form:
+                return redirect(self.get_url(".create_view", url=return_url))
+            elif "_continue_editing" in request.form:
+                return redirect(
+                    self.get_url(".edit_view", id=self.get_pk_value(model))
+                )
+            else:
+                return redirect(self.get_save_return_url(model, is_created=False))
 
         form_opts = {"widget_args": self.form_widget_args}
 

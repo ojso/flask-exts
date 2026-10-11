@@ -1,11 +1,15 @@
-{% macro add_modal_button(url="", title="", content="", modal_window_id="fa_modal_window", btn_class="btn btn-primary") %}
-  <button class="{{ btn_class }}" data-bs-target="#{{ modal_window_id }}" data-bs-toggle="modal" data-href="{{ url }}" title="{{ title }}" type="button">{{ content }}</button>
-{% endmacro %}
-
-{% macro add_modal_window(modal_window_id="fa_modal_window") %}
-  <div id="{{ modal_window_id }}" class="modal fade" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-      <div class="modal-content"></div>
-    </div>
-  </div>
+{% macro add_modal_button(url, title, content, fields, success_url="", method="POST", size="md", submit_text="", btn_class="btn btn-primary") %}
+  <button class="{{ btn_class }}"
+          data-csrf-field="{{ config.get('CSRF_FIELD_NAME', 'csrf_token') }}"
+          data-csrf-required="{{ 'true' if config.get('CSRF_ENABLED', True) else 'false' }}"
+          data-fields="{{ fields | tojson | forceescape }}"
+          data-method="{{ method }}"
+          data-modal-form
+          data-size="{{ size }}"
+          data-submit-text="{{ submit_text or gettext('Submit') }}"
+          data-success-url="{{ success_url }}"
+          data-title="{{ title }}"
+          data-url="{{ url }}"
+          title="{{ title }}"
+          type="button">{{ content }}</button>
 {% endmacro %}

@@ -70,3 +70,25 @@ class TestSimpleAuthorizer:
         user.tfa_enabled = True
 
         assert authorizer.allow(user=user) is True
+
+    def test_authorize_without_view_uses_permission_context(self):
+        authorizer = SimpleAuthorizer()
+        user = MockUser(roles=["editor"])
+
+        assert (
+            authorizer.authorize(
+                user=user,
+                resource="/reports",
+                method="GET",
+                role_need="editor",
+            )
+            is True
+        )
+        assert (
+            authorizer.authorize(
+                user=user,
+                resource="/reports",
+                method="GET",
+            )
+            is False
+        )

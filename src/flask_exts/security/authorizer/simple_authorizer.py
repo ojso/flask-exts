@@ -20,11 +20,9 @@ class SimpleAuthorizer(Authorizer):
 
     def authorize(self, *args, **kwargs):
         """
-        Authorize access based on user and view.
+        Authorize access based on user and optional view or permission context.
         """
 
-        if "view" not in kwargs:
-            raise ValueError("view is required when SimpleAuthorizer is used.")
         kwargs.setdefault("user", current_user)
         return self.allow(*args, **kwargs)
 

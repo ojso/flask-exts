@@ -9,7 +9,7 @@ docs-serve:
 docs-clean:
 	rm -rf docs/_build
 
-pytest:
+test:
 	pytest
 
 pytest-last:
