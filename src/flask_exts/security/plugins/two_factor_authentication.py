@@ -27,10 +27,9 @@ class TwoFactorAuthentication:
 
     def get_totp_uri(self, otp_secret, username):
         otp = pyotp.TOTP(otp_secret)
-        if self.app and self.app.config.get("APP_NAME"):
-            app_name = self.app.config.get("APP_NAME")
-        else:
-            app_name = "UnknownApp"
+        app_name = (
+            self.app.config.get("APP_NAME", "UnknownApp") if self.app else "UnknownApp"
+        )
         uri = otp.provisioning_uri(name=username, issuer_name=app_name)
         return uri
 

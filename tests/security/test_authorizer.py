@@ -60,17 +60,6 @@ class TestSimpleAuthorizer:
         view = type("View", (), {"allow_access": True})()
         assert authorizer.allow(user=user, view=view) is True
 
-    def test_admin_allow_access_precedes_authentication_gates(self):
-        app = FakeApp()
-        app.config["ADMIN_ALLOW_ACCESS"] = True
-        authorizer = SimpleAuthorizer(app)
-        user = MockUser()
-        user.is_authenticated = True
-        user.is_active = False
-        user.tfa_enabled = True
-
-        assert authorizer.allow(user=user) is True
-
     def test_authorize_without_view_uses_permission_context(self):
         authorizer = SimpleAuthorizer()
         user = MockUser(roles=["editor"])

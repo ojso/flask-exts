@@ -1,20 +1,15 @@
 from sqlalchemy import inspect
 
 from ....forms.fields.inline import InlineModelField
-from ..ajax import create_ajax_loader
 from . import get_model_form
 from .inline_form import InlineForm
 
 
 class InlineModelConverter:
-    """
-    Inline model form converter.
-    """
+    """Inline model form converter."""
 
     def __init__(self, session, view, model_converter):
         """
-        Constructor.
-
         Args:
             session:
                 SQLAlchemy session
@@ -51,13 +46,12 @@ class InlineModelConverter:
         return None
 
     def get_inline_form(self, prop):
-        """
-        Figure out InlineForm information.
+        """Figure out InlineForm information.
 
         Args:
             prop:
                 Inline model. Can be one of:
-                    - ``tuple``, first value is related model instance,second is dictionary with options
+                    - ``tuple``, first value is related model instance,second is options
                     - ``InlineForm`` instance
                     - Model class
         """
@@ -69,35 +63,36 @@ class InlineModelConverter:
             inline_form = InlineForm(prop)
 
         # Resolve AJAX FKs
-        inline_form._form_ajax_refs = self.process_ajax_refs(inline_form)
+        inline_form._ajax_refs = self.process_ajax_refs(inline_form)
 
         return inline_form
 
     def process_ajax_refs(self, inline_form):
-        refs = getattr(inline_form, "form_ajax_refs", None)
+        refs = getattr(inline_form, "ajax_refs", None)
 
         result = {}
 
         if refs:
             for name, opts in refs.items():
-                new_name = "%s-%s" % (inline_form.model.__name__.lower(), name)
+                new_name = f"{inline_form.model.__name__.lower()}-{name}"
 
                 loader = None
                 if isinstance(opts, dict):
-                    loader = create_ajax_loader(
+                    loader = self.view.create_ajax_loader(
                         inline_form.model, self.session, new_name, name, opts
                     )
                 else:
                     loader = opts
-                    # If we're changing the name in self.view._form_ajax_refs,
-                    # we must also change loader.name property. Otherwise
-                    # when the widget tries to set the 'data-url' property in the <input> tag,
-                    # it won't be able to find the loader since it'll be using the "field.loader.name"
-                    # of the previously-configured loader.
-                    setattr(loader, "name", new_name)
+                    # If we're changing the name in self.view._ajax_refs, we
+                    # must also change loader.name property. Otherwise when the
+                    # widget tries to set the 'data-url' property in the <input>
+                    # tag, it won't be able to find the loader since it'll be
+                    # using the "field.loader.name" of the previously-configured
+                    # loader.
+                    loader.name = new_name
 
                 result[name] = loader
-                self.view._form_ajax_refs[new_name] = loader
+                self.view._ajax_refs[new_name] = loader
 
         return result
 
@@ -122,18 +117,18 @@ class InlineModelConverter:
         # Use the base mapper to support inheritance
         target_mapper = inspect(info.model).base_mapper
         reverse_props = []
-        forward_reverse_props_keys = dict()
+        forward_reverse_props_keys = {}
         for prop in target_mapper.iterate_properties:
-            if hasattr(prop, "direction") and prop.direction.name in (
-                "MANYTOONE",
-                "MANYTOMANY",
+            if (
+                hasattr(prop, "direction")
+                and prop.direction.name in ("MANYTOONE", "MANYTOMANY")
+                and issubclass(model, prop.mapper.class_)
             ):
-                if issubclass(model, prop.mapper.class_):
-                    # store props in reverse_props list
-                    reverse_props.append(prop)
+                # store props in reverse_props list
+                reverse_props.append(prop)
 
         if not reverse_props:
-            raise Exception("Cannot find reverse relation for model %s" % info.model)
+            raise ValueError(f"Cannot find reverse relation for model {info.model}")
 
         for reverse_prop in reverse_props:
             # Find forward property
@@ -145,74 +140,65 @@ class InlineModelConverter:
 
             for prop in mapper.iterate_properties:
                 if hasattr(prop, "direction") and prop.direction.name == candidate:
-                    # check if prop is not handled yet
-                    # issubclass is more useful than equal comparator in the case of inheritance
                     if prop.key not in forward_reverse_props_keys.keys() and issubclass(
                         target_mapper.class_, prop.mapper.class_
                     ):
                         forward_reverse_props_keys[prop.key] = reverse_prop.key
                         break
             else:
-                raise Exception(
-                    "Cannot find forward relation for model %s" % info.model
-                )
+                raise ValueError(f"Cannot find forward relation for model {info.model}")
 
         return forward_reverse_props_keys
 
     def contribute(self, model, form_class, inline_model):
-        """
-        Generate form fields for inline model and contribute them to the `form_class`
+        """Generate form fields for inline model and contribute them to the `form_class`
 
         Args:
-            converter:
-                ModelConverterBase instance
-            session:
-                SQLAlchemy session
-            model:
-                Model class
-            form_class:
-                Form to add properties to
-            inline_model:
-                Inline model. Can be one of:
-                 - ``tuple``, first value is related model instance, second is dictionary with options
-                 - ``InlineForm`` instance
-                 - Model class
+            model: Model class.
+            form_class: Form to add properties to.
+            inline_model: Inline model. Can be one of:
+                - ``tuple``: first value is related model instance,
+                  second is dictionary with options.
+                - ``InlineForm`` instance.
+                - Model class.
 
         Returns:
-            Form class
+            Form class.
         """
 
-        info = self.get_inline_form(inline_model)
+        inline_form = self.get_inline_form(inline_model)
 
-        forward_reverse_props_keys = self._calculate_mapping_key_pair(model, info)
+        forward_reverse_props_keys = self._calculate_mapping_key_pair(
+            model, inline_form
+        )
 
         for forward_prop_key, reverse_prop_key in forward_reverse_props_keys.items():
             # Remove reverse property from the list
             ignore = [reverse_prop_key]
 
-            if info.form_excluded_columns:
-                exclude = ignore + list(info.form_excluded_columns)
+            if inline_form.form_excluded_columns:
+                exclude = ignore + list(inline_form.form_excluded_columns)
             else:
                 exclude = ignore
 
             # Create converter
-            converter = self.model_converter(self.session, info)
+            converter = self.model_converter(self.session, inline_form)
 
             # Create form
             child_form = get_model_form(
-                info.model,
+                inline_form.model,
                 converter,
-                base_class=info.base_form_class,
-                only=info.form_columns,
+                base_class=inline_form.base_form_class,
+                only=inline_form.form_columns,
                 exclude=exclude,
-                field_args=info.form_args,
+                field_args=inline_form.form_args,
                 hidden_pk=True,
-                extra_fields=info.form_extra_fields,
+                extra_fields=inline_form.form_extra_fields,
             )
 
-            kwargs = dict()
+            kwargs = {}
 
-            label = self.get_label(info, forward_prop_key)
+            label = self.get_label(inline_form, forward_prop_key)
             if label:
                 kwargs["label"] = label
 
@@ -220,21 +206,20 @@ class InlineModelConverter:
                 field_args = self.view.form_args.get(forward_prop_key, {})
                 kwargs.update(**field_args)
 
-            
             relationship = inspect(model).relationships[forward_prop_key]
             inline_field = InlineModelField(
                 child_form,
-                info.model,
+                inline_form.model,
                 forward_prop_key,
                 relationship.uselist,
-                info,
+                inline_form,
                 **kwargs,
             )
             if not hasattr(self.view, "_inline_model_configs"):
                 self.view._inline_model_configs = {}
             self.view._inline_model_configs[forward_prop_key] = {
                 "form_class": child_form,
-                "model": info.model,
+                "model": inline_form.model,
                 "reverse_prop": reverse_prop_key,
                 "is_collection": relationship.uselist,
             }
@@ -258,7 +243,7 @@ class InlineOneToOneModelConverter(InlineModelConverter):
         mapper = inspect(info.model).base_mapper
         target_mapper = inspect(model)
 
-        inline_relationship = dict()
+        inline_relationship = {}
 
         for forward_prop in mapper.iterate_properties:
             if not hasattr(forward_prop, "direction"):
@@ -273,10 +258,10 @@ class InlineOneToOneModelConverter(InlineModelConverter):
             # in case when model has few relationships to target model or
             # has just installed references manually. This is more quick
             # solution rather than rotate yet another one loop
-            ref = getattr(forward_prop, "backref")
+            ref = getattr(forward_prop, "backref", None)
 
             if not ref:
-                ref = getattr(forward_prop, "back_populates")
+                ref = getattr(forward_prop, "back_populates", None)
 
             if ref:
                 inline_relationship[ref] = forward_prop.key
@@ -295,9 +280,7 @@ class InlineOneToOneModelConverter(InlineModelConverter):
                     inline_relationship[backward_prop.key] = forward_prop.key
                     break
             else:
-                raise Exception(
-                    "Cannot find reverse relation for model %s" % info.model
-                )
+                raise Exception(f"Cannot find reverse relation for model {info.model}")
             break
 
         if not inline_relationship:

@@ -8,7 +8,9 @@ class ExtensionManager:
 
     This class orchestrates initialization of registered extensions through a
     registry-based composition pattern. It keeps the extension lifecycle
-    separate from the concrete extension implementations.
+    separate from the concrete extension implementations: initialization runs
+    in two neutral phases (``init_app`` then ``post_init``) and the manager
+    never references a specific extension by name.
 
     Usage:
         exts = ExtensionManager(app)
@@ -67,6 +69,15 @@ class ExtensionManager:
         Returns:
             Extension: Instance of registered extension
 
+        Note:
+            If the manager already has an app (``init_app`` already ran),
+            this immediately runs both lifecycle phases -- ``init_app`` then
+            ``post_init`` -- for the new extension alone. It will not,
+            however, retroactively re-run other extensions' ``post_init`` to
+            pick up a newly added contribution (e.g. a late-registered
+            ``AdminViewMixin`` provider will not be seen by an admin whose
+            own ``post_init`` already ran).
+
         Example:
             class MyExtension(Extension):
                 @property
@@ -80,8 +91,13 @@ class ExtensionManager:
         """
         ext = self._registry.register(extension_class)
 
+        # Late registration (after init_app already ran) goes through the
+        # same registry entry points as the bulk path, so init/post_init
+        # bookkeeping (idempotency, the "init before post_init" guard) stays
+        # consistent regardless of when an extension was added.
         if self.app:
             self._registry.init(ext.name, self.app)
+            self._registry.post_init(ext.name, self.app)
 
         return ext
 
@@ -103,19 +119,12 @@ class ExtensionManager:
 
         app.extensions["exts"] = self
 
-        # Initialize all extensions
+        # Phase 1: every extension builds its own services
         self._registry.init_all(app)
 
-        # Register all views
-        self.register_all_admin_views()
-
-    def register_all_admin_views(self):
-        admin_ext = self.get_extension("admin")
-        if admin_ext is not None:
-            admin = admin_ext.get_admin()
-            for ext in self.list_extensions():
-                for view, is_menu in ext.get_admin_views():
-                    admin.register_view(view, is_menu=is_menu)
+        # Phase 2: extensions wire into each other, now that every peer
+        # exists. The manager stays agnostic of what any of them do here.
+        self._registry.post_init_all(app)
 
     def shutdown(self) -> None:
         """

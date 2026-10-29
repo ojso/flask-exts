@@ -17,7 +17,7 @@ The module contains:
 
 from flask_babel import lazy_gettext
 
-from ...model.filter import (
+from ...model.filter.filters import (
     BaseBooleanFilter,
     BaseDateBetweenFilter,
     BaseDateFilter,

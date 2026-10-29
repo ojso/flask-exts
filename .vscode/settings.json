@@ -1,5 +1,6 @@
 {
   "files.eol": "\n",
+  "ruff.lineLength": 88,
   "files.associations": {
     "**/templates/**/*.html": "jinja-html"
   },

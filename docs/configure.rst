@@ -41,10 +41,6 @@ admin access, CSRF, i18n, and email behavior.
        This is a dict for SMTP configuration with keys such as
        ``host``, ``port``, ``user``, and ``password``.
        Default is ``None``.
-   * - ``ADMIN_ALLOW_ACCESS``
-     - Set to ``True`` to allow all users to access admin views for testing.
-       Otherwise, access is restricted to users with an appropriate role.
-       Default is ``False``.
    * - ``TFA_EXEMPT_ENDPOINTS``
      - Endpoints that authenticated users may access before completing the
        TFA challenge.

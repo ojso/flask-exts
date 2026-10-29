@@ -10,13 +10,17 @@ from flask import (
     session,
     url_for,
 )
-from flask_login import current_user, login_required, login_user, logout_user
+from flask_login import current_user, login_user, logout_user
 from werkzeug.datastructures import MultiDict
 
-from ..admin import View, expose_url
+from ..admin import View, expose_url, login_required, requires_active
 from ..constants import NO_CACHE_HEADER
 from ..proxies import current_security, current_userstore
-from ..security import SESSION_KEY_TFA_VERIFIED
+from ..security import (
+    SESSION_KEY_PENDING_TFA_USER_ID,
+    SESSION_KEY_TFA_RECOVERY,
+    SESSION_KEY_TFA_VERIFIED,
+)
 from ..security.exceptions import TokenActionError
 from ..security.urls import safe_redirect_target
 from ..signals import user_registered
@@ -30,6 +34,8 @@ from .forms.register import RegisterForm
 from .forms.resend_verification import ResendVerificationForm
 from .forms.reset_password import ResetPasswordForm
 from .forms.two_factor import TwoFactorForm
+
+SESSION_KEY_PENDING_TFA_REBIND_SECRET = "pending_tfa_rebind_secret"
 
 
 class UserView(View):
@@ -72,18 +78,20 @@ class UserView(View):
     @login_required
     @expose_url("/index/")
     def index(self):
-        return self.render(
-            self.index_template, resend_form=ResendVerificationForm()
-        )
+        return self.render(self.index_template, resend_form=ResendVerificationForm())
 
     @login_required
     @expose_url("/profile/")
     def profile(self):
-        return self.render(
-            "user/profile.html", resend_form=ResendVerificationForm()
-        )
+        # Deliberately NOT @requires_active: this page is how an unverified
+        # (is_active=False) account finds the "resend verification email"
+        # action. The actual account-authenticated features it links to
+        # (change_password, email_change, enable_tfa) each enforce
+        # @requires_active themselves.
+        return self.render("user/profile.html", resend_form=ResendVerificationForm())
 
     @login_required
+    @requires_active
     @expose_url("/email_change/", methods=("GET", "POST"))
     def email_change(self):
         form = EmailChangeForm()
@@ -111,9 +119,7 @@ class UserView(View):
         if current_user.email_verified:
             flash("Your email address is already verified.", "info")
         elif current_user.email:
-            current_security.get_plugin("email_verification").send_token(
-                current_user
-            )
+            current_security.get_plugin("email_verification").send_token(current_user)
             flash("A new verification email has been sent.", "success")
         else:
             flash("No email address is associated with this account.", "error")
@@ -132,18 +138,32 @@ class UserView(View):
             except InvalidCredentialsError as error:
                 form[error.field].errors.append(str(error))
             else:
+                next_page = safe_redirect_target(
+                    request.args.get("next"), url_for(".index")
+                )
+                if user.tfa_enabled:
+                    # Do NOT log the user in yet. Only the password has been
+                    # verified; the login is not complete until the TFA code
+                    # is also verified. Stash the pending user id instead of
+                    # establishing a login session, so there is no window
+                    # where a password-only login grants access to anything.
+                    session[SESSION_KEY_PENDING_TFA_USER_ID] = user.id
+                    login_kwargs = {}
+                    if hasattr(form, "remember_me"):
+                        login_kwargs["remember"] = form.remember_me.data
+                    session["_pending_tfa_remember"] = login_kwargs.get(
+                        "remember", False
+                    )
+                    return redirect(url_for(".verify_tfa", next=next_page))
+
                 login_kwargs = {}
                 if hasattr(form, "remember_me"):
                     login_kwargs["remember"] = form.remember_me.data
-                # force=True to bypass the is_active check, since we handle it in the allow method
+                # force=True to bypass the is_active check, since we handle it
+                # in the allow method
                 if not login_user(user, force=True, **login_kwargs):
                     form.username.errors.append("Invalid username or password.")
                 else:
-                    next_page = safe_redirect_target(
-                        request.args.get("next"), url_for(".index")
-                    )
-                    if user.tfa_enabled:
-                        return redirect(url_for(".verify_tfa", next=next_page))
                     return redirect(next_page)
         return self.render(self.login_template, form=form)
 
@@ -174,8 +194,13 @@ class UserView(View):
     @expose_url("/logout/")
     def logout(self):
         logout_user()
-        if SESSION_KEY_TFA_VERIFIED in session:
-            session.pop(SESSION_KEY_TFA_VERIFIED)
+        session.pop(SESSION_KEY_TFA_VERIFIED, None)
+        session.pop(SESSION_KEY_TFA_RECOVERY, None)
+        session.pop(SESSION_KEY_PENDING_TFA_REBIND_SECRET, None)
+        # Also abandon any in-progress TFA login: logging out must leave no
+        # residue that could resume a half-completed login later.
+        session.pop(SESSION_KEY_PENDING_TFA_USER_ID, None)
+        session.pop("_pending_tfa_remember", None)
         return redirect(url_for(".login"))
 
     @expose_url("/verify_email/")
@@ -184,9 +209,7 @@ class UserView(View):
         try:
             result = current_security.get_plugin(
                 "email_verification"
-            ).execute_with_token(
-                token
-            )
+            ).execute_with_token(token)
         except TokenActionError as error:
             result = error.status
         return self.render(self.verify_email_template, result=result)
@@ -205,6 +228,7 @@ class UserView(View):
         return self.render(self.verify_email_template, result=result)
 
     @login_required
+    @requires_active
     @expose_url("/enable_tfa/", methods=("GET", "POST"))
     def enable_tfa(self):
         enable = request.args.get("enable")
@@ -242,7 +266,7 @@ class UserView(View):
             return jsonify({"message": "Invalid form submission"}), 400
 
         tfa = current_security.get_plugin("two_factor_authentication")
-        if not tfa.verify_totp(current_user.totp_secret, form.code.data):
+        if not tfa.verify_totp(current_user.get_totp_secret(), form.code.data):
             return jsonify(
                 {
                     "message": "Invalid code",
@@ -255,24 +279,25 @@ class UserView(View):
             session[SESSION_KEY_TFA_VERIFIED] = True
         else:
             session.pop(SESSION_KEY_TFA_VERIFIED, None)
+            session.pop(SESSION_KEY_TFA_RECOVERY, None)
+            session.pop(SESSION_KEY_PENDING_TFA_REBIND_SECRET, None)
             current_userstore.user_set(current_user, totp_secret=None)
 
         return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
     @login_required
+    @requires_active
     @expose_url("/setup_tfa/")
     def setup_tfa(self):
         if current_user.tfa_enabled:
             return self.render(
                 "user/show_tfa.html",
+                can_rebind_tfa=session.get(SESSION_KEY_TFA_RECOVERY, False),
             )
         tfa = current_security.get_plugin("two_factor_authentication")
-        if not current_user.totp_secret:
-            current_userstore.user_set(
-                current_user, totp_secret=tfa.generate_totp_secret()
-            )
+        totp_secret = current_user.get_or_create_totp_secret()
 
-        totp_uri = tfa.get_totp_uri(current_user.totp_secret, current_user.username)
+        totp_uri = tfa.get_totp_uri(totp_secret, current_user.username)
         return self.render(
             "user/setup_tfa.html",
             totp_uri=totp_uri,
@@ -280,18 +305,53 @@ class UserView(View):
             _headers=NO_CACHE_HEADER,
         )
 
-    @login_required
+    def _get_pending_tfa_user(self):
+        """
+        Resolve the user mid-login, pending TFA verification, if any.
+
+        Clears the pending state and returns None when there is nothing
+        valid to resume (no pending login, unknown user, or TFA no longer
+        enabled on the account) so callers can bounce back to ``login``.
+        """
+        pending_user_id = session.get(SESSION_KEY_PENDING_TFA_USER_ID)
+        if pending_user_id is None:
+            return None
+
+        user = current_userstore.get_user_by_id(pending_user_id)
+        if user is None or not user.tfa_enabled:
+            session.pop(SESSION_KEY_PENDING_TFA_USER_ID, None)
+            session.pop("_pending_tfa_remember", None)
+            return None
+
+        return user
+
     @expose_url("/verify_tfa/", methods=("GET", "POST"))
     def verify_tfa(self):
-        if not current_user.tfa_enabled:
-            abort(403)
-        if session.get(SESSION_KEY_TFA_VERIFIED):
-            abort(403)
+        """
+        Second half of a TFA-protected login.
+
+        Deliberately NOT ``@login_required``: at this point the user is not
+        logged in yet (see ``login``). The pending user id in the session is
+        the only link to who is trying to log in, and it only unlocks a real
+        login session once the TFA code is verified.
+        """
+        user = self._get_pending_tfa_user()
+        if user is None:
+            return redirect(url_for(".login"))
 
         form = TwoFactorForm()
         if form.validate_on_submit():
             tfa = current_security.get_plugin("two_factor_authentication")
-            if tfa.verify_totp(current_user.totp_secret, form.code.data):
+            if tfa.verify_totp(user.get_totp_secret(), form.code.data):
+                remember = session.pop("_pending_tfa_remember", False)
+                session.pop(SESSION_KEY_PENDING_TFA_USER_ID, None)
+                # Only now, with both factors verified, does a login session
+                # get created.
+                if not login_user(user, force=True, remember=remember):
+                    flash("Invalid username or password.", "error")
+                    return redirect(url_for(".login"))
+                session.pop(SESSION_KEY_TFA_RECOVERY, None)
+                session.pop(SESSION_KEY_PENDING_TFA_REBIND_SECRET, None)
                 session[SESSION_KEY_TFA_VERIFIED] = True
                 next_page = safe_redirect_target(
                     request.args.get("next"), url_for(".index")
@@ -301,7 +361,100 @@ class UserView(View):
 
         return self.render("user/verify_tfa.html", form=form)
 
+    @expose_url("/recovery/", methods=("GET", "POST"))
+    def recovery(self):
+        """
+        Recovery-code alternative to ``verify_tfa``, for the same pending,
+        not-yet-logged-in user. Mirrors ``verify_tfa``'s login-completion
+        logic instead of relying on an already-established login session.
+        """
+        user = self._get_pending_tfa_user()
+        if user is None:
+            return redirect(url_for(".login"))
+
+        form = RecoveryForm()
+        if form.validate_on_submit():
+            matching_index = None
+            for index, stored_code in enumerate(user.recovery_codes or []):
+                if current_security.hasher.verify(form.code.data, stored_code) or (
+                    compare_digest(form.code.data, stored_code)
+                ):
+                    matching_index = index
+            if matching_index is not None:
+                remaining_codes = list(user.recovery_codes or [])
+                remaining_codes.pop(matching_index)
+                current_userstore.user_set(user, recovery_codes=remaining_codes)
+                remember = session.pop("_pending_tfa_remember", False)
+                session.pop(SESSION_KEY_PENDING_TFA_USER_ID, None)
+                # A spent recovery code proves the second factor just as a
+                # TOTP code would, so this also completes the login.
+                if not login_user(user, force=True, remember=remember):
+                    flash("Invalid username or password.", "error")
+                    return redirect(url_for(".login"))
+                session[SESSION_KEY_TFA_RECOVERY] = True
+                session[SESSION_KEY_TFA_VERIFIED] = True
+                next_page = safe_redirect_target(
+                    request.args.get("next"), url_for(".index")
+                )
+                return redirect(next_page)
+            else:
+                flash("Invalid recovery code", "error")
+        return self.render("user/recovery.html", form=form)
+
     @login_required
+    @requires_active
+    @expose_url("/rebind_tfa/", methods=("GET", "POST"))
+    def rebind_tfa(self):
+        if (
+            not current_user.tfa_enabled
+            or not session.get(SESSION_KEY_TFA_RECOVERY)
+            or not session.get(SESSION_KEY_TFA_VERIFIED)
+        ):
+            abort(403)
+
+        tfa = current_security.get_plugin("two_factor_authentication")
+        if request.method == "GET":
+            pending_secret = tfa.generate_totp_secret()
+            session[SESSION_KEY_PENDING_TFA_REBIND_SECRET] = (
+                current_security.encryptor.encrypt(pending_secret)
+            )
+        else:
+            encrypted_secret = session.get(SESSION_KEY_PENDING_TFA_REBIND_SECRET)
+            if encrypted_secret is None:
+                flash("Please start the TOTP rebind process again.", "error")
+                return redirect(url_for(".rebind_tfa"))
+            pending_secret = current_security.encryptor.decrypt(encrypted_secret)
+
+        form = TwoFactorForm()
+        if form.validate_on_submit():
+            if not tfa.verify_totp(pending_secret, form.code.data):
+                flash("Invalid code", "error")
+            else:
+                current_userstore.user_set(
+                    current_user,
+                    totp_secret=session[SESSION_KEY_PENDING_TFA_REBIND_SECRET],
+                )
+                session.pop(SESSION_KEY_PENDING_TFA_REBIND_SECRET, None)
+                session.pop(SESSION_KEY_TFA_RECOVERY, None)
+                return self.render(
+                    "user/setup_tfa.html",
+                    rebind_complete=True,
+                    totp_uri=tfa.get_totp_uri(pending_secret, current_user.username),
+                    totp_secret=pending_secret,
+                    _headers=NO_CACHE_HEADER,
+                )
+
+        return self.render(
+            "user/setup_tfa.html",
+            form=form,
+            rebind=True,
+            totp_uri=tfa.get_totp_uri(pending_secret, current_user.username),
+            totp_secret=pending_secret,
+            _headers=NO_CACHE_HEADER,
+        )
+
+    @login_required
+    @requires_active
     @expose_url("/change_password/", methods=("GET", "POST"))
     def change_password(self):
         form = ChangePasswordForm()
@@ -342,19 +495,20 @@ class UserView(View):
                     token, password=form.password.data
                 )
             except TokenActionError:
-                flash("The reset password link is invalid or has expired.", "error")
+                flash(
+                    "The reset password link is invalid or has expired.",
+                    "error",
+                )
             else:
                 flash("Your password has been reset.", "success")
                 return redirect(url_for(".login"))
         return self.render("user/reset_password.html", form=form)
 
     @login_required
+    @requires_active
     @expose_url("/recovery_codes/")
     def recovery_codes(self):
-        if (
-            not current_user.tfa_enabled
-            or not session.get(SESSION_KEY_TFA_VERIFIED)
-        ):
+        if not current_user.tfa_enabled or not session.get(SESSION_KEY_TFA_VERIFIED):
             abort(403)
         recovery_codes = self._generate_recovery_codes(current_user)
         return self.render(
@@ -369,42 +523,3 @@ class UserView(View):
         hashed_codes = [current_security.hasher.hash(code) for code in recovery_codes]
         current_userstore.user_set(user, recovery_codes=hashed_codes)
         return recovery_codes
-
-    @login_required
-    @expose_url("/recovery/", methods=("GET", "POST"))
-    def recovery(self):
-        if not current_user.tfa_enabled or session.get(SESSION_KEY_TFA_VERIFIED):
-            abort(403)
-        form = RecoveryForm()
-        if form.validate_on_submit():
-            matching_index = None
-            for index, stored_code in enumerate(current_user.recovery_codes or []):
-                if current_security.hasher.verify(form.code.data, stored_code) or (
-                    compare_digest(form.code.data, stored_code)
-                ):
-                    matching_index = index
-            if matching_index is not None:
-                remaining_codes = list(current_user.recovery_codes or [])
-                remaining_codes.pop(matching_index)
-                tfa = current_security.get_plugin("two_factor_authentication")
-                totp_secret = tfa.generate_totp_secret()
-                current_userstore.user_set(
-                    current_user,
-                    recovery_codes=remaining_codes,
-                    totp_secret=totp_secret,
-                )
-                session[SESSION_KEY_TFA_VERIFIED] = True
-                recovery_codes = self._generate_recovery_codes(current_user)
-                totp_uri = tfa.get_totp_uri(
-                    totp_secret, current_user.username
-                )
-                return self.render(
-                    "user/setup_tfa.html",
-                    totp_uri=totp_uri,
-                    totp_secret=totp_secret,
-                    recovery_codes=recovery_codes,
-                    _headers=NO_CACHE_HEADER,
-                )
-            else:
-                flash("Invalid recovery code", "error")
-        return self.render("user/recovery.html", form=form)

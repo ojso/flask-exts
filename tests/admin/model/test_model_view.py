@@ -1,7 +1,7 @@
 from wtforms.fields import StringField
 
-from flask_exts.admin.model.filter import BaseFilter
-from flask_exts.admin.model.row_actions import (
+from flask_exts.admin.model.filter.filters import BaseFilter
+from flask_exts.admin.model.handlers.rowactions import (
     DeleteRowAction,
     EditRowAction,
     ViewRowAction,
@@ -76,8 +76,8 @@ class MockModelView(ModelView):
 
         return Form
 
-    def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
-        self.search_arguments.append((page, sort_field, sort_desc, search, filters))
+    def get_list(self, search, filters, sort_field, sort_desc, page, page_size=None):
+        self.search_arguments.append((search, filters, sort_field, sort_desc, page))
         return len(self.all_models), self.all_models.values()
 
     def get_one(self, id):

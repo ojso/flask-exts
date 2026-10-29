@@ -22,7 +22,9 @@
   <form class="icon" action="{{ url_for('.delete_view') }}" method="post">
     {% set delete_form = view.delete_form(id=view.get_pk_value(row)) %}
     {{ render_form_fields(delete_form) }}
-    <button onclick="return confirm('{{ action.confirm }}');" title="{{ action.title }}" type="button">{{ render_icon(action.icon) }}</button>
+    <button onclick="return confirm('{{ action.confirm }}');"
+            title="{{ action.title }}"
+            type="submit">{{ render_icon(action.icon) }}</button>
   </form>
 {% endmacro %}
 
@@ -47,7 +49,9 @@
     </li>
     {% if view.can_create %}
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('.create_view', url=return_url) }}" title="{{ gettext('Create New Record') }}">{{ gettext("Create") }}</a>
+        <a class="nav-link"
+           href="{{ url_for('.create_view', url=return_url) }}"
+           title="{{ gettext('Create New Record') }}">{{ gettext("Create") }}</a>
       </li>
     {% endif %}
     {% if view.can_export %}{{ export_options(view.export_types) }}{% endif %}
@@ -58,20 +62,35 @@
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">{{ gettext("With selected") }}</a>
         <div class="dropdown-menu">
-          {% for p in actions %}<a class="dropdown-item" href="#" onclick="return listAction.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
+          {% for p in actions %}<a class="dropdown-item"
+   href="#"
+   onclick="return listAction.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
         </div>
       </li>
     {% endif %}
     {% if view.column_searchable_list %}
       <li class="nav-item ms-2">
-        <form class="d-flex flex-wrap align-items-center my-2 my-lg-0" action="{{ return_url }}" method="get">
-          {% for flt_name, flt_value in filter_args.items() %}<input name="{{ flt_name }}" type="hidden" value="{{ flt_value }}">{% endfor %}
-          {% if page_size != default_page_size %}<input name="page_size" type="hidden" value="{{ page_size }}">{% endif %}
-          {% for arg_name, arg_value in extra_args.items() %}<input name="{{ arg_name }}" type="hidden" value="{{ arg_value }}">{% endfor %}
+        <form class="d-flex flex-wrap align-items-center my-2 my-lg-0"
+              action="{{ return_url }}"
+              method="get">
+          {% for flt_name, flt_value in filter_args.items() %}
+            <input name="{{ flt_name }}" type="hidden" value="{{ flt_value }}">
+          {% endfor %}
+          {% if page_size != view.get_default_page_size() %}
+            <input name="page_size" type="hidden" value="{{ page_size }}">
+          {% endif %}
+          {% for arg_name, arg_value in extra_args.items() %}
+            <input name="{{ arg_name }}" type="hidden" value="{{ arg_value }}">
+          {% endfor %}
           {% if sort_column is not none %}<input name="sort" type="hidden" value="{{ sort_column }}">{% endif %}
           {% if sort_desc %}<input name="desc" type="hidden" value="1">{% endif %}
           <div class="input-group">
-            <input class="form-control" aria-label="search" name="search" placeholder="{{ view.search_placeholder() }}" type="text" value="{{ search | default('',true) }}">
+            <input class="form-control"
+                   aria-label="search"
+                   name="search"
+                   placeholder="{{ view.search_placeholder() }}"
+                   type="text"
+                   value="{{ search | default('',true) }}">
             {% if search %}
               <span class="input-group-text">
                 <a class="align-middle" href="{{ clear_search_url }}"><span>x</span></a>
@@ -87,14 +106,19 @@
 
   {% if filter_groups %}
     <form id="filter_form" action="{{ return_url }}" method="get">
-      {% for arg_name, arg_value in extra_args.items() %}<input name="{{ arg_name }}" type="hidden" value="{{ arg_value }}">{% endfor %}
+      {% for arg_name, arg_value in extra_args.items() %}
+        <input name="{{ arg_name }}" type="hidden" value="{{ arg_value }}">
+      {% endfor %}
       {% if sort_column is not none %}<input name="sort" type="hidden" value="{{ sort_column }}">{% endif %}
       {% if sort_desc %}<input name="desc" type="hidden" value="1">{% endif %}
       {% if search %}<input name="search" type="hidden" value="{{ search }}">{% endif %}
-      {% if page_size != default_page_size %}<input name="page_size" type="hidden" value="{{ page_size }}">{% endif %}
+      {% if page_size != view.get_default_page_size() %}
+        <input name="page_size" type="hidden" value="{{ page_size }}">
+      {% endif %}
       <div class="float-end">
         <button class="btn btn-primary d-none" type="submit">{{ gettext("Apply") }}</button>
-        {% if active_filters %}<a class="btn btn-secondary" href="{{ clear_search_url }}">{{ gettext("Reset Filters") }}</a>{% endif %}
+        {% if active_filters %}<a class="btn btn-secondary"
+   href="{{ clear_search_url }}">{{ gettext("Reset Filters") }}</a>{% endif %}
       </div>
       <table class="filters">
       </table>
@@ -109,32 +133,34 @@
             {% block list_header scoped %}
               {% if actions %}
                 <th class="list-checkbox-column">
-                  <input class="action-rowtoggle" name="rowtoggle" title="{{ gettext('Select all records') }}" type="checkbox" />
+                  <input class="action-rowtoggle"
+                         name="rowtoggle"
+                         title="{{ gettext('Select all records') }}"
+                         type="checkbox" />
                 </th>
               {% endif %}
               {% if row_actions %}<th>Operates</th>{% endif %}
-              {% for c, name in list_columns %}
+              {% for c, name in view.get_list_columns() %}
                 {% set column = loop.index0 %}
                 <th class="column-header col-{{ c }}">
                   {% if view.is_sortable(c) %}
                     {% if sort_column == column %}
-                      <a href="{{ sort_url(column, True) }}" title="{{ gettext('Sort by %(name)s', name=name) }}">
+                      <a href="{{ sort_url(column, True) }}"
+                         title="{{ gettext('Sort by %(name)s', name=name) }}">
                         {{ name }}
-                        <span>
-                          {% if sort_desc %}
-                            ↑
-                          {% else %}
-                            ↓
-                          {% endif %}
-                        </span>
+                        <span>{% if sort_desc %}↑{% else %}↓{% endif %}</span>
                       </a>
                     {% else %}
-                      <a href="{{ sort_url(column) }}" title="{{ gettext('Sort by %(name)s', name=name) }}">{{ name }}</a>
+                      <a href="{{ sort_url(column) }}"
+                         title="{{ gettext('Sort by %(name)s', name=name) }}">{{ name }}</a>
                     {% endif %}
                   {% else %}
                     {{ name }}
                   {% endif %}
-                  {% if view.column_descriptions.get(c) %}<span data-role="tooltip" title="{{ view.column_descriptions[c] }}"></span>{% endif %}
+                  {% set description = view.get_column_description(c) -%}
+                  {% if description -%}
+                    <span data-role="tooltip" title="{{ description }}"></span>
+                  {%- endif %}
                 </th>
               {% endfor %}
             {% endblock %}
@@ -145,14 +171,18 @@
             {% block list_row scoped %}
               {% if actions %}
                 <td>
-                  <input class="action-checkbox" name="rowid" title="{{ gettext('Select record') }}" type="checkbox" value="{{ view.get_pk_value(row) }}" />
+                  <input class="action-checkbox"
+                         name="rowid"
+                         title="{{ gettext('Select record') }}"
+                         type="checkbox"
+                         value="{{ view.get_pk_value(row) }}" />
                 </td>
               {% endif %}
               {% if row_actions %}
                 <td class="list-buttons-column">{% for rowaction in row_actions %}{{ render_row_action(rowaction, view.get_pk_value(row) , row) }}{% endfor %}</td>
               {%- endif -%}
               {% set list_form = view.list_form(obj=row) if view.column_editable_list else None %}
-              {% for c, name in list_columns %}
+              {% for c, name in view.get_list_columns() %}
                 <td class="col-{{ c }}">
                   {% set display_value = view.get_list_value(row, c) %}
                   {% if view.is_editable(c) %}
@@ -183,7 +213,10 @@
   {% endblock %}
   {% if actions %}
     {% set action_form = view.action_form(url=return_url) %}
-    <form id="action_form" class="d-none" action="{{ url_for('.action_view') }}" method="post">
+    <form id="action_form"
+          class="d-none"
+          action="{{ url_for('.action_view') }}"
+          method="post">
       {{ render_form_fields(action_form) }}
     </form>
   {% endif %}

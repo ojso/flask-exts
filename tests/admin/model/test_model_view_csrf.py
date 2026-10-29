@@ -25,7 +25,7 @@ class MockModelView(ModelView):
     def get_one(self, id):
         return next((model for model in self.models if model.id == int(id)), None)
 
-    def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
+    def get_list(self, search, filters, sort_field, sort_desc, page, page_size=None):
         return len(self.models), self.models
 
     def scaffold_form(self):

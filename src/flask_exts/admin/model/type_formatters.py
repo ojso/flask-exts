@@ -1,9 +1,11 @@
 import json
+from collections.abc import Callable
 from enum import Enum
+from typing import Any
 
 from markupsafe import Markup
 
-from .types import T_FORMATTERS
+T_FORMATTERS = dict[type, Callable[[Any, Any, Any], Any]]
 
 
 def null_formatter(view, value, name):

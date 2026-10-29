@@ -10,13 +10,11 @@ class SimpleAuthorizer(Authorizer):
 
     def __init__(self, app=None):
         self.app = None
-        self.admin_allow_access = False
         if app is not None:
             self.init_app(app)
 
     def init_app(self, app):
         self.app = app
-        self.admin_allow_access = app.config.get("ADMIN_ALLOW_ACCESS", False)
 
     def authorize(self, *args, **kwargs):
         """
@@ -27,9 +25,6 @@ class SimpleAuthorizer(Authorizer):
         return self.allow(*args, **kwargs)
 
     def allow(self, *args, **kwargs):
-        # Check if the admin_allow_access configuration is set to True
-        if self.admin_allow_access:
-            return True
 
         user = kwargs.get("user")
 
@@ -38,6 +33,21 @@ class SimpleAuthorizer(Authorizer):
             return True
 
         view = kwargs.get("view")
+        fn = kwargs.get("fn")
+
+        # @requires_active marks a specific method as an account-authenticated
+        # feature (change password, enable TFA, ...) rather than a genuinely
+        # public endpoint, even on a view class that otherwise sets
+        # allow_access = True for its public endpoints (login, register, ...).
+        # A disabled (is_active=False) account's still-valid session must not
+        # be able to use it -- but once active, it should still get the same
+        # free pass allow_access gives everyone else, not fall through to the
+        # admin/super_admin-only checks below (those are for admin RBAC, not
+        # for a user managing their own account).
+        if getattr(fn, "_requires_active", False) and not getattr(
+            user, "is_active", True
+        ):
+            return False
 
         if view is not None and getattr(view, "allow_access", False):
             return True

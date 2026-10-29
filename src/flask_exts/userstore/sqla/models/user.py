@@ -20,7 +20,7 @@ class User(db.Model, UserMixin):
     uuid: Mapped[str] = mapped_column(unique=True, default=lambda: str(uuid.uuid4()))
     username: Mapped[str | None] = mapped_column(unique=True)
     password: Mapped[str | None]
-    _is_active: Mapped[bool] = mapped_column("is_active", default=False)
+    _is_active: Mapped[bool] = mapped_column("is_active", default=True)
     status: Mapped[int] = mapped_column(default=0)
     expired_at: Mapped[datetime | None]
     email: Mapped[str | None] = mapped_column(unique=True)
@@ -47,8 +47,8 @@ class User(db.Model, UserMixin):
         return [r.name for r in self.roles]
 
     def get_id(self):
-        password_fingerprint  = current_security.hasher.hash(self.password or "")
-        return f"{self.id}:{password_fingerprint }"
+        password_fingerprint = current_security.hasher.hash(self.password or "")
+        return f"{self.id}:{password_fingerprint}"
 
     @property
     def is_active(self):
@@ -61,3 +61,38 @@ class User(db.Model, UserMixin):
     @property
     def is_authenticated(self):
         return True
+
+    def get_or_create_totp_secret(self) -> str:
+        """
+        Return this user's TOTP secret, generating one if absent.
+
+        ``totp_secret`` is stored encrypted at rest (AES-256-GCM via
+        ``current_security.encryptor``) rather than in plaintext, since
+        anyone who reads the users table would otherwise be able to
+        generate valid 2FA codes for every account. This method is the
+        only place that should write to ``self.totp_secret``; everywhere
+        else that needs the plaintext secret (to verify a code, build a
+        provisioning URI, ...) should go through this method or
+        :meth:`get_totp_secret` rather than reading the column directly.
+
+        Returns:
+            str: The plaintext TOTP secret (base32).
+        """
+        if self.totp_secret is None:
+            tfa = current_security.get_plugin("two_factor_authentication")
+            plaintext = tfa.generate_totp_secret()
+            self.totp_secret = current_security.encryptor.encrypt(plaintext)
+            db.session.commit()
+            return plaintext
+        return self.get_totp_secret()
+
+    def get_totp_secret(self) -> str | None:
+        """
+        Decrypt and return the stored TOTP secret, or ``None`` if unset.
+
+        Returns:
+            str | None: The plaintext TOTP secret, or ``None``.
+        """
+        if self.totp_secret is None:
+            return None
+        return current_security.encryptor.decrypt(self.totp_secret)

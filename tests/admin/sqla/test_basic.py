@@ -787,11 +787,11 @@ def test_ajax_fk(app, client, admin):
         view = CustomSqlaModelView(
             Model2,
             url="view",
-            form_ajax_refs={"model1": {"fields": ("test1", "test2")}},
+            ajax_refs={"model1": {"fields": ("test1", "test2")}},
         )
         admin.register_view(view)
 
-        assert "model1" in view._form_ajax_refs
+        assert "model1" in view._ajax_refs
 
         model1 = Model1(test1="first")
         model2 = Model1(test1="foo", test2="bar")
@@ -799,7 +799,7 @@ def test_ajax_fk(app, client, admin):
         db.session.commit()
 
         # Check loader
-        loader = view._form_ajax_refs["model1"]
+        loader = view.get_ajax_loader("model1")
         mdl = loader.get_one(model1.id)
         assert mdl.test1 == model1.test1
 
@@ -853,11 +853,11 @@ def _test_ajax_fk_multi(app, client, admin):
         view = CustomSqlaModelView(
             ManyToManyRight,
             url="view",
-            form_ajax_refs={"many_to_many_left": {"fields": ["name"]}},
+            ajax_refs={"many_to_many_left": {"fields": ["name"]}},
         )
         admin.register_view(view)
 
-        assert "many_to_many_left" in view._form_ajax_refs
+        assert "many_to_many_left" in view._ajax_refs
 
         model = ManyToManyLeft(name="first")
         db.session.add_all([model, ManyToManyRight(name="foo")])

@@ -8,6 +8,7 @@ class Security:
         self.app = app
         secret_key = app.secret_key
 
+        from .encryptor import AesGcmEncryptor
         from .hasher import Blake2bHasher
         from .keys import derive_key
         from .registry import Registry
@@ -20,6 +21,10 @@ class Security:
 
         # serializer
         self.serializer = TimedUrlSerializer(derive_key(secret_key, "url-token"))
+
+        # encryptor: for secrets that must be decrypted back to plaintext
+        # (e.g. TOTP seeds), unlike hasher which is one-way.
+        self.encryptor = AesGcmEncryptor(derive_key(secret_key, "encryptor"))
 
         # registry plugins
         self._registry.init_all(app)

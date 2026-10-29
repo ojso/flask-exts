@@ -1,8 +1,9 @@
+from ..admin import AdminViewMixin
 from ..extension_core.base import Extension
 from ..portal.index_view import IndexView
 
 
-class PortalExtension(Extension):
+class PortalExtension(AdminViewMixin, Extension):
     @property
     def name(self) -> str:
         return "portal"

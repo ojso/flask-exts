@@ -10,4 +10,6 @@ initialized, configured, or integrated with your application structure.
 .. toctree::
    :maxdepth: 2
 
+   authentication
    database
+   modelview

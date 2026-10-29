@@ -1,18 +1,18 @@
-"""Field conversion helpers for mapping SQLAlchemy columns to WTForms fields."""
-
 import types
+from enum import Enum
 
 from wtforms import validators
 from wtforms.fields import (
     BooleanField,
     DateField,
+    DateTimeLocalField,
     DecimalField,
     IntegerField,
     StringField,
     TextAreaField,
 )
 
-from ....forms.fields import TimeField
+from ....forms.fields import ChoiceField, JSONField, TimeField
 from ....forms.widgets import DatePickerWidget
 
 
@@ -25,7 +25,7 @@ def convert_form_field(*args):
 
 
 class BaseFormFieldConverter:
-    _converters = {}
+    """Field conversion helpers for mapping SQLAlchemy columns to WTForms fields."""
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -34,10 +34,11 @@ class BaseFormFieldConverter:
         for base in cls.__bases__:
             base_map = getattr(base, "_converters", {})
             converters.update(base_map)
-        # Add converters from the current class including methods from the entire MRO
-        # for name, method in cls.__dict__.items(): # only check the current class, not the base classes
+        # Add converters from the current class including methods from the entire MRO.
+        # If for ``method in cls.__dict__.value()``, then only check the
+        # current class, not the base classes.
         for base in cls.__mro__:
-            for name, method in base.__dict__.items():
+            for method in base.__dict__.values():
                 if callable(method) and hasattr(method, "_converter_for_form_field"):
                     for type_name in method._converter_for_form_field:
                         converters[type_name] = method
@@ -142,23 +143,15 @@ class TemporalFieldConverter:
     @convert_form_field("DateTime", "TIMESTAMP")
     def convert_datetime(self, field_args, **extra):
         """Convert a datetime column to a WTForms DateTimeLocalField."""
-        from wtforms.fields import DateTimeLocalField
-
         return DateTimeLocalField(**field_args)
 
 
 class SpecialFieldConverter:
-    """
-    Special field converter.
-    Converts enum and JSON-like fields to compatible WTForms widgets and field types.
-    """
+    """Special field converter."""
 
     @convert_form_field("Enum")
     def convert_enum(self, column, field_args, **extra):
         """convert Enum field"""
-        from enum import Enum
-        from ....forms.fields import ChoiceField
-
         available_choices = [(f, f) for f in column.type.enums]
         accepted_values = [choice[0] for choice in available_choices]
 
@@ -174,6 +167,4 @@ class SpecialFieldConverter:
     @convert_form_field("JSON")
     def convert_json(self, field_args, **extra):
         """Convert a JSON column to a JSON-capable form field."""
-        from ....forms.fields import JSONField
-
         return JSONField(**field_args)

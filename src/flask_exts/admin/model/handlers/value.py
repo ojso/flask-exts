@@ -8,30 +8,28 @@ from collections.abc import Callable
 from functools import reduce
 from typing import Any
 
+from ..type_formatters import BASE_FORMATTERS, DETAIL_FORMATTERS, EXPORT_FORMATTERS
 
-class ValuesMixin:
-    """Mixin for retrieving and formatting display values in admin views."""
 
-    column_formatters: dict[str, Callable] = {}
-    """Column-specific formatters used in list views."""
+class ValueHandler:
+    """Handler for retrieving and formatting display values in admin views."""
 
-    column_formatters_export: dict[str, Callable] | None = None
-    """Column-specific formatters used during export."""
-
-    column_formatters_detail: dict[str, Callable] | None = None
-    """Column-specific formatters used in detail views."""
-
-    column_type_formatters: dict[type, Callable] | None = None
-    """Type-based formatters used in list views."""
-
-    column_type_formatters_export: dict[type, Callable] | None = None
-    """Type-based formatters used during export."""
-
-    column_type_formatters_detail: dict[type, Callable] | None = None
-    """Type-based formatters used in detail views."""
-
-    column_choices: dict[str, dict[Any, str]] = {}
-    """Choice mappings keyed by column name."""
+    def __init__(self, view):
+        self.view = view
+        self.column_formatters = view.column_formatters
+        self.column_formatters_detail = (
+            view.column_formatters_detail or self.column_formatters
+        )
+        self.column_formatters_export = (
+            view.column_formatters_export or self.column_formatters
+        )
+        self.column_type_formatters = view.column_type_formatters or BASE_FORMATTERS
+        self.column_type_formatters_export = (
+            view.column_type_formatters_export or EXPORT_FORMATTERS
+        )
+        self.column_type_formatters_detail = (
+            view.column_type_formatters_detail or DETAIL_FORMATTERS
+        )
 
     def _get_object_attr(self, obj: Any, name: str) -> Any:
         """Resolve a nested attribute from an object.
@@ -42,9 +40,6 @@ class ValuesMixin:
 
         Returns:
             Any: The resolved attribute value.
-
-        Raises:
-            AttributeError: If the attribute path does not exist.
         """
         return reduce(getattr, name.split("."), obj)
 
@@ -69,15 +64,21 @@ class ValuesMixin:
         Returns:
             Any: The formatted value.
         """
-        column_fmt = column_formatters.get(name)
+
+        if column_formatters is not None:
+            column_fmt = column_formatters.get(name)
+        else:
+            column_fmt = None
+
         if column_fmt is not None:
             value = column_fmt(self, model, name)
         else:
             value = self._get_object_attr(model, name)
 
-        choices_map = self.column_choices.get(name, {})
-        if choices_map:
-            return choices_map.get(value) or value
+        if self.view.column_choices is not None:
+            choices_map = self.view.column_choices.get(name)
+            if choices_map:
+                return choices_map.get(value) or value
 
         if column_type_formatters:
             type_fmt = None
@@ -100,13 +101,11 @@ class ValuesMixin:
         Returns:
             Any: The formatted value.
         """
-        column_type_formatters = self.column_type_formatters or {}
-
         return self._get_format_value(
             model,
             name,
             self.column_formatters,
-            column_type_formatters,
+            self.column_type_formatters,
         )
 
     def get_detail_value(self, model: Any, name: str) -> Any:
@@ -119,18 +118,12 @@ class ValuesMixin:
         Returns:
             Any: The formatted value.
         """
-        column_formatters_detail = (
-            self.column_formatters_detail or self.column_formatters
-        )
-        column_type_formatters_detail = (
-            self.column_type_formatters_detail or self.column_type_formatters or {}
-        )
 
         return self._get_format_value(
             model,
             name,
-            column_formatters_detail,
-            column_type_formatters_detail,
+            self.column_formatters_detail,
+            self.column_type_formatters_detail,
         )
 
     def get_export_value(self, model: Any, name: str) -> Any:
@@ -146,31 +139,10 @@ class ValuesMixin:
         Returns:
             Any: The formatted value.
         """
-        column_formatters_export = (
-            self.column_formatters_export or self.column_formatters
-        )
-        column_type_formatters_export = (
-            self.column_type_formatters_export or self.column_type_formatters or {}
-        )
 
         return self._get_format_value(
             model,
             name,
-            column_formatters_export,
-            column_type_formatters_export,
+            self.column_formatters_export,
+            self.column_type_formatters_export,
         )
-
-    def get_export_name(self, export_type: str = "csv") -> str:
-        """Return the generated export filename.
-
-        Args:
-            export_type: Export format name, for example ``csv``.
-
-        Returns:
-            str: Export filename.
-        """
-        import time
-
-        filename = "{}_{}.{}".format(self.name,time.strftime("%Y-%m-%d_%H-%M-%S"),export_type)
-
-        return filename

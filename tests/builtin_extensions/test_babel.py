@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pytest
 from flask import session
 from flask_babel import (
     format_datetime,
@@ -20,8 +19,8 @@ from flask_exts.forms.form.flask_form import FlaskForm
 
 def test_locale(app):
     with app.test_request_context():
-        locale = get_locale()
-        timezone = get_timezone()
+        # locale = get_locale()
+        # timezone = get_timezone()
         # print("locale:",get_locale().language)
         # print("timezone:",get_timezone().zone)
         # print(format_datetime(datetime.now(), "full"))
@@ -86,10 +85,10 @@ def test_translation(app):
 
 
 def test_translation_form(app):
-    text_required = "This field is required."
+    # text_required = "This field is required."
     text_required_en = "This field is required."
     text_required_zh = "此字段是必需项."
-    text_invalid_json = "Invalid JSON"
+    # text_invalid_json = "Invalid JSON"
     text_invalid_json_en = "Invalid JSON"
     text_invalid_json_zh = "无效的JSON"
 
@@ -118,16 +117,15 @@ def test_translation_form(app):
         assert text_required_zh in f.name.errors
         assert text_invalid_json_zh in f.json.errors
 
-@pytest.mark.skip(reason="skip.")
 def test_babel_get_translations(app):
     with app.test_request_context():
         session["lang"] = "zh"
         t = get_translations()
         # print(t._catalog)
-        for k, v in t._catalog.items():
-            print(f"{k} -> {v}")
+        assert t._catalog["Yes"] == "是"
+        # for k, v in t._catalog.items():
+        #     print(f"{k} -> {v}")
 
-@pytest.mark.skip(reason="skip.")
 def test_GNUTranslations(app):
     import os.path
     from gettext import GNUTranslations
@@ -135,9 +133,10 @@ def test_GNUTranslations(app):
     messages_mo = os.path.join(
         app.root_path, "translations", "zh_CN", "LC_MESSAGES", "messages.mo"
     )
-    print(messages_mo)
+    # print(messages_mo)
     with open(messages_mo, "rb") as f:
         g = GNUTranslations(f)
-    print(g._catalog)
-    for k, v in g._catalog.items():
-        print(k, v)
+    # print(g._catalog)
+    assert g._catalog["Name"] == "名称"
+    # for k, v in g._catalog.items():
+    #     print(k, v)

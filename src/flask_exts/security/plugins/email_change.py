@@ -31,9 +31,7 @@ class EmailChange:
             new_email,
         )
         token = current_security.serializer.dumps(self.serializer_name, token_data)
-        link = url_for(
-            "user.confirm_email_change", token=token, _external=True
-        )
+        link = url_for("user.confirm_email_change", token=token, _external=True)
         to_send_email.send(
             current_app._get_current_object(),
             data={
@@ -53,11 +51,7 @@ class EmailChange:
         )
         if expired:
             raise ExpiredTokenError
-        if (
-            invalid
-            or not isinstance(token_data, (tuple, list))
-            or len(token_data) != 4
-        ):
+        if invalid or not isinstance(token_data, (tuple, list)) or len(token_data) != 4:
             raise InvalidTokenError
 
         user_id, old_email_hash, password_hash, new_email = token_data
@@ -70,12 +64,9 @@ class EmailChange:
         user = current_userstore.get_user_by_identity(user_id)
         if user is None:
             raise TokenUserNotFoundError
-        if (
-            not current_security.hasher.verify(user.email or "", old_email_hash)
-            or not current_security.hasher.verify(
-                user.password or "", password_hash
-            )
-        ):
+        if not current_security.hasher.verify(
+            user.email or "", old_email_hash
+        ) or not current_security.hasher.verify(user.password or "", password_hash):
             raise InvalidTokenError
         if user.email == new_email:
             return "already_verified"
@@ -87,6 +78,7 @@ class EmailChange:
         user.email = new_email
         user.email_verified = True
         user.email_verified_at = datetime.now()
-        user.is_active = True
+        # Deliberately does not touch is_active: that field is an
+        # administrative lock, independent of email verification state.
         current_userstore.save_user(user)
         return "verified"

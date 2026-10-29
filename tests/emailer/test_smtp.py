@@ -1,9 +1,6 @@
-import pytest
-
 from flask_exts.emailer.smtp import SmtpSSL
 
 
-@pytest.mark.skip(reason="skip real email test.")
 def test_email(app):
     real_email_sender = app.config.get("REAL_EMAIL_SENDER")
     if not real_email_sender:

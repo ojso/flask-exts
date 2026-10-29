@@ -1,33 +1,54 @@
 Welcome to Flask-Exts's documentation!
 ======================================
 
-**Flask-Exts** is a Flask extension toolkit that brings together SQLAlchemy,
-Babel, forms, fields, widgets, and admin features to help you build complete web
-applications faster.
+**Flask-Exts** provides reusable extensions for Flask applications, including
+admin tools, SQLAlchemy support, forms, and localization.
 
-Flask-Exts is mainly inspired by:
+Highlights
+----------
 
-- `Flask-Admin <https://github.com/pallets-eco/flask-admin/>`_
-- `Bootstrap <https://getbootstrap.com/>`_
+- Extensions initialize in dependency order and can add admin views.
+- Includes account authentication, email verification, and two-factor
+  authentication.
+- Provides SQLAlchemy tools, forms, filtering, and data export.
+- Supports interface translation with Babel.
 
-This documentation is organized to help you move from installation to a working
-application quickly:
+Getting started
+---------------
 
-- :doc:`quickstart` covers the basic installation and first app.
-- :doc:`configure` documents common configuration options.
-- :doc:`examples` includes runnable sample applications.
-- :doc:`advanced/index` explains more advanced usage patterns.
+Flask-Exts requires Python 3.10 or later. Install it with pip:
 
 .. _installation:
 
-Installation
-------------
-
-To use Flask-Exts, install it with pip:
-
 .. code-block:: console
 
-   (.venv) $ pip install flask-exts
+   pip install flask-exts
+
+Initialize the extension manager in your Flask application:
+
+.. code-block:: python
+
+   from flask import Flask
+   from flask_exts import ExtensionManager
+
+   app = Flask(__name__)
+   app.config["SECRET_KEY"] = "change-this-for-local-development"
+   app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.sqlite"
+
+   extensions = ExtensionManager()
+   extensions.init_app(app)
+
+See :doc:`quickstart` for a complete example.
+
+Documentation guide
+-------------------
+
+- :doc:`quickstart` — installation and first application.
+- :doc:`configure` — configuration options.
+- :doc:`examples` — sample applications.
+- :doc:`advanced/index` — advanced usage.
+- :doc:`develop` — contributing and development.
+- :doc:`changes` — release history.
 
 .. toctree::
    :maxdepth: 2

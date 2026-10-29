@@ -1,9 +1,10 @@
+from ..admin import AdminViewMixin
 from ..extension_core.base import Extension
 from ..usercenter.core import UserCenter
 from ..usercenter.user_view import UserView
 
 
-class UserCenterExtension(Extension):
+class UserCenterExtension(AdminViewMixin, Extension):
     @property
     def name(self) -> str:
         return "usercenter"

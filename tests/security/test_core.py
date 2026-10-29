@@ -65,12 +65,16 @@ class TestSecurity:
                 email="testuser@example.com",
             )
             assert user is not None
-            assert user.is_active is False
+            # is_active is an administrative lock, independent of email
+            # verification -- a new account is active by default.
+            assert user.is_active is True
+            assert user.email_verified is False
             ev = current_security.get_plugin("email_verification")
             token = ev.generate_token(user)
             r = ev.execute_with_token(token)
             assert r == "verified"
             assert user.email_verified is True
+            # Verifying the email must not change is_active.
             assert user.is_active is True
 
             with pytest.raises(InvalidTokenError):

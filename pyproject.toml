@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "Flask-Exts"
 dynamic = ["version"]
 description = "Flask extensions with admin, SQLAlchemy, Babel, forms, fields, widgets, and more."
-readme = "README.rst"
+readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE.rst"]
 keywords = ["flask", "admin", "sqlalchemy", "babel", "form", "widget"]
@@ -14,7 +14,7 @@ authors = [
   { name = "David Hua", email = "david.dong.hua@gmail.com" },
 ]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Environment :: Web Environment",
   "Framework :: Flask",
   "Intended Audience :: Developers",
@@ -33,6 +33,7 @@ dependencies = [
   "Flask>=3.0",
   "WTForms>=3.0",
   "SQLAlchemy>=2.0",
+  "cryptography>=50.0",
   "flask-babel>=4.0",
   "Flask-Login>=0.6",
   "tablib>=3.0",
@@ -62,13 +63,23 @@ source = "code"
 [tool.hatch.build.targets.wheel]
 packages = ["src/flask_exts"]
 
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+extend-select = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
 [tool.djlint]
 profile = "jinja"
 indent = 2
+max_line_length = 120
+max_attribute_length = 80
 no_indent_inner_html = true
-max_attribute_length = 180
-max_line_length = 180
 sort_attributes = true
+format_attribute_template_tags = false
 preserve_blank_lines = true
 ignore = "T003"
 

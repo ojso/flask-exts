@@ -102,25 +102,6 @@ class TestInlineModelConverter:
         assert rv.status_code == 200
         assert 'name="children2-0-id"' in rv.get_data(as_text=True)
 
-    def test_inline_model_with_excluded_columns(self, app, admin):
-        """Test inline model with form_excluded_columns."""
-        with app.app_context():
-            db.reset_all()
-
-            inline = InlineForm(
-                OneToOneChild,
-                form_excluded_columns=("test",),
-            )
-            view = CustomSqlaModelView(
-                OneToOneParent,
-                endpoint="inline_excluded",
-                inline_models=(inline,),
-            )
-            admin.register_view(view)
-
-            form = view.create_form()
-            assert hasattr(form, "child")
-
     def test_multiple_inline_models(self, app, admin):
         """Test multiple inline models on a single view."""
         with app.app_context():

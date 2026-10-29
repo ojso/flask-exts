@@ -13,7 +13,7 @@ def app():
         TESTING=True,
         SECRET_KEY="test_key",
     )
-    app.config["ADMIN_ALLOW_ACCESS"] = True
+
     app.config["BABEL_ACCEPT_LANGUAGES"] = "en;zh;fr;de;ru"
     app.config["BABEL_DEFAULT_TIMEZONE"] = "Asia/Shanghai"
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
@@ -35,16 +35,4 @@ def client(app):
     return app.test_client()
 
 
-@pytest.fixture
-def exts(app):
-    return app.extensions["exts"]
 
-
-@pytest.fixture
-def admin(exts):
-    return exts.get_extension("admin").get_admin()
-
-
-@pytest.fixture
-def email(exts):
-    return exts.get_extension("emailer").get_emailer()

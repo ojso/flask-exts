@@ -72,27 +72,14 @@ class EndpointLinkRowAction(BaseRowAction):
         return url
 
 
-class RowActionMixin:
-    def __init__(self, *args, **kwargs):
-        self._row_actions = []
-        super().__init__(*args, **kwargs)
-
-    def init_row_actions(self):
-        """
-        Return list of row action objects to display in the list view.
-        """
-
-        self._row_actions.append(ViewRowAction())
-
-        if self.can_edit:
+class RowActionHandler:
+    def __init__(self, view):
+        self._row_actions = [ViewRowAction()]
+        if view.can_edit:
             self._row_actions.append(EditRowAction())
-
-        if self.can_delete:
+        if view.can_delete:
             self._row_actions.append(DeleteRowAction())
 
     def get_row_actions(self):
-        """
-        Return a list of row actions.
-        Override this method to provide custom row actions.
-        """
+        """Return a list of row actions."""
         return self._row_actions

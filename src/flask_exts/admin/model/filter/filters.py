@@ -1,42 +1,7 @@
 import datetime
 import time
-import types
 
 from flask_babel import lazy_gettext
-
-
-def convert_filter(*args):
-    """Decorator for field to filter conversion routine."""
-
-    def decorator(func):
-        func._converter_for_filter = list(map(lambda x: x.lower(), args))
-        return func
-
-    return decorator
-
-
-class BaseFilterConverter:
-    """Base filter converter."""
-
-    _converters = dict()
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        converters = {}
-        for base in cls.__bases__:
-            base_map = getattr(base, "_converters", {})
-            converters.update(base_map)
-        for name, method in cls.__dict__.items():
-            if callable(method) and hasattr(method, "_converter_for_filter"):
-                for type_name in method._converter_for_filter:
-                    converters[type_name] = method
-        cls._converters = converters
-
-    def get_filters(self, column_type, column, name, **kwargs):
-        column_type_name = column_type.__class__.__name__.lower()
-        filters = self._converters.get(column_type_name, None)
-        if filters:
-            return types.MethodType(filters, self)(column_type, column, name, **kwargs)
 
 
 class BaseFilter:
@@ -50,7 +15,7 @@ class BaseFilter:
             data_type:
                 Client-side widget type to use.
             options:
-                List of fixed options. If provided, will use drop down instead of textbox.
+                List of fixed options.
         """
         self.name = name
         self.data_type = data_type
@@ -227,10 +192,7 @@ class BaseDateTimeBetweenFilter(BaseFilter):
     def validate(self, value):
         try:
             value = self.clean(value)
-            if (len(value) == 2) and (value[0] <= value[1]):
-                return True
-            else:
-                return False
+            return bool(len(value) == 2 and value[0] <= value[1])
         except ValueError:
             return False
 

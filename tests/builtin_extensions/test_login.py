@@ -11,7 +11,7 @@ from flask_exts.datastore.sqla import db
 from flask_exts.proxies import current_userstore
 
 
-def test_login(app):
+def test_base(app):
     assert getattr(app, "login_manager", None) is not None
 
 
@@ -65,7 +65,7 @@ def test_auth_decode(app, payload, delta):
 
 @pytest.mark.parametrize("authstr, result", [("Basic Ym9iOnBhc3N3b3Jk", "bob")])
 def test_auth_decode_exceptions_unsupported(app, authstr, result):
-    with app.app_context(), pytest.raises(Exception):
+    with app.app_context(), pytest.raises(InvalidAuthorizationError):
         authorization_decoder(authstr)
 
 

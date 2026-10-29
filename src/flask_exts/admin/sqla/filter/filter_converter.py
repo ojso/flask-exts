@@ -1,4 +1,4 @@
-from ...model.filter import BaseFilterConverter, convert_filter
+from ...model.filter.filter_converter import BaseFilterConverter, convert_filter
 from .filters import (
     # bool_filters
     BooleanEqualFilter,

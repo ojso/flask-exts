@@ -1,11 +1,25 @@
 from abc import ABC, abstractmethod
 
-from ..admin import View
-
 
 class Extension(ABC):
     """
     Base class for all Flask-Exts extensions.
+
+    Lifecycle, in order:
+
+    1. ``init_app(app)``  -- build this extension's own services. Other
+       extensions may not be initialized yet, so do not reach for them here.
+    2. ``post_init(app)`` -- optional second pass, run only after every
+       registered extension has finished ``init_app``. Use this to look up
+       and wire into other extensions.
+    3. ``shutdown()``     -- release resources, run in reverse order.
+
+    The two-phase split keeps the core neutral: it never needs to know which
+    concrete extensions exist or in what order they were registered relative
+    to each other. An extension that wants to collect contributions from its
+    peers (for example, admin collecting views) does so in its own
+    ``post_init`` by inspecting the registry -- see ``admin.AdminViewMixin``
+    for the convention this project uses for that.
 
     Example:
         class MyExtension(Extension):
@@ -53,12 +67,17 @@ class Extension(ABC):
         """
         ...
 
-    def get_admin_views(self) -> list[tuple[View, bool]]:
+    def post_init(self, app):
         """
-        Views this extension wants registered on the admin instance.
-        Returns a list of (view_instance, is_menu) tuples.
+        Second initialization phase, run after every extension's ``init_app``.
+
+        Optional hook. Override to wire into other extensions once the whole
+        registry is guaranteed to be initialized -- regardless of
+        registration order.
+
+        Args:
+            app: Flask application instance
         """
-        return []
 
     def shutdown(self):
         """

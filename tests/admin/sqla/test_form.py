@@ -18,21 +18,15 @@ def test_form_columns(app, admin):
             endpoint="view1",
             form_columns=("int_field", "text_field"),
         )
-        view2 = CustomSqlaModelView(
-            FormModel,
-            endpoint="view2",
-            form_excluded_columns=("excluded_column",),
-        )
+
         view3 = CustomSqlaModelView(ChildModel, endpoint="view3")
 
         form1 = view1.create_form()
-        form2 = view2.create_form()
         form3 = view3.create_form()
 
         assert "int_field" in form1._fields
         assert "text_field" in form1._fields
         assert "datetime_field" not in form1._fields
-        assert "excluded_column" not in form2._fields
 
         # check that relation shows up as a query select
         assert type(form3.model).__name__ == "QuerySelectField"

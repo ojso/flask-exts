@@ -1,5 +1,6 @@
 import csv
 import mimetypes
+import time
 from typing import Any
 
 import tablib
@@ -7,28 +8,29 @@ from flask import Response, flash, redirect, stream_with_context
 from flask_babel import gettext
 from werkzeug.utils import secure_filename
 
-from ...exposer import expose_url
 
+class ExportHandler:
+    """Handler for exporting model data in tabular formats."""
 
-class ExportOperationsMixin:
-    """Mixin for exporting model data in tabular formats."""
+    def __init__(self, view):
+        self.view = view
+        self._export_columns = view._export_columns
 
-    can_export: bool = False
-    """Whether export is enabled for the current view."""
+    def get_export_name(self, export_type: str = "csv") -> str:
+        """Return the generated export filename.
 
-    export_max_rows: int = 10000
-    """
-        Maximum number of rows allowed for export.
-    """
+        Args:
+            export_type: Export format name, for example ``csv``.
 
-    export_types: list[str] = ("csv",)
-    """
-        A list of available export filetypes. `csv` only is default, but any
-        filetypes supported by tablib can be used.
+        Returns:
+            str: Export filename.
+        """
 
-        Check tablib for https://tablib.readthedocs.io/en/stable/formats.html
-        for supported types.
-    """
+        filename = (
+            f"{self.view.name}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.{export_type}"
+        )
+
+        return filename
 
     def _export_data(self) -> tuple[int | None, list[Any]]:
         """Return the rows to be exported.
@@ -43,7 +45,7 @@ class ExportOperationsMixin:
             NotImplementedError: If unsupported macros are used in export
                 formatters.
         """
-        for col, func in (self.column_formatters_export or {}).items():
+        for col, func in (self.view.column_formatters_export or {}).items():
             if col not in [col for col, _ in self._export_columns]:
                 continue
 
@@ -54,23 +56,23 @@ class ExportOperationsMixin:
                     f"Column: {col}"
                 )
 
-        view_args = self._get_list_args()
-        sort_column = self._get_column_by_idx(view_args.sort)
+        view_args = self.view.get_list_args()
+        sort_column = self.view._get_column_by_idx(view_args.sort)
         if sort_column is not None:
             sort_column = sort_column[0]
 
-        count, data = self.get_list(
-            0,
-            sort_column,
-            view_args.sort_desc,
-            view_args.search,
-            view_args.filters,
-            page_size=self.export_max_rows,
+        count, data = self.view.get_list(
+            search=view_args.search,
+            filters=view_args.filters,
+            sort_field=sort_column,
+            sort_desc=view_args.sort_desc,
+            page=0,
+            page_size=self.view.export_max_rows,
         )
 
         return count, data
 
-    def _export_csv(self, return_url: str) -> Response:
+    def export_csv(self, return_url: str) -> Response:
         """Export records as a streamed CSV response.
 
         Args:
@@ -94,7 +96,9 @@ class ExportOperationsMixin:
             yield writer.writerow(titles)
 
             for row in data:
-                vals = [self.get_export_value(row, c[0]) for c in self._export_columns]
+                vals = [
+                    self.view.get_export_value(row, c[0]) for c in self._export_columns
+                ]
                 yield writer.writerow(vals)
 
         filename = self.get_export_name(export_type="csv")
@@ -106,12 +110,11 @@ class ExportOperationsMixin:
             mimetype="text/csv",
         )
 
-    def _export_tablib(self, export_type: str, return_url: str) -> Response:
+    def export_tablib(self, export_type: str, return_url: str) -> Response:
         """Export records in a variety of tabular formats.
 
         Args:
-            export_type: Export format such as ``json``, ``yaml``, ``html``, or
-                ``xlsx``.
+            export_type: Export format such as ``json``, ``yaml``, or ``xlsx``.
             return_url: Redirect target if export fails.
 
         Returns:
@@ -131,7 +134,7 @@ class ExportOperationsMixin:
         _count, data = self._export_data()
 
         for row in data:
-            vals = [self.get_export_value(row, c[0]) for c in self._export_columns]
+            vals = [self.view.get_export_value(row, c[0]) for c in self._export_columns]
             ds.append(vals)
 
         try:
@@ -151,26 +154,3 @@ class ExportOperationsMixin:
             headers={"Content-Disposition": disposition},
             mimetype=mimetype,
         )
-
-    @expose_url("/export/<export_type>/")
-    def export(self, export_type: str) -> Response:
-        """Handle export requests for a given file format.
-
-        Args:
-            export_type: Output format to generate.
-
-        Returns:
-            Response: File response or redirect.
-        """
-        return_url = (
-            self.get_redirect_target() if hasattr(self, "get_redirect_target") else "#"
-        )
-
-        if not self.can_export or (export_type not in self.export_types):
-            flash(gettext("Permission denied."), "error")
-            return redirect(return_url)
-
-        if export_type == "csv":
-            return self._export_csv(return_url)
-        else:
-            return self._export_tablib(export_type, return_url)

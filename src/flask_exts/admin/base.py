@@ -15,20 +15,15 @@ class Admin:
     Collection of the views. Also manages menu structure.
     """
 
-    def __init__(self, app=None):
-        self.app = app
-        self.name = self.get_admin_name()
-        self.url = self.get_admin_url()
-        self.endpoint = self.get_admin_endpoint()
-        self.template_folder = self.get_admin_template_folder()
-        self.static_folder = self.get_admin_static_folder()
-        self._views = {}
-        self.menu = Menu(self)
-        self.all_accessed = True
-        if app is not None:
-            self.init_app(app)
-
-    def init_app(self, app):
+    def __init__(
+        self,
+        app=None,
+        name="Admin",
+        url="/admin",
+        endpoint="admin",
+        template_folder="../templates",
+        static_folder="../static",
+    ):
         """
         Constructor.
 
@@ -36,40 +31,32 @@ class Admin:
             app:
                 Flask application object
             name:
-                Application name. Will be displayed in the main menu and as a page title. Defaults to "Admin"
+                Application name. Will be displayed in the main menu and as a
+                page title. Defaults to "Admin"
             url:
                 Base URL
             endpoint:
-                Base endpoint name for index view. If you use multiple instances of the `Admin` class with
-                a single Flask application, you have to set a unique endpoint name for each instance.
-
+                Base endpoint name for index view. If you use multiple instances
+                of the `Admin` class with a single Flask application, you have
+                to set a unique endpoint name for each instance.
         """
         self.app = app
+        self.name = name
+        self.url = url
+        if not url.startswith("/"):
+            raise ValueError("admin.url must startswith '/'")
+        self.endpoint = endpoint
+        self.template_folder = template_folder
+        self.static_folder = static_folder
+        self._views = {}
+        self.menu = Menu(self)
+        if app is not None:
+            self.init_app(app)
 
-        # Register views
+    def init_app(self, app):
+        self.app = app
         for v in self._views.values():
             app.register_blueprint(v.create_blueprint())
-
-    def get_admin_name(self):
-        name = "Admin"
-        return name
-
-    def get_admin_url(self):
-        url = "/admin"
-        if not url.startswith("/"):
-            raise ValueError("admin.url must startswith /")
-        return url
-
-    def get_admin_endpoint(self):
-        return "admin"
-
-    def get_admin_template_folder(self):
-        template_folder = "../templates"
-        return template_folder
-
-    def get_admin_static_folder(self):
-        static_folder = "../static"
-        return static_folder
 
     def register_view(self, view, is_menu=True, category=None):
         """
@@ -83,7 +70,7 @@ class Admin:
         view.admin = self
 
         # Add to _views
-        view_name = view.name.lower().replace(" ", "_")
+        view_name = view.name.lower().replace(" ", "")
 
         if view_name in self._views:
             raise ValueError(f"View with name {view.name} already exists")
@@ -96,6 +83,12 @@ class Admin:
 
         if is_menu:
             self.menu.add_view(view, category)
+
+    def get_views(self):
+        return self._views.values()
+
+    def get_view(self, name):
+        return self._views.get(name)
 
     def get_url(self, endpoint, **kwargs):
         """

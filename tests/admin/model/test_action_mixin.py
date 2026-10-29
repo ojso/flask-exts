@@ -1,9 +1,9 @@
 from flask_exts.admin import View, expose_url
-from flask_exts.admin.model.actions_mixin import ActionsMixin
+from flask_exts.admin.model.handlers.rowsaction import RowsActionHandler
 from flask_exts.forms.form.flask_form import FlaskForm
 
 
-class MockView(View, ActionsMixin):
+class MockView(View, RowsActionHandler):
     base_form_class = FlaskForm
 
     @expose_url("/")

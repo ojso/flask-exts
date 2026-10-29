@@ -4,6 +4,7 @@ from flask_exts.extension_core.base import (
     Extension,
     ExtensionDependencyError,
     ExtensionError,
+    ExtensionInitError,
     ExtensionNotFoundError,
 )
 from flask_exts.extension_core.registry import ExtensionRegistry
@@ -15,7 +16,8 @@ from flask_exts.extension_core.registry import ExtensionRegistry
 def make_extension(name, dependencies=(), record=None, shutdown_error=None):
     """Build a configurable fake extension.
 
-    - record: if given a list, append(name) on init_app and append(f"shutdown:{name}") on shutdown
+    - record: if given a list, append(name) on init_app, append(f"post_init:{name}")
+      on post_init, and append(f"shutdown:{name}") on shutdown
     - shutdown_error: if given an exception, raise it on shutdown (used to test exception isolation)
     """
 
@@ -31,6 +33,10 @@ def make_extension(name, dependencies=(), record=None, shutdown_error=None):
         def init_app(self, app):
             if record is not None:
                 record.append(name)
+
+        def post_init(self, app):
+            if record is not None:
+                record.append(f"post_init:{name}")
 
         def shutdown(self):
             if shutdown_error is not None:
@@ -157,6 +163,82 @@ def test_init_is_idempotent(registry):
     registry.init_all(None)
     registry.init_all(None)
     assert record == ["a", "b"]
+
+
+def test_post_init_is_idempotent(registry):
+    """Calling post_init_all twice triggers post_init only once per extension.
+
+    Regression: AdminExtension.post_init registers views on each call: a
+    duplicate call would raise on re-registering the same view name.
+    """
+    record = []
+    registry.register(make_extension("a", record=record))
+    registry.register(make_extension("b", record=record))
+    registry.init_all(None)
+
+    registry.post_init_all(None)
+    registry.post_init_all(None)
+    assert record.count("post_init:a") == 1
+    assert record.count("post_init:b") == 1
+
+
+def test_post_init_requires_init_first(registry):
+    """post_init on an extension whose init_app has not run raises."""
+    registry.register(make_extension("a"))
+    with pytest.raises(ExtensionInitError):
+        registry.post_init("a", None)
+
+
+def test_post_init_unknown_extension_raises(registry):
+    with pytest.raises(ExtensionNotFoundError):
+        registry.post_init("ghost", None)
+
+
+def test_post_init_follows_dependency_order(registry):
+    """post_init respects the same topological order as init_app."""
+    record = []
+    registry.register(
+        make_extension("dependent", dependencies=["dep"], record=record)
+    )
+    registry.register(make_extension("dep", record=record))
+    registry.init_all(None)
+    registry.post_init_all(None)
+
+    assert record.index("post_init:dep") < record.index("post_init:dependent")
+
+
+def test_is_post_initialized(registry):
+    registry.register(make_extension("a"))
+    assert registry.is_post_initialized("a") is False
+    registry.init_all(None)
+    assert registry.is_post_initialized("a") is False
+    registry.post_init_all(None)
+    assert registry.is_post_initialized("a") is True
+
+
+def test_shutdown_resets_post_init_state(registry):
+    """A->shutdown->re-init cycle must re-run post_init, not skip it."""
+    record = []
+    registry.register(make_extension("a", record=record))
+    registry.init_all(None)
+    registry.post_init_all(None)
+    registry.shutdown_all()
+
+    assert registry.is_post_initialized("a") is False
+
+    registry.init_all(None)
+    registry.post_init_all(None)
+    assert record.count("post_init:a") == 2
+
+
+def test_unregister_clears_post_init_state(registry):
+    registry.register(make_extension("a"))
+    registry.init_all(None)
+    registry.post_init_all(None)
+    assert registry.is_post_initialized("a") is True
+
+    registry.unregister("a")
+    assert registry.is_post_initialized("a") is False
 
 
 def test_init_failure_raises_and_marks(registry):

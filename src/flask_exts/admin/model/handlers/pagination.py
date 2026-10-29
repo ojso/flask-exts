@@ -36,25 +36,38 @@ class ViewArgs:
         args.update(kwargs)
         return ViewArgs(**args)
 
+    def __str__(self):
+        filters = ", ".join(repr(f) for f in self.filters)
+        extra = ", ".join(f"{k}={v!r}" for k, v in self.extra_args.items())
+        return (
+            f"{type(self).__name__}("
+            f"page={self.page}, "
+            f"page_size={self.page_size}, "
+            f"sort={self.sort!r}, "
+            f"sort_desc={self.sort_desc}, "
+            f"search={self.search!r}, "
+            f"filters=[{filters}], "
+            f"extra_args={{{extra}}}"
+            f")"
+        )
 
-class PaginationMixin:
-    """Mixin that provides pagination state and URL generation for list views."""
+class PaginationHandler:
+    """Handler that provides pagination state and URL generation for list views."""
 
-    # Pagination settings
     page_size: int = 20
-    """
-        Default page size for pagination.
-    """
+    """Default page size for pagination."""
 
     can_set_page_size = True
-    """
-        Allows to select page size via dropdown list
-    """
+    """Allows to select page size via dropdown list."""
 
     page_size_options: tuple = (5, 10, 20, 50, 100)
-    """
-        Sets the page size options available, if `can_set_page_size` is True
-    """
+    """Sets the page size options available, if `can_set_page_size` is True."""
+
+    def __init__(self, view):
+        self.view = view
+
+    def get_default_page_size(self):
+        return self.page_size
 
     def get_safe_page_size(self, page_size: int) -> int:
         """Return a validated page size for the current view.
@@ -69,7 +82,7 @@ class PaginationMixin:
             return page_size
         return self.page_size
 
-    def _get_list_args(self) -> "ViewArgs":
+    def get_list_args(self) -> "ViewArgs":
         """Return the current list arguments parsed from the request.
 
         Returns:
@@ -81,9 +94,7 @@ class PaginationMixin:
             sort=request.args.get("sort", None, type=int),
             sort_desc=request.args.get("desc", None, type=int),
             search=request.args.get("search", None),
-            filters=self.get_active_filters()
-            if hasattr(self, "get_active_filters")
-            else [],
+            filters=self.view.get_active_filters(),
             extra_args={
                 k: v
                 for k, v in request.args.items()
@@ -100,7 +111,7 @@ class PaginationMixin:
             },
         )
 
-    def _get_list_url(self, view_args: "ViewArgs") -> str:
+    def get_list_url(self, view_args: "ViewArgs") -> str:
         """Generate a list-view URL from the current view arguments.
 
         Args:
@@ -122,8 +133,7 @@ class PaginationMixin:
 
         kwargs["page_size"] = self.get_safe_page_size(view_args.page_size)
 
-        if hasattr(self, "get_active_filters_kwargs"):
-            kwargs.update(self.get_active_filters_kwargs(view_args.filters))
+        kwargs.update(self.view.get_active_filters_kwargs(view_args.filters))
 
         if hasattr(self, "get_url"):
             return self.get_url(".index_view", **kwargs)

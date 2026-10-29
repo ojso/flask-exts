@@ -22,9 +22,7 @@ class ModelFieldConverter(
     SpecialFieldConverter,
     BaseFormFieldConverter,
 ):
-    """
-    SQLAlchemy model to form converter.
-    """
+    """SQLAlchemy model to form field converter."""
 
     def __init__(self, session, view):
         super().__init__()
@@ -44,24 +42,16 @@ class ModelFieldConverter(
         if "label" in field_args:
             return field_args["label"]
 
-        column_labels = getattr(self.view, "column_labels", None)
-
-        if column_labels:
-            return column_labels.get(name)
-
-        return name.replace("_", " ").title()
+        return self.view.get_column_label(name)
 
     def _get_description(self, name, field_args):
         if "description" in field_args:
             return field_args["description"]
 
-        column_descriptions = getattr(self.view, "column_descriptions", None)
-
-        if column_descriptions:
-            return column_descriptions.get(name)
+        return self.view.get_column_description(name)
 
     def model_select_field(self, prop, multiple, remote_model, **kwargs):
-        loader = getattr(self.view, "_form_ajax_refs", {}).get(prop.key)
+        loader = self.view.get_ajax_loader(prop.key)
 
         if loader:
             if multiple:
@@ -131,12 +121,12 @@ class ModelFieldConverter(
         # Check if it is relation or property
         if hasattr(prop, "direction"):
             return self.convert_relation(name, prop, kwargs)
-        
+
         elif hasattr(prop, "columns"):
             column = prop.columns[0]
             form_columns = getattr(self.view, "form_columns", None) or ()
 
-            # Do not display foreign keys - use relations, except when explicitly instructed
+            # Do not display foreign keys - use relations, except explicitly instructed
             if column.foreign_keys and prop.key not in form_columns:
                 return None
 
@@ -174,9 +164,9 @@ class ModelFieldConverter(
                 kwargs["validators"].append(validators.InputRequired())
 
             # Apply label and description if it isn't inline form field
-            if self.view.model == mapper.class_:
-                kwargs["label"] = self._get_label(prop.key, kwargs)
-                kwargs["description"] = self._get_description(prop.key, kwargs)
+            # if self.view.model == mapper.class_:
+            #     kwargs["label"] = self._get_label(prop.key, kwargs)
+            #     kwargs["description"] = self._get_description(prop.key, kwargs)
 
             # Figure out default value
             default = getattr(column, "default", None)
@@ -187,7 +177,7 @@ class ModelFieldConverter(
 
                 if value is not None:
                     if getattr(default, "is_callable", False):
-                        value = lambda: default.arg(None)  # noqa: E731
+                        value = lambda: default.arg(None)
                     else:
                         if not getattr(default, "is_scalar", True):
                             value = None

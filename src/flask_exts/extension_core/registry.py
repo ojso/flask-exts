@@ -29,6 +29,7 @@ class ExtensionRegistry:
         self._extension_classes: dict[str, type[Extension]] = {}
         self._instances: dict[str, Extension] = {}
         self._initialized: set[str] = set()
+        self._post_initialized: set[str] = set()
 
     def register(self, extension_class: type[Extension]) -> Extension:
         """
@@ -52,7 +53,9 @@ class ExtensionRegistry:
 
         # Check for duplicates
         if name in self._extension_classes:
-            raise ExtensionError(f"Duplicate name '{name}' for Extension '{extension_class.__name__}'.")
+            raise ExtensionError(
+                f"Duplicate name '{name}' for Extension '{extension_class.__name__}'."
+            )
 
         # Validate name
         if not name or not name.isascii() or not name.replace("_", "").isalnum():
@@ -77,8 +80,8 @@ class ExtensionRegistry:
             del self._extension_classes[name]
             if name in self._instances:
                 del self._instances[name]
-            if name in self._initialized:
-                self._initialized.discard(name)
+            self._initialized.discard(name)
+            self._post_initialized.discard(name)
             return True
         return False
 
@@ -160,6 +163,65 @@ class ExtensionRegistry:
         for name in self.initialization_order():
             self.init(name, app)
 
+    def post_init_all(self, app) -> None:
+        """
+        Run the second initialization phase for all registered extensions.
+
+        Must be called after :meth:`init_all`, so every extension's
+        ``init_app`` has already run by the time any ``post_init`` executes.
+
+        Args:
+            app: Flask application
+        """
+        for name in self.initialization_order():
+            self.post_init(name, app)
+
+    def post_init(self, name: str, app) -> None:
+        """
+        Run the second initialization phase for a single extension.
+
+        Idempotent: calling this more than once for the same extension (e.g.
+        because ``post_init_all`` ran, then a late registration re-triggers
+        it) is a no-op after the first call. This matters because
+        ``post_init`` implementations are not expected to guard against being
+        invoked twice -- AdminExtension.post_init, for example, would raise
+        on a duplicate view registration otherwise.
+
+        Args:
+            name: Extension name
+            app: Flask application
+
+        Raises:
+            ExtensionNotFoundError: If extension not found
+            ExtensionInitError: If the extension's init_app has not run yet
+        """
+        if name in self._post_initialized:
+            return
+
+        ext = self.get_extension(name)
+        if ext is None:
+            raise ExtensionNotFoundError(f"Extension '{name}' is not registered")
+
+        if name not in self._initialized:
+            raise ExtensionInitError(
+                f"Extension '{name}' must be initialized before post_init"
+            )
+
+        ext.post_init(app)
+        self._post_initialized.add(name)
+
+    def is_post_initialized(self, name: str) -> bool:
+        """
+        Check if an extension has completed the second initialization phase.
+
+        Args:
+            name: Extension name
+
+        Returns:
+            bool: True if post-initialized
+        """
+        return name in self._post_initialized
+
     def shutdown_all(self) -> None:
         """
         Shutdown all extensions in reverse order.
@@ -177,6 +239,7 @@ class ExtensionRegistry:
 
                 warnings.warn(f"Error shutting down {ext.name}: {e}")
             self._initialized.discard(name)
+            self._post_initialized.discard(name)
 
     def init(self, name: str, app) -> None:
         """

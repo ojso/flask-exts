@@ -95,7 +95,7 @@ class PostView(SqlaModelView):
     }
     form_widget_args = {"text": {"rows": 10}}
 
-    form_ajax_refs = {
+    ajax_refs = {
         "author": {"fields": ("first_name", "last_name")},
         # "tags": {
         #     "fields": ("name",),

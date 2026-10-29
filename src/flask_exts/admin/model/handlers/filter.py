@@ -3,7 +3,7 @@ from collections import OrderedDict
 from flask import flash, request
 from flask_babel import gettext
 
-from .filter import BaseFilter
+from ..filter.filters import BaseFilter
 
 
 class FilterGroup:
@@ -28,70 +28,20 @@ class FilterGroup:
         return iter(self.filters)
 
 
-class FilterMixin:
-    column_filters = None
-    """
-        Collection of the column filters.
-
-        Can contain either field names or instances of :class:`~.model.filters.BaseFilter` classes.
-        Can contain either field names or instances of :class:`~.sqla.filters.BaseSQLAFilter` classes.
-
-        Example::
-
-            class MyModelView(BaseModelView):
-                column_filters = ('user', 'email')
-
-        or::
-
-            from .sqla.filters import BooleanEqualFilter
-
-            class MyModelView(BaseModelView):
-                column_filters = (BooleanEqualFilter(column="user.name", name='Name'),)
-
-        or::
-
-            from ~.sqla.filters import BaseSQLAFilter
-
-            class FilterNameBrown(BaseSQLAFilter):
-                def __init__(self, column_type, column, name, data_type=None, options=None):
-                    super().__init__(
-                        column_type, column, name, data_type, options=(("1", "Yes"), ("0", "No"))
-                    )
-                def apply(self, query, value):
-                    if value == "1":
-                        return query.add_filter(self.column, "==", "Brown")
-                    else:
-                        return query.add_filter(self.column, "!=", "Brown")
-
-                def operation(self):
-                    return "is Brown"
-
-            class MyModelView(BaseModelView):
-                column_filters = [
-                    FilterNameBrown(
-                        column_type = get_model_column_type(Author, "last_name"),
-                        column="author.last_name",
-                        name="Last Name",
-                    ),
-                ]
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def init_filters(self):
+class FilterHandler:
+    def __init__(self, view):
         self._filters = []
         self._filter_groups = OrderedDict()
         self._filter_args = {}
 
-        if not self.column_filters:
+        if not view.column_filters:
             return
 
-        for f in self.column_filters:
+        for f in view.column_filters:
             if isinstance(f, BaseFilter):
                 self._filters.append(f)
             else:
-                flts = self.scaffold_filter(f)
+                flts = view.scaffold_filter(f)
                 if flts:
                     self._filters.extend(flts)
 
@@ -111,33 +61,36 @@ class FilterMixin:
 
                 self._filter_args[self._get_filter_arg(i, flt)] = (i, flt)
 
-    def scaffold_filter(self, name):
-        """
-        Generate filter object for the given name
+    def get_filters(self):
+        return self._filters
 
-        Args:
-            name:
-                Name of the field
-        """
+    def get_filter_groups(self):
+        """Returns non-lazy version of filter strings."""
+        if self._filter_groups:
+            results = OrderedDict()
+
+            for group in self._filter_groups.values():
+                key, items = group.non_lazy()
+                results[key] = items
+
+            return results
+
+        return None
 
     def _get_filter_arg(self, index, flt):
-        """
-        Given a filter `flt`, return a unique name for that filter in this view.
+        """Given a filter `flt`, return a unique name for that filter in this view.
 
         Does not include the `flt[n]_` portion of the filter name.
 
         Args:
-            index:
-                Filter index in _filters array
-            flt:
-                Filter instance
+            index: Filter index in _filters array
+            flt: Filter instance
         """
 
         return str(index)
 
     def get_active_filters_kwargs(self, active_filters):
-        """
-        Get active filters as dictionary of URL arguments and values
+        """Get active filters as dictionary of URL arguments and values.
 
         Args:
             active_filters:
@@ -152,21 +105,6 @@ class FilterMixin:
                 kwargs[key] = value
 
         return kwargs
-
-    def get_filter_groups(self):
-        """
-        Returns non-lazy version of filter strings
-        """
-        if self._filter_groups:
-            results = OrderedDict()
-
-            for group in self._filter_groups.values():
-                key, items = group.non_lazy()
-                results[key] = items
-
-            return results
-
-        return None
 
     def get_active_filters(self) -> list[tuple[int, str, str]]:
         if self._filters:

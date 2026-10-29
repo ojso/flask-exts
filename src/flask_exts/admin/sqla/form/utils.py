@@ -12,7 +12,6 @@ class FieldPlaceholder:
         self.field = field
 
 
-# Get list of fields and generate form
 def get_model_form(
     model,
     converter,
@@ -23,8 +22,7 @@ def get_model_form(
     hidden_pk=False,
     extra_fields=None,
 ):
-    """
-    Generate form from the model.
+    """Get list of fields and generate form from the model.
 
     Args:
         model:
@@ -44,7 +42,6 @@ def get_model_form(
     """
 
     field_args = field_args or {}
-
     mapper = inspect(model)
 
     if only:

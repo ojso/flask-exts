@@ -3,6 +3,7 @@ from functools import wraps
 from re import sub
 
 from flask import Blueprint, abort, url_for
+from flask_login import current_user
 
 
 class AlreadyWrappedError(Exception):
@@ -17,6 +18,8 @@ def _wrap_view_func_with_access(f):
 
     @wraps(f)
     def wrapper(self, *args, **kwargs):
+        if getattr(f, "_login_required", False) and not current_user.is_authenticated:
+            return f(self, *args, **kwargs)
         if not self.allow(f, *args, **kwargs):
             return self.inaccessible_callback(f, *args, **kwargs)
         return f(self, *args, **kwargs)
@@ -56,22 +59,28 @@ class View(metaclass=ViewMeta):
 
         Args:
             name:
-                Name of this view. If not provided, will default to the class name.
+                Name of this view. If not provided, will default to the class
+                name.
             endpoint:
-                Base endpoint name for the view. For example, if there's a view method called "index" and
-                endpoint is set to "admin", you can use `url_for('admin.index')` to get the URL to the
-                view method. Defaults to the class name in lower case.
+                Base endpoint name for the view. For example, if there's a view
+                method called "index" and endpoint is set to "admin", you can
+                use `url_for('admin.index')` to get the URL to the view method.
+                Defaults to the class name in lower case.
             url:
-                Base URL. If provided, affects how URLs are generated. For example, if the url parameter
-                is "test", the resulting URL will look like "/admin/test/". If not provided, will
-                use endpoint as a base url. However, if URL starts with '/', absolute path is assumed
-                and '/admin/' prefix won't be applied.
+                Base URL. If provided, affects how URLs are generated. For
+                example, if the url parameter is "test", the resulting URL will
+                look like "/admin/test/". If not provided, will use endpoint as
+                a base url. However, if URL starts with '/', absolute path is
+                assumed and '/admin/' prefix won't be applied.
             template_folder:
-                Template folder for this view. If not provided, default admin template folder will be used.
+                Template folder for this view. If not provided, default admin
+                template folder will be used.
             static_folder:
-                Static folder for this view. If provided, will be used to serve static files for this view.
+                Static folder for this view. If provided, will be used to serve
+                static files for this view.
             static_url_path:
-                Static URL Path. If provided, this specifies the path to the static url directory.
+                Static URL Path. If provided, this specifies the path to the
+                static url directory.
         """
 
         self.name = name or self._prettify_class_name(self.__class__.__name__)
@@ -93,9 +102,9 @@ class View(metaclass=ViewMeta):
 
         # Default view
         if self._default_view is None:
-            raise Exception(
-                "Attempted to instantiate admin view %s without default view"
-                % self.__class__.__name__
+            raise ValueError(
+                f"Attempted to instantiate admin view {self.__class__.__name__} without"
+                " default view"
             )
 
         super().__init__(**kwargs)
@@ -105,15 +114,13 @@ class View(metaclass=ViewMeta):
             if hasattr(attr, "_urls"):
                 for url, methods in attr._urls:
                     self._urls.append((url, name, methods))
-                    if url == "/":
-                        self._default_view = name
-                    elif url == "/index/" and self._default_view is None:
+                    if url == "/" or url == "/index/" and self._default_view is None:
                         self._default_view = name
 
     def _get_endpoint(self):
         """
-        Generate Flask endpoint name. By default converts class name to lower case if endpoint is
-        not explicitly provided.
+        Generate Flask endpoint name. By default converts class name to lower
+        case if endpoint is not explicitly provided.
         """
         return self.__class__.__name__.lower()
 

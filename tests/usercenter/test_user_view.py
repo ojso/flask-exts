@@ -7,7 +7,11 @@ from flask_exts.datastore.sqla import db
 from flask_exts.emailer.sender import Sender
 from flask_exts.forms.form.csrf import get_csrf_token
 from flask_exts.proxies import current_security, current_userstore
-from flask_exts.security import SESSION_KEY_TFA_VERIFIED
+from flask_exts.security import (
+    SESSION_KEY_PENDING_TFA_USER_ID,
+    SESSION_KEY_TFA_RECOVERY,
+    SESSION_KEY_TFA_VERIFIED,
+)
 from flask_exts.usercenter.forms.email_change import EmailChangeForm
 
 mail_data = []
@@ -40,6 +44,7 @@ class TestUserView:
             self.user_logout_url = url_for("user.logout")
             self.user_enable_tfa_url = url_for("user.enable_tfa")
             self.user_setup_tfa_url = url_for("user.setup_tfa")
+            self.user_rebind_tfa_url = url_for("user.rebind_tfa")
             self.user_verify_tfa_url = url_for("user.verify_tfa")
             self.user_change_password_url = url_for("user.change_password")
             self.user_forgot_password_url = url_for("user.forgot_password")
@@ -75,10 +80,17 @@ class TestUserView:
         with app.app_context():
             user = current_userstore.get_user_by_username(self.test_username)
             self.test_user_id = user.id
-            assert user.is_active is False
+            # is_active is an administrative lock, independent of email
+            # verification -- a newly registered account is active by
+            # default; it just hasn't verified its email yet.
+            assert user.is_active is True
+            assert user.email_verified is False
 
         verification_link = mail_data[-1]["verification_link"]
         client.get(verification_link, follow_redirects=True)
+
+    @pytest.fixture
+    def register_and_login_user(self, client, register_user):
         client.post(
             self.user_login_url,
             data={
@@ -90,10 +102,6 @@ class TestUserView:
         )
         with client.session_transaction() as sess:
             assert "_user_id" in sess
-
-    @pytest.fixture
-    def register_user_and_active(self, register_user):
-        return register_user
 
     def test_register(self, client, setup):
         with client.application.app_context():
@@ -128,8 +136,10 @@ class TestUserView:
         assert rv.status_code == 200
         assert "Invalid username or password." in rv.text
 
-        # An unverified account can sign in to its profile, but cannot use
-        # authenticated features until email verification completes.
+        # An account that hasn't verified its email yet is still active
+        # (is_active is an administrative lock, not an email-verification
+        # gate) -- it can sign in, see its profile, and use
+        # account-authenticated features like change_password.
         rv = client.post(
             self.user_login_url,
             data={
@@ -141,7 +151,7 @@ class TestUserView:
         )
         assert rv.status_code == 200
         assert self.test_username in rv.text
-        assert "verify your email" in rv.text.lower()
+        assert "Email: Pending" in rv.text
         with client.session_transaction() as sess:
             assert "_user_id" in sess
 
@@ -166,8 +176,8 @@ class TestUserView:
         with client.session_transaction() as sess:
             assert "_user_id" in sess
 
-        # The emailed verification link activates the account without
-        # requiring another login.
+        # The emailed verification link marks the email verified without
+        # requiring another login, and without touching is_active.
         verification_link = mail_data[-1]["verification_link"]
         rv = client.get(verification_link, follow_redirects=True)
         assert rv.status_code == 200
@@ -267,7 +277,9 @@ class TestUserView:
             user = current_userstore.get_user_by_username(self.test_username)
             assert user.email_verified is True
 
-    def test_change_email_requires_confirmation(self, app, client, register_user):
+    def test_change_email_requires_confirmation(
+        self, app, client, register_and_login_user
+    ):
         new_email = "updated@example.com"
         rv = client.get(self.user_profile_url)
         assert rv.status_code == 200
@@ -301,7 +313,9 @@ class TestUserView:
             assert user.email == new_email
             assert user.email_verified is True
 
-    def test_change_email_requires_correct_password(self, app, client, register_user):
+    def test_change_email_requires_correct_password(
+        self, app, client, register_and_login_user
+    ):
         sent_before = len(mail_data)
         rv = client.post(
             self.user_email_change_url,
@@ -316,7 +330,9 @@ class TestUserView:
         assert "Invalid password." in rv.text
         assert len(mail_data) == sent_before
 
-    def test_change_email_rejects_invalid_address(self, client, register_user):
+    def test_change_email_rejects_invalid_address(
+        self, client, register_and_login_user
+    ):
         sent_before = len(mail_data)
         rv = client.post(
             self.user_email_change_url,
@@ -331,7 +347,13 @@ class TestUserView:
         assert "Invalid email address." in rv.text
         assert len(mail_data) == sent_before
 
-    def test_tfa(self, app, client, register_user, monkeypatch):
+    def test_login_required_precedes_view_authorization(self, client, setup):
+        response = client.get(self.user_setup_tfa_url)
+
+        assert response.status_code == 302
+        assert response.location.startswith(self.user_login_url)
+
+    def test_tfa(self, app, client, register_and_login_user, monkeypatch):
         # get tfa_enabled status
         rv = client.get(self.user_enable_tfa_url)
         assert rv.status_code == 200
@@ -360,7 +382,7 @@ class TestUserView:
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
             tfa = current_security.get_plugin("two_factor_authentication")
-            totp_code = tfa.get_totp_code(u.totp_secret)
+            totp_code = tfa.get_totp_code(u.get_or_create_totp_secret())
 
         # enable tfa without code
         rv = client.get(self.user_enable_tfa_url, query_string={"enable": True})
@@ -399,7 +421,10 @@ class TestUserView:
         assert "ok" not in rv.json
         with client.session_transaction() as sess:
             assert "_user_id" in sess
-            assert SESSION_KEY_TFA_VERIFIED in sess and sess[SESSION_KEY_TFA_VERIFIED] is True
+            assert (
+                SESSION_KEY_TFA_VERIFIED in sess
+                and sess[SESSION_KEY_TFA_VERIFIED] is True
+            )
 
         rv = client.get(self.user_setup_tfa_url)
         assert rv.status_code == 200
@@ -432,7 +457,7 @@ class TestUserView:
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
             tfa = current_security.get_plugin("two_factor_authentication")
-            totp_code = tfa.get_totp_code(u.totp_secret)
+            totp_code = tfa.get_totp_code(u.get_or_create_totp_secret())
 
         assert u.totp_secret is not None
 
@@ -446,12 +471,15 @@ class TestUserView:
         assert rv.json["tfa_enabled"] is True
         with client.session_transaction() as sess:
             assert "_user_id" in sess
-            assert SESSION_KEY_TFA_VERIFIED in sess and sess[SESSION_KEY_TFA_VERIFIED] is True
+            assert (
+                SESSION_KEY_TFA_VERIFIED in sess
+                and sess[SESSION_KEY_TFA_VERIFIED] is True
+            )
 
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
             tfa = current_security.get_plugin("two_factor_authentication")
-            totp_code = tfa.get_totp_code(u.totp_secret)
+            totp_code = tfa.get_totp_code(u.get_or_create_totp_secret())
 
         # when tfa is enabled, tfa_verified is required to access setup_tfa
         rv = client.get(self.user_setup_tfa_url)
@@ -460,7 +488,9 @@ class TestUserView:
         # logout
         client.get(self.user_logout_url)
 
-        # relogin
+        # relogin: password is correct, but TFA is enabled, so the login is
+        # NOT established yet -- there must be no _user_id in the session,
+        # only a pending-TFA marker.
         rv = client.post(
             self.user_login_url,
             data={
@@ -474,11 +504,38 @@ class TestUserView:
         assert rv.request.path == self.user_verify_tfa_url
 
         with client.session_transaction() as sess:
-            assert "_user_id" in sess
+            assert "_user_id" not in sess
+            assert SESSION_KEY_PENDING_TFA_USER_ID in sess
             assert SESSION_KEY_TFA_VERIFIED not in sess
 
-        assert client.get(self.user_setup_tfa_url).status_code == 200
-        assert client.get(self.user_change_password_url).status_code == 200
+        # Nothing that requires login is reachable during the pending-TFA
+        # window: a password-only login must not unlock anything.
+        assert client.get(self.user_setup_tfa_url).status_code == 302
+        assert client.get(self.user_change_password_url).status_code == 302
+        assert client.get(self.user_index_url).status_code == 302
+
+        # abandoning verify_tfa (e.g. closing the browser) and starting over
+        # must require username/password again -- there is no persisted
+        # half-login to resume.
+        client.get(self.user_logout_url)
+        with client.session_transaction() as sess:
+            assert SESSION_KEY_PENDING_TFA_USER_ID not in sess
+        assert (
+            client.get(self.user_verify_tfa_url, follow_redirects=True).request.path
+            == self.user_login_url
+        )
+
+        # restart the login
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.request.path == self.user_verify_tfa_url
 
         # verify tfa
         rv = client.get(self.user_verify_tfa_url)
@@ -495,9 +552,117 @@ class TestUserView:
         assert rv.status_code == 200
         with client.session_transaction() as sess:
             assert "_user_id" in sess
-            assert SESSION_KEY_TFA_VERIFIED in sess and sess[SESSION_KEY_TFA_VERIFIED] is True
+            assert SESSION_KEY_PENDING_TFA_USER_ID not in sess
+            assert (
+                SESSION_KEY_TFA_VERIFIED in sess
+                and sess[SESSION_KEY_TFA_VERIFIED] is True
+            )
 
-    def test_change_password(self, client, register_user):
+        # setup_tfa / change_password are reachable now that login is complete
+        assert client.get(self.user_setup_tfa_url).status_code == 200
+        assert client.get(self.user_change_password_url).status_code == 200
+
+    def test_tfa_cannot_be_bypassed_after_password_login(
+        self, app, client, register_and_login_user
+    ):
+        """Dedicated regression test: a correct password alone must never
+        grant access to a TFA-enabled account. This is the exact bug class
+        that was previously present (login_user was called before the TFA
+        check), so it gets its own test independent of test_tfa.
+        """
+        with app.app_context():
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            tfa = current_security.get_plugin("two_factor_authentication")
+            totp_code = tfa.get_totp_code(u.get_or_create_totp_secret())
+
+        rv = client.post(
+            self.user_enable_tfa_url,
+            query_string={"enable": True},
+            data={"csrf_token": self.csrf_token, "code": totp_code},
+        )
+        assert rv.json["tfa_enabled"] is True
+
+        client.get(self.user_logout_url)
+        with client.session_transaction() as sess:
+            assert "_user_id" not in sess
+
+        # Password-only login.
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+        )
+        assert rv.status_code == 302
+        assert self.user_verify_tfa_url in rv.location
+
+        # The password check alone must not establish a login session.
+        with client.session_transaction() as sess:
+            assert "_user_id" not in sess
+
+        # Every login-gated endpoint must be unreachable in this window.
+        for protected_url in (
+            self.user_index_url,
+            self.user_profile_url,
+            self.user_setup_tfa_url,
+            self.user_change_password_url,
+            self.user_enable_tfa_url,
+            self.user_recovery_codes_url,
+        ):
+            rv = client.get(protected_url)
+            assert rv.status_code in (302, 403), (
+                f"{protected_url} was reachable with password-only login "
+                f"(status={rv.status_code})"
+            )
+
+    def test_inactive_account_blocked_from_account_features(
+        self, app, client, register_and_login_user
+    ):
+        """Dedicated regression test for the is_active bypass: with
+        ADMIN_ALLOW_ACCESS off (the real default -- the conftest fixture
+        turning it on is a test-only convenience, not the production
+        default), an administratively disabled account's still-valid
+        session must not reach account-authenticated features, while
+        genuinely public endpoints and the profile view remain open.
+
+        is_active is independent of email_verified (see test_register):
+        this test simulates an admin explicitly disabling the account, not
+        an unverified email.
+        """
+        with app.app_context():
+            current_security.get_plugin("authorizer").admin_allow_access = False
+            current_userstore.user_set(
+                current_userstore.get_user_by_id(self.test_user_id), is_active=False
+            )
+
+        # Still reachable while disabled: viewing profile.
+        assert client.get(self.user_index_url).status_code == 200
+        assert client.get(self.user_profile_url).status_code == 200
+
+        # Blocked while inactive: every account-authenticated feature.
+        for url in (
+            self.user_change_password_url,
+            self.user_email_change_url,
+            self.user_enable_tfa_url,
+            self.user_setup_tfa_url,
+            self.user_recovery_codes_url,
+        ):
+            rv = client.get(url)
+            assert rv.status_code == 403, (
+                f"{url} was reachable for an inactive account (status={rv.status_code})"
+            )
+
+        # Re-activating the account opens them back up.
+        with app.app_context():
+            current_userstore.user_set(
+                current_userstore.get_user_by_id(self.test_user_id), is_active=True
+            )
+        assert client.get(self.user_change_password_url).status_code == 200
+        assert client.get(self.user_setup_tfa_url).status_code == 200
+
+    def test_change_password(self, client, register_and_login_user):
         rv = client.get(self.user_change_password_url)
         assert rv.status_code == 200
 
@@ -578,7 +743,7 @@ class TestUserView:
             assert "_user_id" in sess
         assert self.test_username in rv.text
 
-    def test_forgot_password(self, client, register_user_and_active):
+    def test_forgot_password(self, client, register_and_login_user):
         # logout
         client.get(self.user_logout_url)
 
@@ -598,7 +763,10 @@ class TestUserView:
         )
         assert rv.status_code == 200
         invalid_email_response = rv.text
-        assert "An email has been sent with instructions to reset your password." in rv.text
+        assert (
+            "An email has been sent with instructions to reset your password."
+            in rv.text
+        )
 
         # forgot password successfully
         rv = client.post(
@@ -660,10 +828,24 @@ class TestUserView:
 
     def test_recovery(self, app, client, register_user):
         rv = client.get(self.user_recovery_codes_url)
-        assert rv.status_code == 403
+        assert rv.status_code == 302
 
-        rv = client.get(self.user_recovery_url)
-        assert rv.status_code == 403
+        # No pending TFA login exists yet (TFA isn't even enabled), so
+        # recovery bounces to login rather than 403ing on an authenticated
+        # user who isn't mid-TFA.
+        rv = client.get(self.user_recovery_url, follow_redirects=True)
+        assert rv.request.path == self.user_login_url
+
+        # login
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
 
         # tfa enable
         rv = client.get(self.user_setup_tfa_url)
@@ -672,7 +854,7 @@ class TestUserView:
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
             tfa = current_security.get_plugin("two_factor_authentication")
-            totp_code = tfa.get_totp_code(u.totp_secret)
+            totp_code = tfa.get_totp_code(u.get_totp_secret())
 
         rv = client.post(
             self.user_enable_tfa_url,
@@ -683,15 +865,18 @@ class TestUserView:
         assert rv.json["tfa_enabled"] is True
         with client.session_transaction() as sess:
             assert "_user_id" in sess
-            assert SESSION_KEY_TFA_VERIFIED in sess and sess[SESSION_KEY_TFA_VERIFIED] is True
+            assert (
+                SESSION_KEY_TFA_VERIFIED in sess
+                and sess[SESSION_KEY_TFA_VERIFIED] is True
+            )
 
-        # show recovery codes
+        # Capture the plaintext codes shown once; the database stores only hashes.
         rv = client.get(self.user_recovery_codes_url)
         assert rv.status_code == 200
 
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
-            totp_secret = u.totp_secret
+            totp_secret = u.get_totp_secret()
 
         code_block = re.search(
             r'<pre id="recoveryCodes">\s*(.*?)\s*</pre>', rv.text, re.DOTALL
@@ -702,6 +887,7 @@ class TestUserView:
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
             assert all(code not in u.recovery_codes for code in recovery_codes)
+            stored_recovery_codes = list(u.recovery_codes)
 
         client.get(self.user_logout_url)
         client.post(
@@ -716,23 +902,135 @@ class TestUserView:
         rv = client.get(self.user_recovery_url)
         assert rv.status_code == 200
 
-        # recovery to get totp_secret
+        # A recovery code completes the pending login and is removed from storage.
         recovery_code = recovery_codes[0]
+        recovery_code_2 = recovery_codes[1]
         rv = client.post(
             self.user_recovery_url,
             data={"csrf_token": self.csrf_token, "code": recovery_code},
         )
 
-        assert rv.status_code == 200
-        assert "Save these new recovery codes" in rv.text
+        assert rv.status_code == 302
+        assert rv.headers["Location"].endswith(self.user_index_url)
         with client.session_transaction() as sess:
             assert sess[SESSION_KEY_TFA_VERIFIED] is True
 
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
             recovery_codes_2 = u.recovery_codes
-            new_totp_secret = u.totp_secret
+            assert u.get_totp_secret() == totp_secret
+            consumed_code_hashes = [
+                code
+                for code in stored_recovery_codes
+                if current_security.hasher.verify(recovery_code, code)
+            ]
 
+        assert len(recovery_codes_2) == len(stored_recovery_codes) - 1
+        assert len(consumed_code_hashes) == 1
+        assert recovery_codes_2 == [
+            code for code in stored_recovery_codes if code not in consumed_code_hashes
+        ]
+
+        # Log in again and prove a different unused code still works.
+        client.get(self.user_logout_url)
+        client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        rv = client.get(self.user_recovery_url)
+        assert rv.status_code == 200
+
+        rv = client.post(
+            self.user_recovery_url,
+            data={"csrf_token": self.csrf_token, "code": recovery_code_2},
+        )
+
+        assert rv.status_code == 302
+        assert rv.headers["Location"].endswith(self.user_index_url)
+        with client.session_transaction() as sess:
+            assert sess[SESSION_KEY_TFA_VERIFIED] is True
+
+        with app.app_context():
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            recovery_codes_3 = u.recovery_codes
+            assert u.get_totp_secret() == totp_secret
+            # Match the plaintext code against hashes to identify what was consumed.
+            consumed_code_hashes_2 = [
+                code
+                for code in recovery_codes_2
+                if current_security.hasher.verify(recovery_code_2, code)
+            ]
+
+        assert len(recovery_codes_3) == len(recovery_codes_2) - 1
+        assert len(consumed_code_hashes_2) == 1
+        assert recovery_codes_3 == [
+            code for code in recovery_codes_2 if code not in consumed_code_hashes_2
+        ]
+
+        # Recovery login grants a one-time path to bind a new authenticator.
+        rv = client.get(self.user_setup_tfa_url)
+        assert rv.status_code == 200
+        assert "Rebind authenticator app" in rv.text
+
+        rv = client.get(self.user_rebind_tfa_url)
+        assert rv.status_code == 200
+        assert "Verify and replace authenticator" in rv.text
+        secret_match = re.search(r"<b>([A-Z2-7]+)</b>", rv.text)
+        assert secret_match is not None
+        new_totp_secret = secret_match.group(1)
         assert new_totp_secret != totp_secret
-        assert recovery_code not in recovery_codes_2
-        assert all(code not in recovery_codes_2 for code in recovery_codes)
+
+        with app.app_context():
+            tfa = current_security.get_plugin("two_factor_authentication")
+            new_totp_code = tfa.get_totp_code(new_totp_secret)
+
+        invalid_totp_code = "000000" if new_totp_code != "000000" else "000001"
+        rv = client.post(
+            self.user_rebind_tfa_url,
+            data={"csrf_token": self.csrf_token, "code": invalid_totp_code},
+        )
+        assert rv.status_code == 200
+        assert "Invalid code" in rv.text
+        with app.app_context():
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            assert u.get_totp_secret() == totp_secret
+            assert u.recovery_codes == recovery_codes_3
+
+        rv = client.post(
+            self.user_rebind_tfa_url,
+            data={"csrf_token": self.csrf_token, "code": new_totp_code},
+        )
+        assert rv.status_code == 200
+        assert "Save these new recovery codes" not in rv.text
+
+        with app.app_context():
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            assert u.tfa_enabled is True
+            assert u.get_totp_secret() == new_totp_secret
+            rebound_hashes = list(u.recovery_codes)
+            assert rebound_hashes == recovery_codes_3
+            assert all(
+                sum(
+                    current_security.hasher.verify(code, stored_hash)
+                    for stored_hash in rebound_hashes
+                )
+                == 1
+                for code in recovery_codes[2:]
+            )
+            assert not any(
+                current_security.hasher.verify(code, stored_hash)
+                for code in recovery_codes[:2]
+                for stored_hash in rebound_hashes
+            )
+
+        with client.session_transaction() as sess:
+            assert SESSION_KEY_TFA_VERIFIED in sess
+            assert SESSION_KEY_TFA_RECOVERY not in sess
+
+        # Rebinding is available only during the recovery-authenticated session.
+        assert client.get(self.user_rebind_tfa_url).status_code == 403

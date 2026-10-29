@@ -43,9 +43,10 @@ class EmailVerification(TokenBasedAction):
         if user.email_verified:
             return "already_verified"
 
+        # Deliberately does not touch is_active: that field is an
+        # administrative lock, independent of email verification state.
         user.email_verified = True
         user.email_verified_at = datetime.now()
-        user.is_active = True
 
         current_userstore.save_user(user)
 

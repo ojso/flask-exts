@@ -46,6 +46,45 @@ class Query:
         self._selectinloads = []
         self._is_join_many = False
 
+    def __str__(self):
+        model_name = getattr(self.root_model, "__name__", repr(self.root_model))
+        lines = [f"{type(self).__name__}(root_model={model_name}"]
+
+        if self._path_to_alias:
+            aliases = ", ".join(
+                f"{'.'.join(path) or '<root>'} -> {alias!r}"
+                for path, alias in self._path_to_alias.items()
+            )
+            lines.append(f"  aliases: {aliases}")
+
+        if self._joins:
+            lines.append(f"  joins: [{', '.join(map(repr, self._joins))}]")
+        if self._filter_conditions:
+            lines.append(
+                f"  filters: [{', '.join(map(repr, self._filter_conditions))}]"
+            )
+        if self._search_conditions:
+            lines.append(
+                f"  searches: [{', '.join(map(repr, self._search_conditions))}]"
+            )
+        if self._order_by:
+            lines.append(f"  order_by: [{', '.join(map(repr, self._order_by))}]")
+
+        if self._limit is not None or self._offset is not None:
+            lines.append(f"  limit={self._limit}, offset={self._offset}")
+
+        if self._joinedloads:
+            lines.append(f"  joinedloads: [{', '.join(map(repr, self._joinedloads))}]")
+        if self._selectinloads:
+            lines.append(
+                f"  selectinloads: [{', '.join(map(repr, self._selectinloads))}]"
+            )
+        if self._is_join_many:
+            lines.append("  is_join_many: True")
+
+        lines.append(")")
+        return "\n".join(lines)
+
     def _find_reusable_path(
         self, path: tuple[str, ...]
     ) -> tuple[str, tuple[str, ...], AliasedClass] | None:
@@ -164,15 +203,15 @@ class Query:
         for term in terms:
             if not term:
                 continue
-            self._search_conditions.append([])
-            search_term = self._search_conditions[-1]
+            search_term = []
             for column_path in column_list:
                 self._join_attr(column_path)
                 search_term.append((column_path, term))
+            if search_term:
+                self._search_conditions.append(search_term)
 
     def add_order_by(self, column_path: str | tuple[str, ...], is_desc: bool = False):
-        """
-        Adds an order by clause.
+        """Adds an order by clause.
 
         Args:
             column_path: The path to the column.

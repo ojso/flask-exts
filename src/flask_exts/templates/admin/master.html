@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% from "macro/menu.html" import render_menu, render_menu_links, render_menu_user %}
+{% from "macro/menu.html" import render_menu, render_menu_user %}
 {% from "macro/message.html" import render_messages %}
 {% from "macro/nav.html" import render_nav_item %}
 
@@ -22,14 +22,11 @@
       <div id="navbar" class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto my-2 my-lg-0">
           {{ render_nav_item("index.adminindex",admin.name) }}
-          {{ render_menu(admin.menu.menus() ,view) }}
-          {{ render_menu_links(admin.menu.menu_links()) }}
+          {{ render_menu(admin.menu.get_menus() ,view) }}
         </ul>
-        {% if "user" in admin._views %}
-          <ul class="navbar-nav">
-            {{ render_menu_user(current_user) }}
-          </ul>
-        {% endif %}
+        <ul class="navbar-nav">
+          {{ render_menu_user(current_user) }}
+        </ul>
       </div>
     </div>
   </nav>

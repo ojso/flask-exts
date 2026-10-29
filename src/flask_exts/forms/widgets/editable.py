@@ -5,7 +5,7 @@ from wtforms.widgets import html_params
 
 
 def _build_query_select_options(field):
-    """返回 (data-options 的 JSON 字符串, 选中的 value 列表)。"""
+    """Return (the JSON string of data-options, the list of selected values)."""
     choices = []
     selected_ids = []
     for field_choices in field.iter_choices():
@@ -112,6 +112,6 @@ class EditableWidget:
             else:
                 kwargs["data-value"] = selected_ids[0]
         else:
-            raise Exception(f"Unsupported field type: {type(field)}")
+            raise ValueError(f"Unsupported field type: {type(field)}")
 
         return kwargs

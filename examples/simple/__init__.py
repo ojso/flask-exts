@@ -1,5 +1,4 @@
 # app.py
-import os.path as op
 import textwrap
 
 from flask import Flask
@@ -26,10 +25,9 @@ class MockView(View):
 
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + op.join(
-    op.realpath(op.dirname(__file__)), "app.sqlite"
-)
+app.config["SECRET_KEY"] = "simple"
+app.config["APP_NAME"] = "FlaskSimple"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 exts = ExtensionManager()
 exts.init_app(app)
 
