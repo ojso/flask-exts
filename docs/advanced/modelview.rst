@@ -66,7 +66,7 @@ A backend implements:
      - A single record by primary key, or ``None``.
    * - ``get_pk_value(obj)``
      - String representation of a record's primary key.
-   * - ``create_model(form)`` / ``update_model(form, model)`` / ``delete_model(model)``
+   * - ``create_model(model)`` / ``update_model(model)`` / ``delete_model(model)``
      - Write operations driven by a validated form.
    * - ``delete_model_by_pk_ids(ids)``
      - Bulk delete; returns the number of records removed.
@@ -236,34 +236,52 @@ against the typed query.
 Inline models
 --------------
 
-``SqlaModelView`` (not the generic ``DataBackend`` protocol) supports
-editing parent/child relationships from the parent's form, via
-``inline_models``::
+``SqlaModelView`` supports editing parent/child relationships from the parent's
+form via the ``inline_models`` attribute. Related rows are managed
+independently through AJAX: a new parent record is created first, then its
+inline rows can be added, edited, or removed without a full form resubmission.
+
+``inline_models`` accepts three forms:
+
+1. A child model class directly::
 
     class AuthorView(SqlaModelView):
         inline_models = (Post,)
 
-Related rows are managed independently through AJAX
-(``/ajax/create-parent/`` and ``/ajax/inline/<relationship_name>/``): a new
-parent record is created first, and its inline rows are then added, edited,
-or removed without a full form resubmission. ``inline_models`` accepts:
+2. A ``(model, options)`` pair to specify form columns::
 
-- a child model class directly: ``inline_models = (Post,)``
-- a ``(model, options)`` pair: ``inline_models = [(Post, {"form_columns": ["title"]})]``
-- an ``InlineForm`` instance for more control over the generated sub-form::
+    class AuthorView(SqlaModelView):
+        inline_models = [(Post, {"form_columns": ["title"]})]
 
-      from flask_exts.admin.sqla.form.inline_form import InlineForm
+3. An ``InlineForm`` instance for fine-grained control over the generated
+   sub-form::
 
-      class MyInlineForm(InlineForm):
-          form_columns = ("title", "date")
+    from flask_exts.admin.sqla.inline.inline_form import InlineForm
 
-      class AuthorView(SqlaModelView):
-          inline_models = (MyInlineForm(Post),)
+    class MyInlineForm(InlineForm):
+        form_columns = ("title", "date")
+        form_args = {"title": {"label": "Post Title"}}
 
-By default, inline models assume a many-to-many-style collection
-relationship. For a one-to-one relationship, set
-``inline_model_converter = InlineOneToOneModelConverter`` on the
-``InlineForm``.
+    class AuthorView(SqlaModelView):
+        inline_models = (MyInlineForm(Post),)
+
+By default, inline models assume a many-to-many-style collection relationship.
+For a one-to-one relationship, set ``inline_model_converter =
+InlineOneToOneModelConverter`` on the ``InlineForm``::
+
+    class MyOneToOneInlineForm(InlineForm):
+        inline_model_converter = InlineOneToOneModelConverter
+        form_columns = ("bio",)
+
+Each rendered row shows a badge identifying its state: persisted rows display
+their primary key value, while rows added in the current session display
+``New`` until they are saved through the AJAX endpoint.
+
+You can customize field labels for inline models using ``form_label``::
+
+    class MyInlineForm(InlineForm):
+        form_label = "Related Posts"
+        form_columns = ("title", "date")
 
 Export
 ------

@@ -1,7 +1,10 @@
 v0.4.0
 ------
 
-Unreleased
+Released 2026-11-01
+
+- Add AGENTS.md
+- View add inline-model
 
 
 v0.3.1

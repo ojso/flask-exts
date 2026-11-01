@@ -19,7 +19,6 @@ def get_model_form(
     only=None,
     exclude=None,
     field_args=None,
-    hidden_pk=False,
     extra_fields=None,
 ):
     """Get list of fields and generate form from the model.
@@ -37,8 +36,8 @@ def get_model_form(
             Exclude fields
         field_args:
             Dictionary with additional field arguments
-        hidden_pk:
-            Generate hidden field with model primary key or not
+        extra_fields:
+            Dictionary with extra fields to add to the form
     """
 
     field_args = field_args or {}
@@ -47,19 +46,11 @@ def get_model_form(
     if only:
         properties = []
         for name in only:
-            if extra_fields and name in extra_fields:
-                properties.append((name, FieldPlaceholder(extra_fields[name])))
-            else:
-                column, _path = get_field_with_path(model, name)
-                properties.append((column.key, column.property))
-        if hidden_pk:
-            included_names = {name for name, _ in properties}
-            for column in mapper.primary_key:
-                prop = mapper.get_property_by_column(column)
-                if prop.key not in included_names:
-                    properties.append((prop.key, prop))
+            column, _path = get_field_with_path(model, name)
+            properties.append((column.key, column.property))
     else:
         properties = [(p.key, p) for p in mapper.attrs]
+
         if exclude:
             properties = [x for x in properties if x[0] not in exclude]
 
@@ -70,13 +61,13 @@ def get_model_form(
             continue
 
         field = converter.convert(
-            model, mapper, name, p, field_args.get(name), hidden_pk
+            model, mapper, name, p, field_args.get(name)
         )
         if field is not None:
             field_dict[name] = field
 
     # Contribute extra fields
-    if not only and extra_fields:
+    if extra_fields:
         for name, field in extra_fields.items():
             unbound = field
             field_dict[name] = unbound.field_class(*unbound.args, **unbound.kwargs)

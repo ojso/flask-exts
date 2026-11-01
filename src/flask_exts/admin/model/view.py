@@ -422,6 +422,15 @@ class ModelView(View):
     export_types: tuple[str] = ("csv",)
     """A list of available export filetypes. `csv` only is default."""
 
+    page_size: int = 20
+    """Default page size for pagination."""
+
+    can_set_page_size = True
+    """Allows to select page size via dropdown list."""
+
+    page_size_options: tuple = (5, 10, 20, 50, 100)
+    """Sets the page size options available, if `can_set_page_size` is True."""
+
     # Templates
     list_template = "admin/model/list.html"
     """Default list view template"""
@@ -434,61 +443,6 @@ class ModelView(View):
 
     details_template = "admin/model/details.html"
     """Default details view template"""
-
-    inline_models = None
-    """Inline related-model editing for models with parent-child relations.
-
-    Related rows are managed independently through AJAX; a new parent record is
-    created before its inline rows can be added.
-
-    Accepts enumerable with one of the following possible values:
-
-    1. Child model class::
-
-        inline_models = (Post,)
-
-    2. Child model class and additional options::
-
-        inline_models = [(Post, {"form_columns": ["title"]})]
-
-    3. Django-like ``InlineForm`` class instance::
-
-        from .model.form import InlineForm
-
-        class MyInlineForm(InlineForm):
-            form_columns = ('title', 'date')
-
-        inline_models = (MyInlineForm(MyInlineModel),)
-
-    You can customize the generated field name by:
-
-    1. Using the `form_name` property as a key to the options dictionary::
-
-        inline_models = ((Post, {"form_label": "Hello"}))
-
-    2. Using forward relation name and `column_labels` property::
-
-        class Model1(Base):
-            pass
-
-        class Model2(Base):
-            # ... model1 = relation(Model1, backref='models')
-
-        inline_models = (Model2,)
-        column_labels = {'models': 'Hello'}
-
-    By default used ManyToMany relationship for inline models. You may configure
-    inline model for OneToOne relationship. To achieve this, you need to install
-    special ``inline_model_converter`` for your model::
-
-        from .sqla.form import InlineOneToOneModelConverter
-
-        class MyInlineForm(InlineForm):
-            form_columns = ('title', 'date')
-            inline_model_converter = InlineOneToOneModelConverter
-
-        inline_models = (MyInlineForm(MyInlineModel),)
-    """
 
     def __init__(
         self,
@@ -602,7 +556,7 @@ class ModelView(View):
     def scaffold_filter(self, column_path):
         return self._backend.scaffold_filter(column_path)
 
-    def scaffold_form(self,form_type=None):
+    def scaffold_form(self, form_type=None):
         return self._backend.scaffold_form(form_type)
 
     def scaffold_list_form(self, validators=None):
@@ -611,7 +565,15 @@ class ModelView(View):
     def get_one(self, id):
         return self._backend.get_one(id)
 
-    def get_list(self, search, filters, sort_field, sort_desc, page, page_size=None):
+    def get_list(
+        self,
+        search=None,
+        filters=None,
+        sort_field=None,
+        sort_desc=None,
+        page=None,
+        page_size=None,
+    ):
         return self._backend.get_list(
             search=search,
             filters=filters,
@@ -624,11 +586,11 @@ class ModelView(View):
     def get_pk_value(self, obj):
         return self._backend.get_pk_value(obj)
 
-    def create_model(self, form):
-        return self._backend.create_model(form)
+    def create_model(self, model):
+        return self._backend.create_model(model)
 
-    def update_model(self, form, model):
-        return self._backend.update_model(form, model)
+    def update_model(self, model):
+        return self._backend.update_model(model)
 
     def delete_model(self, model):
         return self._backend.delete_model(model)
@@ -968,7 +930,9 @@ class ModelView(View):
         form = self.create_form()
 
         if form.validate_on_submit():
-            model = self.create_model(form)
+            model_instance = self.model()
+            form.populate_obj(model_instance)
+            model = self.create_model(model_instance)
             if model:
                 flash(gettext("Record was successfully created."), "success")
                 if "_add_another" in request.form:
@@ -1016,12 +980,16 @@ class ModelView(View):
         form = self.edit_form(obj=model)
 
         if form.validate_on_submit():
-            if self.update_model(form, model):
+            form.populate_obj(model)
+
+            if self.update_model(model):
                 flash(gettext("Record was successfully saved."), "success")
                 if "_add_another" in request.form:
                     return redirect(self.get_url(".create_view", url=return_url))
                 elif "_continue_editing" in request.form:
-                    return redirect(self.get_url(".edit_view", id=self.get_pk_value(model)))
+                    return redirect(
+                        self.get_url(".edit_view", id=self.get_pk_value(model))
+                    )
                 else:
                     return redirect(self.get_save_return_url(model, is_created=False))
             else:
@@ -1134,7 +1102,9 @@ class ModelView(View):
             if record is None:
                 return gettext("Record does not exist."), 500
 
-            if self.update_model(form, record):
+            form.populate_obj(record)
+
+            if self.update_model(record):
                 return gettext("Record was successfully saved.")
             else:
                 msgs = ", ".join([msg for msg in get_flashed_messages()])

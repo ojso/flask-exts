@@ -3,6 +3,9 @@ from flask import Flask
 
 from flask_exts import ExtensionManager
 
+from .blackhole import Blackhole
+from .dummypostdata import DummyPostData
+
 
 @pytest.fixture
 def app():
@@ -19,9 +22,9 @@ def app():
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
     # app.config["SQLALCHEMY_ECHO"] = True
     app.config["CSRF_ENABLED"] = False
-    app.config["JWT_SECRET_KEY"] = (
-        "SHA256_SECRET_KEY_RECOMMENDED_32_BYTES"  #  The HMAC key is recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
-    )
+    # The HMAC key is recommended length of 32 bytes for SHA256.
+    # See RFC 7518 Section 3.2.
+    app.config["JWT_SECRET_KEY"] = "SHA256_SECRET_KEY_RECOMMENDED_32_BYTES"
     app.config["JWT_HASH"] = "HS256"
     exts = ExtensionManager()
     exts.init_app(app)
@@ -35,4 +38,10 @@ def client(app):
     return app.test_client()
 
 
+@pytest.fixture
+def blackhole_factory():
+    return Blackhole
 
+@pytest.fixture
+def post_data_factory():
+    return DummyPostData

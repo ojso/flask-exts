@@ -1,31 +1,68 @@
 Develop
 =======
 
-This guide explains how to install the project for development, run the test
-suite, build the documentation, and manage translations with Babel.
+This guide explains how to set up the project for development, run the test
+suite, lint and format code, build the documentation, refresh front-end assets,
+and manage translations with Babel.
 
-Install
--------
+Environment setup
+-----------------
 
-Install the project in editable mode so local changes are picked up immediately:
+Flask-Exts requires Python 3.10 or later. Use a repository-local virtual
+environment instead of the system Python, and install the project in editable
+mode so local changes are picked up immediately:
 
 .. code-block:: console
 
-    $ pip install -e .
+    $ python3 -m venv venv
+    $ . venv/bin/activate
+    $ python -m pip install -e '.[dev,test]'
+
+The ``dev`` and ``test`` extras install the linting and testing tools. Re-run
+the install command after changes to ``pyproject.toml`` so the environment stays
+in sync.
+
+If the environment already exists, activate it with:
+
+.. code-block:: console
+
+    $ . venv/bin/activate
 
 Test
 ----
 
 The project uses `pytest <https://pytest.org/>`_ for testing. From the project
-root, run:
+root, with the virtual environment activated, run the full test suite:
 
 .. code-block:: console
 
-    # install test dependencies
-    $ pip install -r requirements/test.in
+    $ python -m pytest -q
 
-    # run the test suite
-    $ pytest
+Run a single file or test case while iterating:
+
+.. code-block:: console
+
+    $ python -m pytest -q tests/forms/fields/test_json.py
+    $ python -m pytest -q tests/forms/fields/test_json.py::test_json_field
+
+The ``make test`` and ``make coverage`` targets also work, but they call
+``pytest`` and ``coverage`` directly, so the virtual environment must be
+activated first.
+
+Lint and format
+---------------
+
+Run ruff for Python linting and formatting, and djlint for templates:
+
+.. code-block:: console
+
+    $ python -m ruff check .
+    $ python -m ruff format .
+    $ python -m djlint src/flask_exts/templates/layout.html --check
+
+Check only the templates you change. The template tree currently contains
+pre-existing formatting issues, so a whole-directory ``--check`` reports files
+unrelated to your work.
 
 Docs
 ----
@@ -34,28 +71,44 @@ To build the documentation locally:
 
 .. code-block:: console
 
-    $ pip install -r docs/requirements.txt
-    $ cd docs
-    $ make html
+    $ python -m pip install -r docs/requirements.txt
+    $ make docs-build
 
-Develop
--------
-
+The build writes HTML to ``docs/_build/html``. Preview it with:
 
 .. code-block:: console
 
-    # develop with jinja formatter, and so on.
-    $ pip install -r requirements/develop.in
+    $ make docs-serve
+
+``make docs-build`` treats Sphinx warnings as errors. Fix warnings introduced
+by your change; pre-existing warnings are tracked separately.
+
+Front-end assets
+----------------
+
+Bootstrap and other front-end dependencies are managed with npm and copied into
+the package's static directory:
+
+.. code-block:: console
+
+    $ npm install
+    $ npm run copy:vendor
+
+Run these commands only when changing files under
+``src/flask_exts/static``.
 
 Build package
 -------------
 
-To build a distributable package:
+Building distributions is independent of the development environment. Install
+the packaging tools and build the wheel and source distribution:
 
 .. code-block:: console
 
-    $ pip install -r requirements/build.in
+    $ python -m pip install -e '.[build]'
     $ python -m build
+
+The wheel and source distribution are written to ``dist/``.
 
 Translations
 ------------

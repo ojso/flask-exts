@@ -1,14 +1,12 @@
 from flask import abort, current_app, jsonify, request
 from flask_babel import gettext
-from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.datastructures import MultiDict
 
-from ...datastore.sqla.utils import get_model_primary_key
 from ...forms.form import Form
 from ...forms.form.csrf import CSRF_FIELD_NAME
 from ..exposer import expose_url
 from ..model.view import ModelView
-from .backend import SqlaBackend
+from .backend import InlineModelError, SqlaBackend
 from .type_formatters import SQLA_FORMATTERS
 
 
@@ -17,7 +15,60 @@ class SqlaModelView(ModelView):
 
     column_type_formatters = SQLA_FORMATTERS
 
+    inline_models = None
+    """Inline related-model editing for models with parent-child relations.
 
+    Related rows are managed independently through AJAX; a new parent record is
+    created before its inline rows can be added.
+
+    Accepts enumerable with one of the following possible values:
+
+    1. Child model class::
+
+        inline_models = (Post,)
+
+    2. Child model class and additional options::
+
+        inline_models = [(Post, {"form_columns": ["title"]})]
+
+    3. Django-like ``InlineForm`` class instance::
+
+        from .model.form import InlineForm
+
+        class MyInlineForm(InlineForm):
+            form_columns = ('title', 'date')
+
+        inline_models = (MyInlineForm(MyInlineModel),)
+
+    You can customize the generated field name by:
+
+    1. Using the `form_name` property as a key to the options dictionary::
+
+        inline_models = ((Post, {"form_label": "Hello"}))
+
+    2. Using forward relation name and `column_labels` property::
+
+        class Model1(Base):
+            pass
+
+        class Model2(Base):
+            # ... model1 = relation(Model1, backref='models')
+
+        inline_models = (Model2,)
+        column_labels = {'models': 'Hello'}
+
+    By default used ManyToMany relationship for inline models. You may configure
+    inline model for OneToOne relationship. To achieve this, you need to install
+    special ``inline_model_converter`` for your model::
+
+        from .sqla.form import InlineOneToOneModelConverter
+
+        class MyInlineForm(InlineForm):
+            form_columns = ('title', 'date')
+            inline_model_converter = InlineOneToOneModelConverter
+
+        inline_models = (MyInlineForm(MyInlineModel),)
+    """
 
     def __init__(self, model, session=None, name=None, endpoint=None, url=None):
         """
@@ -40,6 +91,14 @@ class SqlaModelView(ModelView):
         if self.form_choices is None:
             self.form_choices = {}
 
+    def remove_inline_child(self, parent, relationship_name, child_id):
+        return self._backend.remove_inline_child(parent, relationship_name, child_id)
+
+    def save_inline_child(self, parent, relationship_name, child_id, values):
+        return self._backend.save_inline_child(
+            parent, relationship_name, child_id, values
+        )
+
     @expose_url("/ajax/create-parent/", methods=("POST",))
     def ajax_create_parent(self):
         if not self.inline_models:
@@ -51,7 +110,9 @@ class SqlaModelView(ModelView):
         if not form.validate():
             return jsonify(errors=form.errors), 422
 
-        model = self.create_model(form)
+        model_instance = self.model()
+        form.populate_obj(model_instance)
+        model = self.create_model(model_instance)
         if model is None:
             return jsonify(error=gettext("Failed to create the parent record.")), 500
 
@@ -81,17 +142,6 @@ class SqlaModelView(ModelView):
         if parent is None:
             abort(404)
 
-        action = payload.get("action")
-
-        related_objects = getattr(parent, relationship_name)
-        prefix = payload.get("prefix")
-        if (
-            not isinstance(prefix, str)
-            or not prefix.startswith(f"{relationship_name}-")
-            or not prefix.endswith("-")
-        ):
-            return jsonify(error=gettext("Invalid inline form data.")), 400
-
         token = payload.get("csrf_token")
         if current_app.config.get("CSRF_ENABLED", True):
             csrf_field_name = current_app.config.get("CSRF_FIELD_NAME", CSRF_FIELD_NAME)
@@ -99,103 +149,38 @@ class SqlaModelView(ModelView):
             if not csrf_form[csrf_field_name].validate(csrf_form):
                 return jsonify(error=gettext("CSRF token is invalid.")), 400
 
+        action = payload.get("action")
+        child_id = payload.get("child_id")
+
         if action == "delete":
-            child_id = payload.get("child_id")
             if child_id is None:
                 return jsonify(error=gettext("Related record is required.")), 400
 
-            self.remove_child(parent_id,relationship_name,child_id)
-
-            child = self._get_related_inline_object(
-                parent, relationship_name, config, child_id
-            )
-            if child is None:
-                abort(404)
             try:
-                if config["is_collection"]:
-                    if hasattr(related_objects, "remove"):
-                        related_objects.remove(child)
-                    elif hasattr(related_objects, "discard"):
-                        related_objects.discard(child)
-                else:
-                    setattr(parent, relationship_name, None)
-                self.session.delete(child)
-                self.session.commit()
-            except SQLAlchemyError:
-                self.session.rollback()
-                current_app.logger.exception("Failed to delete inline model")
-                return (
-                    jsonify(error=gettext("Failed to delete related record.")),
-                    500,
-                )
-            return jsonify(message=gettext("Related record deleted."))
-
-        if action != "save":
-            return jsonify(error=gettext("Unsupported inline action.")), 400
-
-        values = payload.get("values")
-        if not isinstance(values, dict):
-            return jsonify(error=gettext("Invalid inline form data.")), 400
-
-        formdata = MultiDict()
-        for name, value in values.items():
-            if not isinstance(name, str):
-                return jsonify(error=gettext("Invalid inline form data.")), 400
-            for item in value if isinstance(value, list) else [value]:
-                formdata.add(f"{prefix}{name}", "" if item is None else str(item))
-
-        child_form = config["form_class"](
-            formdata=formdata,
-            prefix=prefix,
-        )
-        if not child_form.validate():
-            return jsonify(errors=child_form.errors), 422
-
-        child_id = payload.get("child_id")
-        if child_id is None:
-            if not config["is_collection"] and related_objects is not None:
-                return jsonify(error=gettext("A related record already exists.")), 409
-            child = config["model"]()
-        else:
-            child = self._get_related_inline_object(
-                parent, relationship_name, config, child_id
-            )
-            if child is None:
+                self.remove_inline_child(parent, relationship_name, child_id)
+            except LookupError:
                 abort(404)
+            return jsonify(message=gettext("Related record deleted."))
+        elif action == "save":
+            values = payload.get("values")
+            if not isinstance(values, dict):
+                return jsonify(error=gettext("Invalid inline form data.")), 400
 
-        primary_key = get_model_primary_key(config["model"])
-        primary_key_names = (
-            primary_key if isinstance(primary_key, tuple) else (primary_key,)
-        )
-        for name, field in child_form._fields.items():
-            if (
-                name not in primary_key_names
-                and name != config["reverse_prop"]
-                and name != child_form.meta.csrf_field_name
-            ):
-                field.populate_obj(child, name)
+            try:
+                saved_child_id = self.save_inline_child(
+                    parent, relationship_name, child_id, values
+                )
+            except LookupError:
+                abort(404)
+            except InlineModelError as exc:
+                response = {"error": exc.message}
+                if exc.errors:
+                    response["errors"] = exc.errors
+                return jsonify(response), exc.status_code
 
-        try:
-            if child_id is None:
-                if config["is_collection"]:
-                    if hasattr(related_objects, "add"):
-                        related_objects.add(child)
-                    else:
-                        related_objects.append(child)
-                else:
-                    setattr(parent, relationship_name, child)
-            self.session.add(child)
-            self.session.commit()
-        except SQLAlchemyError:
-            self.session.rollback()
-            current_app.logger.exception("Failed to save inline model")
-            return jsonify(error=gettext("Failed to save related record.")), 500
-
-        if isinstance(primary_key, tuple):
-            saved_child_id = [getattr(child, key) for key in primary_key]
+            return jsonify(
+                child_id=saved_child_id,
+                message=gettext("Related record saved."),
+            )
         else:
-            saved_child_id = getattr(child, primary_key)
-        return jsonify(
-            child_id=saved_child_id,
-            message=gettext("Related record saved."),
-        )
+            return jsonify(error=gettext("Unsupported inline action.")), 400

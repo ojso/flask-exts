@@ -3,7 +3,7 @@ from markupsafe import Markup
 from sqlalchemy import select
 from wtforms import validators
 
-from flask_exts.admin.sqla.form.inline_model_convert import InlineForm
+from flask_exts.admin.sqla.inline.inline_model_convert import InlineForm
 from flask_exts.admin.sqla.view import SqlaModelView
 
 from ..models.author import AVAILABLE_USER_TYPES, Author

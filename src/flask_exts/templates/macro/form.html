@@ -64,9 +64,18 @@
 {% macro render_inline_row(field, child, index) %}
   {% set prefix = field.get_prefix(index) %}
   {% set child_form = field.form_class(obj=child, prefix=prefix) %}
+  {% set pk_label = field.get_pk_label(child) %}
   <div class="inline-model-row card card-body bg-light mb-3"
-       data-inline-row data-child-id="{{ field.get_pk(child)|tojson|forceescape }}"
+       data-inline-row
+       data-child-id="{{ (field.get_pk(child)|tojson|forceescape) if pk_label else '' }}"
        data-prefix="{{ prefix }}">
+    <div class="inline-model-row-header d-flex align-items-center gap-2 mb-2">
+      <span class="badge {{ 'bg-secondary' if pk_label else 'bg-success' }} inline-model-marker"
+            data-inline-marker
+            data-existing-label="{{ gettext('Existing record') }}"
+            data-new-label="{{ gettext('New record') }}"
+            title="{{ gettext('Existing record') if pk_label else gettext('New record') }}">{{ pk_label or gettext("New") }}</span>
+    </div>
     <div class="inline-model-row-fields">
       {{ render_form_fields(child_form, form_opts=field.form_opts) }}
     </div>
@@ -99,6 +108,13 @@
       {% set child_form = field.form_class(prefix=prefix) %}
       <div class="inline-model-row card card-body bg-light mb-3"
            data-inline-row data-child-id="" data-prefix="{{ prefix }}">
+        <div class="inline-model-row-header d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-success inline-model-marker"
+                data-inline-marker
+                data-existing-label="{{ gettext('Existing record') }}"
+                data-new-label="{{ gettext('New record') }}"
+                title="{{ gettext('New record') }}">{{ gettext("New") }}</span>
+        </div>
         <div class="inline-model-row-fields">
           {{ render_form_fields(child_form, form_opts=field.form_opts) }}
         </div>

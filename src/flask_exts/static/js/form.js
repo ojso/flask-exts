@@ -539,6 +539,17 @@
       this.applyGlobalStyles(row);
     };
 
+    this.updateInlineModelMarker = function (row, childId) {
+      var marker = row.querySelector('.inline-model-marker');
+      if (!marker || childId === null || childId === undefined) return;
+      var label = Array.isArray(childId) ? childId.join(',') : String(childId);
+      if (!label) return;
+      marker.textContent = label;
+      marker.classList.remove('bg-success');
+      marker.classList.add('bg-secondary');
+      if (marker.dataset.existingLabel) marker.title = marker.dataset.existingLabel;
+    };
+
     this.saveInlineModelRow = function (row) {
       var field = row.closest('[data-inline-model]');
       if (!field) return;
@@ -566,7 +577,6 @@
         action: 'save',
         parent_id: field.dataset.parentId,
         child_id: row.dataset.childId ? JSON.parse(row.dataset.childId) : null,
-        prefix: prefix,
         csrf_token: values[field.dataset.csrfField] || '',
         values: values
       });
@@ -594,7 +604,6 @@
         action: 'delete',
         parent_id: field.dataset.parentId,
         child_id: JSON.parse(row.dataset.childId),
-        prefix: row.dataset.prefix,
         csrf_token: csrfInput ? csrfInput.value : ''
       }).then(function () {
         row.remove();
@@ -626,6 +635,7 @@
       }).then(function (payload) {
         if (payload.child_id !== undefined) {
           row.dataset.childId = JSON.stringify(payload.child_id);
+          self.updateInlineModelMarker(row, payload.child_id);
           var field = row.closest('[data-inline-model]');
           if (field && field.dataset.isCollection !== 'true') {
             var addButton = field.querySelector('[data-inline-add]');

@@ -54,17 +54,11 @@ class ViewArgs:
 class PaginationHandler:
     """Handler that provides pagination state and URL generation for list views."""
 
-    page_size: int = 20
-    """Default page size for pagination."""
-
-    can_set_page_size = True
-    """Allows to select page size via dropdown list."""
-
-    page_size_options: tuple = (5, 10, 20, 50, 100)
-    """Sets the page size options available, if `can_set_page_size` is True."""
-
     def __init__(self, view):
         self.view = view
+        self.page_size = view.page_size
+        self.can_set_page_size = view.can_set_page_size
+        self.page_size_options = view.page_size_options
 
     def get_default_page_size(self):
         return self.page_size

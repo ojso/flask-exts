@@ -47,5 +47,20 @@ class InlineModelField(Field):
             return [getattr(obj, key) for key in primary_key]
         return getattr(obj, primary_key)
 
+    def get_pk_label(self, obj):
+        """Return the primary key as a display string for persisted rows.
+
+        Returns ``None`` when the object has no primary key yet, so templates
+        can mark the row as a new, unsaved record.
+        """
+        primary_key = self.get_pk(obj)
+        if isinstance(primary_key, (list, tuple)):
+            if any(value is None for value in primary_key):
+                return None
+            return ",".join(str(value) for value in primary_key)
+        if primary_key is None:
+            return None
+        return str(primary_key)
+
     def get_prefix(self, index):
         return f"{self.name}-{index}-"

@@ -70,11 +70,6 @@ class ModelFieldConverter(
             return QuerySelectField(**kwargs)
 
     def convert_relation(self, name, prop, kwargs):
-        # Check if relation is specified
-        form_columns = getattr(self.view, "form_columns", None)
-        if form_columns and name not in form_columns:
-            return None
-
         remote_model = prop.mapper.class_
         column = prop.local_remote_pairs[0][0]
 
@@ -103,7 +98,7 @@ class ModelFieldConverter(
         multiple = prop.direction.name in ("ONETOMANY", "MANYTOMANY") and prop.uselist
         return self.model_select_field(prop, multiple, remote_model, **kwargs)
 
-    def convert(self, model, mapper, name, prop, field_args, hidden_pk):
+    def convert(self, model, mapper, name, prop, field_args):
         # Properly handle forced fields
         if isinstance(prop, FieldPlaceholder):
             unbound = prop.field
@@ -136,20 +131,10 @@ class ModelFieldConverter(
 
             unique = False
 
-            if column.primary_key:
-                if hidden_pk:
-                    # If requested to add hidden field, show it
-                    return HiddenField()
-                else:
-                    # By default, don't show primary keys either
-                    # If PK is not explicitly allowed, ignore it
-                    if prop.key not in form_columns:
-                        return None
-
-                    # Current Unique Validator does not work with multicolumns-pks
-                    if not is_model_multiple_pks(model):
-                        kwargs["validators"].append(Unique(self.session, model, column))
-                        unique = True
+            if column.primary_key and (not is_model_multiple_pks(model)):
+                # Current Unique Validator does not work with multicolumns-pks
+                kwargs["validators"].append(Unique(self.session, model, column))
+                unique = True
 
             # If field is unique, validate it
             if column.unique and not unique:

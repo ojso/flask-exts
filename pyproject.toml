@@ -44,6 +44,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "djlint", "ruff"]
+test = ["pytest-cov", "coverage"]
+build = ["build", "hatch"]
 
 [project.urls]
 Documentation = "https://flask-exts.readthedocs.io"

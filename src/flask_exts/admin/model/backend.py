@@ -107,24 +107,22 @@ class DataBackend(ABC):
     # --- Writes ------------------------------------------------------------
 
     @abstractmethod
-    def create_model(self, form) -> Any:
-        """Create a record from a validated form. Return the new record, or
-        ``None`` on failure (implementations handle their own flash
-        messaging, matching the existing convention)."""
+    def create_model(self, model) -> Any:
+        """Create a record. Return the new record, or ``None`` on failure."""
 
     @abstractmethod
-    def update_model(self, form, model: Any) -> bool:
-        """Update ``model`` from a validated form. Return success as a bool."""
+    def update_model(self, model) -> bool:
+        """Update ``model`` from a model instance. Return success as a bool."""
 
     @abstractmethod
-    def delete_model(self, model: Any) -> bool:
+    def delete_model(self, model) -> bool:
         """Delete a model instance.
 
         Args:
             model: Model instance to remove.
 
         Returns:
-            bool: ``True`` if the delete operation succeeded, otherwise ``False``.
+            ``True`` if the delete operation succeeded, otherwise ``False``.
         """
 
     @abstractmethod
