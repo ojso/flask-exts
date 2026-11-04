@@ -61,12 +61,13 @@
       <h2 class="h5">{{ _("Account Security") }}</h2>
       <div class="d-flex flex-wrap gap-2">
         {% if not current_user.email_verified and current_user.email %}
-          <form method="post" action="{{ url_for('.resend_verification') }}">
+          <form action="{{ url_for('.resend_verification') }}" method="post">
             {{ resend_form.csrf_token }}
             {{ resend_form.submit(class_="btn btn-sm btn-outline-warning") }}
           </form>
         {% endif %}
-        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('.change_password') }}">{{ _("Change Password") }}</a>
+        <a class="btn btn-sm btn-outline-primary"
+           href="{{ url_for('.change_password') }}">{{ _("Change Password") }}</a>
       </div>
 
       <section class="border rounded p-3 mt-3">
@@ -90,7 +91,6 @@
           </div>
         </div>
       </section>
-      </div>
     </div>
   </div>
 {% endblock %}

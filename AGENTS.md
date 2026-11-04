@@ -1,104 +1,85 @@
 # AGENTS.md
 
-## Language
-
-Code and documentation are primarily in English. Tests may include Chinese comments for internationalization (i18n) scenarios.
-
-## Project overview
+## Project
 
 Flask extension library built on SQLAlchemy, WTForms, and admin views.
-Requires Python 3.10+.
+Supports Python 3.10+.
 
-## Environment setup
+## Development workflow
 
-Use the repository-local virtual environment instead of the system Python.
+Use the repository-local virtual environment. Developers can set it up with:
 
 ```bash
-# Run from the repo root
 test -d venv || python3 -m venv venv
 . venv/bin/activate
 python -m pip install -e '.[dev,test]'
+python -m pip install -r docs/requirements.txt
 ```
 
-If the environment already exists, activate it with:
+Agents must not install packages or tools; the setup commands above are for
+developers. If a required dependency is missing, ask the developer to install
+it.
+
+Run the smallest relevant test target while iterating; run the full suite for
+broad changes:
 
 ```bash
-. venv/bin/activate
-```
-
-Re-run the `pip install -e '.[dev,test]'` command after pulling changes to
-`pyproject.toml`, so optional dependencies stay in sync.
-
-## Common development commands
-
-All commands below assume the venv is activated. If you use `make` targets such as
-`make test` or `make coverage`, activate the venv first: the Makefile calls bare
-`pytest` and `coverage`, which are not available system-wide.
-
-Run the full test suite when needed:
-
-```bash
-# Run from the repo root
-. venv/bin/activate
+python -m pytest -q tests/unit/forms/fields/test_json.py
 python -m pytest -q
 ```
 
-Run the smallest relevant test target while iterating:
+Run Ruff and format only files changed for the task. Check only templates you
+changed with djLint. Build docs when changing docs or public docstrings:
 
 ```bash
-python -m pytest -q tests/forms/fields/test_json.py
+python -m ruff check path/to/changed_file.py
+python -m ruff format path/to/changed_file.py
+python -m djlint path/to/changed_template.html --check
+python -m sphinx -b html docs docs/_build/html -W -n --keep-going
 ```
 
-Lint and format:
+The repository has pre-existing Ruff and template-formatting issues; do not
+reformat unrelated files.
 
-```bash
-python -m ruff check .
-python -m ruff format .
-# Check only the templates you changed; the whole tree currently has
-# pre-existing formatting issues.
-python -m djlint src/flask_exts/templates/layout.html --check
-```
+## Change boundaries
 
-Refresh vendored front-end assets (only when changing files under
-`src/flask_exts/static`):
+Ask before:
 
-```bash
-npm install
-npm run copy:vendor
-```
+- Adding or upgrading runtime dependencies.
+- Changing public APIs, configuration keys, models, or the database schema.
+- Regenerating vendored assets or restructuring docs and published pages.
 
-## Documentation
+Always keep changes focused and declare public re-exports in `__all__`. Never:
 
-Install the documentation dependencies and build the HTML docs:
-
-```bash
-python -m pip install -r docs/requirements.txt
-make docs-build
-```
-
-`make docs-build` treats Sphinx warnings as errors; only address warnings
-introduced by your change, not pre-existing ones.
-
-## Build package
-
-Building distributions is independent of the development environment. Install
-the packaging tools and build the wheel and source distribution:
-
-```bash
-python -m pip install -e '.[build]'
-python -m build
-```
-
-Artifacts are written to `dist/`.
+- Commit secrets, credentials, or local `.env` files.
+- Hand-edit `src/flask_exts/static/vendor/`; use the project regeneration
+  script when authorized.
+- Edit files under `venv/`, `node_modules/`, `dist/`, or `docs/_build/`.
+- Rewrite git history, force-push, or revert another person's work.
 
 ## Coding guidance
 
-- Prefer the project-local venv for all Python commands.
-- Validate with the smallest relevant test target before broad test runs.
-- Avoid using system `python` or `pytest` directly when a repo-local venv is available.
-- Run ruff and djlint checks on files you touch before finishing.
-- Code and documentation are in English. Tests may use other languages for internationalization (i18n) scenarios.
+- Write code and documentation primarily in English. Tests may use other
+  languages for i18n coverage.
+- Preserve Python 3.10 compatibility; do not use syntax or standard-library
+  features introduced in later Python versions.
+- Prefer f-strings for string formatting; avoid `.format()` and `%` formatting.
+- Add type annotations to public functions and methods, and give them concise,
+  same-line Google-style docstrings with `Args:`, `Returns:`, and `Raises:`
+  sections. Preserve Sphinx/reStructuredText markup.
+- Use SQLAlchemy 2.0 `Mapped` annotations. Declare reverse relationships
+  explicitly with `relationship(back_populates=...)`; do not use `backref`.
 
-## Notes
+For test organization, naming, coverage, integration models, and validation,
+see `docs/testing.rst`.
 
-- This project is configured for Python 3.10+; the local venv currently uses 3.13.
+## Changelog and releases
+
+Keep user-visible changes under `Unreleased` in `CHANGES.rst`, written in
+reStructuredText. The version is maintained in `src/flask_exts/__about__.py`;
+do not bump it or create release tags unless asked.
+
+## Commits
+
+Use Conventional Commit messages for new commits (for example,
+`fix(forms): handle empty input`). Do not create commits unless asked.

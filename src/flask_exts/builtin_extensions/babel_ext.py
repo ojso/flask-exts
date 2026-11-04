@@ -68,7 +68,8 @@ class BabelExtension(Extension):
         app_validate_translation_directories = []
         app_validate_domains = []
 
-        # only add existing directories to the translation directories list and corresponding domains to the domains list
+        # only add existing directories to the translation directories list and
+        # corresponding domains to the domains list
         for path, domain in zip(app_directory, app_domain):
             if not os.path.isabs(path):
                 path = os.path.join(app.root_path, path)

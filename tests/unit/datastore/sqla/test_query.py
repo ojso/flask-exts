@@ -6,9 +6,11 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TEXT, String
 
-from flask_exts.datastore.sqla import db
+from flask_exts.datastore.sqla.database import SqlaDb
 from flask_exts.datastore.sqla.query import Query
 from flask_exts.datastore.sqla.utils import get_field_with_path, get_model_column_type
+
+db = SqlaDb()
 
 
 class EnumChoices(enum.Enum):
@@ -146,11 +148,11 @@ def test_eager_load():
 
 def test_count_query():
     manager = Query(ModelA)
-    alias_b1 = manager.join_path("first_b")
+    manager.join_path("first_b")
     stmt = manager.build()
-    # print(stmt)
     count_stmt = manager.build_count()
-    # print(count_stmt)
+    assert stmt is not None
+    assert count_stmt is not None
 
 
 def test_join_path():
@@ -162,7 +164,8 @@ def test_join_path():
     # print(f"First JOIN returned alias: {alias_b1}")
 
     # Second JOIN: A -> second_b (path: second_b)
-    # Although both point to TableB, they are different relationships and need different aliases
+    # Although both point to TableB, they are different relationships and need
+    # different aliases
     # print('join_path("second_b")')
     alias_b2 = manager.join_path("second_b")
     # print(f"Second JOIN returned alias: {alias_b2}")
@@ -208,6 +211,8 @@ def test_join_path():
     # Get already JOINed alias
     retrieved_b = manager3.get_path_alias(("first_b",))
     # print(f"Retrieved first_b alias: {retrieved_b}")
+    assert retrieved_b is alias_b
+    assert alias_c is not alias_b
 
     # Use in query
     stmt = manager3.build()
@@ -237,6 +242,10 @@ def test_join_path():
     alias_c_from_first = manager4.join_path(("first_b", "c_items"))
     alias_c_from_second = manager4.join_path(("second_b", "c_items"))
 
+    # Different relationships must produce different aliases
+    assert alias_b_first != alias_b_second
+    assert alias_c_from_first != alias_c_from_second
+
     # Build complex query
     stmt = manager4.build()
     stmt = stmt.where(
@@ -265,9 +274,9 @@ def test_get_column_type():
         column_type = get_model_column_type(Model1, key)
         column_type_name = column_type.__class__.__name__
         # print(f"Model1.{key} column type: {column_type_name}")
-        assert (
-            column_type is not None
-        ), f"Column type for Model1.{key} should not be None"
+        assert column_type is not None, (
+            f"Column type for Model1.{key} should not be None"
+        )
         if column_type_name == "Enum":
             # print(f"  Model1.{key} is an Enum with values: {column_type.enums}")
             # print(f"  Model1.{key} Enum class: {column_type.enum_class}")

@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class Extension(ABC):
-    """
-    Base class for all Flask-Exts extensions.
+    """Base class for all Flask-Exts extensions.
 
     Lifecycle, in order:
 
@@ -21,7 +20,7 @@ class Extension(ABC):
     ``post_init`` by inspecting the registry -- see ``admin.AdminViewMixin``
     for the convention this project uses for that.
 
-    Example:
+    Examples:
         class MyExtension(Extension):
             @property
             def name(self) -> str:
@@ -35,8 +34,7 @@ class Extension(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
-        """
-        Unique identifier for this extension.
+        """Unique identifier for this extension.
 
         Returns:
             str: Extension name (lowercase, no spaces)
@@ -45,8 +43,7 @@ class Extension(ABC):
 
     @property
     def dependencies(self) -> list[str]:
-        """
-        List of extension names this extension depends on.
+        """List of extension names this extension depends on.
 
         Returns:
             list[str]: Names of required extensions
@@ -55,8 +52,7 @@ class Extension(ABC):
 
     @abstractmethod
     def init_app(self, app):
-        """
-        Initialize extension with Flask application.
+        """Initialize extension with Flask application.
 
         Args:
             app: Flask application instance
@@ -68,8 +64,7 @@ class Extension(ABC):
         ...
 
     def post_init(self, app):
-        """
-        Second initialization phase, run after every extension's ``init_app``.
+        """Second initialization phase, run after every extension's ``init_app``.
 
         Optional hook. Override to wire into other extensions once the whole
         registry is guaranteed to be initialized -- regardless of
@@ -80,8 +75,7 @@ class Extension(ABC):
         """
 
     def shutdown(self):
-        """
-        Optional cleanup when app context is destroyed.
+        """Optional cleanup when app context is destroyed.
 
         Args:
             app: Flask application instance (optional)

@@ -10,8 +10,10 @@ from flask_exts.forms.form.flask_form import FlaskForm
 class F(Form):
     file = FileField()
 
+
 class MultipleF(Form):
     files = MultipleFileField()
+
 
 class FlaskF(FlaskForm):
     file = FileField()
@@ -26,6 +28,7 @@ def test_filefield_without_file_input():
     assert f.file.raw_data is None
     assert f.file.data is None
     assert f.file() == '<input id="file" name="file" type="file">'
+
 
 def test_multiplefilefield_without_file_input():
     mf = MultipleF()

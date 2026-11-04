@@ -4,9 +4,7 @@ from ....datastore.sqla.utils import get_field_with_path
 
 
 class FieldPlaceholder:
-    """
-    Field placeholder for model convertors.
-    """
+    """Field placeholder for model convertors."""
 
     def __init__(self, field):
         self.field = field
@@ -60,9 +58,7 @@ def get_model_form(
         if name.startswith("_"):
             continue
 
-        field = converter.convert(
-            model, mapper, name, p, field_args.get(name)
-        )
+        field = converter.convert(model, mapper, name, p, field_args.get(name))
         if field is not None:
             field_dict[name] = field
 

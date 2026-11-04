@@ -142,7 +142,6 @@ def test_init_app_registers_extension_and_adds_models_to_shell():
         db.dispose()
 
 
-
 def test_reset_all_drops_and_recreates_tables():
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"

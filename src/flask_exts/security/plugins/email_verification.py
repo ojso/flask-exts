@@ -5,8 +5,8 @@ from ..token_action import TokenBasedAction
 
 
 class EmailVerification(TokenBasedAction):
-    """
-    Handles email verification via signed tokens.
+    """Handles email verification via signed tokens.
+
     Users receive a verification link via email and confirm their email address.
     """
 
@@ -31,8 +31,7 @@ class EmailVerification(TokenBasedAction):
         return "verification_token"
 
     def execute_action(self, user, **kwargs):
-        """
-        Mark the user's email as verified.
+        """Mark the user's email as verified.
 
         Args:
             user: The user whose email to verify

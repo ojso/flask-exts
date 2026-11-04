@@ -215,8 +215,8 @@ class SqlaBackend(DataBackend):
         return count, result
 
     def get_pk_value(self, instance):
-        """
-        Return the primary key value from a model object.
+        """Return the primary key value from a model object.
+
         If there are multiple primary keys, they're encoded into string representation.
         """
         value = get_instance_identity(instance)
@@ -304,7 +304,7 @@ class SqlaBackend(DataBackend):
         for m in self.view.inline_models:
             if hasattr(m, "inline_model_converter"):
                 custom_converter = m.inline_model_converter(
-                    self.session, self, self.model_field_converter
+                    self.session, self.view, self.model_field_converter
                 )
                 form_class = custom_converter.contribute(self.model, form_class, m)
             else:
@@ -323,7 +323,6 @@ class SqlaBackend(DataBackend):
             flt.apply(query, clean_value)
 
     def _apply_sorting(self, query: Query, sort_column, sort_desc):
-        print(f"Sorting by {sort_column}, desc={sort_desc}")
         if sort_column is not None:
             if sort_column in self.view.get_sortable_columns():
                 sort_field = self.view.get_sortable_columns()[sort_column]

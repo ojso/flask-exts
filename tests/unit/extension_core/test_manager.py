@@ -38,14 +38,20 @@ def make_extension(name, dependencies=(), record=None):
 # Registration
 # ---------------------------------------------------------------------------
 def test_register_extension_documented_usage():
-    """A6 regression: the documented usage `exts.register_extension(MyExtension)` must work."""
+    """A6 regression: the documented usage must work.
+
+    The documented usage is `exts.register_extension(MyExtension)`.
+    """
     exts = ExtensionManager(register_builtin=False)
     ext = exts.register_extension(make_extension("my_ext"))
     assert exts.get_extension("my_ext") is ext
 
 
 def test_register_before_init_app_required():
-    """Call register_extension before init_app; the extension is registered correctly."""
+    """Call register_extension before init_app.
+
+    The extension is registered correctly.
+    """
     exts = ExtensionManager(register_builtin=False)
     exts.register_extension(make_extension("a"))
     exts.init_app(FakeApp())
@@ -88,9 +94,7 @@ def test_all_init_app_run_before_any_post_init():
     exts.init_app(FakeApp())
 
     inits = [i for i, step in enumerate(record) if step.startswith("init:")]
-    posts = [
-        i for i, step in enumerate(record) if step.startswith("post_init:")
-    ]
+    posts = [i for i, step in enumerate(record) if step.startswith("post_init:")]
     assert max(inits) < min(posts), record
 
 
@@ -126,11 +130,11 @@ def test_registration_order_between_unrelated_extensions_does_not_matter():
 
 
 def test_builtin_graph_initializes_in_valid_order():
-    """The most valuable one: use the real builtin dependency graph to verify that topological sorting holds under all declarations.
+    """Use the real builtin dependency graph to verify topological sorting.
 
-    If `dependencies = ["admin"]` is not added to startup_ext, this test will fail at
-    order.index("startup") > order.index("admin")—this is exactly the order described in section 17.0
-    of CODE_REVIEW: "removing only priority will break".
+    The most valuable one: verify that topological sorting holds under all
+    declarations. If `dependencies = ["admin"]` is not added to startup_ext,
+    this test will fail at order.index("startup") > order.index("admin").
     """
     exts = ExtensionManager()
     order = exts.get_registry().initialization_order()

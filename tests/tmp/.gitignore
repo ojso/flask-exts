@@ -1,0 +1,3 @@
+# Keep this directory in version control while ignoring runtime files.
+*
+!.gitignore

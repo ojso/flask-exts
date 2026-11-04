@@ -30,10 +30,9 @@ security_cli = AppGroup("security", short_help="security for the app.")
     "--active", is_flag=True, default=False, help="Activate the user immediately"
 )
 def create_user(name, password, email, active):
-    """
-    Create a new user with the given NAME.
+    """Create a new user with the given NAME.
 
-    Example:
+    Examples:
         security create_user john_doe
         security create_user jane --password mypass123 --active
     """
@@ -53,9 +52,7 @@ def create_user(name, password, email, active):
 @click.argument("password", default="admin")
 def create_admin(password):
     try:
-        user_admin = current_userstore.create_user(
-            username="admin", password=password
-        )
+        user_admin = current_userstore.create_user(username="admin", password=password)
     except UserAlreadyExistsError as error:
         raise click.ClickException(str(error)) from error
     role_admin = current_userstore.create_role(name="admin")

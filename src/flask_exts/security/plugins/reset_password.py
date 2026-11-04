@@ -4,8 +4,8 @@ from ..token_action import TokenBasedAction
 
 
 class ResetPassword(TokenBasedAction):
-    """
-    Handles password reset via signed tokens.
+    """Handles password reset via signed tokens.
+
     Users receive a reset link via email and can set a new password.
     """
 
@@ -30,8 +30,7 @@ class ResetPassword(TokenBasedAction):
         return "reset_password_token"
 
     def execute_action(self, user, **kwargs):
-        """
-        Reset the user's password.
+        """Reset the user's password.
 
         Args:
             user: The user whose password to reset

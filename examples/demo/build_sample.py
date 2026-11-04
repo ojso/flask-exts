@@ -146,43 +146,50 @@ def build_sample_post():
         {
             "title": "Cities Turn Empty Offices Into Housing",
             "content": (
-                "Across many cities, vacant office buildings are being converted into apartments "
-                "and mixed-use spaces. The projects aim to revive downtowns, ease housing shortages, "
-                "and adapt to remote work. Supporters say the trend could reshape urban life, "
-                "but high renovation costs and zoning rules remain major obstacles."
+                "Across many cities, vacant office buildings are being converted into "
+                "apartments and mixed-use spaces. The projects aim to revive "
+                "downtowns, ease housing shortages, and adapt to remote work. "
+                "Supporters say the trend could reshape urban life, but high "
+                "renovation costs and zoning rules remain major obstacles."
             ),
         },
         {
             "title": "Universities Warn of Budget Cuts as Overseas Students Decline",
             "content": (
-                "Universities are preparing for tighter budgets after a fall in international applications. "
-                "Leaders warn that cuts could hit research, staffing, and courses that depend on overseas fees. "
-                "The government says it is reviewing visa rules and funding to protect the sector's global reputation."
+                "Universities are preparing for tighter budgets after a fall in "
+                "international applications. Leaders warn that cuts could hit "
+                "research, staffing, and courses that depend on overseas fees. The "
+                "government says it is reviewing visa rules and funding to protect the "
+                "sector's global reputation."
             ),
         },
         {
             "title": "Les villes accelerent la transition vers le velo",
             "content": (
-                "Face a la pollution et aux embouteillages, de nombreuses villes developpent pistes cyclables, "
-                "aides a l'achat et parkings securises. Les elus esperent changer les habitudes quotidiennes, "
-                "mais certains habitants craignent que les travaux et les nouvelles regles compliquent la circulation."
+                "Face a la pollution et aux embouteillages, de nombreuses villes "
+                "developpent pistes cyclables, aides a l'achat et parkings securises. "
+                "Les elus esperent changer les habitudes quotidiennes, mais certains "
+                "habitants craignent que les travaux et les nouvelles regles "
+                "compliquent la circulation."
             ),
         },
         {
             "title": "Staedte testen autofreie Innenstaedte",
             "content": (
-                "Mehrere Staedte erproben Verkehrskonzepte, die private Autos aus zentralen Bereichen "
-                "verdraengen sollen. Sie hoffen auf weniger Laerm, sauberere Luft und mehr Raum fuer "
-                "Fussgaenger und Radfahrer. Kritiker bezweifeln jedoch, dass der oeffentliche Nahverkehr "
-                "schon bereit ist."
+                "Mehrere Staedte erproben Verkehrskonzepte, die private Autos aus "
+                "zentralen Bereichen verdraengen sollen. Sie hoffen auf weniger Laerm, "
+                "sauberere Luft und mehr Raum fuer Fussgaenger und Radfahrer. Kritiker "
+                "bezweifeln jedoch, dass der oeffentliche Nahverkehr schon bereit ist."
             ),
         },
         {
             "title": "Ciudades amplian zonas verdes contra el calor",
             "content": (
-                "Varios ayuntamientos crean nuevos parques y plantan arboles en barrios densamente poblados. "
-                "El objetivo es reducir las temperaturas, mejorar la salud publica y adaptarse al cambio climatico. "
-                "Los expertos advierten que estas medidas deben ir acompanadas de planes de agua y vivienda."
+                "Varios ayuntamientos crean nuevos parques y plantan arboles en "
+                "barrios densamente poblados. El objetivo es reducir las temperaturas, "
+                "mejorar la salud publica y adaptarse al cambio climatico. Los "
+                "expertos advierten que estas medidas deben ir acompanadas de planes "
+                "de agua y vivienda."
             ),
         },
     ]
@@ -208,9 +215,7 @@ def build_sample_post():
 
 
 def build_sample_db():
-    """
-    Populate a small db with some example entries.
-    """
+    """Populate a small db with some example entries."""
 
     db.drop_all()
     db.create_all()
@@ -218,4 +223,3 @@ def build_sample_db():
     build_sample_tree()
     build_sample_post()
     build_user_admin()
-

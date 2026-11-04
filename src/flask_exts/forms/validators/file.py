@@ -1,5 +1,3 @@
-from collections.abc import Iterable
-
 from werkzeug.datastructures import FileStorage
 from wtforms.validators import DataRequired, StopValidation, ValidationError
 
@@ -51,6 +49,7 @@ class FileAllowed:
                 ).format(extensions=", ".join(self.upload_set))
             )
 
+
 class FileSize:
     """Validates that the uploaded file(s) is within a minimum and maximum
     file size (set in bytes).
@@ -83,8 +82,7 @@ class FileSize:
                 raise ValidationError(
                     self.message
                     or field.gettext(
-                        f"File must be between {self.min_size} and {self.max_size} bytes."
+                        f"File must be between {self.min_size} and "
+                        f"{self.max_size} bytes."
                     )
                 )
-
-

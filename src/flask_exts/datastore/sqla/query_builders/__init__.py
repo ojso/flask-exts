@@ -17,8 +17,8 @@ from .pagination_builder import PaginationBuilder
 from .sort_builder import SortBuilder
 
 __all__ = [
-    'FilterBuilder',
-    'JoinBuilder',
-    'PaginationBuilder',
-    'SortBuilder',
+    "FilterBuilder",
+    "JoinBuilder",
+    "PaginationBuilder",
+    "SortBuilder",
 ]

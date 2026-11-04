@@ -1,5 +1,6 @@
 import os
 import os.path as op
+from contextlib import suppress
 from io import BytesIO
 
 import pytest
@@ -19,10 +20,9 @@ def _create_temp(root_path):
 
 
 def safe_delete(path, name):
-    try:
+    """Remove a temp upload file, ignoring the case where it is already gone."""
+    with suppress(OSError):
         os.remove(op.join(path, name))
-    except:
-        pass
 
 
 def test_base_upload_file_form(app):
@@ -58,7 +58,7 @@ def test_base_upload_file_form(app):
 
 
 def test_base_upload_image_form(app):
-    path = _create_temp(app.root_path)
+    _create_temp(app.root_path)
 
     class TestUploadImageForm(Form):
         upload = ImageField("Upload")
@@ -72,7 +72,7 @@ def test_base_upload_image_form(app):
 
 
 def test_base_upload_required_field(app):
-    path = _create_temp(app.root_path)
+    _create_temp(app.root_path)
 
     class TestRequiredForm(Form):
         upload = FileField("Upload", validators=[FileRequired()])

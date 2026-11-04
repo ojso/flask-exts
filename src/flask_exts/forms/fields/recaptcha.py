@@ -1,6 +1,7 @@
 from wtforms.fields import Field
-from ..widgets.recaptcha import RecaptchaWidget
+
 from ..validators.recaptcha import Recaptcha
+from ..widgets.recaptcha import RecaptchaWidget
 
 
 class RecaptchaField(Field):

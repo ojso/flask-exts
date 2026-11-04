@@ -5,9 +5,7 @@ from ..widgets import AjaxSelectWidget
 
 
 class AjaxSelectField(SelectFieldBase):
-    """
-    Ajax Model Select Field
-    """
+    """Ajax Model Select Field"""
 
     widget = AjaxSelectWidget()
 
@@ -61,9 +59,7 @@ class AjaxSelectField(SelectFieldBase):
 
 
 class AjaxSelectMultipleField(AjaxSelectField):
-    """
-    Ajax-enabled model multi-select field.
-    """
+    """Ajax-enabled model multi-select field."""
 
     widget = AjaxSelectWidget(multiple=True)
 

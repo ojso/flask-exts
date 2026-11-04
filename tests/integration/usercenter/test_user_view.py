@@ -381,8 +381,13 @@ class TestUserView:
 
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
+            plaintext_totp_secret = u.get_totp_secret()
+            encrypted_totp_secret = u.totp_secret
             tfa = current_security.get_plugin("two_factor_authentication")
-            totp_code = tfa.get_totp_code(u.get_or_create_totp_secret())
+            totp_code = tfa.get_totp_code(plaintext_totp_secret)
+
+        assert f"<b>{plaintext_totp_secret}</b>" in rv.text
+        assert f"<b>{encrypted_totp_secret}</b>" not in rv.text
 
         # enable tfa without code
         rv = client.get(self.user_enable_tfa_url, query_string={"enable": True})

@@ -12,9 +12,7 @@ class TimeField(wtforms.fields.TimeField):
 
 
 class DateTimePickerField(wtforms.fields.DateTimeField):
-    """
-    Allows modifying the datetime format of a DateTimeField using form_args.
-    """
+    """Allows modifying the datetime format of a DateTimeField using form_args."""
 
     widget = DateTimePickerWidget()
 
@@ -35,8 +33,8 @@ class DateTimePickerField(wtforms.fields.DateTimeField):
 
 
 class TimePickerField(wtforms.fields.Field):
-    """
-    A text field which stores a `datetime.time` object.
+    """A text field which stores a `datetime.time` object.
+
     Accepts time string in multiple formats: 20:10, 20:10:00, 10:00 am, 9:30pm, etc.
     """
 
@@ -51,8 +49,7 @@ class TimePickerField(wtforms.fields.Field):
         widget_format=None,
         **kwargs,
     ):
-        """
-        Constructor
+        """Constructor
 
         Args:
             label:

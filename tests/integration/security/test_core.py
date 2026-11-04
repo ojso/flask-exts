@@ -86,9 +86,7 @@ class TestSecurity:
                 reset_password.execute_with_token(reset_token, password="")
 
             assert current_security.get_within("reset_password") == 1800
-            reset_password.execute_with_token(
-                reset_token, password="new-test-password"
-            )
+            reset_password.execute_with_token(reset_token, password="new-test-password")
             with pytest.raises(InvalidTokenError):
                 reset_password.execute_with_token(
                     reset_token, password="another-test-password"

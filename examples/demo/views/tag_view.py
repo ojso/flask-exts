@@ -5,5 +5,6 @@ from ..models.tag import Tag
 
 class TagView(SqlaModelView):
     pass
-    
+
+
 tagview = TagView(Tag)

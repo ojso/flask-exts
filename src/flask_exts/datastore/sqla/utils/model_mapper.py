@@ -8,16 +8,15 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
 def get_model_mapper(model):
-    """
-    Return the mapper for a given model
-    """
+    """Return the mapper for a given model"""
     return inspect(model)
 
 
 def get_model_primary_key(model):
-    """
-    Return primary key name from a model. If the primary key consists of multiple columns,
-    return the corresponding tuple
+    """Return primary key name from a model.
+
+    If the primary key consists of multiple columns, return the corresponding
+    tuple.
     """
     mapper = inspect(model)
     pks = [col.name for col in mapper.primary_key]
@@ -28,9 +27,7 @@ def get_model_primary_key(model):
 
 
 def is_model_multiple_pks(model):
-    """
-    Return True if the model has multiple primary keys, False otherwise
-    """
+    """Return True if the model has multiple primary keys, False otherwise"""
     mapper = inspect(model)
     return len(mapper.primary_key) > 1
 
@@ -52,9 +49,7 @@ def get_model_column_type(model, column_path: str):
 
 
 def get_instance_identity(instance):
-    """
-    Return primary key values from an instance.
-    """
+    """Return primary key values from an instance."""
     identity = inspect(instance).identity
     if len(identity) == 1:
         return identity[0]
@@ -89,14 +84,15 @@ def is_association_proxy(model, attr_name):
 def get_field_with_path(
     model, name: str
 ) -> tuple[InstrumentedAttribute, list[InstrumentedAttribute]]:
-    """
-    Resolve a dot-separated field path (e.g., 'profile.contact.email')
+    """Resolve a dot-separated field path (e.g., 'profile.contact.email')
+
     starting from `model`, handling columns and relationships.
 
     Returns:
         (final_attr, join_path)
         - final_attr: The terminal InstrumentedAttribute (e.g., Contact.email)
-        - join_path: List of relationship attributes for explicit joins (e.g., [User.profile, Profile.contact])
+        - join_path: List of relationship attributes for explicit joins
+          (e.g., [User.profile, Profile.contact])
     """
     final_attr = None
     join_path: list[InstrumentedAttribute] = []
@@ -124,7 +120,8 @@ def get_field_with_path(
         elif is_association_proxy(current_model, part):
             if i != len(parts) - 1:
                 raise ValueError(
-                    f"AssociationProxy '{part}' cannot be followed by further path segments."
+                    f"AssociationProxy '{part}' cannot be followed by further "
+                    "path segments."
                 )
             # Step into the underlying relationship
             local_rel = attr.local_attr

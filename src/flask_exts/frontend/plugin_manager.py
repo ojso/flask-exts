@@ -43,17 +43,15 @@ class PluginManager:
         return g._request_plugins
 
     def add_request_plugins(self, names: list[str]) -> None:
-        """
-        Add plugins to the current request plugins in flask.g.
-        """
+        """Add plugins to the current request plugins in flask.g."""
         request_plugins = self.get_request_plugins()
         for name in names:
             if name not in self._default_plugins and name not in request_plugins:
                 request_plugins.append(name)
 
     def ordered_names(self):
-        """
-        Returns the names of the active plugins in the order they should be loaded,
+        """Returns the names of the active plugins in the order they should be loaded,
+
         considering their dependencies.
         """
         names = self._default_plugins + self.get_request_plugins()
@@ -96,8 +94,7 @@ class PluginManager:
         return Markup("\n".join(parts))
 
     def load_from_directory(self, directory, namespace, base_class):
-        """
-        Scans the specified directory for Python files, imports them.
+        """Scans the specified directory for Python files, imports them.
 
         Args:
             directory: The directory to scan for Python files.

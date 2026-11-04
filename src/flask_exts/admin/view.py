@@ -37,8 +37,9 @@ class ViewMeta(type):
 
 
 class View(metaclass=ViewMeta):
-    """
-    Base form class. Will be used by form scaffolding function when creating model form.
+    """Base form class.
+
+    Will be used by form scaffolding function when creating model form.
     Useful if you want to have custom constructor or override some fields.
     """
 
@@ -54,8 +55,7 @@ class View(metaclass=ViewMeta):
         static_url_path=None,
         **kwargs,
     ):
-        """
-        Constructor.
+        """Constructor.
 
         Args:
             name:
@@ -118,16 +118,14 @@ class View(metaclass=ViewMeta):
                         self._default_view = name
 
     def _get_endpoint(self):
-        """
-        Generate Flask endpoint name. By default converts class name to lower
+        """Generate Flask endpoint name. By default converts class name to lower
+
         case if endpoint is not explicitly provided.
         """
         return self.__class__.__name__.lower()
 
     def _get_url_prefix(self):
-        """
-        Generate URL for the view. Override to change default behavior.
-        """
+        """Generate URL for the view. Override to change default behavior."""
         if self.url is None:
             url_prefix = self.admin.url.rstrip("/") + "/" + self.endpoint
         elif self.url.startswith("/"):
@@ -139,9 +137,7 @@ class View(metaclass=ViewMeta):
         return url_prefix
 
     def create_blueprint(self):
-        """
-        Create Flask blueprint.
-        """
+        """Create Flask blueprint."""
         # Generate URL
         self.url_prefix = self._get_url_prefix()
 
@@ -165,8 +161,8 @@ class View(metaclass=ViewMeta):
         return self.blueprint
 
     def get_url(self, endpoint, **kwargs):
-        """
-        Generate URL for the endpoint. If you want to customize URL generation
+        """Generate URL for the endpoint. If you want to customize URL generation
+
         logic (persist some query string argument, for example), this is
         right place to do it.
 
@@ -179,8 +175,7 @@ class View(metaclass=ViewMeta):
         return url_for(endpoint, **kwargs)
 
     def render(self, template, **kwargs):
-        """
-        Render template
+        """Render template
 
         Args:
             template:
@@ -194,8 +189,7 @@ class View(metaclass=ViewMeta):
         return self.admin.render(template, **kwargs)
 
     def render_string(self, source, **kwargs):
-        """
-        Render source string as template
+        """Render source string as template
 
         Args:
             source:
@@ -209,8 +203,8 @@ class View(metaclass=ViewMeta):
         return self.admin.render_string(source, **kwargs)
 
     def _prettify_class_name(self, name):
-        """
-        Split words in PascalCase string into separate words.
+        """Split words in PascalCase string into separate words.
+
         For example, 'HelloWorld' will be converted to 'Hello World'
 
         Args:
@@ -220,8 +214,7 @@ class View(metaclass=ViewMeta):
         return sub(r"(?<=.)([A-Z])", r" \1", name)
 
     def _prettify_name(self, name):
-        """
-        Prettify pythonic variable name.
+        """Prettify pythonic variable name.
 
         For example, 'hello_world' will be converted to 'Hello World'
 
@@ -232,8 +225,7 @@ class View(metaclass=ViewMeta):
         return name.replace("_", " ").title()
 
     def allow(self, fn, *args, **kwargs):
-        """
-        This method will be executed before calling any view method.
+        """This method will be executed before calling any view method.
 
         Args:
             fn:
@@ -248,17 +240,14 @@ class View(metaclass=ViewMeta):
         return self.admin.allow(*args, view=self, fn=fn, **kwargs)
 
     def is_accessible(self):
-        """
-        Check if the view is accessible.
-        """
+        """Check if the view is accessible."""
         if self.admin is None:
             return True
 
         return self.admin.allow(view=self)
 
     def inaccessible_callback(self, fn, *args, **kwargs):
-        """
-        Handle the response to inaccessible views.
+        """Handle the response to inaccessible views.
 
         By default, it throw HTTP 403 error. Override this method to
         customize the behaviour.

@@ -30,9 +30,7 @@
   {% if rebind and not rebind_complete %}
     <form method="post">
       {{ render_form_fields(form) }}
-      <button class="btn btn-primary" type="submit">
-        {{ gettext("Verify and replace authenticator") }}
-      </button>
+      <button class="btn btn-primary" type="submit">{{ gettext("Verify and replace authenticator") }}</button>
     </form>
   {% elif not current_user.tfa_enabled %}
     {{ add_modal_button(

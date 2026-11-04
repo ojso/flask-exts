@@ -16,7 +16,7 @@ class Unique:
             The unique column.
     """
 
-    field_flags = {"unique": True}
+    field_flags = {"unique": True}  # noqa: RUF012
 
     def __init__(self, session, model, column):
         self.session = session
@@ -30,18 +30,20 @@ class Unique:
 
         stmt = select(self.model).where(self.column == field.data)
         obj = self.session.execute(stmt).scalar_one_or_none()
-        # if obj is None, the value is unique, and we can stop here. Otherwise, we need to check if it's the same object as the one being edited (if any).
+        # If obj is None the value is unique and we can stop here. Otherwise we
+        # need to check if it's the same object as the one being edited (if any).
         if obj is None:
             return
 
-        # form._obj is the object being edited, if any. We should allow it to have the same value as itself.
+        # form._obj is the object being edited, if any. We should allow it to
+        # have the same value as itself.
         if not hasattr(form, "_obj") or not form._obj == obj:
             raise ValidationError(lazy_gettext("Already exists."))
 
 
 class ItemsRequired(InputRequired):
-    """
-    A version of the ``InputRequired`` validator that works with relations,
+    """A version of the ``InputRequired`` validator that works with relations,
+
     to require a minimum number of related items.
     """
 

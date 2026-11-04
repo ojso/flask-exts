@@ -8,8 +8,7 @@ from .base import (
 
 
 class ExtensionRegistry:
-    """
-    Manages registration and initialization of Flask-Exts extensions.
+    """Manages registration and initialization of Flask-Exts extensions.
 
     Features:
     - Dynamic registration and discovery
@@ -17,7 +16,7 @@ class ExtensionRegistry:
     - Priority-based initialization order
     - Circular dependency detection
 
-    Example:
+    Examples:
         registry = ExtensionRegistry()
         registry.register(DatabaseExtension)
         registry.register(TemplateExtension)
@@ -32,8 +31,7 @@ class ExtensionRegistry:
         self._post_initialized: set[str] = set()
 
     def register(self, extension_class: type[Extension]) -> Extension:
-        """
-        Register an extension class.
+        """Register an extension class.
 
         Args:
             extension_class: Class inheriting from Extension
@@ -67,8 +65,7 @@ class ExtensionRegistry:
         return ext
 
     def unregister(self, name: str) -> bool:
-        """
-        Unregister an extension (mainly for testing).
+        """Unregister an extension (mainly for testing).
 
         Args:
             name: Extension name
@@ -86,8 +83,7 @@ class ExtensionRegistry:
         return False
 
     def get_extension(self, name: str) -> Extension | None:
-        """
-        Get extension instance by name.
+        """Get extension instance by name.
 
         Args:
             name: Extension name
@@ -98,8 +94,7 @@ class ExtensionRegistry:
         return self._instances.get(name)
 
     def list_extensions(self) -> list[Extension]:
-        """
-        Get all registered extensions.
+        """Get all registered extensions.
 
         Returns:
             list[Extension]: Registered extensions
@@ -109,8 +104,7 @@ class ExtensionRegistry:
         return extensions
 
     def initialization_order(self) -> list[str]:
-        """
-        Return extension names in dependency-respecting order.
+        """Return extension names in dependency-respecting order.
 
         Extensions with no dependency relationship between them keep registration
         order, so the result is deterministic and does not depend on dict/set
@@ -150,8 +144,7 @@ class ExtensionRegistry:
         return order
 
     def init_all(self, app) -> None:
-        """
-        Initialize all registered extensions in priority order.
+        """Initialize all registered extensions in priority order.
 
         Args:
             app: Flask application
@@ -164,8 +157,7 @@ class ExtensionRegistry:
             self.init(name, app)
 
     def post_init_all(self, app) -> None:
-        """
-        Run the second initialization phase for all registered extensions.
+        """Run the second initialization phase for all registered extensions.
 
         Must be called after :meth:`init_all`, so every extension's
         ``init_app`` has already run by the time any ``post_init`` executes.
@@ -177,8 +169,7 @@ class ExtensionRegistry:
             self.post_init(name, app)
 
     def post_init(self, name: str, app) -> None:
-        """
-        Run the second initialization phase for a single extension.
+        """Run the second initialization phase for a single extension.
 
         Idempotent: calling this more than once for the same extension (e.g.
         because ``post_init_all`` ran, then a late registration re-triggers
@@ -211,8 +202,7 @@ class ExtensionRegistry:
         self._post_initialized.add(name)
 
     def is_post_initialized(self, name: str) -> bool:
-        """
-        Check if an extension has completed the second initialization phase.
+        """Check if an extension has completed the second initialization phase.
 
         Args:
             name: Extension name
@@ -223,8 +213,7 @@ class ExtensionRegistry:
         return name in self._post_initialized
 
     def shutdown_all(self) -> None:
-        """
-        Shutdown all extensions in reverse order.
+        """Shutdown all extensions in reverse order.
 
         Args:
             app: Flask application (optional)
@@ -242,8 +231,7 @@ class ExtensionRegistry:
             self._post_initialized.discard(name)
 
     def init(self, name: str, app) -> None:
-        """
-        Initialize a single extension by name.
+        """Initialize a single extension by name.
 
         Args:
             name: Extension name
@@ -270,8 +258,7 @@ class ExtensionRegistry:
         self._initialized.add(name)
 
     def is_initialized(self, name: str) -> bool:
-        """
-        Check if an extension is initialized.
+        """Check if an extension is initialized.
 
         Args:
             name: Extension name

@@ -25,9 +25,7 @@ class InlineModelField(Field):
         self.relationship_name = relationship_name
         self.is_collection = is_collection
         self.inline_view = inline_view
-        self.form_opts = {
-            "widget_args": getattr(inline_view, "form_widget_args", None)
-        }
+        self.form_opts = {"widget_args": getattr(inline_view, "form_widget_args", None)}
 
     def process(self, formdata, data=unset_value, extra_filters=None):
         value = None if data is unset_value else data

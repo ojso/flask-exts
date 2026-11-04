@@ -51,6 +51,7 @@ class ViewArgs:
             f")"
         )
 
+
 class PaginationHandler:
     """Handler that provides pagination state and URL generation for list views."""
 

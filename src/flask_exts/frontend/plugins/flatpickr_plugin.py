@@ -5,8 +5,8 @@ from ..plugin_base import PluginBase
 
 
 class FlatpickrPlugin(PluginBase):
-    """
-    Flatpickr is a lightweight and powerful datetimepicker with
+    """Flatpickr is a lightweight and powerful datetimepicker with
+
     no dependencies.
 
     Features:
@@ -26,9 +26,7 @@ class FlatpickrPlugin(PluginBase):
 
     def style(self):
         """Load local Flatpickr CSS"""
-        url = url_for(
-            "_template.static", filename="vendor/flatpickr/flatpickr.min.css"
-        )
+        url = url_for("_template.static", filename="vendor/flatpickr/flatpickr.min.css")
         return f'<link rel="stylesheet" href="{url}">'
 
     def script(self):
@@ -41,7 +39,9 @@ class FlatpickrPlugin(PluginBase):
             <script>
                 // Initialize Flatpickr for date inputs
                 document.addEventListener('DOMContentLoaded', function() {{
-                    var dateInputs = document.querySelectorAll('input[type="date"][data-flatpickr]');
+                    var dateInputs = document.querySelectorAll(
+                        'input[type="date"][data-flatpickr]'
+                    );
                     dateInputs.forEach(function(input) {{
                         flatpickr(input, {{
                             dateFormat: input.getAttribute('data-format') || 'Y-m-d',
@@ -55,11 +55,14 @@ class FlatpickrPlugin(PluginBase):
                 }});
 
                 // Initialize Flatpickr for date range inputs
-                var rangeInputs = document.querySelectorAll('input[data-flatpickr-range]');
+                var rangeInputs = document.querySelectorAll(
+                    'input[data-flatpickr-range]'
+                );
                 if (rangeInputs.length >= 2) {{
                     flatpickr(rangeInputs, {{
                         mode: 'range',
-                        dateFormat: rangeInputs[0].getAttribute('data-format') || 'Y-m-d',
+                        dateFormat:
+                            rangeInputs[0].getAttribute('data-format') || 'Y-m-d',
                         locale: 'en'
                     }});
                 }}

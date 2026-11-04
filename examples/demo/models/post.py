@@ -28,4 +28,4 @@ class Post(db.Model):
     tags: Mapped[list["Tag"]] = relationship(secondary=post_tag_table)
 
     def __str__(self):
-        return "{}".format(self.title)
+        return f"{self.title}"

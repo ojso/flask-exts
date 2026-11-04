@@ -6,10 +6,11 @@ from .inline_form import InlineForm
 
 
 class InlineModelConverter:
-    """Inline model form converter."""
+    """Inline model form converter for collection and scalar relationships."""
 
     def __init__(self, session, view, model_converter):
-        """
+        """Initialize the inline model converter.
+
         Args:
             session:
                 SQLAlchemy session
@@ -25,8 +26,7 @@ class InlineModelConverter:
         self.model_converter = model_converter
 
     def get_label(self, info, name):
-        """
-        Get inline model field label
+        """Get inline model field label
 
         Args:
             info:
@@ -97,8 +97,8 @@ class InlineModelConverter:
         return result
 
     def _calculate_mapping_key_pair(self, model, info):
-        """
-        Calculate mapping property key pair between `model` and inline model,
+        """Calculate mapping property key pair between `model` and inline model,
+
             including the forward one for `model` and the reverse one for inline model.
             Override the method to map your own inline models.
 
@@ -131,20 +131,32 @@ class InlineModelConverter:
             raise ValueError(f"Cannot find reverse relation for model {info.model}")
 
         for reverse_prop in reverse_props:
-            # Find forward property
-
             if reverse_prop.direction.name == "MANYTOONE":
                 candidate = "ONETOMANY"
             else:
                 candidate = "MANYTOMANY"
 
+            back_populates = getattr(reverse_prop, "back_populates", None)
+            if back_populates:
+                forward_prop = mapper.relationships.get(back_populates)
+                if (
+                    forward_prop is not None
+                    and forward_prop.direction.name == candidate
+                    and forward_prop.key not in forward_reverse_props_keys
+                    and issubclass(target_mapper.class_, forward_prop.mapper.class_)
+                ):
+                    forward_reverse_props_keys[forward_prop.key] = reverse_prop.key
+                    continue
+
             for prop in mapper.iterate_properties:
-                if hasattr(prop, "direction") and prop.direction.name == candidate:
-                    if prop.key not in forward_reverse_props_keys.keys() and issubclass(
-                        target_mapper.class_, prop.mapper.class_
-                    ):
-                        forward_reverse_props_keys[prop.key] = reverse_prop.key
-                        break
+                if (
+                    hasattr(prop, "direction")
+                    and prop.direction.name == candidate
+                    and prop.key not in forward_reverse_props_keys
+                    and issubclass(target_mapper.class_, prop.mapper.class_)
+                ):
+                    forward_reverse_props_keys[prop.key] = reverse_prop.key
+                    break
             else:
                 raise ValueError(f"Cannot find forward relation for model {info.model}")
 
@@ -230,59 +242,3 @@ class InlineModelConverter:
             )
 
         return form_class
-
-
-class InlineOneToOneModelConverter(InlineModelConverter):
-    """
-    Inline one-to-one model form converter.
-    """
-
-    def _calculate_mapping_key_pair(self, model, info):
-
-        mapper = inspect(info.model).base_mapper
-        target_mapper = inspect(model)
-
-        inline_relationship = {}
-
-        for forward_prop in mapper.iterate_properties:
-            if not hasattr(forward_prop, "direction"):
-                continue
-
-            if forward_prop.direction.name != "MANYTOONE":
-                continue
-
-            if forward_prop.mapper.class_ != target_mapper.class_:
-                continue
-
-            # in case when model has few relationships to target model or
-            # has just installed references manually. This is more quick
-            # solution rather than rotate yet another one loop
-            ref = getattr(forward_prop, "backref", None)
-
-            if not ref:
-                ref = getattr(forward_prop, "back_populates", None)
-
-            if ref:
-                inline_relationship[ref] = forward_prop.key
-                continue
-
-            # here we suppose that model has only one relationship
-            # to target model and prop has not any reference
-            for backward_prop in target_mapper.iterate_properties:
-                if not hasattr(backward_prop, "direction"):
-                    continue
-
-                if backward_prop.direction.name != "ONETOMANY":
-                    continue
-
-                if issubclass(model, backward_prop.mapper.class_):
-                    inline_relationship[backward_prop.key] = forward_prop.key
-                    break
-            else:
-                raise Exception(f"Cannot find reverse relation for model {info.model}")
-            break
-
-        if not inline_relationship:
-            raise Exception("Cannot find forward relation for model %s" % info.model)
-
-        return inline_relationship

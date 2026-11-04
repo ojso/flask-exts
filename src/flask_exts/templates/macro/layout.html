@@ -12,23 +12,31 @@
     </li>
   {% else %}
     <li>
-      <a class="nav-link" href="{{ url_for('.export', export_type=export_types[0], **request.args) }}" title="{{ gettext('Export') }}">{{ gettext("Export") }}</a>
+      <a class="nav-link"
+         href="{{ url_for('.export', export_type=export_types[0], **request.args) }}"
+         title="{{ gettext('Export') }}">{{ gettext("Export") }}</a>
     </li>
   {% endif %}
 {% endmacro %}
 
 {% macro filter_options(filter_groups) %}
   <div class="dropdown">
-    <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" type="button">{{ gettext("Add Filter") }}</button>
+    <button class="nav-link dropdown-toggle"
+            data-bs-toggle="dropdown"
+            type="button">{{ gettext("Add Filter") }}</button>
     <div class="dropdown-menu field-filters">
-      {% for k in filter_groups %}<a class="dropdown-item filter" href="#" onclick="return false;">{{ k }}</a>{% endfor %}
+      {% for k in filter_groups %}
+        <a class="dropdown-item filter" href="#" onclick="return false;">{{ k }}</a>
+      {% endfor %}
     </div>
   </div>
 {% endmacro %}
 
 {% macro page_size_form(generator, page_size,page_size_options) %}
   <div class="dropdown">
-    <button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" type="button">{{ page_size }} {{ gettext("items") }}</button>
+    <button class="btn btn-outline-primary dropdown-toggle"
+            data-bs-toggle="dropdown"
+            type="button">{{ page_size }} {{ gettext("items") }}</button>
     <ul class="dropdown-menu">
       {% for option in page_size_options %}
         <li>

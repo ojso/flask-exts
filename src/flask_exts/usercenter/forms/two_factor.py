@@ -1,7 +1,6 @@
-from wtforms import StringField
-from wtforms import SubmitField
-from wtforms.validators import DataRequired
-from wtforms.validators import Length
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired, Length
+
 from . import Form
 
 

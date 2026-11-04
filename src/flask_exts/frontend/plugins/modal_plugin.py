@@ -19,7 +19,9 @@ document.querySelectorAll("[data-modal-form]").forEach((trigger) => {{
 
     new ModalForm(trigger, {{
       fetchImpl: (url, init) => {{
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content?.trim();
+        const csrfToken = document
+          .querySelector('meta[name="csrf-token"]')
+          ?.content?.trim();
 
         if (csrfRequired && !csrfToken) {{
           throw new Error("The CSRF token is missing from the page.");

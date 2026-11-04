@@ -22,8 +22,7 @@ def field_filename_generate(field, file_data: FileStorage):
 
 
 class FileField(_FileField):
-    """
-    Customizable file-upload field.
+    """Customizable file-upload field.
 
     Saves file to configured path, handles updates. Inherits from `FileField`,
     resulting filename will be stored as string.
@@ -38,8 +37,7 @@ class FileField(_FileField):
         allow_overwrite=False,
         **kwargs,
     ):
-        """
-        Constructor.
+        """Constructor.
 
         Args:
             label:
@@ -49,9 +47,11 @@ class FileField(_FileField):
             save_path:
                 Absolute path to the directory which will store files
             filename_generate:
-                Function(File) that will generate filename from the model and uploaded file object.
+                Function(File) that will generate filename from the model and
+                uploaded file object.
             allow_overwrite:
-                Whether to overwrite existing files in upload directory. Defaults to `False`.
+                Whether to overwrite existing files in upload directory.
+                Defaults to `False`.
         """
 
         self.save_path = save_path

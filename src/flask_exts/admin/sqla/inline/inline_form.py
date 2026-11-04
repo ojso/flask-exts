@@ -18,7 +18,8 @@ class InlineForm:
     form_extra_fields = None
 
     def __init__(self, model, **kwargs):
-        """
+        """Initialize inline form settings for a model.
+
         Args:
             model: Model class.
             kwargs: Additional options.
@@ -45,6 +46,8 @@ class InlineForm:
             elif hasattr(p, "columns"):
                 column = p.columns[0]
                 if column.foreign_keys:
+                    continue
+                if column.primary_key:
                     continue
                 columns.append(p.key)
 

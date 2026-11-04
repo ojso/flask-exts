@@ -10,10 +10,9 @@ from .view import View
 
 
 class AdminViewMixin:
-    """
-    Mix this into an ``Extension`` to publish views to the admin instance.
+    """Mix this into an ``Extension`` to publish views to the admin instance.
 
-    Usage::
+    Examples::
 
         class PortalExtension(AdminViewMixin, Extension):
             @property
@@ -32,8 +31,7 @@ class AdminViewMixin:
     """
 
     def get_admin_views(self) -> list[tuple[View, bool]]:
-        """
-        Views this extension wants registered on the admin instance.
+        """Views this extension wants registered on the admin instance.
 
         Returns:
             list[tuple[View, bool]]: ``(view_instance, is_menu)`` pairs

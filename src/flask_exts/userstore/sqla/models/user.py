@@ -63,8 +63,7 @@ class User(db.Model, UserMixin):
         return True
 
     def get_or_create_totp_secret(self) -> str:
-        """
-        Return this user's TOTP secret, generating one if absent.
+        """Return this user's TOTP secret, generating one if absent.
 
         ``totp_secret`` is stored encrypted at rest (AES-256-GCM via
         ``current_security.encryptor``) rather than in plaintext, since
@@ -87,8 +86,7 @@ class User(db.Model, UserMixin):
         return self.get_totp_secret()
 
     def get_totp_secret(self) -> str | None:
-        """
-        Decrypt and return the stored TOTP secret, or ``None`` if unset.
+        """Decrypt and return the stored TOTP secret, or ``None`` if unset.
 
         Returns:
             str | None: The plaintext TOTP secret, or ``None``.

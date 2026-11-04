@@ -1,6 +1,5 @@
 class DynamicMockModel:
-    """
-    Dynamic mock model for testing with support for multiple data types.
+    """Dynamic mock model for testing with support for multiple data types.
 
     Features:
     - Dynamic attribute addition/deletion
@@ -21,8 +20,7 @@ class DynamicMockModel:
     """
 
     def __init__(self, id=None, **kwargs):
-        """
-        Initialize DynamicMockModel.
+        """Initialize DynamicMockModel.
 
         Args:
             id: Primary key value
@@ -35,8 +33,7 @@ class DynamicMockModel:
 
     @classmethod
     def from_dict(cls, data_dict):
-        """
-        Create instance from a dictionary.
+        """Create instance from a dictionary.
 
         Args:
             data_dict: Dictionary with attribute names as keys
@@ -52,8 +49,7 @@ class DynamicMockModel:
         return f"DynamicMockModel({', '.join(attrs)})"
 
     def to_dict(self):
-        """
-        Convert model to dictionary.
+        """Convert model to dictionary.
 
         Returns:
             Dictionary with all model attributes
@@ -61,8 +57,7 @@ class DynamicMockModel:
         return {k: v for k, v in self.__dict__.items()}
 
     def set_attr(self, name, value):
-        """
-        Dynamically set an attribute.
+        """Dynamically set an attribute.
 
         Args:
             name: Attribute name
@@ -71,8 +66,7 @@ class DynamicMockModel:
         setattr(self, name, value)
 
     def del_attr(self, name):
-        """
-        Dynamically delete an attribute.
+        """Dynamically delete an attribute.
 
         Args:
             name: Attribute name to delete
@@ -81,8 +75,7 @@ class DynamicMockModel:
             delattr(self, name)
 
     def has_attr(self, name):
-        """
-        Check if attribute exists.
+        """Check if attribute exists.
 
         Args:
             name: Attribute name
@@ -93,8 +86,7 @@ class DynamicMockModel:
         return hasattr(self, name)
 
     def get_attr(self, name, default=None):
-        """
-        Get attribute value safely.
+        """Get attribute value safely.
 
         Args:
             name: Attribute name

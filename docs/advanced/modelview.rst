@@ -78,7 +78,8 @@ A backend is constructed with the ``ModelView`` instance it belongs to
 configuration -- ``view.column_searchable_list``, ``view._filters``,
 ``view.page_size``, and so on -- without that state being duplicated on the
 backend itself. How search/filter/sort/pagination are actually carried out
-internally is entirely up to the backend: :class:`SqlaBackend` builds a
+internally is entirely up to the backend:
+:class:`~flask_exts.admin.sqla.backend.SqlaBackend` builds a
 SQL query (see ``_apply_search``, ``_apply_filters``, ``_apply_sorting``,
 ``_apply_pagination``, ``_apply_auto_joins`` for its approach), but a
 JSON-file or filesystem backend might just filter, sort, and slice an
@@ -88,7 +89,7 @@ outputs, not any intermediate steps.
 Inline models (parent/child relationships), AJAX foreign-key lookups
 beyond the ``create_ajax_loader`` hook, and other relational-data-specific
 features are **not** part of the generic protocol -- they live directly on
-:class:`SqlaModelView` (see `Inline models`_ below), since a JSON or
+:class:`~flask_exts.admin.sqla.view.SqlaModelView` (see `Inline models`_ below), since a JSON or
 filesystem backend has no equivalent concept.
 
 Creating a view
@@ -161,7 +162,7 @@ the view is constructed:
        when they should differ from ``column_list``.
 
 See the attribute docstrings on
-:class:`~flask_exts.admin.model.base.BaseModelView` for the full list,
+:class:`~flask_exts.admin.model.view.ModelView` for the full list,
 including the formatter hooks (``column_formatters``,
 ``column_formatters_export``, ``column_formatters_detail``,
 ``column_type_formatters``).
@@ -241,47 +242,35 @@ form via the ``inline_models`` attribute. Related rows are managed
 independently through AJAX: a new parent record is created first, then its
 inline rows can be added, edited, or removed without a full form resubmission.
 
-``inline_models`` accepts three forms:
+The inline model must be related to the model managed by the view. For example,
+the following one-to-many relationship and view configuration are also shown in
+the ``inline_models`` attribute documentation:
 
-1. A child model class directly::
+.. code-block:: python
 
-    class AuthorView(SqlaModelView):
-        inline_models = (Post,)
+   class Model1(Base):
+       __tablename__ = "model1"
+       id: Mapped[int] = mapped_column(primary_key=True)
+       model2: Mapped[list["Model2"]] = relationship(back_populates="model1")
 
-2. A ``(model, options)`` pair to specify form columns::
+   class Model2(Base):
+       __tablename__ = "model2"
+       id: Mapped[int] = mapped_column(primary_key=True)
+       model1_id: Mapped[int] = mapped_column(ForeignKey("model1.id"))
+       model1: Mapped["Model1"] = relationship(back_populates="model2")
 
-    class AuthorView(SqlaModelView):
-        inline_models = [(Post, {"form_columns": ["title"]})]
+   class Model1View(SqlaModelView):
+       inline_models = (Model2,)
 
-3. An ``InlineForm`` instance for fine-grained control over the generated
-   sub-form::
-
-    from flask_exts.admin.sqla.inline.inline_form import InlineForm
-
-    class MyInlineForm(InlineForm):
-        form_columns = ("title", "date")
-        form_args = {"title": {"label": "Post Title"}}
-
-    class AuthorView(SqlaModelView):
-        inline_models = (MyInlineForm(Post),)
-
-By default, inline models assume a many-to-many-style collection relationship.
-For a one-to-one relationship, set ``inline_model_converter =
-InlineOneToOneModelConverter`` on the ``InlineForm``::
-
-    class MyOneToOneInlineForm(InlineForm):
-        inline_model_converter = InlineOneToOneModelConverter
-        form_columns = ("bio",)
+Each entry can be a child model class, a ``(model, options)`` pair, or an
+``InlineForm`` instance for customizing its generated form. The converter
+detects collection and scalar relationships, including one-to-one relationships.
 
 Each rendered row shows a badge identifying its state: persisted rows display
 their primary key value, while rows added in the current session display
 ``New`` until they are saved through the AJAX endpoint.
 
-You can customize field labels for inline models using ``form_label``::
-
-    class MyInlineForm(InlineForm):
-        form_label = "Related Posts"
-        form_columns = ("title", "date")
+Use ``form_label`` on an ``InlineForm`` to customize the generated field label.
 
 Export
 ------
@@ -336,4 +325,9 @@ API reference
    :members:
 
 .. automodule:: flask_exts.admin.sqla.view
+   :members:
+
+.. autoclass:: flask_exts.admin.model.filter.filters.BaseFilter
+
+.. autoclass:: flask_exts.security.authorizer.simple_authorizer.SimpleAuthorizer
    :members:

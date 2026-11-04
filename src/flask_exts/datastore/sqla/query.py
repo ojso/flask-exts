@@ -10,17 +10,13 @@ from sqlalchemy.sql.elements import ColumnElement
 class Query:
     @staticmethod
     def count(model):
-        """
-        Return a count of rows for the given model.
-        """
+        """Return a count of rows for the given model."""
         stmt = select(func.count()).select_from(model)
         return stmt
 
     @staticmethod
     def delete_by_pk_ids(model, ids: list):
-        """
-        Return a delete statement that deletes all rows with primary key in ids
-        """
+        """Return a delete statement that deletes all rows with primary key in ids"""
         mapper = inspect(model)
         primary_key = mapper.primary_key
         if len(primary_key) == 1:
@@ -106,12 +102,13 @@ class Query:
         return best_match
 
     def join_path(self, path: str | tuple[str, ...], is_outer=True) -> AliasedClass:
-        """
-        Executes a JOIN operation, automatically reusing existing paths.
+        """Executes a JOIN operation, automatically reusing existing paths.
 
         Args:
-            path: The relationship path to join, either as a dot-separated string or a tuple of strings.
-            is_outer: Whether to perform an OUTER JOIN (default: True). If False, performs an INNER JOIN.
+            path: The relationship path to join, either as a dot-separated string
+                or a tuple of strings.
+            is_outer: Whether to perform an OUTER JOIN (default: True). If False,
+                performs an INNER JOIN.
 
         Returns:
             The alias for the joined table.
@@ -143,7 +140,8 @@ class Query:
 
             if part not in mapper.relationships:
                 raise ValueError(
-                    f"'{part}' is not a relationship attribute of {current_model.__name__}"
+                    f"'{part}' is not a relationship attribute of "
+                    f"{current_model.__name__}"
                 )
 
             rel_prop = mapper.relationships[part]
@@ -178,8 +176,8 @@ class Query:
         return self._path_to_alias.get(path, None)
 
     def get_column(self, column_path: str | tuple[str, ...]):
-        """
-        Retrieves a column reference based on the path.
+        """Retrieves a column reference based on the path.
+
         Supports formats like "field", "relation.field", or ("relation", "field").
         """
         if isinstance(column_path, str):
@@ -189,7 +187,8 @@ class Query:
         # If length is 1, it refers to a column on the root model
         if len(column_path) == 1:
             return getattr(self.root_model, column_path[0])
-        # Otherwise, get the alias for the path excluding the last element (the column name)
+        # Otherwise, get the alias for the path excluding the last element
+        # (the column name)
         else:
             alias = self.get_path_alias(column_path[:-1])
             return getattr(alias, column_path[-1])
@@ -346,8 +345,7 @@ class Query:
         return stmt
 
     def build(self):
-        """
-        Compiles and returns the final SELECT statement.
+        """Compiles and returns the final SELECT statement.
 
         Applies all pending JOIN operations and dynamically added WHERE conditions
         to the base statement. Clears the internal queues to ensure idempotency.

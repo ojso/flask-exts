@@ -38,7 +38,8 @@ class Emailer:
         """Send an email using a registered sender."""
         if name not in self.senders:
             self.app.logger.warning(
-                f"Email can not send data: {data}, because it can not find the sender: {name}"
+                f"Email can not send data: {data}, because it can not find "
+                f"the sender: {name}"
             )
             # raise ValueError(f"Email can not find the sender: {name}")
             return

@@ -18,7 +18,8 @@ def make_extension(name, dependencies=(), record=None, shutdown_error=None):
 
     - record: if given a list, append(name) on init_app, append(f"post_init:{name}")
       on post_init, and append(f"shutdown:{name}") on shutdown
-    - shutdown_error: if given an exception, raise it on shutdown (used to test exception isolation)
+    - shutdown_error: if given an exception, raise it on shutdown (used to test
+      exception isolation)
     """
 
     class FakeExtension(Extension):
@@ -57,7 +58,10 @@ def registry():
 # Ordering
 # ---------------------------------------------------------------------------
 def test_dependency_initialized_before_dependent(registry):
-    """The dependent must always be ordered after the dependency. This is the regression test for B1."""
+    """The dependent must always be ordered after the dependency.
+
+    This is the regression test for B1.
+    """
     record = []
     a = make_extension("a", dependencies=["b"], record=record)
     b = make_extension("b", record=record)
@@ -71,7 +75,10 @@ def test_dependency_initialized_before_dependent(registry):
 
 
 def test_independent_extensions_keep_registration_order(registry):
-    """Independent extensions keep registration order (this is an implicit contract that needs to be locked down)."""
+    """Independent extensions keep registration order.
+
+    This is an implicit contract that needs to be locked down.
+    """
     record = []
     registry.register(make_extension("a", record=record))
     registry.register(make_extension("b", record=record))
@@ -102,7 +109,10 @@ def test_missing_dependency_raises(registry):
 
 
 def test_circular_dependency_raises_with_cycle(registry):
-    """A->B->A cycle -> ExtensionDependencyError, and the message contains the full cycle path."""
+    """A->B->A cycle -> ExtensionDependencyError.
+
+    The message must contain the full cycle path.
+    """
     registry.register(make_extension("a", dependencies=["b"]))
     registry.register(make_extension("b", dependencies=["a"]))
     with pytest.raises(ExtensionDependencyError, match="a -> b -> a"):
@@ -197,9 +207,7 @@ def test_post_init_unknown_extension_raises(registry):
 def test_post_init_follows_dependency_order(registry):
     """post_init respects the same topological order as init_app."""
     record = []
-    registry.register(
-        make_extension("dependent", dependencies=["dep"], record=record)
-    )
+    registry.register(make_extension("dependent", dependencies=["dep"], record=record))
     registry.register(make_extension("dep", record=record))
     registry.init_all(None)
     registry.post_init_all(None)

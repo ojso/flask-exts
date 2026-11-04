@@ -3,8 +3,7 @@ from wtforms.widgets import html_params
 
 
 class CheckboxListInput:
-    """
-    Alternative widget for many-to-many relationships.
+    """Alternative widget for many-to-many relationships.
 
     Appears as the list of checkboxes.
     """

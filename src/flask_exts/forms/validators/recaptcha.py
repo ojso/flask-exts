@@ -55,7 +55,7 @@ class Recaptcha:
             {"secret": private_key, "remoteip": remote_addr, "response": response}
         )
 
-        http_response = http.urlopen(verify_server, data.encode("utf-8"),timeout=5)
+        http_response = http.urlopen(verify_server, data.encode("utf-8"), timeout=5)
 
         if http_response.code != 200:
             return False

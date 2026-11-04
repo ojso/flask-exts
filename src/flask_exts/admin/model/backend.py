@@ -29,7 +29,8 @@ if TYPE_CHECKING:
 
 
 class DataBackend(ABC):
-    """Protocol for a pluggable data source behind a :class:`ModelView`.
+    """Protocol for a pluggable data source behind a
+    :class:`~flask_exts.admin.model.view.ModelView`.
 
     Implementations hold whatever resource they need (a SQLAlchemy session,
     a path to a JSON file, a filesystem root directory, ...) and translate
@@ -92,7 +93,7 @@ class DataBackend(ABC):
                 overriden to change the page_size limit. Removing the page_size
                 limit requires setting page_size to 0 or False.
 
-        Return:
+        Returns:
             ``(count, rows)`` for one page of results.
         """
 

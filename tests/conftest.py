@@ -42,6 +42,7 @@ def client(app):
 def blackhole_factory():
     return Blackhole
 
+
 @pytest.fixture
 def post_data_factory():
     return DummyPostData

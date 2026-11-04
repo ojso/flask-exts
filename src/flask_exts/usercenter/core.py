@@ -6,4 +6,3 @@ class UserCenter:
 
     def init_app(self, app):
         self.app = app
-

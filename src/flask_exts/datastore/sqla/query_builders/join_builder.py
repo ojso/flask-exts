@@ -24,7 +24,7 @@ class JoinBuilder:
         Args:
             relationship: SQLAlchemy relationship object.
         """
-        self.joins.append(('joinedload', relationship, None))
+        self.joins.append(("joinedload", relationship, None))
         return self
 
     def build(self, query):
@@ -37,7 +37,7 @@ class JoinBuilder:
             Query with joins applied.
         """
         for item in self.joins:
-            if item[0] == 'joinedload':
+            if item[0] == "joinedload":
                 query = query.joinedload(item[1])
             else:
                 target, onclause, isouter = item

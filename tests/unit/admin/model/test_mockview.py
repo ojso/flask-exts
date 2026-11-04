@@ -33,6 +33,7 @@ def view():
 
     return view
 
+
 # =============================================================================
 # Column Configuration Tests
 # =============================================================================
@@ -56,6 +57,7 @@ def test_mockview_column_labels(view):
     assert view.get_column_label("col1") == "Column 1"
     assert view.get_column_label("col2") == "Column 2"
     assert view.get_column_label("col3") == "Col3"
+
 
 # =============================================================================
 # CRUD Operations Tests
@@ -227,6 +229,3 @@ def test_mockview_get_list_with_sorting(view):
     assert result["total"] == view.n_initial
     assert len(result["items"]) == view.n_initial
     assert result["items"][0]["col1"] == "col1_5"
-
-
-

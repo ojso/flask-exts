@@ -1,7 +1,7 @@
-"""
-A module-level singleton of :class:`~flask_exts.datastore.sqla.database.SqlaDb`.
+"""A module-level singleton of :class:`~flask_exts.datastore.sqla.database.SqlaDb`.
 
-``db`` is the single global entry point for defining models and managing database sessions.
+``db`` is the single global entry point for defining models and managing
+database sessions.
 It wraps SQLAlchemy and binds to a single Flask application context.
 After initialization, it can be used to:
 
@@ -9,7 +9,7 @@ After initialization, it can be used to:
 - Access the session via ``db.session``
 - Access the engine via ``db.engine``
 
-Example:
+Examples:
     Define a model::
 
         from sqlalchemy.orm import mapped_column

@@ -11,9 +11,7 @@ from .menu import Menu
 
 
 class Admin:
-    """
-    Collection of the views. Also manages menu structure.
-    """
+    """Collection of the views. Also manages menu structure."""
 
     def __init__(
         self,
@@ -24,8 +22,7 @@ class Admin:
         template_folder="../templates",
         static_folder="../static",
     ):
-        """
-        Constructor.
+        """Constructor.
 
         Args:
             app:
@@ -59,8 +56,7 @@ class Admin:
             app.register_blueprint(v.create_blueprint())
 
     def register_view(self, view, is_menu=True, category=None):
-        """
-        Add a view to the collection.
+        """Add a view to the collection.
 
         Args:
             view:
@@ -91,8 +87,7 @@ class Admin:
         return self._views.get(name)
 
     def get_url(self, endpoint, **kwargs):
-        """
-        Generate URL for the endpoint.
+        """Generate URL for the endpoint.
 
         Args:
             endpoint:
@@ -108,8 +103,7 @@ class Admin:
         return True
 
     def render(self, template, **kwargs):
-        """
-        Render template
+        """Render template
 
         Args:
             template:
@@ -133,8 +127,7 @@ class Admin:
             return render_template(template, **kwargs)
 
     def render_string(self, source, **kwargs):
-        """
-        Render source string as template
+        """Render source string as template
 
         Args:
             source:

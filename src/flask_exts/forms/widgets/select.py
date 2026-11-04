@@ -70,6 +70,5 @@ class AjaxSelectWidget:
         )
         kwargs.setdefault("data-separator", ",")
 
-        return Markup(
-            f'<select {html_params(name=field.name, multiple=self.multiple, **kwargs)}></select>'
-        )
+        params = html_params(name=field.name, multiple=self.multiple, **kwargs)
+        return Markup(f"<select {params}></select>")

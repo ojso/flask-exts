@@ -5,8 +5,8 @@ from ..plugin_base import PluginBase
 
 
 class DayjsPlugin(PluginBase):
-    """
-    Day.js is a minimalist JavaScript library that parses, validates,
+    """Day.js is a minimalist JavaScript library that parses, validates,
+
     manipulates, and displays dates and times for modern browsers with
     a largely Moment.js-compatible API.
 
@@ -63,9 +63,12 @@ class DayjsPlugin(PluginBase):
                     var diffSeconds = now.diff(d, 'second');
 
                     if (diffSeconds < 60) return 'just now';
-                    if (diffSeconds < 3600) return Math.floor(diffSeconds / 60) + ' minutes ago';
-                    if (diffSeconds < 86400) return Math.floor(diffSeconds / 3600) + ' hours ago';
-                    if (diffSeconds < 604800) return Math.floor(diffSeconds / 86400) + ' days ago';
+                    if (diffSeconds < 3600)
+                        return Math.floor(diffSeconds / 60) + ' minutes ago';
+                    if (diffSeconds < 86400)
+                        return Math.floor(diffSeconds / 3600) + ' hours ago';
+                    if (diffSeconds < 604800)
+                        return Math.floor(diffSeconds / 86400) + ' days ago';
 
                     return d.format('YYYY-MM-DD');
                 }};

@@ -5,8 +5,8 @@ from ..plugin_base import PluginBase
 
 
 class TomSelectPlugin(PluginBase):
-    """
-    Tom Select is a lightweight and flexible select UI control
+    """Tom Select is a lightweight and flexible select UI control
+
     replacement for select boxes with support for searching, remote data sets,
     and infinite scrolling of results.
 
@@ -38,32 +38,36 @@ class TomSelectPlugin(PluginBase):
         )
         return f'<script src="{url}"></script>'
 
-        return Markup(f"""
+        return Markup("""
             <script>
                 // Auto-initialize Tom Select for select elements with data-tom-select
-                document.addEventListener('DOMContentLoaded', function() {{
-                    var selectElements = document.querySelectorAll('select[data-tom-select]');
-                    selectElements.forEach(function(element) {{
-                        if (!element.tomSelect) {{
-                            new TomSelect(element, {{
+                document.addEventListener('DOMContentLoaded', function() {
+                    var selectElements = document.querySelectorAll(
+                        'select[data-tom-select]'
+                    );
+                    selectElements.forEach(function(element) {
+                        if (!element.tomSelect) {
+                            new TomSelect(element, {
                                 create: element.hasAttribute('data-tom-select-create'),
-                                placeholder: element.getAttribute('data-placeholder') || element.placeholder,
+                                placeholder:
+                                    element.getAttribute('data-placeholder')
+                                    || element.placeholder,
                                 maxItems: element.multiple ? null : 1,
                                 searchField: 'label',
                                 labelField: 'label',
                                 valueField: 'value'
-                            }});
-                        }}
-                    }});
-                }});
+                            });
+                        }
+                    });
+                });
 
                 // Function to manually initialize Tom Select
-                window.initTomSelect = function(selector, options) {{
+                window.initTomSelect = function(selector, options) {
                     var element = document.querySelector(selector);
-                    if (element && !element.tomSelect) {{
-                        return new TomSelect(element, options || {{}});
-                    }}
+                    if (element && !element.tomSelect) {
+                        return new TomSelect(element, options || {});
+                    }
                     return element ? element.tomSelect : null;
-                }};
+                };
             </script>
         """)

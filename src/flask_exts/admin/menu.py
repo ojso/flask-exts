@@ -2,9 +2,7 @@ from flask import url_for
 
 
 class BaseMenu:
-    """
-    Base menu item
-    """
+    """Base menu item"""
 
     def __init__(self, name, type):
         self.name = name
@@ -38,9 +36,7 @@ class BaseMenu:
 
 
 class MenuCategory(BaseMenu):
-    """
-    Menu category item.
-    """
+    """Menu category item."""
 
     def __init__(self, name):
         super().__init__(name, "category")
@@ -62,9 +58,7 @@ class MenuCategory(BaseMenu):
 
 
 class MenuView(BaseMenu):
-    """
-    Admin view menu item
-    """
+    """Admin view menu item"""
 
     def __init__(self, name, view):
         super().__init__(name, "view")
@@ -86,9 +80,7 @@ class MenuView(BaseMenu):
 
 
 class MenuEndpoint(BaseMenu):
-    """
-    Link item
-    """
+    """Link item"""
 
     def __init__(self, name, endpoint):
         super().__init__(name, "endpoint")
@@ -104,9 +96,7 @@ class MenuEndpoint(BaseMenu):
 
 
 class MenuLink(BaseMenu):
-    """
-    Link item
-    """
+    """Link item"""
 
     def __init__(self, name, url):
         super().__init__(name, "link")
@@ -119,16 +109,13 @@ class Menu:
         self._menu = []
 
     def get_menus(self):
-        """
-        Return the menu hierarchy.
-        """
+        """Return the menu hierarchy."""
         return self._menu
 
     def add_menu_item(
         self, menu_item: BaseMenu, target_category: BaseMenu | None = None
     ) -> BaseMenu:
-        """
-        Add menu item to menu tree hierarchy.
+        """Add menu item to menu tree hierarchy.
 
         Args:
             menu_item:
@@ -142,8 +129,7 @@ class Menu:
             target_category.add_child(menu_item)
 
     def add_view(self, view, category=None):
-        """
-        Add a view to the menu tree
+        """Add a view to the menu tree
 
         Args:
             view:
@@ -152,8 +138,7 @@ class Menu:
         self.add_menu_item(MenuView(view.name, view), category)
 
     def add_category(self, name):
-        """
-        Add a category of a given name
+        """Add a category of a given name
 
         Args:
             name:

@@ -8,5 +8,5 @@ def register_views(app):
     admin = app.extensions["exts"].get_extension("admin").get_admin()
     admin.register_view(authorview)
     admin.register_view(postview)
-    admin.register_view(tagview)    
+    admin.register_view(tagview)
     admin.register_view(treeview)

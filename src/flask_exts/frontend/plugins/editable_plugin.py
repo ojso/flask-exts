@@ -4,20 +4,23 @@ from ..plugin_base import PluginBase
 
 
 class EditablePlugin(PluginBase):
-    """
-    Usage:
+    """HTML examples for the editable plugin.
+
+    Examples:
         <!-- Text field -->
         <span class="editable" data-type="text" data-name="username">
             John Doe
         </span>
 
         <!-- With AJAX save -->
-        <span class="editable" data-type="text" data-id="1" data-name="title" data-url="/api/post/">
+        <span class="editable" data-type="text" data-id="1" data-name="title"
+          data-url="/api/post/">
             Post Title
         </span>
 
         <!-- Select field with options seperated by | -->
-        <span class="editable" data-type="select" data-name="status" data-options="Active|active,Inactive|inactive">
+        <span class="editable" data-type="select" data-name="status"
+          data-options="Active|active,Inactive|inactive">
             Active
         </span>
 

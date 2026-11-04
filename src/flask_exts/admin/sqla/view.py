@@ -16,62 +16,11 @@ class SqlaModelView(ModelView):
     column_type_formatters = SQLA_FORMATTERS
 
     inline_models = None
-    """Inline related-model editing for models with parent-child relations.
-
-    Related rows are managed independently through AJAX; a new parent record is
-    created before its inline rows can be added.
-
-    Accepts enumerable with one of the following possible values:
-
-    1. Child model class::
-
-        inline_models = (Post,)
-
-    2. Child model class and additional options::
-
-        inline_models = [(Post, {"form_columns": ["title"]})]
-
-    3. Django-like ``InlineForm`` class instance::
-
-        from .model.form import InlineForm
-
-        class MyInlineForm(InlineForm):
-            form_columns = ('title', 'date')
-
-        inline_models = (MyInlineForm(MyInlineModel),)
-
-    You can customize the generated field name by:
-
-    1. Using the `form_name` property as a key to the options dictionary::
-
-        inline_models = ((Post, {"form_label": "Hello"}))
-
-    2. Using forward relation name and `column_labels` property::
-
-        class Model1(Base):
-            pass
-
-        class Model2(Base):
-            # ... model1 = relation(Model1, backref='models')
-
-        inline_models = (Model2,)
-        column_labels = {'models': 'Hello'}
-
-    By default used ManyToMany relationship for inline models. You may configure
-    inline model for OneToOne relationship. To achieve this, you need to install
-    special ``inline_model_converter`` for your model::
-
-        from .sqla.form import InlineOneToOneModelConverter
-
-        class MyInlineForm(InlineForm):
-            form_columns = ('title', 'date')
-            inline_model_converter = InlineOneToOneModelConverter
-
-        inline_models = (MyInlineForm(MyInlineModel),)
-    """
+    """Child models to include as inline forms."""
 
     def __init__(self, model, session=None, name=None, endpoint=None, url=None):
-        """
+        """Initialize the SQLAlchemy model view.
+
         Args:
             model: Model class
             session: SQLAlchemy session

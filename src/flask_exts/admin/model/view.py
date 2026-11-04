@@ -33,7 +33,8 @@ class ModelView(View):
     """Admin view for model-backed resources.
 
     Where the data actually lives (a SQLAlchemy table, a JSON file, a
-    filesystem directory, ...) is delegated to a :class:`DataBackend`
+    filesystem directory, ...) is delegated to a
+    :class:`~flask_exts.admin.model.backend.DataBackend`
     instance held on ``self.backend``, supplied via the ``backend_factory``
     constructor argument. This class and its mixins handle everything that
     doesn't depend on that choice: routing, pagination/sort/search argument
@@ -50,7 +51,7 @@ class ModelView(View):
     The class combines column management, filtering, sorting, pagination,
     formatting, forms, CRUD operations, and export support.
 
-    Example::
+    Examples::
 
         from flask_exts.admin.model import ModelView
 
@@ -106,7 +107,7 @@ class ModelView(View):
     column_choices: dict[str, dict[Any, str]] | None = None
     """Map choices to columns in list view.
 
-    Example::
+    Examples::
 
         column_choices = {
             'my_column': {
@@ -188,9 +189,9 @@ class ModelView(View):
     """Collection of the column filters.
 
     Can contain either field names or instances of
-    :class:`~.model.filters.BaseFilter`.
+    :class:`~flask_exts.admin.model.filter.filters.BaseFilter`.
 
-    Example::
+    Examples::
 
         column_filters = ('user', 'email')
 
@@ -249,7 +250,7 @@ class ModelView(View):
     column_default_sort: str | tuple[str, bool] | list[tuple[str, bool]] | None = None
     """Default sort column if no sorting is applied.
 
-    Example::
+    Examples::
 
         column_default_sort = 'user'
 
@@ -270,7 +271,7 @@ class ModelView(View):
     It is assumed that only text-only fields are searchable, but it is up to the
     model implementation to decide.
 
-    Example::
+    Examples::
 
         column_searchable_list = ('name', 'email')
 
@@ -295,7 +296,7 @@ class ModelView(View):
     form_columns: list | None = None
     """List of form fields to include.
 
-    Example::
+    Examples::
 
         form_columns = ('name', 'email')
     """
@@ -313,7 +314,7 @@ class ModelView(View):
 
     Use this to customize how widget is rendered without using custom template.
 
-    Example::
+    Examples::
 
         form_widget_args = {
             'description': {
@@ -326,7 +327,7 @@ class ModelView(View):
     Changing the format of a DateTimeField will require changes to both
     form_widget_args and form_args.
 
-    Example::
+    Examples::
 
         form_args = {
             "start": {"format": "%Y-%m-%d %I:%M %p"} # changes how the input is
@@ -342,7 +343,7 @@ class ModelView(View):
     form_extra_fields = None
     """Additional field definitions for the form.
 
-    Example::
+    Examples::
 
         form_extra_fields = {
             'password': PasswordField('Password')
@@ -366,7 +367,7 @@ class ModelView(View):
 
     Refer to WTForms documentation for list of possible options.
 
-    Example::
+    Examples::
 
         from wtforms.validators import DataRequired
         form_args = {
@@ -401,7 +402,7 @@ class ModelView(View):
     form_choices: dict[str, list[tuple[str, str]]] | None = None
     """Map choices to form fields
 
-    Example::
+    Examples::
 
         form_choices = {'my_form_field': [
             ('db_value', 'display_value'),

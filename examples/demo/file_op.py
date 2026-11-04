@@ -1,5 +1,5 @@
-import os.path as op
 import os
+import os.path as op
 
 # Figure out base upload path
 static_path = op.join(op.dirname(__file__), "static")

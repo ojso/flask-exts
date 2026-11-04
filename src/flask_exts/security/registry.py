@@ -2,7 +2,7 @@ class Registry:
     def __init__(self):
         self._plugins = {}
 
-    def init_all(self,app):
+    def init_all(self, app):
         # email verification
         from .plugins.email_verification import EmailVerification
 

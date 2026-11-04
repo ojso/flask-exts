@@ -21,9 +21,8 @@
   </div>
   {% if can_rebind_tfa %}
     <div class="mt-3">
-      <a class="btn btn-outline-primary" href="{{ url_for('.rebind_tfa') }}">
-        {{ gettext("Rebind authenticator app") }}
-      </a>
+      <a class="btn btn-outline-primary"
+         href="{{ url_for('.rebind_tfa') }}">{{ gettext("Rebind authenticator app") }}</a>
     </div>
   {% endif %}
   <div>

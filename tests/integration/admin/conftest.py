@@ -30,7 +30,7 @@ def login_as_admin(app, client):
     admin-role user.
 
     This is a callable rather than a plain value because most tests under
-    tests/admin/ start their body with `db.reset_all()`, which would wipe
+    tests/integration/admin/ start their body with `db.reset_all()`, which would wipe
     out a user created ahead of time by a regular fixture. Call this *after*
     resetting the database, inside the test's own `app.app_context()`::
 

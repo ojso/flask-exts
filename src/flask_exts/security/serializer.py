@@ -14,8 +14,8 @@ class TimedUrlSerializer:
 
         Args:
             serializer_name: The name of the serializer. Can be one of the
-                                    following: ``confirm``, ``login``, ``reset``, ``us_setup`
-                                    ``remember``, ``two_factor_validity``, ``wan``
+                following: ``confirm``, ``login``, ``reset``, ``us_setup``,
+                ``remember``, ``two_factor_validity``, ``wan``
             data: The data to serialize into the token
 
         Returns:
@@ -26,16 +26,20 @@ class TimedUrlSerializer:
         return token
 
     def loads(
-        self, serializer_name: str, token: str, max_age: int | None = 259200  # 3 days
+        self,
+        serializer_name: str,
+        token: str,
+        max_age: int | None = 259200,  # 3 days
     ) -> tuple[bool, bool, t.Any]:
         """Get the status of a token and return data.
 
         Args:
             token: The token to check
             serializer_name: The name of the serializer. Can be one of the
-                            following: ``confirm``, ``login``, ``reset``, ``us_setup``
-                            ``remember``, ``two_factor_validity``, ``wan``
-            max_age: The maximum age of the token in seconds. If None, no max age is enforced.
+                following: ``confirm``, ``login``, ``reset``, ``us_setup``,
+                ``remember``, ``two_factor_validity``, ``wan``
+            max_age: The maximum age of the token in seconds. If None, no max
+                age is enforced.
 
         Returns:
             A tuple of (expired, invalid, data)

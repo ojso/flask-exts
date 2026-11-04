@@ -7,9 +7,7 @@ from ...security.keys import derive_key
 
 
 class SessionCSRF:
-    """
-    Session CSRF token generation and validation support.
-    """
+    """Session CSRF token generation and validation support."""
 
     csrf = True
     csrf_class = SessionCSRF

@@ -14,7 +14,7 @@ class MockSqlaView(SqlaModelView):
     ):
         for k, v in kwargs.items():
             setattr(self, k, v)
-        self.form_choices = {"choice_field": [("choice-1", "One"), ("choice-2", "Two")]}
+        self.form_choices = {"choice_value": [("choice-1", "One"), ("choice-2", "Two")]}
         super().__init__(model, name=name, endpoint=endpoint, url=url)
 
 

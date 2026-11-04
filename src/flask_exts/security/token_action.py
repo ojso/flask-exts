@@ -12,8 +12,8 @@ from .exceptions import (
 
 
 class TokenBasedAction(ABC):
-    """
-    Abstract base class that encapsulates common token-based operations:
+    """Abstract base class that encapsulates common token-based operations:
+
     token generation, email sending, and token validation/execution.
     Subclasses only need to implement a few methods.
     """
@@ -24,7 +24,10 @@ class TokenBasedAction(ABC):
     @property
     @abstractmethod
     def serializer_name(self) -> str:
-        """Name of the serializer used for this action (e.g., 'verify_email', 'reset_password')."""
+        """Name of the serializer used for this action.
+
+        For example, 'verify_email' or 'reset_password'.
+        """
 
     @property
     @abstractmethod
@@ -47,8 +50,7 @@ class TokenBasedAction(ABC):
         """Dictionary key name for the token in email data."""
 
     def generate_token(self, user):
-        """
-        Generate a signed token for the given user.
+        """Generate a signed token for the given user.
 
         Args:
             user: The user object
@@ -64,8 +66,7 @@ class TokenBasedAction(ABC):
         return current_security.serializer.dumps(self.serializer_name, data)
 
     def send_token(self, user):
-        """
-        Send an email containing the action token to the user.
+        """Send an email containing the action token to the user.
 
         Args:
             user: The user to send the email to
@@ -87,8 +88,7 @@ class TokenBasedAction(ABC):
         to_send_email.send(current_app._get_current_object(), data=data)
 
     def _load_and_validate_token(self, token, within=None):
-        """
-        Load and validate the token, returning the associated user if valid.
+        """Load and validate the token, returning the associated user if valid.
 
         Args:
             token: The token string to validate
@@ -124,11 +124,10 @@ class TokenBasedAction(ABC):
         if not user:
             raise TokenUserNotFoundError
 
-        if (
-            not current_security.hasher.verify(user.email, token_email_hash)
-            or not current_security.hasher.verify(
-                user.password or "", token_password_hash
-            )
+        if not current_security.hasher.verify(
+            user.email, token_email_hash
+        ) or not current_security.hasher.verify(
+            user.password or "", token_password_hash
         ):
             raise InvalidTokenError
 
@@ -136,8 +135,7 @@ class TokenBasedAction(ABC):
 
     @abstractmethod
     def execute_action(self, user, **kwargs):
-        """
-        Execute the specific business action after token validation.
+        """Execute the specific business action after token validation.
 
         Args:
             user: The validated user object
@@ -148,8 +146,8 @@ class TokenBasedAction(ABC):
         """
 
     def execute_with_token(self, token, within=None, **kwargs):
-        """
-        Template method: complete token-based workflow.
+        """Template method: complete token-based workflow.
+
         1. Validate the token
         2. Execute the specific action (implemented by subclass)
 

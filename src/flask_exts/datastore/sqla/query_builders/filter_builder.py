@@ -29,17 +29,17 @@ class FilterBuilder:
             Query with filters applied.
         """
         for column, operator, value in self.filters:
-            if operator == '=':
+            if operator == "=":
                 query = query.filter(column == value)
-            elif operator == '!=':
+            elif operator == "!=":
                 query = query.filter(column != value)
-            elif operator == '>':
+            elif operator == ">":
                 query = query.filter(column > value)
-            elif operator == '<':
+            elif operator == "<":
                 query = query.filter(column < value)
-            elif operator == 'like':
+            elif operator == "like":
                 query = query.filter(column.like(value))
-            elif operator == 'in':
+            elif operator == "in":
                 query = query.filter(column.in_(value))
 
         return query

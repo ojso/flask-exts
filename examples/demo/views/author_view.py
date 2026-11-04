@@ -20,6 +20,14 @@ def is_numberic_validator(form, field):
         raise validators.ValidationError(gettext("Only numbers are allowed."))
 
 
+# Module level so the value stays a list (a tuple would be read as a single
+# sort spec by the view) while no mutable literal lives in the class body.
+DEFAULT_SORT = [
+    ("last_name", False),
+    ("first_name", False),
+]
+
+
 class AuthorView(SqlaModelView):
     can_set_page_size = False
     can_export = True
@@ -36,17 +44,17 @@ class AuthorView(SqlaModelView):
         ),
     )
 
-    form_choices = {
+    form_choices = {  # noqa: RUF012
         "type": AVAILABLE_USER_TYPES,
     }
-    form_args = {
+    form_args = {  # noqa: RUF012
         "dialling_code": {"label": "Dialling code"},
         "local_phone_number": {
             "label": "Phone number",
             "validators": [is_numberic_validator],
         },
     }
-    form_widget_args = {"id": {"readonly": True}}
+    form_widget_args = {"id": {"readonly": True}}  # noqa: RUF012
     column_list = (
         "id",
         "type",
@@ -104,12 +112,10 @@ class AuthorView(SqlaModelView):
         "dialling_code",
         "local_phone_number",
     )
-    column_default_sort = [
-        ("last_name", False),
-        ("first_name", False),
-    ]
+    column_default_sort = DEFAULT_SORT
 
-    # custom filter: each filter in the list is a filter operation (equals, not equals, etc)
+    # custom filter: each filter in the list is a filter operation
+    # (equals, not equals, etc)
     # filters with the same name will appear as operations under the same filter
     column_filters = (
         "first_name",
@@ -123,7 +129,8 @@ class AuthorView(SqlaModelView):
     )
     # column_formatters = {"phone_number": phone_number_formatter}
 
-    # setup edit forms so that only posts created by this author can be selected as 'featured'
+    # setup edit forms so that only posts created by this author can be
+    # selected as 'featured'
     def edit_form(self, *args, **kwargs):
         return self._filtered_posts(super().edit_form(*args, **kwargs))
 

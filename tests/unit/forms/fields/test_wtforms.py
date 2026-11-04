@@ -69,10 +69,14 @@ def test_fieldlist(post_data_factory):
     # widget
     assert f.a() == (
         '<ul id="a">'
-        '<li><label for="a-0">A-0</label> <input id="a-0" name="a-0" type="text" value=""></li>'
-        '<li><label for="a-1">A-1</label> <input id="a-1" name="a-1" type="text" value=""></li>'
-        '<li><label for="a-2">A-2</label> <input id="a-2" name="a-2" type="text" value="0"></li>'
-        '<li><label for="a-3">A-3</label> <input id="a-3" name="a-3" type="text" value="1"></li>'
+        '<li><label for="a-0">A-0</label> '
+        '<input id="a-0" name="a-0" type="text" value=""></li>'
+        '<li><label for="a-1">A-1</label> '
+        '<input id="a-1" name="a-1" type="text" value=""></li>'
+        '<li><label for="a-2">A-2</label> '
+        '<input id="a-2" name="a-2" type="text" value="0"></li>'
+        '<li><label for="a-3">A-3</label> '
+        '<input id="a-3" name="a-3" type="text" value="1"></li>'
         "</ul>"
     )
     # data
@@ -111,12 +115,16 @@ def test_fieldlist_subform(post_data_factory):
     assert f.a() == (
         '<ul id="a">'
         '<li><label for="a-0">A-0</label> <table id="a-0">'
-        '<tr><th><label for="a-0-a">A</label></th><td><input id="a-0-a" name="a-0-a" type="text" value="foo"></td></tr>'
-        '<tr><th><label for="a-0-b">B</label></th><td><input id="a-0-b" name="a-0-b" type="text" value="bar"></td></tr>'
+        '<tr><th><label for="a-0-a">A</label></th>'
+        '<td><input id="a-0-a" name="a-0-a" type="text" value="foo"></td></tr>'
+        '<tr><th><label for="a-0-b">B</label></th>'
+        '<td><input id="a-0-b" name="a-0-b" type="text" value="bar"></td></tr>'
         "</table></li>"
         '<li><label for="a-1">A-1</label> <table id="a-1">'
-        '<tr><th><label for="a-1-a">A</label></th><td><input id="a-1-a" name="a-1-a" type="text" value="baz"></td></tr>'
-        '<tr><th><label for="a-1-b">B</label></th><td><input id="a-1-b" name="a-1-b" type="text" value="qux"></td></tr>'
+        '<tr><th><label for="a-1-a">A</label></th>'
+        '<td><input id="a-1-a" name="a-1-a" type="text" value="baz"></td></tr>'
+        '<tr><th><label for="a-1-b">B</label></th>'
+        '<td><input id="a-1-b" name="a-1-b" type="text" value="qux"></td></tr>'
         "</table></li>"
         "</ul>"
     )

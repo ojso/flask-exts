@@ -26,7 +26,7 @@ class FilterNameBrown(BaseSQLAFilter):
 
 
 class PostView(SqlaModelView):
-    column_list = [
+    column_list = (
         "id",
         "author",
         "author.email",
@@ -35,20 +35,18 @@ class PostView(SqlaModelView):
         "tags",
         "color",
         "created_at",
-    ]
-    column_labels = {
+    )
+    column_labels = {  # noqa: RUF012
         "title": "Post Title",
         "tags.name": "TagsName",
         "author.first_name": "Author's first name",
         "author.last_name": "Last name",
     }
 
-    column_editable_list = [
-        "color",
-    ]
+    column_editable_list = ("color",)
     column_default_sort = ("date", True)
 
-    column_sortable_list = [
+    column_sortable_list = (
         "id",
         "title",
         "date",
@@ -56,14 +54,14 @@ class PostView(SqlaModelView):
             "author",
             ("author.last_name", "author.first_name"),
         ),  # sort on multiple columns
-    ]
-    column_searchable_list = [
+    )
+    column_searchable_list = (
         "title",
         "author.first_name",
         "author.last_name",
-    ]
+    )
 
-    column_filters = [
+    column_filters = (
         "id",
         "author.first_name",
         "author.id",
@@ -83,29 +81,29 @@ class PostView(SqlaModelView):
             name="Fixed Title",
             options=(("test1", "Test 1"), ("test2", "Test 2")),
         ),
-    ]
+    )
     can_export = True
     export_max_rows = 1000
     export_types = ("csv", "xls")
 
     # Pass arguments to WTForms. In this case, change label for text field to
     # be 'Big Text' and add DataRequired() validator.
-    form_args = {
+    form_args = {  # noqa: RUF012
         "text": {"label": "Big Text", "validators": [validators.DataRequired()]}
     }
-    form_widget_args = {"text": {"rows": 10}}
+    form_widget_args = {"text": {"rows": 10}}  # noqa: RUF012
 
-    ajax_refs = {
+    ajax_refs = {  # noqa: RUF012
         "author": {"fields": ("first_name", "last_name")},
         # "tags": {
         #     "fields": ("name",),
-        #     "minimum_input_length": 0,  # show suggestions, even before any author input
+        #     "minimum_input_length": 0,  # show suggestions before any input
         #     "placeholder": "Please select",
         #     "page_size": 5,
         # },
     }
 
-    column_descriptions = {"color": "favorite color"}
+    column_descriptions = {"color": "favorite color"}  # noqa: RUF012
 
 
 postview = PostView(Post)

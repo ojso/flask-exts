@@ -5,14 +5,9 @@ from ..models.tree import Tree
 
 class TreeView(SqlaModelView):
     list_template = "tree_list.html"
-    column_list = ["id", "name", "parent"]
-    form_excluded_columns = [
-        "children",
-    ]
-    column_filters = [
-        "id",
-        "name",
-    ]
+    column_list = ("id", "name", "parent")
+    form_excluded_columns = ("children",)
+    column_filters = ("id", "name")
 
     # override the 'render' method to pass your own parameters to the template
     def render(self, template, **kwargs):

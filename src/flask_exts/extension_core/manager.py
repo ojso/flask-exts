@@ -3,8 +3,7 @@ from .registry import ExtensionRegistry
 
 
 class ExtensionManager:
-    """
-    Composable Flask-Exts extension manager.
+    """Composable Flask-Exts extension manager.
 
     This class orchestrates initialization of registered extensions through a
     registry-based composition pattern. It keeps the extension lifecycle
@@ -12,7 +11,7 @@ class ExtensionManager:
     in two neutral phases (``init_app`` then ``post_init``) and the manager
     never references a specific extension by name.
 
-    Usage:
+    Examples:
         exts = ExtensionManager(app)
         exts.register_extension(MyCustomExtension)
     """
@@ -22,8 +21,7 @@ class ExtensionManager:
         app=None,
         register_builtin=True,
     ):
-        """
-        Initialize the extension manager.
+        """Initialize the extension manager.
 
         Args:
             app: Flask application (optional; call init_app later if not provided)
@@ -51,8 +49,7 @@ class ExtensionManager:
             self.init_app(app)
 
     def get_registry(self) -> ExtensionRegistry:
-        """
-        Get the underlying extension registry.
+        """Get the underlying extension registry.
 
         Returns:
             ExtensionRegistry: The registry instance
@@ -60,8 +57,7 @@ class ExtensionManager:
         return self._registry
 
     def register_extension(self, extension_class: type[Extension]) -> Extension:
-        """
-        Register a custom extension.
+        """Register a custom extension.
 
         Args:
             extension_class: Class inheriting from Extension
@@ -78,7 +74,7 @@ class ExtensionManager:
             ``AdminViewMixin`` provider will not be seen by an admin whose
             own ``post_init`` already ran).
 
-        Example:
+        Examples:
             class MyExtension(Extension):
                 @property
                 def name(self) -> str:
@@ -102,8 +98,7 @@ class ExtensionManager:
         return ext
 
     def init_app(self, app) -> None:
-        """
-        Initialize all registered extensions for a Flask application.
+        """Initialize all registered extensions for a Flask application.
 
         Args:
             app: Flask application
@@ -127,14 +122,11 @@ class ExtensionManager:
         self._registry.post_init_all(app)
 
     def shutdown(self) -> None:
-        """
-        Shutdown all extensions and cleanup resources.
-        """
+        """Shutdown all extensions and cleanup resources."""
         self._registry.shutdown_all()
 
     def get_extension(self, name: str) -> Extension | None:
-        """
-        Get extension by name (modern API).
+        """Get extension by name (modern API).
 
         Args:
             name: Extension name
@@ -145,8 +137,7 @@ class ExtensionManager:
         return self._registry.get_extension(name)
 
     def list_extensions(self) -> list[Extension]:
-        """
-        List all registered extensions (modern API).
+        """List all registered extensions (modern API).
 
         Args:
             sorted_by_priority: Sort by initialization priority
@@ -157,8 +148,7 @@ class ExtensionManager:
         return self._registry.list_extensions()
 
     def has_extension(self, name: str) -> bool:
-        """
-        Check if extension is enabled.
+        """Check if extension is enabled.
 
         Args:
             name: Extension name

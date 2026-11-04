@@ -9,8 +9,7 @@ T_FORMATTERS = dict[type, Callable[[Any, Any, Any], Any]]
 
 
 def null_formatter(view, value, name):
-    """
-    Return `NULL` as the string for `None` value
+    """Return `NULL` as the string for `None` value
 
     Args:
         value:
@@ -20,8 +19,7 @@ def null_formatter(view, value, name):
 
 
 def empty_formatter(view, value, name):
-    """
-    Return empty string for `None` value
+    """Return empty string for `None` value
 
     Args:
         value:
@@ -31,8 +29,7 @@ def empty_formatter(view, value, name):
 
 
 def bool_formatter(view, value, name):
-    """
-    Return check icon if value is `True` or empty string otherwise.
+    """Return check icon if value is `True` or empty string otherwise.
 
     Args:
         value:
@@ -43,8 +40,7 @@ def bool_formatter(view, value, name):
 
 
 def list_formatter(view, values, name) -> str:
-    """
-    Return string with comma separated values
+    """Return string with comma separated values
 
     Args:
         values:
@@ -54,8 +50,7 @@ def list_formatter(view, values, name) -> str:
 
 
 def enum_formatter(view, value, name) -> str:
-    """
-    Return the name of the enumerated member.
+    """Return the name of the enumerated member.
 
     Args:
         value:
@@ -65,8 +60,8 @@ def enum_formatter(view, value, name) -> str:
 
 
 def dict_formatter(view, value, name) -> str:
-    """
-    Removes unicode entities when displaying dict as string. Also unescapes
+    """Removes unicode entities when displaying dict as string. Also unescapes
+
     non-ASCII characters stored in the JSON.
 
     Args:

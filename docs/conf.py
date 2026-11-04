@@ -18,9 +18,9 @@ sys.path.insert(0, os.path.abspath("../src"))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Flask-Exts'
-copyright = '2024, David Hua'
-author = 'David Hua'
+project = "Flask-Exts"
+copyright = "2024, David Hua"
+author = "David Hua"
 
 # -- General configuration ---------------------------------------------------
 

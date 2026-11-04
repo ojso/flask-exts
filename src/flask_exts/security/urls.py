@@ -2,12 +2,7 @@ from urllib.parse import unquote, urlsplit
 
 
 def safe_redirect_target(target: str | None, fallback: str) -> str:
-    if (
-        not target
-        or target.startswith("//")
-        or target[0].isspace()
-        or "\\" in target
-    ):
+    if not target or target.startswith("//") or target[0].isspace() or "\\" in target:
         return fallback
 
     try:

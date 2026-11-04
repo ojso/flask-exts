@@ -26,8 +26,7 @@ def init_app(app: Flask):
     exts = ExtensionManager()
     exts.init_app(app)
 
-    from . import models
-
+    from . import models  # noqa: F401  (registers the demo models)
     from .admin_views import register_views
 
     register_views(app)

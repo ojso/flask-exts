@@ -1,6 +1,5 @@
 from sqlalchemy import Boolean, Column, select
 from wtforms import validators
-from wtforms.fields import HiddenField
 
 from ....datastore.sqla.utils import is_model_multiple_pks
 from ....forms.fields import ChoiceField
@@ -31,8 +30,8 @@ class ModelFieldConverter(
         self.view = view
 
     def _get_label(self, name, field_args):
-        """
-        Label for field name. If it is not specified explicitly,
+        """Label for field name. If it is not specified explicitly,
+
         then the views _prettify_name method is used to find it.
 
         Args:
@@ -60,8 +59,8 @@ class ModelFieldConverter(
                 return AjaxSelectField(loader, **kwargs)
 
         if "query_factory" not in kwargs:
-            kwargs["query_factory"] = (
-                lambda: self.session.execute(select(remote_model)).scalars().all()
+            kwargs["query_factory"] = lambda: (
+                self.session.execute(select(remote_model)).scalars().all()
             )
 
         if multiple:
@@ -69,12 +68,11 @@ class ModelFieldConverter(
         else:
             return QuerySelectField(**kwargs)
 
-    def convert_relation(self, name, prop, kwargs):
+    def convert_relationship(self, name, prop, kwargs):
         remote_model = prop.mapper.class_
         column = prop.local_remote_pairs[0][0]
 
-        # If this relation points to local column that's not foreign key, assume
-        # that it is backref and use remote column data
+        # If this relation points to local column that's not foreign key
         if not column.foreign_keys:
             column = prop.local_remote_pairs[0][1]
 
@@ -115,7 +113,7 @@ class ModelFieldConverter(
 
         # Check if it is relation or property
         if hasattr(prop, "direction"):
-            return self.convert_relation(name, prop, kwargs)
+            return self.convert_relationship(name, prop, kwargs)
 
         elif hasattr(prop, "columns"):
             column = prop.columns[0]

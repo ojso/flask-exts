@@ -15,8 +15,7 @@ class AdminExtension(Extension):
         return self._admin
 
     def post_init(self, app):
-        """
-        Collect views from every extension that implements AdminViewMixin.
+        """Collect views from every extension that implements AdminViewMixin.
 
         Runs after all extensions' init_app, so this does not care whether
         admin was registered before or after its view providers.

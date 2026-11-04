@@ -2,4 +2,4 @@ from wtforms.widgets import FileInput
 
 
 class ImageInput(FileInput):
-    field_flags = {"accept": "image/*"}
+    field_flags = {"accept": "image/*"}  # noqa: RUF012

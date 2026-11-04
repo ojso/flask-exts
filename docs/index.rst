@@ -48,6 +48,7 @@ Documentation guide
 - :doc:`examples` — sample applications.
 - :doc:`advanced/index` — advanced usage.
 - :doc:`develop` — contributing and development.
+- :doc:`testing` — test commands and conventions.
 - :doc:`changes` — release history.
 
 .. toctree::
@@ -59,6 +60,7 @@ Documentation guide
    examples
    advanced/index
    develop
+   testing
    changes
 
 .. toctree::

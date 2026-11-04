@@ -46,19 +46,19 @@ def test_translation(app):
         assert gettext("Name") == "Name"
         count = 1
         s1 = ngettext(
-                "one apple",
-                "%(count)d apples",
-                count,
-                count=count,
-            )
+            "one apple",
+            "%(count)d apples",
+            count,
+            count=count,
+        )
         assert s1 == "one apple"
         count = 2
         s2 = ngettext(
-                "one apple",
-                "%(count)d apples",
-                count,
-                count=count,
-            )
+            "one apple",
+            "%(count)d apples",
+            count,
+            count=count,
+        )
         assert s2 == "2 apples"
         # print(s1,s2)
 
@@ -67,19 +67,19 @@ def test_translation(app):
         assert gettext("Name") == "名称"
         count = 1
         s1 = ngettext(
-                "one apple",
-                "%(count)d apples",
-                count,
-                count=count,
-            )
+            "one apple",
+            "%(count)d apples",
+            count,
+            count=count,
+        )
         assert s1 == "1 个苹果"
         count = 2
         s2 = ngettext(
-                "one apple",
-                "%(count)d apples",
-                count,
-                count=count,
-            )
+            "one apple",
+            "%(count)d apples",
+            count,
+            count=count,
+        )
         assert s2 == "2 个苹果"
         # print(s1,s2)
 
@@ -117,6 +117,7 @@ def test_translation_form(app):
         assert text_required_zh in f.name.errors
         assert text_invalid_json_zh in f.json.errors
 
+
 def test_babel_get_translations(app):
     with app.test_request_context():
         session["lang"] = "zh"
@@ -125,6 +126,7 @@ def test_babel_get_translations(app):
         assert t._catalog["Yes"] == "是"
         # for k, v in t._catalog.items():
         #     print(f"{k} -> {v}")
+
 
 def test_GNUTranslations(app):
     import os.path

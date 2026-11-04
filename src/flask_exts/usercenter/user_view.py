@@ -39,9 +39,7 @@ SESSION_KEY_PENDING_TFA_REBIND_SECRET = "pending_tfa_rebind_secret"
 
 
 class UserView(View):
-    """
-    Default administrative interface index page when visiting the ``/user/`` URL.
-    """
+    """Default administrative interface index page when visiting the ``/user/`` URL."""
 
     allow_access = True
 
@@ -301,13 +299,12 @@ class UserView(View):
         return self.render(
             "user/setup_tfa.html",
             totp_uri=totp_uri,
-            totp_secret=current_user.totp_secret,
+            totp_secret=totp_secret,
             _headers=NO_CACHE_HEADER,
         )
 
     def _get_pending_tfa_user(self):
-        """
-        Resolve the user mid-login, pending TFA verification, if any.
+        """Resolve the user mid-login, pending TFA verification, if any.
 
         Clears the pending state and returns None when there is nothing
         valid to resume (no pending login, unknown user, or TFA no longer
@@ -327,8 +324,7 @@ class UserView(View):
 
     @expose_url("/verify_tfa/", methods=("GET", "POST"))
     def verify_tfa(self):
-        """
-        Second half of a TFA-protected login.
+        """Second half of a TFA-protected login.
 
         Deliberately NOT ``@login_required``: at this point the user is not
         logged in yet (see ``login``). The pending user id in the session is
@@ -363,8 +359,8 @@ class UserView(View):
 
     @expose_url("/recovery/", methods=("GET", "POST"))
     def recovery(self):
-        """
-        Recovery-code alternative to ``verify_tfa``, for the same pending,
+        """Recovery-code alternative to ``verify_tfa``, for the same pending,
+
         not-yet-logged-in user. Mirrors ``verify_tfa``'s login-completion
         logic instead of relying on an already-established login session.
         """

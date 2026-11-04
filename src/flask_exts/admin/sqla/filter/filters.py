@@ -39,8 +39,7 @@ class BaseSQLAFilter(BaseFilter):
     """Base SQLAlchemy filter."""
 
     def __init__(self, column_type, column: str, name, data_type=None, options=None):
-        """
-        Constructor.
+        """Constructor.
 
         Args:
             column: Model field
@@ -192,37 +191,25 @@ class EnumEqualFilter(FilterEqual):
 class EnumFilterNotEqual(FilterNotEqual):
     """Enum not equal filter"""
 
-    pass
-
 
 class EnumFilterEmpty(FilterEmpty):
     """Enum empty filter"""
-
-    pass
 
 
 class EnumFilterInList(FilterInList):
     """Enum in list filter"""
 
-    pass
-
 
 class EnumFilterNotInList(FilterNotInList):
     """Enum not in list filter"""
-
-    pass
 
 
 class ChoiceTypeEqualFilter(FilterEqual):
     """Choice type equals filter"""
 
-    pass
-
 
 class ChoiceTypeNotEqualFilter(FilterNotEqual):
     """Choice type not equal filter"""
-
-    pass
 
 
 class ChoiceTypeLikeFilter(FilterLike):

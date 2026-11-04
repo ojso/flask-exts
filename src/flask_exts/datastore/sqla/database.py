@@ -14,7 +14,7 @@ _EXTENSION_KEY = "flask_exts_sqla"
 class SqlaDb:
     """sqlalchemy db
 
-    Example:
+    Examples:
         Create a db::
 
             db = SqlaDb()
@@ -42,6 +42,12 @@ class SqlaDb:
         return Base
 
     def init_app(self, app: Flask) -> None:
+        """Bind this database instance to a Flask application.
+
+        The application must define ``SQLALCHEMY_DATABASE_URI`` before this
+        method is called. An instance can only be bound to one application at
+        a time; call :meth:`dispose` before reusing it with another app.
+        """
         if self.app is not None:
             # Rebinding this singleton to a (possibly different) app would
             # silently swap out engine/session for every other reference to
@@ -139,6 +145,12 @@ class SqlaDb:
         self.Model.metadata.create_all(self.engine)
 
     def dispose(self):
+        """Remove the scoped session and dispose the engine's connection pool.
+
+        The instance is marked unbound so it can be initialized with another
+        Flask application. This method can also be called without an active
+        application context.
+        """
         if self.session is not None:
             try:
                 self.session.remove()

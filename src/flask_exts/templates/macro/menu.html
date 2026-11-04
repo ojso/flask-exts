@@ -13,7 +13,9 @@
               {% else %}
                 {% set dropdown_item_class = "dropdown-item active" if child.is_active(current_view) else "dropdown-item" %}
                 <li>
-                  <a class="{{ dropdown_item_class }}" href="{{ child.get_url() }}" {% if child.target %}target="{{ child.target }}"{% endif %}>{{ child.name }}</a>
+                  <a class="{{ dropdown_item_class }}"
+                     href="{{ child.get_url() }}"
+                     {% if child.target %}target="{{ child.target }}"{% endif %}>{{ child.name }}</a>
                 </li>
               {% endif %}
             {% endfor %}

@@ -31,23 +31,8 @@ If the environment already exists, activate it with:
 Test
 ----
 
-The project uses `pytest <https://pytest.org/>`_ for testing. From the project
-root, with the virtual environment activated, run the full test suite:
-
-.. code-block:: console
-
-    $ python -m pytest -q
-
-Run a single file or test case while iterating:
-
-.. code-block:: console
-
-    $ python -m pytest -q tests/forms/fields/test_json.py
-    $ python -m pytest -q tests/forms/fields/test_json.py::test_json_field
-
-The ``make test`` and ``make coverage`` targets also work, but they call
-``pytest`` and ``coverage`` directly, so the virtual environment must be
-activated first.
+See :doc:`testing` for test commands, conventions, integration-test models,
+and validation guidance.
 
 Lint and format
 ---------------

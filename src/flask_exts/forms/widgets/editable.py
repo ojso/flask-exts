@@ -18,9 +18,9 @@ def _build_query_select_options(field):
             selected_ids.append(value)
     return json.dumps(choices, default=str), selected_ids
 
+
 class EditableWidget:
-    """
-    WTForms widget that provides in-line editing for the list view.
+    """WTForms widget that provides in-line editing for the list view.
 
     Determines how to display the editable/ajax form based on the
     field inside of the FieldList (StringField, IntegerField, etc).
@@ -30,7 +30,7 @@ class EditableWidget:
         display_value = kwargs.pop("display_value", "")
         kwargs.setdefault("class", "editable")
         kwargs.setdefault("data-value", display_value)
-        kwargs.setdefault('data-url', './ajax/update/')
+        kwargs.setdefault("data-url", "./ajax/update/")
         # data_url = kwargs.pop("data_url", "")
         # kwargs.setdefault("data-url", data_url)
         kwargs.setdefault("data-name", field.name)
@@ -41,9 +41,7 @@ class EditableWidget:
         return Markup(f"<a {html_params(**kwargs)}>{escape(display_value)}</a>")
 
     def get_kwargs(self, field, kwargs):
-        """
-        Return extra kwargs based on the field type.
-        """
+        """Return extra kwargs based on the field type."""
         if field.type == "StringField":
             kwargs["data-type"] = "text"
         elif field.type == "TextAreaField":
@@ -102,7 +100,7 @@ class EditableWidget:
                 if selected:
                     selected_ids.append(value)
             # blank field is already included if allow_blank
-            kwargs["data-options"] = json.dumps(choices,default=str)
+            kwargs["data-options"] = json.dumps(choices, default=str)
 
             if field.type == "QuerySelectMultipleField":
                 kwargs["data-role"] = "x-editable-select-multiple"

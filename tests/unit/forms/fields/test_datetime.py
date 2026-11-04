@@ -11,7 +11,8 @@ def test_datetime_field(post_data_factory):
 
     f = F()
     assert f.a() == (
-        '<input data-date-format="YYYY-MM-DD HH:mm:ss" data-role="datetimepicker" id="a" name="a" type="text" value="">'
+        '<input data-date-format="YYYY-MM-DD HH:mm:ss" '
+        'data-role="datetimepicker" id="a" name="a" type="text" value="">'
     )
     assert f.a.data is None
 
@@ -22,6 +23,8 @@ def test_datetime_field(post_data_factory):
     f = F(formdata)
     assert f.validate()
     assert f.a() == (
-        '<input data-date-format="YYYY-MM-DD HH:mm:ss" data-role="datetimepicker" id="a" name="a" type="text" value="2000-01-01 01:01:01">'
+        '<input data-date-format="YYYY-MM-DD HH:mm:ss" '
+        'data-role="datetimepicker" id="a" name="a" type="text" '
+        'value="2000-01-01 01:01:01">'
     )
     assert f.a.data == dt

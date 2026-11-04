@@ -17,16 +17,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: tests/admin/sqla/test_translation.py:16 tests/test_babel.py:42
-#: tests/test_babel.py:62
+#: tests/integration/admin/sqla/test_translation.py:16
+#: tests/unit/builtin_extensions/test_babel.py:42
+#: tests/unit/builtin_extensions/test_babel.py:62
 msgid "Name"
 msgstr ""
 
-#: tests/test_babel.py:45 tests/test_babel.py:53 tests/test_babel.py:65
-#: tests/test_babel.py:73
+#: tests/unit/builtin_extensions/test_babel.py:45
+#: tests/unit/builtin_extensions/test_babel.py:53
+#: tests/unit/builtin_extensions/test_babel.py:65
+#: tests/unit/builtin_extensions/test_babel.py:73
 #, python-format
 msgid "one apple"
 msgid_plural "%(count)d apples"
 msgstr[0] ""
 msgstr[1] ""
-

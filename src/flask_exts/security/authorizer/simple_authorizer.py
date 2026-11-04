@@ -4,9 +4,7 @@ from .base import Authorizer
 
 
 class SimpleAuthorizer(Authorizer):
-    """
-    Simple Authorizer
-    """
+    """Simple Authorizer"""
 
     def __init__(self, app=None):
         self.app = None
@@ -17,9 +15,7 @@ class SimpleAuthorizer(Authorizer):
         self.app = app
 
     def authorize(self, *args, **kwargs):
-        """
-        Authorize access based on user and optional view or permission context.
-        """
+        """Authorize access based on user and optional view or permission context."""
 
         kwargs.setdefault("user", current_user)
         return self.allow(*args, **kwargs)

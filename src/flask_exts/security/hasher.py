@@ -3,9 +3,7 @@ from hmac import compare_digest
 
 
 class Blake2bHasher:
-    """
-    Hash context for string hashing and verification.
-    """
+    """Hash context for string hashing and verification."""
 
     digest_size = 16
 

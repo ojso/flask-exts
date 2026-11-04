@@ -31,13 +31,13 @@ class LoginExtension(Extension):
 
 def user_loader(user_id):
     try:
-        raw_id, password_fingerprint  = user_id.rsplit(":", 1)
+        raw_id, password_fingerprint = user_id.rsplit(":", 1)
         user = current_userstore.user_loader(int(raw_id))
     except (AttributeError, TypeError, ValueError):
         return None
     if user is None:
         return None
-    if not current_security.hasher.verify(user.password or "", password_fingerprint ):
+    if not current_security.hasher.verify(user.password or "", password_fingerprint):
         return None
     return user
 
@@ -70,8 +70,8 @@ def jwt_decode(token, key=None, algorithm=None):
 
 
 def authorization_decoder(authstr: str):
-    """
-    Authorization token decoder based on type. Current only support jwt.
+    """Authorization token decoder based on type. Current only support jwt.
+
     Args:
         authstr: Authorization string should be in "<type> <token>" format
     Returns:

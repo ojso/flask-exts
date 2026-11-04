@@ -19,8 +19,8 @@ class DecryptionError(Exception):
 
 
 class AesGcmEncryptor:
-    """
-    AES-256-GCM authenticated encryption for short secrets (TOTP seeds,
+    """AES-256-GCM authenticated encryption for short secrets (TOTP seeds,
+
     API keys, etc.) that must be decryptable later, not just verifiable.
 
     Each call to :meth:`encrypt` uses a fresh random nonce; the nonce is
@@ -37,8 +37,7 @@ class AesGcmEncryptor:
         self._aesgcm = AESGCM(key)
 
     def encrypt(self, plaintext: str) -> str:
-        """
-        Encrypt ``plaintext``, returning a URL-safe base64 string.
+        """Encrypt ``plaintext``, returning a URL-safe base64 string.
 
         Args:
             plaintext: The secret to encrypt.
@@ -51,8 +50,7 @@ class AesGcmEncryptor:
         return base64.urlsafe_b64encode(nonce + ciphertext).decode("ascii")
 
     def decrypt(self, token: str) -> str:
-        """
-        Decrypt a token produced by :meth:`encrypt`.
+        """Decrypt a token produced by :meth:`encrypt`.
 
         Args:
             token: The encrypted token.
