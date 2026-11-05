@@ -1,4 +1,3 @@
-
 from flask_exts.datastore.sqla import db
 
 from .models.admin_records import AdminTestModel

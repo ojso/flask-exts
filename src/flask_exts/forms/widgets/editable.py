@@ -29,15 +29,14 @@ class EditableWidget:
     def __call__(self, field, **kwargs):
         display_value = kwargs.pop("display_value", "")
         kwargs.setdefault("class", "editable")
-        kwargs.setdefault("data-value", display_value)
         kwargs.setdefault("data-url", "./ajax/update/")
         # data_url = kwargs.pop("data_url", "")
         # kwargs.setdefault("data-url", data_url)
         kwargs.setdefault("data-name", field.name)
         kwargs.setdefault("href", "#")
         kwargs["data-pk"] = str(kwargs.pop("pk"))
+        kwargs["data-value"] = display_value
         kwargs = self.get_kwargs(field, kwargs)
-
         return Markup(f"<a {html_params(**kwargs)}>{escape(display_value)}</a>")
 
     def get_kwargs(self, field, kwargs):
@@ -64,20 +63,14 @@ class EditableWidget:
                 choices.insert(0, {"value": "", "label": ""})
             kwargs["data-options"] = json.dumps(choices)
         elif field.type == "DateField":
-            kwargs["data-type"] = "combodate"
+            kwargs["data-type"] = "date"
             kwargs["data-format"] = "YYYY-MM-DD"
-            kwargs["data-template"] = "YYYY-MM-DD"
-            kwargs["data-role"] = "x-editable-combodate"
-        elif field.type == "DateTimeField":
-            kwargs["data-type"] = "combodate"
+        elif field.type in ("DateTimeField", "DateTimeLocalField"):
+            kwargs["data-type"] = "datetime-local"
             kwargs["data-format"] = "YYYY-MM-DD HH:mm:ss"
-            kwargs["data-template"] = "YYYY-MM-DD  HH:mm:ss"
-            kwargs["data-role"] = "x-editable-combodate"
         elif field.type == "TimeField":
-            kwargs["data-type"] = "combodate"
+            kwargs["data-type"] = "time"
             kwargs["data-format"] = "HH:mm:ss"
-            kwargs["data-template"] = "HH:mm:ss"
-            kwargs["data-role"] = "x-editable-combodate"
         elif field.type == "IntegerField":
             kwargs["data-type"] = "number"
         elif field.type in ["FloatField", "DecimalField"]:

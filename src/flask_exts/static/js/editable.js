@@ -121,7 +121,7 @@ class Editable {
     if (this.activeTarget && this.activeTarget == target) {
     } else {
       this.activeTarget = target
-      this.modalTitle.textContent = target.dataset.Title ?? "✎"
+      this.modalTitle.textContent = target.dataset.title ?? "✎"
       if (this.field) {
         this.field.remove()
       }

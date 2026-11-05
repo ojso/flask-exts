@@ -1,10 +1,65 @@
-
+from datetime import datetime
+from html.parser import HTMLParser
 
 from flask_exts.datastore.sqla import db
 from flask_exts.datastore.sqla.query import Query
 
 from .helpers import fill_admin_records
 from .models.admin_records import AdminTestModel, RelatedAdminTestModel
+
+
+class EditableCellParser(HTMLParser):
+    """Collect attributes from anchors rendered as inline-editable cells."""
+
+    def __init__(self):
+        super().__init__()
+        self.cells = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "a":
+            return
+        attributes = dict(attrs)
+        classes = (attributes.get("class") or "").split()
+        if "editable" in classes:
+            self.cells.append(attributes)
+
+
+def test_column_editable_list_row_data(
+    app, client, admin, sqla_view_factory, login_as_admin
+):
+    """Each editable cell must carry its own pk and displayed value."""
+    with app.app_context():
+        db.reset_all()
+
+        datetime_obj1 = AdminTestModel(
+            name="dt_obj1", datetime_value=datetime(2014, 4, 3, 1, 9, 0)
+        )
+        datetime_obj2 = AdminTestModel(
+            name="dt_obj2", datetime_value=datetime(2013, 3, 2, 0, 8, 0)
+        )
+        db.session.add_all([datetime_obj1, datetime_obj2])
+        db.session.commit()
+        pk1, pk2 = datetime_obj1.id, datetime_obj2.id
+
+        view = sqla_view_factory(
+            AdminTestModel, column_editable_list=["datetime_value"]
+        )
+        admin.register_view(view)
+        login_as_admin()
+
+    rv = client.get("/admin/admintestmodel/")
+    assert rv.status_code == 200
+
+    parser = EditableCellParser()
+    parser.feed(rv.text)
+    datetime_cells = [
+        cell for cell in parser.cells if cell.get("data-name") == "datetime_value"
+    ]
+    assert len(datetime_cells) == 2
+    assert {cell["data-pk"]: cell["data-value"] for cell in datetime_cells} == {
+        str(pk1): "2014-04-03 01:09:00",
+        str(pk2): "2013-03-02 00:08:00",
+    }
 
 
 def test_inline_column_editing(app, client, admin, sqla_view_factory, login_as_admin):
@@ -15,8 +70,7 @@ def test_inline_column_editing(app, client, admin, sqla_view_factory, login_as_a
             AdminTestModel, column_editable_list=["name", "enum_choice"]
         )
         admin.register_view(view1)
-        # return
-        # Test in-line editing for relations
+
         view2 = sqla_view_factory(
             RelatedAdminTestModel, column_editable_list=["admin_record"]
         )

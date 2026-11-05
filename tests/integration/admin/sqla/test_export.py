@@ -1,5 +1,3 @@
-
-
 from flask_exts.datastore.sqla import db
 
 from .helpers import fill_admin_records

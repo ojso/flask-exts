@@ -88,8 +88,6 @@
           });
       }
 
-      var page = 0;
-
       var opts = {
         valueField: 'id',
         labelField: 'text',
@@ -102,7 +100,6 @@
           return query.length >= minimumInputLength;
         },
         load: function (query, callback) {
-          page = 0;
           loadAjaxOptions(query, 0)
             .then(function (results) {
               callback(results);
@@ -124,221 +121,11 @@
     }
 
     /**
-     * Process Leaflet (map) widget
-     */
-    function processLeafletWidget(el, name) {
-      if (!window.L) {
-        console.error('Leaflet library is not loaded. Add the leaflet plugin to use the map widget.');
-        return false;
-      }
-      if (!window.FLASK_EXTS_MAPS) {
-        console.error("You must set FLASK_EXTS_MAPS in your Flask settings to use the map widget");
-        return false;
-      }
-      if (!window.FLASK_EXTS_DEFAULT_CENTER_LAT || !window.FLASK_EXTS_DEFAULT_CENTER_LONG) {
-        console.error("You must set FLASK_EXTS_DEFAULT_CENTER_LAT and FLASK_EXTS_DEFAULT_CENTER_LONG in your Flask settings to use the map widget");
-        return false;
-      }
-
-      var geometryType = el.getAttribute('data-geometry-type');
-      if (geometryType) {
-        geometryType = geometryType.toUpperCase();
-      } else {
-        geometryType = 'GEOMETRY';
-      }
-      var multiple = geometryType.lastIndexOf('MULTI', geometryType) === 0;
-      var editable = !el.disabled;
-
-      var mapDiv = document.createElement('div');
-      mapDiv.style.width = el.getAttribute('data-width') + 'px';
-      mapDiv.style.height = el.getAttribute('data-height') + 'px';
-      el.insertAdjacentElement('afterend', mapDiv);
-      el.style.display = 'none';
-
-      var center = null;
-      if (el.getAttribute('data-lat') && el.getAttribute('data-lng')) {
-        center = L.latLng(el.getAttribute('data-lat'), el.getAttribute('data-lng'));
-      }
-
-      var maxBounds = null;
-      if (
-        el.getAttribute('data-max-bounds-sw-lat') && el.getAttribute('data-max-bounds-sw-lng') &&
-        el.getAttribute('data-max-bounds-ne-lat') && el.getAttribute('data-max-bounds-ne-lng')
-      ) {
-        maxBounds = L.latLngBounds(
-          L.latLng(el.getAttribute('data-max-bounds-sw-lat'), el.getAttribute('data-max-bounds-sw-lng')),
-          L.latLng(el.getAttribute('data-max-bounds-ne-lat'), el.getAttribute('data-max-bounds-ne-lng'))
-        );
-      }
-
-      var editableLayers;
-      if (el.value) {
-        editableLayers = new L.geoJson(JSON.parse(el.value));
-        center = center || editableLayers.getBounds().getCenter();
-      } else {
-        editableLayers = new L.geoJson();
-      }
-
-      var mapOptions = {
-        center: center,
-        zoom: parseInt(el.getAttribute('data-zoom'), 10) || 12,
-        minZoom: parseInt(el.getAttribute('data-min-zoom'), 10) || undefined,
-        maxZoom: parseInt(el.getAttribute('data-max-zoom'), 10) || undefined,
-        maxBounds: maxBounds
-      };
-
-      if (!editable) {
-        mapOptions.dragging = false;
-        mapOptions.touchzoom = false;
-        mapOptions.scrollWheelZoom = false;
-        mapOptions.doubleClickZoom = false;
-        mapOptions.boxZoom = false;
-        mapOptions.tap = false;
-        mapOptions.keyboard = false;
-        mapOptions.zoomControl = false;
-      }
-
-      // only show attributions if the map is big enough
-      // (otherwise, it gets in the way)
-      var mapW = parseInt(el.getAttribute('data-width'), 10) || 0;
-      var mapH = parseInt(el.getAttribute('data-height'), 10) || 0;
-      if (mapW * mapH < 10000) {
-        mapOptions.attributionControl = false;
-      }
-
-      var map = L.map(mapDiv, mapOptions);
-      map.addLayer(editableLayers);
-
-      if (center) {
-        // if we have more than one point, make the map show everything
-        var bounds = editableLayers.getBounds();
-        if (!bounds.getNorthEast().equals(bounds.getSouthWest())) {
-          map.fitBounds(bounds);
-        }
-      } else {
-        // use the default map center
-        map.setView([window.FLASK_EXTS_DEFAULT_CENTER_LAT, window.FLASK_EXTS_DEFAULT_CENTER_LONG], 12);
-      }
-
-      // set up tiles
-      var mapboxHostnameAndPath = el.getAttribute('data-tile-layer-url') || 'api.mapbox.com/styles/v1/mapbox/' + window.FLASK_EXTS_MAPBOX_MAP_ID + '/tiles/{z}/{x}/{y}?access_token={accessToken}';
-      var attribution = el.getAttribute('data-tile-layer-attribution') || 'Map data &copy; <a href="//openstreetmap.org">OpenStreetMap</a> contributors, <a href="//creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="//mapbox.com">Mapbox</a>';
-      L.tileLayer('//' + mapboxHostnameAndPath, {
-        // Attributes from https://docs.mapbox.com/help/troubleshooting/migrate-legacy-static-tiles-api/
-        attribution: attribution,
-        maxZoom: 18,
-        tileSize: 512,
-        zoomOffset: -1,
-        accessToken: window.FLASK_EXTS_MAPBOX_ACCESS_TOKEN
-      }).addTo(map);
-
-      // everything below here is to set up editing, so if we're not editable,
-      // we can just return early.
-      if (!editable) {
-        return true;
-      }
-
-      // set up Leaflet.draw editor
-      var drawOptions = {
-        draw: {
-          // circles are not geometries in geojson
-          circle: false,
-          circlemarker: false
-        },
-        edit: {
-          featureGroup: editableLayers
-        }
-      };
-
-      if (['POINT', 'MULTIPOINT'].indexOf(geometryType) > -1) {
-        drawOptions.draw.polyline = false;
-        drawOptions.draw.polygon = false;
-        drawOptions.draw.rectangle = false;
-      } else if (['LINESTRING', 'MULTILINESTRING'].indexOf(geometryType) > -1) {
-        drawOptions.draw.marker = false;
-        drawOptions.draw.polygon = false;
-        drawOptions.draw.rectangle = false;
-      } else if (['POLYGON', 'MULTIPOLYGON'].indexOf(geometryType) > -1) {
-        drawOptions.draw.marker = false;
-        drawOptions.draw.polyline = false;
-      }
-      var drawControl = new L.Control.Draw(drawOptions);
-      map.addControl(drawControl);
-      if (window.FLASK_EXTS_MAPS_SEARCH) {
-        var circle = L.circleMarker([0, 0]);
-        var autocompleteEl = document.createElement('input');
-        autocompleteEl.style.position = 'absolute';
-        autocompleteEl.style.zIndex = '9999';
-        autocompleteEl.style.display = 'block';
-        autocompleteEl.style.margin = '-42px 0 0 10px';
-        autocompleteEl.style.width = '50%';
-        var form = el.form;
-
-        mapDiv.insertAdjacentElement('afterend', autocompleteEl);
-        form.addEventListener('submit', function (evt) {
-          if (document.activeElement === autocompleteEl) {
-            evt.preventDefault();
-            return false;
-          }
-        });
-        var autocomplete = new google.maps.places.Autocomplete(autocompleteEl);
-        autocomplete.addListener('place_changed', function () {
-          var place = autocomplete.getPlace();
-          var loc = place.geometry.location;
-          var viewport = place.geometry.viewport;
-          circle.setLatLng(L.latLng(loc.lat(), loc.lng()));
-          circle.addTo(map);
-          if (viewport) {
-            map.fitBounds([
-              viewport.getNorthEast().toJSON(),
-              viewport.getSouthWest().toJSON(),
-            ]);
-          }
-          else {
-            map.fitBounds(circle.getBounds());
-          }
-        });
-      }
-
-      // save when the editableLayers are edited
-      var saveToTextArea = function () {
-        var geo = editableLayers.toGeoJSON();
-        if (geo.features.length === 0) {
-          el.value = '';
-          return true;
-        }
-        if (multiple) {
-          var coords = geo.features.map(function (feature) {
-            return [feature.geometry.coordinates];
-          });
-          geo = {
-            'type': geometryType,
-            'coordinates': coords
-          };
-        } else {
-          geo = geo.features[0].geometry;
-        }
-        el.value = JSON.stringify(geo);
-      };
-
-      // handle creation
-      map.on('draw:created', function (e) {
-        if (!multiple) {
-          editableLayers.clearLayers();
-        }
-        editableLayers.addLayer(e.layer);
-        saveToTextArea();
-      });
-      map.on('draw:edited', saveToTextArea);
-      map.on('draw:deleted', saveToTextArea);    
-    }
-
-    /**
     * Process data-role attribute for the given input element. Feel free to override
     *
     * @param {Element} el DOM element
     * @param {String} name data-role value
-    * @param {Element} parent 
+    * @param {Element} parent
     */
     this.applyStyle = function (el, name, parent) {
       // Process converters first
@@ -488,14 +275,9 @@
           });
           el.dataset.faInitialized = '1';
           return true;
-        case 'leaflet':
-          processLeafletWidget(el, name);
-          el.dataset.faInitialized = '1';
-          return true;
         // x-editable* widgets are handled natively by editable.js (Editable module).
         // The old jQuery x-editable cases are intentionally no-ops.
         case 'x-editable':
-        case 'x-editable-combodate':
         case 'x-editable-select-multiple':
         case 'x-editable-boolean':
           el.dataset.faInitialized = '1';
@@ -682,9 +464,9 @@
     if (target.hasAttribute('data-inline-add')) {
       faForm.addInlineModelRow(target.closest('[data-inline-model]'));
     } else if (target.hasAttribute('data-inline-save')) {
-      faForm.saveInlineModelRow(target.closest('[data-inline-row]')).catch(function () {});
+      faForm.saveInlineModelRow(target.closest('[data-inline-row]')).catch(function () { });
     } else {
-      faForm.deleteInlineModelRow(target.closest('[data-inline-row]')).catch(function () {});
+      faForm.deleteInlineModelRow(target.closest('[data-inline-row]')).catch(function () { });
     }
   });
 

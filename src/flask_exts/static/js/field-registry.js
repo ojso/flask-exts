@@ -11,7 +11,11 @@ class FieldRegistry {
   }
 
   register(plugin) {
-    this.plugins.set(plugin.type, plugin)
+    if (Array.isArray(plugin.type)) {
+      plugin.type.forEach(t => this.plugins.set(t, plugin))
+    } else {
+      this.plugins.set(plugin.type, plugin)
+    }
     return plugin
   }
 
@@ -53,17 +57,6 @@ class FieldRegistry {
       return plugin.parseOptions(source)
     }
   }
-}
-
-// Native input types do not support datetime; the combodate widget format
-// (moment-style) tells us which native field to use.
-function combodateKind(format) {
-  const f = String(format || "")
-  const hasDate = /[YD]/.test(f)
-  const hasTime = f.includes("HH")
-  if (hasTime && hasDate) return "datetime"
-  if (hasTime) return "time"
-  return "date"
 }
 
 function normalizeSelectOptions(parsed) {
@@ -111,36 +104,6 @@ const selectFieldPlugin = {
       }
       return { label: trimmed, value: trimmed }
     }).filter(Boolean)
-  }
-}
-
-const combodateFieldPlugin = {
-  createField({ format } = {}) {
-    const kind = combodateKind(format)
-    let field
-    if (kind === "datetime") {
-      field = createInputField({ type: "datetime-local" })
-    } else if (kind === "time") {
-      field = createInputField({ type: "time" })
-    } else {
-      field = createInputField({ type: "date" })
-    }
-    field.dataset.combodateKind = kind
-    return field
-  },
-  setValue(field, value) {
-    let v = String(value ?? "")
-    if (field.dataset.combodateKind === "datetime") {
-      v = v.replace(" ", "T")
-    }
-    field.value = v
-  },
-  getValue(field) {
-    let v = field.value
-    if (field.dataset.combodateKind === "datetime" && v) {
-      v = v.replace("T", " ")
-    }
-    return v
   }
 }
 
@@ -194,6 +157,32 @@ const builtinFieldPlugins = [
     }
   },
   {
+    type: "time",
+    createField(params = {}) {
+      return createInputField({ type: "time", attrs: { step: 1 } })
+    },
+    setValue(field, value) {
+      field.value = String(value ?? "")
+    },
+    getValue(field) {
+      return field.value.trim()
+    }
+  },
+  {
+    type: ["datetime", "datetime-local"],
+    createField(params = {}) {
+      return createInputField({ type: "datetime-local", attrs: { step: 1 } })
+    },
+    setValue(field, value) {
+      field.value = String(value ?? "").replace(" ", "T")
+    },
+    getValue(field) {
+      // `<input type="datetime-local">` yields "YYYY-MM-DDTHH:mm[:ss[.fff]]".
+      // Send the plain "YYYY-MM-DD HH:MM:SS" form the backend parses.
+      return field.value.trim().replace("T", " ")
+    }
+  },
+  {
     type: "textarea",
     createField(params = {}) {
       return createTextareaField({ className: "w-100" })
@@ -232,8 +221,6 @@ const builtinFieldPlugins = [
     }
   },
   { ...selectFieldPlugin, type: "select" },
-  // DateField / DateTimeField / TimeField render data-type="combodate"
-  combodateFieldPlugin
 ]
 
 export default FieldRegistry;

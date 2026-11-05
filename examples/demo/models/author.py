@@ -1,4 +1,5 @@
 import enum
+from datetime import date, datetime, time
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String, cast, sql
@@ -44,6 +45,11 @@ class Author(db.Model):
 
     dialling_code: Mapped[int | None]
     local_phone_number: Mapped[str | None]
+
+    cdate: Mapped[date] = mapped_column(default=date.today)
+    ctime: Mapped[time] = mapped_column(default=lambda: datetime.now().time())
+    cdatetime: Mapped[datetime] = mapped_column(default=datetime.now)
+
     posts: Mapped[list["Post"]] = relationship(
         foreign_keys="[Post.author_id]",
         back_populates="author",

@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 from collections.abc import Callable
 from enum import Enum
@@ -71,12 +72,34 @@ def dict_formatter(view, value, name) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+def time_formatter(view, value: dt.time, name) -> str:
+    """Return the time formatted as `HH:MM:SS`
+
+    Args:
+        value:
+            Time to format
+    """
+    return value.strftime("%H:%M:%S")
+
+
+def datetime_formatter(view, value: dt.datetime, name) -> str:
+    """Return the datetime formatted as `YYYY-MM-DD HH:MM:SS`
+
+    Args:
+        value:
+            Datetime to format
+    """
+    return value.strftime("%Y-%m-%d %H:%M:%S")
+
+
 BASE_FORMATTERS: T_FORMATTERS = {
     type(None): empty_formatter,
     bool: bool_formatter,
     list: list_formatter,
     dict: dict_formatter,
     Enum: enum_formatter,
+    dt.time: time_formatter,
+    dt.datetime: datetime_formatter,
 }
 
 EXPORT_FORMATTERS: T_FORMATTERS = {
@@ -84,6 +107,8 @@ EXPORT_FORMATTERS: T_FORMATTERS = {
     list: list_formatter,
     dict: dict_formatter,
     Enum: enum_formatter,
+    dt.time: time_formatter,
+    dt.datetime: datetime_formatter,
 }
 
 DETAIL_FORMATTERS: T_FORMATTERS = {
@@ -91,4 +116,6 @@ DETAIL_FORMATTERS: T_FORMATTERS = {
     list: list_formatter,
     dict: dict_formatter,
     Enum: enum_formatter,
+    dt.time: time_formatter,
+    dt.datetime: datetime_formatter,
 }

@@ -67,6 +67,9 @@ class AuthorView(SqlaModelView):
         # "phone_number",
         "enum_choice_field",
         "posts",
+        "cdate",
+        "ctime",
+        "cdatetime",
     )
     column_searchable_list = (
         "first_name",
@@ -74,7 +77,14 @@ class AuthorView(SqlaModelView):
         # "phone_number",
         "email",
     )
-    column_editable_list = ("type", "currency", "timezone")
+    column_editable_list = (
+        "type",
+        "currency",
+        "timezone",
+        "cdate",
+        "ctime",
+        "cdatetime",
+    )
     column_details_list = (
         "id",
         "featured_post",

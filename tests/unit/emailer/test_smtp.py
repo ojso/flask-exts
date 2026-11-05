@@ -1,10 +1,12 @@
+import pytest
+
 from flask_exts.emailer.smtp import SmtpSSL
 
 
 def test_email(app):
     real_email_sender = app.config.get("REAL_EMAIL_SENDER")
     if not real_email_sender:
-        return
+        pytest.skip("REAL_EMAIL_SENDER is not configured")
 
     # set to's email
     to = "david.dong.hua@gmail.com"
