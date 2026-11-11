@@ -8,25 +8,30 @@ and manage translations with Babel.
 Environment setup
 -----------------
 
-Flask-Exts requires Python 3.10 or later. Use a repository-local virtual
-environment instead of the system Python, and install the project in editable
-mode so local changes are picked up immediately:
+Flask-Exts requires Python 3.11 or later. The primary development version is
+Python 3.13, matching the default in Debian 13 stable; 3.11 remains the minimum
+supported version. Development uses `uv
+<https://docs.astral.sh/uv/>`_ to manage a repository-local virtual
+environment. Install uv, then run:
 
 .. code-block:: console
 
-    $ python3 -m venv venv
-    $ . venv/bin/activate
-    $ python -m pip install -e '.[dev,test]'
+    $ uv sync
 
-The ``dev`` and ``test`` extras install the linting and testing tools. Re-run
-the install command after changes to ``pyproject.toml`` so the environment stays
-in sync.
+``uv sync`` creates ``.venv``, installs the project in editable mode, and
+installs the ``dev`` dependency group. That group includes the linting and
+testing tools as well as the Sphinx dependencies used to build the
+documentation. Re-run ``uv sync`` after changes to ``pyproject.toml`` so the
+environment stays in sync.
 
 If the environment already exists, activate it with:
 
 .. code-block:: console
 
-    $ . venv/bin/activate
+    $ . .venv/bin/activate
+
+Commands can also be run without activation by prefixing them with ``uv run``,
+for example ``uv run pytest``.
 
 Test
 ----
@@ -56,7 +61,6 @@ To build the documentation locally:
 
 .. code-block:: console
 
-    $ python -m pip install -r docs/requirements.txt
     $ make docs-build
 
 The build writes HTML to ``docs/_build/html``. Preview it with:
@@ -85,15 +89,21 @@ Run these commands only when changing files under
 Build package
 -------------
 
-Building distributions is independent of the development environment. Install
-the packaging tools and build the wheel and source distribution:
+Building distributions is independent of the development environment. Build the
+wheel and source distribution with:
 
 .. code-block:: console
 
-    $ python -m pip install -e '.[build]'
-    $ python -m build
+    $ uv build
 
 The wheel and source distribution are written to ``dist/``.
+
+Changelog and versioning
+------------------------
+
+User-visible changes are recorded in ``CHANGES.rst``. The format is based on
+`Keep a Changelog <https://keepachangelog.com/en/1.1.0/>`_ and this project
+adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
 Translations
 ------------

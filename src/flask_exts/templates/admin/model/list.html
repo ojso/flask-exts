@@ -63,8 +63,8 @@
         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">{{ gettext("With selected") }}</a>
         <div class="dropdown-menu">
           {% for p in actions %}<a class="dropdown-item"
-   href="#"
-   onclick="return listAction.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
+                                   href="#"
+                                   onclick="return listAction.execute('{{ p[0] }}');">{{ gettext(p[1]) }}</a>{% endfor %}
         </div>
       </li>
     {% endif %}
@@ -118,7 +118,7 @@
       <div class="float-end">
         <button class="btn btn-primary d-none" type="submit">{{ gettext("Apply") }}</button>
         {% if active_filters %}<a class="btn btn-secondary"
-   href="{{ clear_search_url }}">{{ gettext("Reset Filters") }}</a>{% endif %}
+                                  href="{{ clear_search_url }}">{{ gettext("Reset Filters") }}</a>{% endif %}
       </div>
       <table class="filters">
       </table>

@@ -1,7 +1,7 @@
 import operator
 
 from sqlalchemy.orm.util import identity_key
-from wtforms.fields import SelectFieldBase
+from wtforms.fields import Choice, SelectFieldBase
 from wtforms.validators import ValidationError
 
 from ..widgets.checkbox import CheckboxListInput
@@ -96,10 +96,10 @@ class QuerySelectField(SelectFieldBase):
 
     def iter_choices(self):
         if self.allow_blank:
-            yield ("", self.blank_text, self.data is None, {})
+            yield Choice("", self.blank_text, self.data is None, {})
 
         for pk, obj in self._get_object_list():
-            yield (pk, self.get_label(obj), obj == self.data, {})
+            yield Choice(pk, self.get_label(obj), obj == self.data, {})
 
     def process_formdata(self, valuelist):
         if valuelist:
@@ -160,7 +160,7 @@ class QuerySelectMultipleField(QuerySelectField):
 
     def iter_choices(self):
         for pk, obj in self._get_object_list():
-            yield (pk, self.get_label(obj), obj in self.data, {})
+            yield Choice(pk, self.get_label(obj), obj in self.data, {})
 
     def process_formdata(self, valuelist):
         self._formdata = set(valuelist)

@@ -45,9 +45,7 @@ def user_loader(user_id):
 def jwt_encode(payload, key=None, delta: int | None = None, algorithm=None):
     if delta is None:
         delta = current_app.config.get("JWT_ACCESS_TOKEN_MAX_AGE", 900)
-    exp = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(
-        seconds=delta
-    )
+    exp = datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(seconds=delta)
     token_payload = dict(payload)
     token_payload["exp"] = exp
     token_payload["token_use"] = "access"

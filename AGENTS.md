@@ -3,18 +3,20 @@
 ## Project
 
 Flask extension library built on SQLAlchemy, WTForms, and admin views.
-Supports Python 3.10+.
+Supports Python 3.11+; the primary development version is Python 3.13 (Debian 13
+stable), and 3.11 is kept as the minimum supported version.
 
 ## Development workflow
 
-Use the repository-local virtual environment. Developers can set it up with:
+Use the repository-local virtual environment managed by uv. Developers can set
+it up with:
 
 ```bash
-test -d venv || python3 -m venv venv
-. venv/bin/activate
-python -m pip install -e '.[dev,test]'
-python -m pip install -r docs/requirements.txt
+uv sync
 ```
+
+The `dev` dependency group includes the linting, testing, and documentation
+tools. Activate `.venv` or prefix commands with `uv run`.
 
 Agents must not install packages or tools; the setup commands above are for
 developers. If a required dependency is missing, ask the developer to install
@@ -61,7 +63,7 @@ Always keep changes focused and declare public re-exports in `__all__`. Never:
 
 - Write code and documentation primarily in English. Tests may use other
   languages for i18n coverage.
-- Preserve Python 3.10 compatibility; do not use syntax or standard-library
+- Preserve Python 3.11 compatibility; do not use syntax or standard-library
   features introduced in later Python versions.
 - Prefer f-strings for string formatting; avoid `.format()` and `%` formatting.
 - Add type annotations to public functions and methods, and give them concise,
@@ -72,6 +74,45 @@ Always keep changes focused and declare public re-exports in `__all__`. Never:
 
 For test organization, naming, coverage, integration models, and validation,
 see `docs/testing.rst`.
+
+## Dependency upgrades and compatibility
+
+Support only the single dependency baseline declared in `pyproject.toml`. When
+a dependency upgrade breaks behavior, fix the code for the declared version and
+raise the lower bound if needed; do not keep runtime branches for older
+versions.
+
+Do not add version-conditional shims: `try/except ImportError` fallbacks,
+`hasattr`/`getattr` probing, `sys.version_info` checks, or version comparisons
+for versions outside the declared range. Let missing imports fail; install the
+missing dependency with the developer instead. If an upgrade cannot be handled
+without a fallback, raise the lower bound and add a `CHANGES.rst` entry.
+
+Tests must not suppress deprecation warnings locally:
+
+```python
+with warnings.catch_warnings():
+    warnings.simplefilter("error", DeprecationWarning)
+```
+
+Assert the supported behavior directly instead. Deprecation handling belongs in
+the project-level pytest configuration, not in individual tests.
+
+## AI-assisted changes
+
+Keep changes minimal and evidence-based.
+
+- Do not hide failures with `except Exception: pass`, default-value fallbacks, or
+  `skip`/`xfail` added to make checks pass.
+- Do not weaken assertions or delete tests to fix a failure. A regression test
+  must fail before the fix and pass after it.
+- Mock only boundaries such as network, time, and external services; never mock
+  the logic under test.
+- Do not add speculative abstractions, flags, or compatibility paths for
+  hypothetical versions or backends.
+- Do not refactor or reformat unrelated code, and do not invent APIs or
+  configuration.
+- Do not add "AI generated" markers or comments that narrate the change.
 
 ## Changelog and releases
 

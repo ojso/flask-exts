@@ -8,13 +8,19 @@ authentication and database-driven management, see :doc:`examples`.
 Prerequisites
 -------------
 
-- Python 3.10+
+- Python 3.11+
 - Basic knowledge of Flask and SQLAlchemy
 
 Installation
 ------------
 
-Install the package with pip:
+Add the package with uv:
+
+.. code-block:: console
+
+   uv add flask-exts
+
+With pip:
 
 .. code-block:: console
 

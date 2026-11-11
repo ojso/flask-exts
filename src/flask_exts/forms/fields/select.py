@@ -1,8 +1,52 @@
 import re
 
 import wtforms.fields
+from wtforms.fields import Choice, SelectChoice
 
 from ..widgets.select import SelectWidget, TagsWidget
+
+
+def _to_select_choice(choice, optgroup=None):
+    if isinstance(choice, Choice):
+        return SelectChoice(
+            value=choice.value,
+            label=choice.label,
+            render_kw=choice.render_kw,
+            optgroup=optgroup,
+        )
+    return SelectChoice.from_input(choice, optgroup)
+
+
+def normalize_choices(choices):
+    """Normalize legacy choice inputs to ``SelectChoice`` instances.
+
+    ``SelectChoice`` is the supported input type for ``choices=...``. Plain
+    strings, 2- or 3-item tuples, and the legacy dict forms are accepted for
+    compatibility and converted here so WTForms does not emit its
+    deprecation warnings.
+    """
+    if choices is None or callable(choices):
+        return choices
+    if isinstance(choices, dict):
+        normalized = []
+        for key, value in choices.items():
+            if isinstance(value, dict):
+                for inner_value, inner_label in value.items():
+                    normalized.append(
+                        SelectChoice(
+                            value=inner_value,
+                            label=inner_label,
+                            optgroup=key,
+                        )
+                    )
+            elif isinstance(value, (list, tuple)):
+                normalized.extend(
+                    _to_select_choice(item, optgroup=key) for item in value
+                )
+            else:
+                normalized.append(SelectChoice(value=key, label=value))
+        return normalized
+    return [_to_select_choice(choice) for choice in choices]
 
 
 class ChoiceField(wtforms.fields.SelectField):
@@ -20,24 +64,25 @@ class ChoiceField(wtforms.fields.SelectField):
         blank_text=None,
         **kwargs,
     ):
-        super().__init__(label, validators, coerce, choices, **kwargs)
+        super().__init__(
+            label=label,
+            validators=validators,
+            coerce=coerce,
+            choices=normalize_choices(choices),
+            **kwargs,
+        )
         self.allow_blank = allow_blank
         self.blank_text = blank_text or " "
 
     def iter_choices(self):
         if self.allow_blank:
-            yield ("", self.blank_text, self.data is None, {})
+            yield Choice("", self.blank_text, self.data is None, {})
+        yield from super().iter_choices()
 
-        for choice in self.choices:
-            if isinstance(choice, tuple):
-                yield (choice[0], choice[1], self.coerce(choice[0]) == self.data, {})
-            else:
-                yield (
-                    choice.value,
-                    choice.name,
-                    self.coerce(choice.value) == self.data,
-                    {},
-                )
+    def iter_groups(self):
+        if self.allow_blank:
+            yield None, [Choice("", self.blank_text, self.data is None, {})]
+        yield from super().iter_groups()
 
     def process_data(self, value):
         if value is None:
@@ -49,14 +94,18 @@ class ChoiceField(wtforms.fields.SelectField):
                 self.data = None
 
     def process_formdata(self, valuelist):
-        if valuelist:
-            if self.allow_blank and valuelist[0] == "":
-                self.data = None
-            else:
-                try:
-                    self.data = self.coerce(valuelist[0])
-                except ValueError:
-                    raise ValueError(self.gettext("Invalid Choice: could not coerce"))
+        if not valuelist:
+            return
+        if self.allow_blank and valuelist[0] == "":
+            self.data = None
+            return
+        try:
+            self.data = self.coerce(valuelist[0])
+        except (ValueError, TypeError) as exc:
+            raise ValueError(
+                self.invalid_value_message
+                or self.gettext("Invalid Choice: could not coerce.")
+            ) from exc
 
     def pre_validate(self, form):
         if self.allow_blank and self.data is None:

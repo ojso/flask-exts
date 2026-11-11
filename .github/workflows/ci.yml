@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Run test suite
+        run: uv run pytest -q
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Measure coverage
+        run: |
+          uv run coverage run -m pytest -q
+          uv run coverage report -m
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data
+          path: .coverage
+          if-no-files-found: error
+
+  lint:
+    name: Lint changed files
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Ruff on changed Python files
+        run: |
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMRT \
+            "origin/${{ github.base_ref }}...HEAD" -- '*.py')
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No Python files changed."
+            exit 0
+          fi
+          uv run ruff check "${files[@]}"
+          uv run ruff format --check "${files[@]}"
+
+      - name: djLint on changed templates
+        run: |
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMRT \
+            "origin/${{ github.base_ref }}...HEAD" \
+            -- 'src/flask_exts/templates/*.html' \
+               'src/flask_exts/templates/**/*.html')
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No templates changed."
+            exit 0
+          fi
+          uv run python -m djlint "${files[@]}" --check

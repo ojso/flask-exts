@@ -58,7 +58,10 @@ class EditableWidget:
             kwargs["data-role"] = "x-editable-boolean"
         elif field.type in ["ChoiceField", "SelectField"]:
             kwargs["data-type"] = "select"
-            choices = [{"value": x, "label": y} for x, y in field.choices]
+            choices = [
+                {"value": choice.value, "label": choice.label}
+                for choice in field.choices
+            ]
             if getattr(field, "allow_blank", False):
                 choices.insert(0, {"value": "", "label": ""})
             kwargs["data-options"] = json.dumps(choices)

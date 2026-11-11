@@ -4,15 +4,13 @@ run them locally.
 Setup
 -----
 
-Clone the repository and create a virtual environment:
+Clone the repository and install the development environment with uv:
 
 .. code-block:: bash
 
     $ git clone https://github.com/ojso/flask-exts.git
     $ cd flask-exts
-    $ python3 -m venv venv
-    $ source venv/bin/activate
-    $ pip install -e .
+    $ uv sync
 
 Run the examples
 ----------------
@@ -28,7 +26,7 @@ This example creates a minimal page and registers it with the admin interface.
 .. code-block:: bash
 
     $ cd examples/simple
-    $ flask --app __init__ run
+    $ uv run flask --app __init__ run
 
 The app will be available at ``http://localhost:5000``.
 
@@ -45,7 +43,7 @@ Default login:
 .. code-block:: bash
 
     $ cd examples/demo
-    $ flask --app __init__ run
+    $ uv run flask --app __init__ run
 
 The app will be available at ``http://localhost:5000``.
 

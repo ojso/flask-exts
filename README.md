@@ -23,7 +23,13 @@ dependency-aware extension system. The project is inspired by
 
 ## Installation
 
-Flask-Exts requires Python 3.10 or later. Install it with pip:
+Flask-Exts requires Python 3.11 or later. Add it to your project with uv:
+
+```console
+uv add flask-exts
+```
+
+With pip:
 
 ```console
 pip install flask-exts

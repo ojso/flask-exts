@@ -1,10 +1,10 @@
 .PHONY: docs-build docs-serve docs-clean ruff-check ruff-format-check djlint-check djlint-format
 
 docs-build:
-	python -m sphinx -b html docs docs/_build/html -W -n --keep-going
+	uv run python -m sphinx -b html docs docs/_build/html -W -n --keep-going
 
 docs-serve:
-	python -m http.server -d docs/_build/html 8000
+	uv run python -m http.server -d docs/_build/html 8000
 
 docs-clean:
 	rm -rf docs/_build
@@ -12,34 +12,34 @@ docs-clean:
 docs-rebuild: docs-clean docs-build
 
 test:
-	pytest
+	uv run pytest
 
 ruff-check:
-	python -m ruff check .
+	uv run python -m ruff check .
 
 ruff-format-check:
-	python -m ruff format --check .
+	uv run python -m ruff format --check .
 
 djlint-check:
-	python -m djlint src/flask_exts/templates --check
+	uv run python -m djlint src/flask_exts/templates --check
 
 djlint-format:
-	python -m djlint src/flask_exts/templates --reformat
+	uv run python -m djlint src/flask_exts/templates --reformat
 
 pytest-last:
-	pytest --lf --last-failed-no-failures=none
+	uv run pytest --lf --last-failed-no-failures=none
 
 pytest-clean:
 	rm -rf .pytest_cache
 
 pytest-warn:
-	pytest -W error
+	uv run pytest -W error
 
 pytest-print:
-	pytest -s
+	uv run pytest -s
 
 coverage:
-	coverage run -m pytest
+	uv run coverage run -m pytest
 
 coverage-report:
-	coverage report -m
+	uv run coverage report -m

@@ -94,9 +94,9 @@ def test_fieldlist(post_data_factory):
     f = F3(formdata)
     assert len(f.a.entries) == 4
     assert f.a.data == ["foo", "bar", "", "qux"]
-    assert f.a.entries[1].name == "a-3"
+    assert f.a.entries[1].name == "a-1"
     assert f.a.entries[1].data == "bar"
-    assert f.a.entries[3].name == "a-7"
+    assert f.a.entries[3].name == "a-3"
     assert f.a.entries[3].data == "qux"
 
 

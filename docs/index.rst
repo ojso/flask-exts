@@ -16,9 +16,15 @@ Highlights
 Getting started
 ---------------
 
-Flask-Exts requires Python 3.10 or later. Install it with pip:
+Flask-Exts requires Python 3.11 or later. Add it to your project with uv:
 
 .. _installation:
+
+.. code-block:: console
+
+   uv add flask-exts
+
+With pip:
 
 .. code-block:: console
 

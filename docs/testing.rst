@@ -7,23 +7,38 @@ models, and validation.
 Running tests
 -------------
 
-The project uses `pytest <https://pytest.org/>`_. From the project root, with
-the repository virtual environment activated, run the full test suite:
+The project uses `pytest <https://pytest.org/>`_. From the project root, run
+the full test suite:
 
 .. code-block:: console
 
-    $ python -m pytest -q
+    $ uv run python -m pytest -q
 
 Run a single file or test case while iterating:
 
 .. code-block:: console
 
-    $ python -m pytest -q tests/unit/forms/fields/test_json.py
-    $ python -m pytest -q tests/unit/forms/fields/test_json.py::test_json_field
+    $ uv run python -m pytest -q tests/unit/forms/fields/test_json.py
+    $ uv run python -m pytest -q tests/unit/forms/fields/test_json.py::test_json_field
 
-The ``make test`` and ``make coverage`` targets also work, but they call
-``pytest`` and ``coverage`` directly, so the virtual environment must be
-activated first.
+The ``make test`` and ``make coverage`` targets also work; they run commands
+through ``uv run``, so no manual activation is required.
+
+Deprecation warnings are errors under the project pytest configuration. Fix the
+code or dependency behavior instead of filtering warnings in individual tests.
+
+Continuous integration
+----------------------
+
+GitHub Actions runs the test suite on Python 3.11, 3.12, and 3.13 for pushes and
+pull requests (``.github/workflows/ci.yml``). Python 3.11 is the minimum
+supported version and Python 3.13 is the primary development version (Debian 13
+stable); 3.12 remains in the matrix as an intermediate check. The workflow has
+three jobs:
+``tests`` runs ``uv run pytest -q`` on each Python version, ``coverage`` runs
+the suite under ``coverage`` and reports the result, and ``lint`` checks Ruff
+and djLint only for files changed in a pull request, because the repository has
+pre-existing formatting findings.
 
 Test organization
 -----------------

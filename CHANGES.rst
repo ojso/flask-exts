@@ -3,18 +3,24 @@ Changelog
 
 All notable changes to this project are documented in this file.
 
-The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.1.0/>`_
-and this project adheres to
-`Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
+0.4.1 - 2026-11-11
+------------------
 
-Unreleased
-----------
+Changed
+~~~~~~~
+
+- Use uv for development setup and dependency management; installing
+  development dependencies with pip is deprecated.
+- Require WTForms 3.3.2 or later.
 
 Fixed
 ~~~~~
 
 - Format ``time`` and ``datetime`` values in admin views as ``HH:MM:SS`` and
   ``YYYY-MM-DD HH:MM:SS``.
+- Avoid WTForms 3.3 deprecation warnings and support string, dict,
+  callable, and three-item tuple ``choices`` in ``ChoiceField``, while
+  preserving ``render_kw`` and ``optgroup`` when rendering.
 
 0.4.0 - 2026-11-04
 ------------------
