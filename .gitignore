@@ -20,6 +20,7 @@ build/
 .cache/
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
 
 # djlint
