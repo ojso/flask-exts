@@ -1,5 +1,5 @@
 from wtforms import PasswordField, StringField, SubmitField
-from wtforms.validators import DataRequired, EqualTo, Length, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 
 from ...proxies import current_userstore
 from . import Form
@@ -9,7 +9,7 @@ class RegisterForm(Form):
     username = StringField(
         "Username", validators=[DataRequired(), Length(min=6, max=50)]
     )
-    email = StringField("Email", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired(), Email(), Length(max=254)])
     password = PasswordField(
         "Password", validators=[DataRequired(), Length(min=8, max=50)]
     )

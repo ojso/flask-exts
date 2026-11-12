@@ -100,7 +100,6 @@ class TestSecurity:
                 password="session-password",
                 email="session-user@example.com",
             )
-            current_userstore.user_set(user, is_active=True)
             old_session_user_id = user.get_id()
 
         with app.test_client() as client:

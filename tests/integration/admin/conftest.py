@@ -18,7 +18,6 @@ def _create_admin_user():
         password="admin_test_password",
         email="admin_test_user@example.com",
     )
-    current_userstore.user_set(user, is_active=True)
     role = current_userstore.create_role("admin")
     current_userstore.user_add_role(user, role)
     return user

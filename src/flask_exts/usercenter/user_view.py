@@ -13,7 +13,7 @@ from flask import (
 from flask_login import current_user, login_user, logout_user
 from werkzeug.datastructures import MultiDict
 
-from ..admin import View, expose_url, login_required, requires_active
+from ..admin import View, expose_url, login_required
 from ..constants import NO_CACHE_HEADER
 from ..proxies import current_security, current_userstore
 from ..security import (
@@ -81,15 +81,9 @@ class UserView(View):
     @login_required
     @expose_url("/profile/")
     def profile(self):
-        # Deliberately NOT @requires_active: this page is how an unverified
-        # (is_active=False) account finds the "resend verification email"
-        # action. The actual account-authenticated features it links to
-        # (change_password, email_change, enable_tfa) each enforce
-        # @requires_active themselves.
         return self.render("user/profile.html", resend_form=ResendVerificationForm())
 
     @login_required
-    @requires_active
     @expose_url("/email_change/", methods=("GET", "POST"))
     def email_change(self):
         form = EmailChangeForm()
@@ -139,12 +133,13 @@ class UserView(View):
                 next_page = safe_redirect_target(
                     request.args.get("next"), url_for(".index")
                 )
-                if user.tfa_enabled:
-                    # Do NOT log the user in yet. Only the password has been
-                    # verified; the login is not complete until the TFA code
-                    # is also verified. Stash the pending user id instead of
-                    # establishing a login session, so there is no window
-                    # where a password-only login grants access to anything.
+                if not user.is_active:
+                    form.username.errors.append(
+                        "This account has been disabled. "
+                        "Please contact an administrator."
+                    )
+                elif user.tfa_enabled:
+                    # Defer login until the second factor is verified.
                     session[SESSION_KEY_PENDING_TFA_USER_ID] = user.id
                     login_kwargs = {}
                     if hasattr(form, "remember_me"):
@@ -153,16 +148,14 @@ class UserView(View):
                         "remember", False
                     )
                     return redirect(url_for(".verify_tfa", next=next_page))
-
-                login_kwargs = {}
-                if hasattr(form, "remember_me"):
-                    login_kwargs["remember"] = form.remember_me.data
-                # force=True to bypass the is_active check, since we handle it
-                # in the allow method
-                if not login_user(user, force=True, **login_kwargs):
-                    form.username.errors.append("Invalid username or password.")
                 else:
-                    return redirect(next_page)
+                    login_kwargs = {}
+                    if hasattr(form, "remember_me"):
+                        login_kwargs["remember"] = form.remember_me.data
+                    if not login_user(user, **login_kwargs):
+                        form.username.errors.append("Invalid username or password.")
+                    else:
+                        return redirect(next_page)
         return self.render(self.login_template, form=form)
 
     @expose_url("/register/", methods=("GET", "POST"))
@@ -226,7 +219,6 @@ class UserView(View):
         return self.render(self.verify_email_template, result=result)
 
     @login_required
-    @requires_active
     @expose_url("/enable_tfa/", methods=("GET", "POST"))
     def enable_tfa(self):
         enable = request.args.get("enable")
@@ -284,7 +276,6 @@ class UserView(View):
         return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
     @login_required
-    @requires_active
     @expose_url("/setup_tfa/")
     def setup_tfa(self):
         if current_user.tfa_enabled:
@@ -315,7 +306,7 @@ class UserView(View):
             return None
 
         user = current_userstore.get_user_by_id(pending_user_id)
-        if user is None or not user.tfa_enabled:
+        if user is None or not user.tfa_enabled or not user.is_active:
             session.pop(SESSION_KEY_PENDING_TFA_USER_ID, None)
             session.pop("_pending_tfa_remember", None)
             return None
@@ -341,9 +332,7 @@ class UserView(View):
             if tfa.verify_totp(user.get_totp_secret(), form.code.data):
                 remember = session.pop("_pending_tfa_remember", False)
                 session.pop(SESSION_KEY_PENDING_TFA_USER_ID, None)
-                # Only now, with both factors verified, does a login session
-                # get created.
-                if not login_user(user, force=True, remember=remember):
+                if not login_user(user, remember=remember):
                     flash("Invalid username or password.", "error")
                     return redirect(url_for(".login"))
                 session.pop(SESSION_KEY_TFA_RECOVERY, None)
@@ -382,9 +371,7 @@ class UserView(View):
                 current_userstore.user_set(user, recovery_codes=remaining_codes)
                 remember = session.pop("_pending_tfa_remember", False)
                 session.pop(SESSION_KEY_PENDING_TFA_USER_ID, None)
-                # A spent recovery code proves the second factor just as a
-                # TOTP code would, so this also completes the login.
-                if not login_user(user, force=True, remember=remember):
+                if not login_user(user, remember=remember):
                     flash("Invalid username or password.", "error")
                     return redirect(url_for(".login"))
                 session[SESSION_KEY_TFA_RECOVERY] = True
@@ -398,7 +385,6 @@ class UserView(View):
         return self.render("user/recovery.html", form=form)
 
     @login_required
-    @requires_active
     @expose_url("/rebind_tfa/", methods=("GET", "POST"))
     def rebind_tfa(self):
         if (
@@ -450,7 +436,6 @@ class UserView(View):
         )
 
     @login_required
-    @requires_active
     @expose_url("/change_password/", methods=("GET", "POST"))
     def change_password(self):
         form = ChangePasswordForm()
@@ -501,7 +486,6 @@ class UserView(View):
         return self.render("user/reset_password.html", form=form)
 
     @login_required
-    @requires_active
     @expose_url("/recovery_codes/")
     def recovery_codes(self):
         if not current_user.tfa_enabled or not session.get(SESSION_KEY_TFA_VERIFIED):

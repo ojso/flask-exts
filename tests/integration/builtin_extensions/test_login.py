@@ -31,7 +31,6 @@ def test_authorization_bearer(app, username, password, email):
             password=password,
             email=email,
         )
-        current_userstore.user_set(user, is_active=True)
         assert user is not None
         assert user.id > 0
         token = jwt_encode({"id": user.id})

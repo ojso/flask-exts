@@ -276,14 +276,49 @@ def test_shutdown_reverse_order(registry):
     assert record.index("shutdown:b") < record.index("shutdown:a")
 
 
-def test_shutdown_exception(registry):
-    """an exception thrown by shutdown."""
+def test_shutdown_exception_is_isolated(registry):
+    """A failing shutdown is isolated and the remaining extensions still close."""
     record = []
     registry.register(make_extension("a", record=record))
     registry.register(
         make_extension("b", record=record, shutdown_error=ValueError("boom"))
     )
+    registry.register(make_extension("c", record=record))
     registry.init_all(None)
 
-    with pytest.raises(ValueError, match="boom"):
+    with pytest.warns(UserWarning, match="Error shutting down b: boom"):
+        registry.shutdown_all()
+
+    assert "shutdown:c" in record
+    assert "shutdown:a" in record
+    assert record.index("shutdown:c") < record.index("shutdown:a")
+    assert not any(registry.is_initialized(name) for name in ("a", "b", "c"))
+
+
+def test_extension_error_is_isolated(registry):
+    """ExtensionError remains isolated like any other Exception."""
+    record = []
+    registry.register(
+        make_extension(
+            "a", record=record, shutdown_error=ExtensionError("extension boom")
+        )
+    )
+    registry.register(make_extension("b", record=record))
+    registry.init_all(None)
+
+    with pytest.warns(UserWarning, match="Error shutting down a: extension boom"):
+        registry.shutdown_all()
+
+    assert "shutdown:b" in record
+    assert not registry.is_initialized("a")
+
+
+def test_shutdown_does_not_catch_base_exception(registry):
+    """BaseException (e.g. KeyboardInterrupt) must not be swallowed."""
+    registry.register(
+        make_extension("a", shutdown_error=KeyboardInterrupt("interrupted"))
+    )
+    registry.init_all(None)
+
+    with pytest.raises(KeyboardInterrupt, match="interrupted"):
         registry.shutdown_all()

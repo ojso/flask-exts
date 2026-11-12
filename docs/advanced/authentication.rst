@@ -43,37 +43,29 @@ requirement:
    # For a regular Flask route, use Flask-Login directly:
    from flask_login import login_required
 
-Active-account checks
----------------------
+Disabled accounts
+-----------------
 
-Authentication and account activity are separate checks. Flask-Login
-determines whether a user is authenticated; ``requires_active`` ensures an
-authenticated but disabled account cannot use a protected feature. This is
-useful for views with ``allow_access = True`` for public endpoints such as
-login or registration:
+``is_active`` is an administrative lock, independent of email verification.
+Disabled accounts cannot log in: the login view refuses them, and the Flask-Login
+``user_loader`` rejects a disabled account's existing session on its next
+request, clearing the session id and the remember-me cookie. The JWT
+``request_loader`` also checks ``is_active``.
 
-.. code-block:: python
+Protected routes therefore only need ``login_required``; disabled accounts are
+already anonymous by the time authorization runs. Views that set
+``allow_access = True`` stay public for anonymous users such as login and
+registration.
 
-   from flask_exts.admin import (
-       View,
-       expose_url,
-       login_required,
-       requires_active,
-   )
+API authentication
+------------------
 
-   class AccountView(View):
-       allow_access = True
+Flask-Login's ``request_loader`` only accepts a Bearer token in the
+``Authorization`` header::
 
-       @login_required
-       @requires_active
-       @expose_url("/settings/")
-       def settings(self):
-           return "Account settings"
+   Authorization: Bearer <JWT>
 
-Keep this decorator order. The login check handles anonymous users first;
-once the user is authenticated, Flask-Exts authorization checks that the
-account is active. Methods that must remain reachable by inactive users (for
-example, a page used to resend an account verification email) should use
-``login_required`` without ``requires_active``.
+API-key query parameters (``?api_key=...``) and HTTP Basic authentication are
+not supported and are not checked.
 
 See :doc:`modelview` for authorization of model views.

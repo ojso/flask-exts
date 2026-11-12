@@ -4,6 +4,15 @@ from .smtp import SmtpError
 from .verify_email_sender import VerifyEmailSender
 
 
+def _mask_recipient(data):
+    """Return a log-safe recipient for an email payload."""
+    recipient = data.get("email")
+    if not isinstance(recipient, str) or "@" not in recipient:
+        return "<unknown>"
+    local, domain = recipient.rsplit("@", 1)
+    return f"{local[:1]}***@{domain}"
+
+
 class Emailer:
     def __init__(self, app=None):
         self.app = None
@@ -15,15 +24,6 @@ class Emailer:
         self.app = app
         self.subscribe_signal(app)
         self.register_senders()
-        # TODO: add logger.warning
-        # if "verify_email" not in self.senders:
-        #     app.logger.warning(
-        #         "Please configure the NOREPLY_EMAIL_SENDER in your app config."
-        #     )
-        # if "reset_password" not in self.senders:
-        #     app.logger.warning(
-        #         "Please configure the NOREPLY_EMAIL_SENDER in your app config."
-        #     )
 
     def subscribe_signal(self, app):
         to_send_email.connect(self.send, app)
@@ -38,10 +38,10 @@ class Emailer:
         """Send an email using a registered sender."""
         if name not in self.senders:
             self.app.logger.warning(
-                f"Email can not send data: {data}, because it can not find "
-                f"the sender: {name}"
+                "Email sender not found: type=%s recipient=%s",
+                name,
+                _mask_recipient(data),
             )
-            # raise ValueError(f"Email can not find the sender: {name}")
             return
         sender = self.senders.get(name)
         try:

@@ -1,7 +1,7 @@
 import datetime
 
 import jwt
-from flask import current_app
+from flask import current_app, has_request_context, session
 from flask_login import LoginManager
 
 from ..extension_core.base import Extension
@@ -36,6 +36,12 @@ def user_loader(user_id):
     except (AttributeError, TypeError, ValueError):
         return None
     if user is None:
+        return None
+    if not user.is_active:
+        # Revoke the disabled account's session and remember-me cookie.
+        if has_request_context():
+            session.pop("_user_id", None)
+            session["_remember"] = "clear"
         return None
     if not current_security.hasher.verify(user.password or "", password_fingerprint):
         return None
@@ -90,28 +96,6 @@ def authorization_decoder(authstr: str):
 
 
 def load_user_from_request(request):
-    # first, try to login using the api_key url arg
-    # api_key = request.args.get('api_key')
-    # if api_key:
-    #     user = User.query.filter_by(api_key=api_key).first()
-    #     if user:
-    #         return user
-
-    # next, try to login using Basic Auth
-    # Basic is vulnerable, and not to use.
-    # api_key = request.headers.get('Authorization')
-    # if api_key:
-    #     api_key = api_key.replace('Basic ', '', 1)
-    #     try:
-    #         api_key = base64.b64decode(api_key)
-    #     except TypeError:
-    #         pass
-    #     user = User.query.filter_by(api_key=api_key).first()
-    #     if user:
-    #         return user
-
-    # next, try to login using Bearer Jwt and load user
-
     if "Authorization" in request.headers:
         authstr = request.headers.get("Authorization")
         try:

@@ -1,3 +1,5 @@
+import warnings
+
 from .base import (
     Extension,
     ExtensionDependencyError,
@@ -222,13 +224,11 @@ class ExtensionRegistry:
             ext = self.get_extension(name)
             try:
                 ext.shutdown()
-            except ExtensionError as e:
-                # Log but don't raise during shutdown
-                import warnings
-
-                warnings.warn(f"Error shutting down {ext.name}: {e}")
-            self._initialized.discard(name)
-            self._post_initialized.discard(name)
+            except Exception as e:  # noqa: BLE001 - shutdown must isolate failures
+                warnings.warn(f"Error shutting down {ext.name}: {e}", stacklevel=2)
+            finally:
+                self._initialized.discard(name)
+                self._post_initialized.discard(name)
 
     def init(self, name: str, app) -> None:
         """Initialize a single extension by name.

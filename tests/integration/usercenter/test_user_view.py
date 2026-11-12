@@ -14,21 +14,28 @@ from flask_exts.security import (
 )
 from flask_exts.usercenter.forms.email_change import EmailChangeForm
 
-mail_data = []
+
+@pytest.fixture
+def mail_outbox():
+    """Per-test mailbox for messages captured by EmailSender."""
+    return []
 
 
 class EmailSender(Sender):
+    def __init__(self, outbox):
+        self.outbox = outbox
+
     def send(self, data):
-        mail_data.append(data)
+        self.outbox.append(data)
 
 
 class TestUserView:
     @pytest.fixture
-    def setup(self, app, client):
+    def setup(self, app, client, mail_outbox):
         with app.app_context():
             db.create_all()
 
-        email_sender = EmailSender()
+        email_sender = EmailSender(mail_outbox)
         email = app.extensions["exts"].get_extension("emailer").get_emailer()
         email.register_sender("verify_email", email_sender)
         email.register_sender("reset_password", email_sender)
@@ -65,7 +72,7 @@ class TestUserView:
         self.test_email = "test1234@test.com"
 
     @pytest.fixture
-    def register_user(self, app, client, setup):
+    def register_user(self, app, client, setup, mail_outbox):
         client.post(
             self.user_register_url,
             data={
@@ -86,7 +93,7 @@ class TestUserView:
             assert user.is_active is True
             assert user.email_verified is False
 
-        verification_link = mail_data[-1]["verification_link"]
+        verification_link = mail_outbox[-1]["verification_link"]
         client.get(verification_link, follow_redirects=True)
 
     @pytest.fixture
@@ -103,7 +110,7 @@ class TestUserView:
         with client.session_transaction() as sess:
             assert "_user_id" in sess
 
-    def test_register(self, client, setup):
+    def test_register(self, client, setup, mail_outbox):
         with client.application.app_context():
             current_security.get_plugin("authorizer").admin_allow_access = False
 
@@ -178,7 +185,7 @@ class TestUserView:
 
         # The emailed verification link marks the email verified without
         # requiring another login, and without touching is_active.
-        verification_link = mail_data[-1]["verification_link"]
+        verification_link = mail_outbox[-1]["verification_link"]
         rv = client.get(verification_link, follow_redirects=True)
         assert rv.status_code == 200
         assert self.test_username in rv.text
@@ -213,6 +220,24 @@ class TestUserView:
         with app.app_context():
             assert current_userstore.get_user_by_username(self.test_username) is None
 
+    def test_register_rejects_invalid_email(self, app, client, setup):
+        rv = client.post(
+            self.user_register_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "password_repeat": self.test_password,
+                "email": "not-an-email",
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+
+        assert rv.status_code == 200
+        assert "Invalid email address." in rv.text
+        with app.app_context():
+            assert current_userstore.get_user_by_username(self.test_username) is None
+
     def test_email_change_form_rejects_duplicate_email(self, app, setup):
         with app.app_context():
             current_userstore.create_user(
@@ -231,7 +256,7 @@ class TestUserView:
             assert not form.validate()
             assert form.email.errors == ["Email already exists."]
 
-    def test_resend_email_verification(self, app, client, setup):
+    def test_resend_email_verification(self, app, client, setup, mail_outbox):
         with app.app_context():
             current_userstore.create_user(
                 username=self.test_username,
@@ -259,7 +284,7 @@ class TestUserView:
         assert "Change Password" in rv.text
         assert "Two-Factor" in rv.text
 
-        sent_before = len(mail_data)
+        sent_before = len(mail_outbox)
         rv = client.post(
             self.user_resend_verification_url,
             data={"csrf_token": self.csrf_token},
@@ -268,17 +293,17 @@ class TestUserView:
         assert rv.status_code == 200
         assert rv.request.path.endswith("/profile/")
         assert "A new verification email has been sent." in rv.text
-        assert len(mail_data) == sent_before + 1
-        assert mail_data[-1]["email"] == self.test_email
+        assert len(mail_outbox) == sent_before + 1
+        assert mail_outbox[-1]["email"] == self.test_email
 
-        rv = client.get(mail_data[-1]["verification_link"])
+        rv = client.get(mail_outbox[-1]["verification_link"])
         assert rv.status_code == 200
         with app.app_context():
             user = current_userstore.get_user_by_username(self.test_username)
             assert user.email_verified is True
 
     def test_change_email_requires_confirmation(
-        self, app, client, register_and_login_user
+        self, app, client, register_and_login_user, mail_outbox
     ):
         new_email = "updated@example.com"
         rv = client.get(self.user_profile_url)
@@ -298,14 +323,14 @@ class TestUserView:
         )
         assert rv.status_code == 200
         assert "confirmation link has been sent" in rv.text.lower()
-        assert mail_data[-1]["email"] == new_email
+        assert mail_outbox[-1]["email"] == new_email
 
         with app.app_context():
             user = current_userstore.get_user_by_id(self.test_user_id)
             assert user.email == self.test_email
             assert user.email_verified is True
 
-        rv = client.get(mail_data[-1]["verification_link"])
+        rv = client.get(mail_outbox[-1]["verification_link"])
         assert rv.status_code == 200
         assert "Your email address has been verified." in rv.text
         with app.app_context():
@@ -314,9 +339,9 @@ class TestUserView:
             assert user.email_verified is True
 
     def test_change_email_requires_correct_password(
-        self, app, client, register_and_login_user
+        self, app, client, register_and_login_user, mail_outbox
     ):
-        sent_before = len(mail_data)
+        sent_before = len(mail_outbox)
         rv = client.post(
             self.user_email_change_url,
             data={
@@ -328,12 +353,12 @@ class TestUserView:
         )
         assert rv.status_code == 200
         assert "Invalid password." in rv.text
-        assert len(mail_data) == sent_before
+        assert len(mail_outbox) == sent_before
 
     def test_change_email_rejects_invalid_address(
-        self, client, register_and_login_user
+        self, client, register_and_login_user, mail_outbox
     ):
-        sent_before = len(mail_data)
+        sent_before = len(mail_outbox)
         rv = client.post(
             self.user_email_change_url,
             data={
@@ -345,7 +370,7 @@ class TestUserView:
         )
         assert rv.status_code == 200
         assert "Invalid email address." in rv.text
-        assert len(mail_data) == sent_before
+        assert len(mail_outbox) == sent_before
 
     def test_login_required_precedes_view_authorization(self, client, setup):
         response = client.get(self.user_setup_tfa_url)
@@ -622,32 +647,22 @@ class TestUserView:
                 f"(status={rv.status_code})"
             )
 
-    def test_inactive_account_blocked_from_account_features(
+    def test_disabling_account_invalidates_existing_session(
         self, app, client, register_and_login_user
     ):
-        """Dedicated regression test for the is_active bypass: with
-        ADMIN_ALLOW_ACCESS off (the real default -- the conftest fixture
-        turning it on is a test-only convenience, not the production
-        default), an administratively disabled account's still-valid
-        session must not reach account-authenticated features, while
-        genuinely public endpoints and the profile view remain open.
-
-        is_active is independent of email_verified (see test_register):
-        this test simulates an admin explicitly disabling the account, not
-        an unverified email.
+        """Disabling an account takes effect on the next request: user_loader
+        rejects inactive users and clears the session, so every login-required
+        page redirects to the login page. Re-enabling the account does not
+        resurrect the old cookie; a fresh login is required.
         """
         with app.app_context():
-            current_security.get_plugin("authorizer").admin_allow_access = False
             current_userstore.user_set(
                 current_userstore.get_user_by_id(self.test_user_id), is_active=False
             )
 
-        # Still reachable while disabled: viewing profile.
-        assert client.get(self.user_index_url).status_code == 200
-        assert client.get(self.user_profile_url).status_code == 200
-
-        # Blocked while inactive: every account-authenticated feature.
         for url in (
+            self.user_index_url,
+            self.user_profile_url,
             self.user_change_password_url,
             self.user_email_change_url,
             self.user_enable_tfa_url,
@@ -655,17 +670,81 @@ class TestUserView:
             self.user_recovery_codes_url,
         ):
             rv = client.get(url)
-            assert rv.status_code == 403, (
-                f"{url} was reachable for an inactive account (status={rv.status_code})"
+            assert rv.status_code == 302, (
+                f"{url} was reachable after the account was disabled "
+                f"(status={rv.status_code})"
             )
+            assert self.user_login_url in rv.location
 
-        # Re-activating the account opens them back up.
+        with client.session_transaction() as sess:
+            assert "_user_id" not in sess
+
+        # Re-enabling the account does not make the old cookie valid again.
         with app.app_context():
             current_userstore.user_set(
                 current_userstore.get_user_by_id(self.test_user_id), is_active=True
             )
-        assert client.get(self.user_change_password_url).status_code == 200
-        assert client.get(self.user_setup_tfa_url).status_code == 200
+        assert client.get(self.user_index_url).status_code == 302
+
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        with client.session_transaction() as sess:
+            assert "_user_id" in sess
+
+    def test_disabled_account_cannot_log_in(self, app, client, register_user):
+        """is_active is an administrative lock: a disabled account must not
+        get a session even when the password is correct, and must not be
+        moved into the pending-TFA state either."""
+        with app.app_context():
+            current_userstore.user_set(
+                current_userstore.get_user_by_id(self.test_user_id),
+                tfa_enabled=True,
+                is_active=False,
+            )
+
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        assert "This account has been disabled." in rv.text
+        with client.session_transaction() as sess:
+            assert "_user_id" not in sess
+            assert SESSION_KEY_PENDING_TFA_USER_ID not in sess
+
+    def test_disabled_account_cannot_complete_pending_tfa(
+        self, app, client, register_user
+    ):
+        """A user disabled after the password step cannot finish TFA login."""
+        with app.app_context():
+            current_userstore.user_set(
+                current_userstore.get_user_by_id(self.test_user_id),
+                tfa_enabled=True,
+                is_active=False,
+            )
+
+        with client.session_transaction() as sess:
+            sess[SESSION_KEY_PENDING_TFA_USER_ID] = self.test_user_id
+
+        rv = client.get(self.user_verify_tfa_url, follow_redirects=True)
+        assert rv.status_code == 200
+        assert rv.request.path == self.user_login_url
+        with client.session_transaction() as sess:
+            assert SESSION_KEY_PENDING_TFA_USER_ID not in sess
+            assert "_user_id" not in sess
 
     def test_change_password(self, client, register_and_login_user):
         rv = client.get(self.user_change_password_url)
@@ -748,7 +827,7 @@ class TestUserView:
             assert "_user_id" in sess
         assert self.test_username in rv.text
 
-    def test_forgot_password(self, client, register_and_login_user):
+    def test_forgot_password(self, client, register_and_login_user, mail_outbox):
         # logout
         client.get(self.user_logout_url)
 
@@ -784,11 +863,11 @@ class TestUserView:
         )
         assert rv.status_code == 200
         assert rv.text == invalid_email_response
-        reset_password_mail_data = mail_data[-1]
-        assert reset_password_mail_data["type"] == "reset_password"
-        assert reset_password_mail_data["email"] == self.test_email
-        assert "reset_password_link" in reset_password_mail_data
-        reset_password_link = reset_password_mail_data["reset_password_link"]
+        reset_password_mail_outbox = mail_outbox[-1]
+        assert reset_password_mail_outbox["type"] == "reset_password"
+        assert reset_password_mail_outbox["email"] == self.test_email
+        assert "reset_password_link" in reset_password_mail_outbox
+        reset_password_link = reset_password_mail_outbox["reset_password_link"]
 
         rv = client.post(
             self.user_reset_password_url,
@@ -831,7 +910,7 @@ class TestUserView:
             assert "_user_id" in sess
         assert self.test_username in rv.text
 
-    def test_recovery(self, app, client, register_user):
+    def test_recovery(self, app, client, register_user, mail_outbox):
         rv = client.get(self.user_recovery_codes_url)
         assert rv.status_code == 302
 

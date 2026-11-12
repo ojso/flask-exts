@@ -24,33 +24,18 @@ class SimpleAuthorizer(Authorizer):
 
         user = kwargs.get("user")
 
-        # Check if the user has the "admin" role, if so, allow access
-        if hasattr(user, "get_roles") and "admin" in user.get_roles():
-            return True
-
         view = kwargs.get("view")
-        fn = kwargs.get("fn")
-
-        # @requires_active marks a specific method as an account-authenticated
-        # feature (change password, enable TFA, ...) rather than a genuinely
-        # public endpoint, even on a view class that otherwise sets
-        # allow_access = True for its public endpoints (login, register, ...).
-        # A disabled (is_active=False) account's still-valid session must not
-        # be able to use it -- but once active, it should still get the same
-        # free pass allow_access gives everyone else, not fall through to the
-        # admin/super_admin-only checks below (those are for admin RBAC, not
-        # for a user managing their own account).
-        if getattr(fn, "_requires_active", False) and not getattr(
-            user, "is_active", True
-        ):
-            return False
 
         if view is not None and getattr(view, "allow_access", False):
             return True
 
-        # Check if the user is active, if not, deny access
+        # Disabled accounts lose all authenticated privileges, including admin.
         if not getattr(user, "is_active", True):
             return False
+
+        # Check if the user has the "admin" role, if so, allow access
+        if hasattr(user, "get_roles") and "admin" in user.get_roles():
+            return True
 
         if (
             "role_need" in kwargs

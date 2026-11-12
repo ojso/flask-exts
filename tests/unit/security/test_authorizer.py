@@ -33,7 +33,15 @@ class TestSimpleAuthorizer:
         authorizer = SimpleAuthorizer()
         authorizer.init_app(FakeApp())
         user = MockUser(roles=["admin"])
+        user.is_active = True
         assert authorizer.allow(user=user) is True
+
+    def test_deny_inactive_admin_user(self):
+        authorizer = SimpleAuthorizer()
+        authorizer.init_app(FakeApp())
+        user = MockUser(roles=["admin"])
+        user.is_active = False
+        assert authorizer.allow(user=user) is False
 
     def test_deny_non_admin_user(self):
         authorizer = SimpleAuthorizer()
