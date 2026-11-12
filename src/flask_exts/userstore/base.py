@@ -44,5 +44,25 @@ class UserStore(ABC):
         """Persist a user instance to the backing store."""
 
     @abstractmethod
+    def login_user_by_username_password(self, username, password):
+        """Return the user matching the credentials.
+
+        Raises InvalidCredentialsError for unknown users or bad passwords,
+        and AccountLockedError while a login lockout is in effect.
+        """
+
+    @abstractmethod
+    def is_locked(self, user, now=None):
+        """Return True while a failed-login lockout is in effect."""
+
+    @abstractmethod
+    def record_login_failure(self, user, now=None):
+        """Count one failed authentication step and lock when the limit is hit."""
+
+    @abstractmethod
+    def clear_login_failures(self, user):
+        """Clear the failed-attempt state after a successful authentication."""
+
+    @abstractmethod
     def create_role(self, name):
         """Create a user role with the given name."""

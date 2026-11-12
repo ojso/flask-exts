@@ -3,40 +3,19 @@ Changelog
 
 All notable changes to this project are documented in this file.
 
-Unreleased
-----------
+0.4.2 - 2026-11-13
+------------------
 
-Changed
-~~~~~~~
-
-- Rename ``RowsActionHandler`` to ``BulkActionHandler`` and move the handlers
-  to ``row_actions.py`` / ``bulk_actions.py``.
-- Measure coverage for ``src/flask_exts`` only.
-
-Removed
-~~~~~~~
-
-- Remove the unused ``datastore/sqla/query_builders`` package.
-- Remove the ``requires_active`` decorator; disabled accounts are rejected at
-  login and their sessions are invalidated by ``user_loader``.
-- Remove commented-out API-key and Basic Auth placeholders from the request
-  loader; only Bearer JWT is supported.
-
-Fixed
+Added
 ~~~~~
 
-- Validate the registration email format and maximum length.
-- Encode admin list URLs with ``urlencode`` and remove the dead
-  ``hasattr`` branch in pagination.
-- Align admin list totals with the number of rows returned by the list query.
-- Deny inactive users with the admin role access to admin views.
-- Reject AJAX inline updates when the view disables editing.
-- Isolate extension shutdown exceptions so the remaining extensions
-  still close.
-- Log only the email type and a masked recipient when no sender is
-  registered, instead of the full payload.
-- Refuse login for disabled accounts and invalidate their existing
-  sessions in ``user_loader``.
+- Add failed-login lockout to ``SqlaUserStore``: ``users`` gains
+  ``failed_login_count`` and ``locked_until``, password and second-factor
+  failures share the counter, and the delay doubles up to a configurable cap.
+- Add the login contract to ``UserStore``
+  (``login_user_by_username_password``, ``is_locked``,
+  ``record_login_failure``, ``clear_login_failures``) so custom stores can
+  provide the same lockout behavior.
 
 0.4.1 - 2026-11-11
 ------------------

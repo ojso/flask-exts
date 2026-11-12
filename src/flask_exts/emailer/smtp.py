@@ -1,4 +1,5 @@
 import smtplib
+import ssl
 from email.message import EmailMessage
 
 from .sender import Sender
@@ -20,6 +21,7 @@ class SmtpSSL(Sender):
         self.user = user
         self.password = password
         self.timeout = timeout
+        self.ssl_context = ssl.create_default_context()
 
     def create_emsg(self, data):
         emsg = EmailMessage()
@@ -42,7 +44,12 @@ class SmtpSSL(Sender):
     def send(self, data):
         emsg = self.create_emsg(data)
         try:
-            with smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout) as smtp:
+            with smtplib.SMTP_SSL(
+                self.host,
+                self.port,
+                timeout=self.timeout,
+                context=self.ssl_context,
+            ) as smtp:
                 # smtp.set_debuglevel(1)
                 smtp.login(self.user, self.password)
                 senderrs = smtp.send_message(emsg)

@@ -1,12 +1,24 @@
+from datetime import datetime, timedelta
+
+from flask import current_app
 from sqlalchemy.sql import select
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..base import UserStore
-from ..exceptions import InvalidCredentialsError, UserAlreadyExistsError
+from ..exceptions import (
+    AccountLockedError,
+    InvalidCredentialsError,
+    UserAlreadyExistsError,
+)
 from . import db
 from .models import Role, User
 
 _DUMMY_PASSWORD_HASH = generate_password_hash("dummy-password", method="scrypt")
+
+_DEFAULT_MAX_FAILURES = 5
+_DEFAULT_LOCKOUT_BASE_SECONDS = 60
+_DEFAULT_LOCKOUT_MAX_SECONDS = 3600
+_MAX_BACKOFF_EXPONENT = 32
 
 
 class SqlaUserStore(UserStore):
@@ -69,16 +81,79 @@ class SqlaUserStore(UserStore):
         return user
 
     def login_user_by_username_password(self, username, password):
-        """Return a matching user or raise InvalidCredentialsError."""
+        """Return a matching user or raise InvalidCredentialsError.
+
+        A locked account raises AccountLockedError before the password is
+        checked, so attempts during a lockout cost no password-hash work.
+        A successful password check does not clear the failure counter;
+        the caller clears it once the whole login flow succeeds, which
+        keeps second-factor failures in the same consecutive-attempt count.
+        """
         password = password if isinstance(password, str) else ""
         stmt = select(self.user_class).filter_by(username=username)
         user = db.session.execute(stmt).scalar()
         if user is None or not user.password:
             check_password_hash(_DUMMY_PASSWORD_HASH, password)
             raise InvalidCredentialsError
+        now = datetime.now()
+        if self.is_locked(user, now):
+            raise AccountLockedError(user.locked_until, now)
         if not user.check_password(password):
+            self.record_login_failure(user, now)
             raise InvalidCredentialsError
         return user
+
+    def is_locked(self, user, now=None):
+        """Return True while a failed-login lockout is in effect."""
+        if user is None or user.locked_until is None:
+            return False
+        return user.locked_until > (now or datetime.now())
+
+    def record_login_failure(self, user, now=None):
+        """Count one failed authentication step and lock when the limit is hit.
+
+        Password and second-factor failures share the counter because both
+        are failed attempts against the same account.
+        """
+        max_failures, base_seconds, max_seconds = self._lockout_policy()
+        now = now or datetime.now()
+        count = (user.failed_login_count or 0) + 1
+        user.failed_login_count = count
+        if count >= max_failures:
+            exponent = min(count - max_failures, _MAX_BACKOFF_EXPONENT)
+            delay = min(base_seconds * 2**exponent, max_seconds)
+            user.locked_until = now + timedelta(seconds=delay)
+        db.session.commit()
+        return user.locked_until
+
+    def clear_login_failures(self, user):
+        """Clear the failed-attempt state after a successful authentication."""
+        if user.failed_login_count == 0 and user.locked_until is None:
+            return
+        user.failed_login_count = 0
+        user.locked_until = None
+        db.session.commit()
+
+    def _lockout_policy(self):
+        max_failures = current_app.config.get(
+            "USER_LOGIN_MAX_FAILURES", _DEFAULT_MAX_FAILURES
+        )
+        base_seconds = current_app.config.get(
+            "USER_LOGIN_LOCKOUT_BASE_SECONDS", _DEFAULT_LOCKOUT_BASE_SECONDS
+        )
+        max_seconds = current_app.config.get(
+            "USER_LOGIN_LOCKOUT_MAX_SECONDS", _DEFAULT_LOCKOUT_MAX_SECONDS
+        )
+        if max_failures < 1:
+            raise ValueError("USER_LOGIN_MAX_FAILURES must be at least 1.")
+        if base_seconds < 1:
+            raise ValueError("USER_LOGIN_LOCKOUT_BASE_SECONDS must be at least 1.")
+        if max_seconds < base_seconds:
+            raise ValueError(
+                "USER_LOGIN_LOCKOUT_MAX_SECONDS must be greater than or equal to "
+                "USER_LOGIN_LOCKOUT_BASE_SECONDS."
+            )
+        return max_failures, base_seconds, max_seconds
 
     def create_role(self, name):
         r = self.role_class(name=name)

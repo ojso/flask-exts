@@ -23,6 +23,8 @@ class User(db.Model, UserMixin):
     _is_active: Mapped[bool] = mapped_column("is_active", default=True)
     status: Mapped[int] = mapped_column(default=0)
     expired_at: Mapped[datetime | None]
+    failed_login_count: Mapped[int] = mapped_column(default=0)
+    locked_until: Mapped[datetime | None]
     email: Mapped[str | None] = mapped_column(unique=True)
     email_verified: Mapped[bool] = mapped_column(default=False)
     email_verified_at: Mapped[datetime | None]

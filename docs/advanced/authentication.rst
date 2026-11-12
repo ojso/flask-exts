@@ -57,6 +57,39 @@ already anonymous by the time authorization runs. Views that set
 ``allow_access = True`` stay public for anonymous users such as login and
 registration.
 
+Failed-login lockout
+--------------------
+
+``SqlaUserStore`` counts consecutive failed authentication steps on the user
+row (``failed_login_count`` and ``locked_until``). Password failures and
+second-factor failures share the counter, because both are failed attempts
+against the same account. The counter is cleared only after the whole login
+flow succeeds, or after a successful password reset.
+
+The account is locked once ``USER_LOGIN_MAX_FAILURES`` is reached. Each further
+failure doubles the delay, starting at ``USER_LOGIN_LOCKOUT_BASE_SECONDS`` and
+capped at ``USER_LOGIN_LOCKOUT_MAX_SECONDS``. While locked, the login view
+reports the remaining time, and a pending second-factor session cannot be
+resumed.
+
+Lockout state is separate from ``is_active``: it expires on its own, and an
+administrator can clear it with ``user_set(user, failed_login_count=0,
+locked_until=None)``. Because the counter lives on the user row, a lockout is
+independent of the client IP and shared by every application process using the
+same database. This complements, but does not replace, request-rate limiting at
+the reverse proxy: a proxy can still reject high-frequency traffic and attempts
+against usernames that do not exist.
+
+Custom user stores
+------------------
+
+``flask_exts.userstore.base.UserStore`` declares every member that
+``UserView`` relies on. A subclass that omits one cannot be instantiated, so a
+missing method fails at startup with the Python ABC error instead of later with
+``AttributeError`` during login. The login-related members are
+``login_user_by_username_password``, ``is_locked``,
+``record_login_failure``, and ``clear_login_failures``.
+
 API authentication
 ------------------
 

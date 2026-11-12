@@ -1,5 +1,3 @@
-from hmac import compare_digest
-
 from flask import (
     abort,
     current_app,
@@ -24,7 +22,11 @@ from ..security import (
 from ..security.exceptions import TokenActionError
 from ..security.urls import safe_redirect_target
 from ..signals import user_registered
-from ..userstore.exceptions import InvalidCredentialsError, UserAlreadyExistsError
+from ..userstore.exceptions import (
+    AccountLockedError,
+    InvalidCredentialsError,
+    UserAlreadyExistsError,
+)
 from .forms.change_password import ChangePasswordForm
 from .forms.email_change import EmailChangeForm
 from .forms.forgot_password import ForgotPasswordForm
@@ -127,7 +129,7 @@ class UserView(View):
                 user = current_userstore.login_user_by_username_password(
                     form.username.data, form.password.data
                 )
-            except InvalidCredentialsError as error:
+            except (AccountLockedError, InvalidCredentialsError) as error:
                 form[error.field].errors.append(str(error))
             else:
                 next_page = safe_redirect_target(
@@ -155,6 +157,7 @@ class UserView(View):
                     if not login_user(user, **login_kwargs):
                         form.username.errors.append("Invalid username or password.")
                     else:
+                        current_userstore.clear_login_failures(user)
                         return redirect(next_page)
         return self.render(self.login_template, form=form)
 
@@ -271,7 +274,9 @@ class UserView(View):
             session.pop(SESSION_KEY_TFA_VERIFIED, None)
             session.pop(SESSION_KEY_TFA_RECOVERY, None)
             session.pop(SESSION_KEY_PENDING_TFA_REBIND_SECRET, None)
-            current_userstore.user_set(current_user, totp_secret=None)
+            current_userstore.user_set(
+                current_user, totp_secret=None, recovery_codes=None
+            )
 
         return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
@@ -298,20 +303,34 @@ class UserView(View):
         """Resolve the user mid-login, pending TFA verification, if any.
 
         Clears the pending state and returns None when there is nothing
-        valid to resume (no pending login, unknown user, or TFA no longer
-        enabled on the account) so callers can bounce back to ``login``.
+        valid to resume (no pending login, unknown user, TFA no longer
+        enabled on the account, or an active login lockout) so callers can
+        bounce back to ``login``.
         """
         pending_user_id = session.get(SESSION_KEY_PENDING_TFA_USER_ID)
         if pending_user_id is None:
             return None
 
         user = current_userstore.get_user_by_id(pending_user_id)
-        if user is None or not user.tfa_enabled or not user.is_active:
+        if (
+            user is None
+            or not user.tfa_enabled
+            or not user.is_active
+            or current_userstore.is_locked(user)
+        ):
             session.pop(SESSION_KEY_PENDING_TFA_USER_ID, None)
             session.pop("_pending_tfa_remember", None)
             return None
 
         return user
+
+    def _record_second_factor_failure(self, user, message):
+        """Count a failed second-factor attempt and report the outcome."""
+        current_userstore.record_login_failure(user)
+        if current_userstore.is_locked(user):
+            flash(str(AccountLockedError(user.locked_until)), "error")
+            return
+        flash(message, "error")
 
     @expose_url("/verify_tfa/", methods=("GET", "POST"))
     def verify_tfa(self):
@@ -335,6 +354,7 @@ class UserView(View):
                 if not login_user(user, remember=remember):
                     flash("Invalid username or password.", "error")
                     return redirect(url_for(".login"))
+                current_userstore.clear_login_failures(user)
                 session.pop(SESSION_KEY_TFA_RECOVERY, None)
                 session.pop(SESSION_KEY_PENDING_TFA_REBIND_SECRET, None)
                 session[SESSION_KEY_TFA_VERIFIED] = True
@@ -342,7 +362,7 @@ class UserView(View):
                     request.args.get("next"), url_for(".index")
                 )
                 return redirect(next_page)
-            flash("Invalid code", "error")
+            self._record_second_factor_failure(user, "Invalid code")
 
         return self.render("user/verify_tfa.html", form=form)
 
@@ -361,9 +381,7 @@ class UserView(View):
         if form.validate_on_submit():
             matching_index = None
             for index, stored_code in enumerate(user.recovery_codes or []):
-                if current_security.hasher.verify(form.code.data, stored_code) or (
-                    compare_digest(form.code.data, stored_code)
-                ):
+                if current_security.hasher.verify(form.code.data, stored_code):
                     matching_index = index
             if matching_index is not None:
                 remaining_codes = list(user.recovery_codes or [])
@@ -374,6 +392,7 @@ class UserView(View):
                 if not login_user(user, remember=remember):
                     flash("Invalid username or password.", "error")
                     return redirect(url_for(".login"))
+                current_userstore.clear_login_failures(user)
                 session[SESSION_KEY_TFA_RECOVERY] = True
                 session[SESSION_KEY_TFA_VERIFIED] = True
                 next_page = safe_redirect_target(
@@ -381,7 +400,7 @@ class UserView(View):
                 )
                 return redirect(next_page)
             else:
-                flash("Invalid recovery code", "error")
+                self._record_second_factor_failure(user, "Invalid recovery code")
         return self.render("user/recovery.html", form=form)
 
     @login_required
@@ -415,6 +434,7 @@ class UserView(View):
                 current_userstore.user_set(
                     current_user,
                     totp_secret=session[SESSION_KEY_PENDING_TFA_REBIND_SECRET],
+                    recovery_codes=None,
                 )
                 session.pop(SESSION_KEY_PENDING_TFA_REBIND_SECRET, None)
                 session.pop(SESSION_KEY_TFA_RECOVERY, None)

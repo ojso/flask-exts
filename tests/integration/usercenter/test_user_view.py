@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timedelta
 
 import pytest
 from flask import session, url_for
@@ -461,6 +462,14 @@ class TestUserView:
         assert "Disable 2FA" in rv.text
         assert "data-modal-form" in rv.text
 
+        # Generate recovery codes so the disable path can be checked to
+        # invalidate them.
+        rv = client.get(self.user_recovery_codes_url)
+        assert rv.status_code == 200
+        with app.app_context():
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            assert u.recovery_codes
+
         # disable tfa
         with client.session_transaction() as sess:
             sess.pop(SESSION_KEY_TFA_VERIFIED, None)
@@ -481,6 +490,7 @@ class TestUserView:
             totp_code = tfa.get_totp_code(u.totp_secret)
 
         assert u.totp_secret is None
+        assert u.recovery_codes is None
 
         # refresh setup_tfa page to generate new totp_secret
         rv = client.get(self.user_setup_tfa_url)
@@ -739,6 +749,161 @@ class TestUserView:
         with client.session_transaction() as sess:
             sess[SESSION_KEY_PENDING_TFA_USER_ID] = self.test_user_id
 
+        rv = client.get(self.user_verify_tfa_url, follow_redirects=True)
+        assert rv.status_code == 200
+        assert rv.request.path == self.user_login_url
+        with client.session_transaction() as sess:
+            assert SESSION_KEY_PENDING_TFA_USER_ID not in sess
+            assert "_user_id" not in sess
+
+    def test_repeated_failed_logins_lock_the_account(self, app, client, register_user):
+        login_data = {
+            "username": self.test_username,
+            "password": "wrong-password",
+            "csrf_token": self.csrf_token,
+        }
+        for _ in range(5):
+            rv = client.post(
+                self.user_login_url, data=login_data, follow_redirects=True
+            )
+            assert rv.status_code == 200
+
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert "Too many failed sign-in attempts." in rv.text
+        with client.session_transaction() as sess:
+            assert "_user_id" not in sess
+
+        with app.app_context():
+            user = current_userstore.get_user_by_id(self.test_user_id)
+            assert user.failed_login_count == 5
+            assert current_userstore.is_locked(user) is True
+
+    def test_successful_login_clears_failed_attempts(self, app, client, register_user):
+        for _ in range(2):
+            client.post(
+                self.user_login_url,
+                data={
+                    "username": self.test_username,
+                    "password": "wrong-password",
+                    "csrf_token": self.csrf_token,
+                },
+                follow_redirects=True,
+            )
+        with app.app_context():
+            user = current_userstore.get_user_by_id(self.test_user_id)
+            assert user.failed_login_count == 2
+
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        with client.session_transaction() as sess:
+            assert "_user_id" in sess
+
+        with app.app_context():
+            user = current_userstore.get_user_by_id(self.test_user_id)
+            assert user.failed_login_count == 0
+            assert user.locked_until is None
+
+    def test_password_reset_clears_lockout(
+        self, app, client, register_user, mail_outbox
+    ):
+        with app.app_context():
+            user = current_userstore.get_user_by_id(self.test_user_id)
+            current_userstore.user_set(
+                user,
+                failed_login_count=5,
+                locked_until=datetime.now() + timedelta(minutes=30),
+            )
+
+        rv = client.post(
+            self.user_forgot_password_url,
+            data={"email": self.test_email, "csrf_token": self.csrf_token},
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        reset_password_link = mail_outbox[-1]["reset_password_link"]
+
+        new_password = "newpassword1234"
+        rv = client.post(
+            reset_password_link,
+            data={
+                "password": new_password,
+                "password_repeat": new_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        assert "Your password has been reset." in rv.text
+
+        with app.app_context():
+            user = current_userstore.get_user_by_id(self.test_user_id)
+            assert user.failed_login_count == 0
+            assert user.locked_until is None
+
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": new_password,
+                "csrf_token": self.csrf_token,
+            },
+            follow_redirects=True,
+        )
+        assert rv.status_code == 200
+        with client.session_transaction() as sess:
+            assert "_user_id" in sess
+
+    def test_failed_tfa_codes_lock_the_account(
+        self, app, client, register_user, monkeypatch
+    ):
+        with app.app_context():
+            user = current_userstore.get_user_by_id(self.test_user_id)
+            user.get_or_create_totp_secret()
+            current_userstore.user_set(user, tfa_enabled=True)
+            tfa = current_security.get_plugin("two_factor_authentication")
+        monkeypatch.setattr(tfa, "verify_totp", lambda *args, **kwargs: False)
+
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+        )
+        assert rv.status_code == 302
+        assert self.user_verify_tfa_url in rv.location
+
+        for _ in range(5):
+            rv = client.post(
+                self.user_verify_tfa_url,
+                data={"code": "000000", "csrf_token": self.csrf_token},
+                follow_redirects=True,
+            )
+        assert "Too many failed sign-in attempts." in rv.text
+
+        with app.app_context():
+            user = current_userstore.get_user_by_id(self.test_user_id)
+            assert user.failed_login_count == 5
+            assert current_userstore.is_locked(user) is True
+
+        # A locked account cannot resume the pending second factor.
         rv = client.get(self.user_verify_tfa_url, follow_redirects=True)
         assert rv.status_code == 200
         assert rv.request.path == self.user_login_url
@@ -1096,21 +1261,7 @@ class TestUserView:
             u = current_userstore.get_user_by_id(self.test_user_id)
             assert u.tfa_enabled is True
             assert u.get_totp_secret() == new_totp_secret
-            rebound_hashes = list(u.recovery_codes)
-            assert rebound_hashes == recovery_codes_3
-            assert all(
-                sum(
-                    current_security.hasher.verify(code, stored_hash)
-                    for stored_hash in rebound_hashes
-                )
-                == 1
-                for code in recovery_codes[2:]
-            )
-            assert not any(
-                current_security.hasher.verify(code, stored_hash)
-                for code in recovery_codes[:2]
-                for stored_hash in rebound_hashes
-            )
+            assert u.recovery_codes is None
 
         with client.session_transaction() as sess:
             assert SESSION_KEY_TFA_VERIFIED in sess
@@ -1118,3 +1269,65 @@ class TestUserView:
 
         # Rebinding is available only during the recovery-authenticated session.
         assert client.get(self.user_rebind_tfa_url).status_code == 403
+
+        # The old recovery codes were invalidated; new ones can be generated
+        # in the still-verified session.
+        rv = client.get(self.user_recovery_codes_url)
+        assert rv.status_code == 200
+        with app.app_context():
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            regenerated_hashes = list(u.recovery_codes)
+            assert len(regenerated_hashes) == 10
+            assert not any(
+                current_security.hasher.verify(code, stored_hash)
+                for code in recovery_codes
+                for stored_hash in regenerated_hashes
+            )
+
+    def test_plaintext_recovery_codes_are_rejected(
+        self, app, client, register_and_login_user
+    ):
+        with app.app_context():
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            tfa = current_security.get_plugin("two_factor_authentication")
+            totp_code = tfa.get_totp_code(u.get_or_create_totp_secret())
+
+        rv = client.post(
+            self.user_enable_tfa_url,
+            query_string={"enable": True},
+            data={"csrf_token": self.csrf_token, "code": totp_code},
+        )
+        assert rv.json["tfa_enabled"] is True
+
+        # Simulate a legacy row written before recovery codes were hashed.
+        plaintext_code = "PLAINTEXTCODE123"
+        with app.app_context():
+            current_userstore.user_set(
+                current_userstore.get_user_by_id(self.test_user_id),
+                recovery_codes=[plaintext_code],
+            )
+
+        client.get(self.user_logout_url)
+        rv = client.post(
+            self.user_login_url,
+            data={
+                "username": self.test_username,
+                "password": self.test_password,
+                "csrf_token": self.csrf_token,
+            },
+        )
+        assert rv.status_code == 302
+        assert self.user_verify_tfa_url in rv.location
+
+        rv = client.post(
+            self.user_recovery_url,
+            data={"csrf_token": self.csrf_token, "code": plaintext_code},
+        )
+
+        assert rv.status_code == 200
+        with client.session_transaction() as sess:
+            assert "_user_id" not in sess
+            assert SESSION_KEY_TFA_VERIFIED not in sess
+        with app.app_context():
+            u = current_userstore.get_user_by_id(self.test_user_id)
+            assert u.recovery_codes == [plaintext_code]

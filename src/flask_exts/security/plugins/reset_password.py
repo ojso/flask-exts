@@ -51,4 +51,5 @@ class ResetPassword(TokenBasedAction):
             raise MissingPasswordError
 
         current_userstore.user_set(user, password=user.hash_password(password))
+        current_userstore.clear_login_failures(user)
         current_userstore.save_user(user)

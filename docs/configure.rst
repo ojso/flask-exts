@@ -40,10 +40,23 @@ admin access, CSRF, i18n, and email behavior.
      - Email address used to send notifications.
        This is a dict for SMTP configuration with keys such as
        ``host``, ``port``, ``user``, and ``password``.
+       TLS certificate and hostname verification are enabled and use the
+       default CA store; configure a private CA through ``SSL_CERT_FILE`` or
+       the system trust store instead of disabling verification.
        Default is ``None``.
    * - ``TFA_EXEMPT_ENDPOINTS``
      - Endpoints that authenticated users may access before completing the
        TFA challenge.
        Default is an empty set.
+   * - ``USER_LOGIN_MAX_FAILURES``
+     - Consecutive failed authentication steps allowed before the account is
+       locked. Password and second-factor failures share the counter.
+       Default is ``5``.
+   * - ``USER_LOGIN_LOCKOUT_BASE_SECONDS``
+     - First lockout duration in seconds. Each further failure doubles it.
+       Default is ``60``.
+   * - ``USER_LOGIN_LOCKOUT_MAX_SECONDS``
+     - Upper bound for the lockout duration in seconds.
+       Default is ``3600``.
 
 For more advanced behavior, see :doc:`advanced/index` and :doc:`examples`.
