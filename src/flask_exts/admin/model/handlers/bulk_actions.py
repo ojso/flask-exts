@@ -3,8 +3,8 @@ import inspect
 from wtforms.fields import HiddenField
 
 
-class RowsActionHandler:
-    """Handler to add mass-model actions to a view.
+class BulkActionHandler:
+    """Handler to add bulk actions to a view.
 
     To create an action, define a method and decorate it with `@expose_action`
     decorator.
@@ -29,11 +29,11 @@ class RowsActionHandler:
                 self._actions[name] = attr
                 self._actions_data.append((name, text, confirmation))
 
-    def get_action(self, name):
+    def get_bulk_action(self, name):
         return self._actions.get(name)
 
-    def get_list_actions(self):
-        """Return a list and a dictionary of allowed actions."""
+    def get_bulk_actions(self):
+        """Return a list of allowed bulk actions."""
         actions_data = []
         for action in self._actions_data:
             name, text, confirmation = action

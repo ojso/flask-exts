@@ -377,6 +377,13 @@ class Query:
         return stmt
 
     def build_count(self):
+        """Build a count statement for the rows returned by the list query.
+
+        Returns:
+            A SELECT statement that counts the rows produced after applying
+            joins, search terms, and filters. This matches the rows rendered
+            by the corresponding list query.
+        """
         stmt = select(func.count()).select_from(self.root_model)
         stmt = self._apply(stmt)
         return stmt

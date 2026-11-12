@@ -6,7 +6,7 @@
 
 {% do _template.plugin_manager.add_request_plugins(["filters","form","editable","flatpickr"]) %}
 
-{% set actions = view.get_list_actions() %}
+{% set actions = view.get_bulk_actions() %}
 {% set row_actions = view.get_row_actions() %}
 {% set filter_groups = view.get_filter_groups() %}
 

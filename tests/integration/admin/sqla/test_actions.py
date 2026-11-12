@@ -62,6 +62,31 @@ def test_column_editable_list_row_data(
     }
 
 
+def test_ajax_update_requires_can_edit(
+    app, client, admin, sqla_view_factory, login_as_admin
+):
+    with app.app_context():
+        db.reset_all()
+
+        view = sqla_view_factory(
+            AdminTestModel, column_editable_list=["name"], can_edit=False
+        )
+        admin.register_view(view)
+
+        db.session.add(AdminTestModel(name="original"))
+        db.session.commit()
+
+        login_as_admin()
+
+        rv = client.post(
+            "/admin/admintestmodel/ajax/update/",
+            json={"pk": "1", "name": "changed"},
+        )
+
+        assert rv.status_code == 403
+        assert db.session.get(AdminTestModel, 1).name == "original"
+
+
 def test_inline_column_editing(app, client, admin, sqla_view_factory, login_as_admin):
     with app.app_context():
         db.reset_all()

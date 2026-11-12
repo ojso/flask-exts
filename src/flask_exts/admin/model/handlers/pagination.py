@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from flask import request
 
 
@@ -107,30 +109,35 @@ class PaginationHandler:
         )
 
     def get_list_url(self, view_args: "ViewArgs") -> str:
-        """Generate a list-view URL from the current view arguments.
+        """Generate an encoded list-view URL from the current view arguments.
 
         Args:
             view_args: Parsed pagination and filtering state.
 
         Returns:
-            str: URL for the current page state.
+            str: URL for the current page state with safely encoded parameters.
         """
-        page = view_args.page or None
-        desc = 1 if view_args.sort_desc else None
+        params = {}
 
-        kwargs = {
-            "page": page,
-            "sort": view_args.sort,
-            "desc": desc,
-            "search": view_args.search,
-        }
-        kwargs.update(view_args.extra_args)
+        if view_args.page and view_args.page > 1:
+            params["page"] = view_args.page
 
-        kwargs["page_size"] = self.get_safe_page_size(view_args.page_size)
+        page_size = self.get_safe_page_size(view_args.page_size)
+        if page_size:
+            params["page_size"] = page_size
 
-        kwargs.update(self.view.get_active_filters_kwargs(view_args.filters))
+        if view_args.sort is not None:
+            params["sort"] = view_args.sort
 
-        if hasattr(self, "get_url"):
-            return self.get_url(".index_view", **kwargs)
-        else:
-            return f"?{'&'.join(f'{k}={v}' for k, v in kwargs.items() if v)}"
+        if view_args.sort_desc:
+            params["desc"] = 1
+
+        if view_args.search:
+            params["search"] = view_args.search
+
+        params.update(view_args.extra_args)
+        params.update(self.view.get_active_filters_kwargs(view_args.filters))
+
+        query_str = urlencode(params, doseq=True)
+        base_url = self.view.get_url(".index_view")
+        return f"{base_url}?{query_str}" if query_str else base_url

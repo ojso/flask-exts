@@ -27,28 +27,6 @@ def login_required(f):
     return f
 
 
-def requires_active(f):
-    """Mark a view method as requiring an active account.
-
-    ``View.allow_access = True`` lets a whole view class bypass the
-    authorizer's ``is_active`` check (it's meant for genuinely public
-    endpoints like login/register). Methods on such a class that are
-    account-authenticated features -- change password, profile, enabling
-    TFA, etc. -- should be marked with this decorator so a disabled
-    (``is_active=False``) account's existing session cannot still use them.
-
-    Stack this above ``@expose_url`` and below ``@login_required``, e.g.::
-
-        @login_required
-        @requires_active
-        @expose_url("/profile/")
-        def profile(self):
-            ...
-    """
-    f._requires_active = True
-    return f
-
-
 def expose_action(name, text, confirmation=None):
     """Use this decorator to expose actions that span more than one entity (model,
 

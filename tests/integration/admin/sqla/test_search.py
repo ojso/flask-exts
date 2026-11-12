@@ -3,6 +3,35 @@ from flask_exts.datastore.sqla import db
 from .models.admin_records import AdminTestModel, RelatedAdminTestModel
 
 
+def test_search_url_encodes_special_characters(
+    app, client, admin, sqla_view_factory, login_as_admin
+):
+    with app.app_context():
+        db.reset_all()
+        view = sqla_view_factory(AdminTestModel, column_searchable_list=["name"])
+        admin.register_view(view)
+        # Non-ASCII text verifies TC-ADMIN-032 query-string encoding.
+        db.session.add_all(
+            [
+                AdminTestModel(name="alpha & beta"),
+                AdminTestModel(name="café au lait"),
+                AdminTestModel(name="unrelated"),
+            ]
+        )
+        db.session.commit()
+
+        login_as_admin()
+
+        rv = client.get("/admin/admintestmodel/?search=alpha%20%26%20beta")
+        assert "alpha &amp; beta" in rv.text
+        assert "unrelated" not in rv.text
+        assert "search=alpha+%26+beta" in rv.text
+
+        rv = client.get("/admin/admintestmodel/?search=caf%C3%A9")
+        assert "café au lait" in rv.text
+        assert "search=caf%C3%A9" in rv.text
+
+
 def test_search_by_configured_columns(
     app, client, admin, sqla_view_factory, login_as_admin
 ):
@@ -122,6 +151,42 @@ def test_search_by_related_columns(
         rv = client.get("/admin/admintestmodel/?search=model2-name")
         assert "model1-name-val" in rv.text
         assert "model1-description-val" not in rv.text
+
+
+def test_related_search_count_matches_list_rows(app, admin, sqla_view_factory):
+    with app.app_context():
+        db.reset_all()
+
+        view = sqla_view_factory(
+            AdminTestModel,
+            column_searchable_list=["related_records.optional_string"],
+        )
+        admin.register_view(view)
+
+        author = AdminTestModel(name="author")
+        other = AdminTestModel(name="other")
+        db.session.add_all([author, other])
+        db.session.flush()
+        db.session.add_all(
+            [
+                RelatedAdminTestModel(optional_string="match", admin_record=author)
+                for _ in range(5)
+            ]
+        )
+        db.session.commit()
+
+        count, data = view.get_list(
+            search="match",
+            filters=None,
+            sort_field=None,
+            sort_desc=False,
+            page=0,
+            page_size=20,
+        )
+
+        assert count == 5
+        assert len(data) == count
+        assert {row.id for row in data} == {author.id}
 
 
 def test_search_related_columns_without_related_rows(

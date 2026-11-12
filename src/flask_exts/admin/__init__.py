@@ -1,5 +1,5 @@
 from .base import Admin
-from .exposer import expose_action, expose_url, login_required, requires_active
+from .exposer import expose_action, expose_url, login_required
 from .mixin import AdminViewMixin
 from .view import View
 
@@ -10,5 +10,4 @@ __all__ = [
     "expose_action",
     "expose_url",
     "login_required",
-    "requires_active",
 ]

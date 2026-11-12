@@ -19,12 +19,12 @@ from ..view import View
 from .ajax import AjaxModelLoader
 from .backend import DataBackend
 from .handlers import (
+    BulkActionHandler,
     ExportHandler,
     FilterHandler,
     FormHandler,
     PaginationHandler,
     RowActionHandler,
-    RowsActionHandler,
     ValueHandler,
 )
 
@@ -537,8 +537,8 @@ class ModelView(View):
 
     def _init_handlers(self):
         self._pagination_handler = PaginationHandler(self)
-        self._rowactions_handler = RowActionHandler(self)
-        self._rowsaction_handler = RowsActionHandler(self)
+        self._row_actions_handler = RowActionHandler(self)
+        self._bulk_actions_handler = BulkActionHandler(self)
         self._filter_handler = FilterHandler(self)
         self._form_handler = FormHandler(self)
         self._export_handler = ExportHandler(self)
@@ -605,7 +605,7 @@ class ModelView(View):
     # --- Delegation to the handlers -----
 
     def get_row_actions(self):
-        return self._rowactions_handler.get_row_actions()
+        return self._row_actions_handler.get_row_actions()
 
     def get_default_page_size(self):
         return self._pagination_handler.get_default_page_size()
@@ -619,14 +619,14 @@ class ModelView(View):
     def get_safe_page_size(self, page_size):
         return self._pagination_handler.get_safe_page_size(page_size)
 
-    def get_list_actions(self):
-        return self._rowsaction_handler.get_list_actions()
+    def get_bulk_actions(self):
+        return self._bulk_actions_handler.get_bulk_actions()
 
-    def get_rows_action(self, name):
-        return self._rowsaction_handler.get_action(name)
+    def get_bulk_action(self, name):
+        return self._bulk_actions_handler.get_bulk_action(name)
 
     def action_form(self, *args, **kwargs):
-        return self._rowsaction_handler.action_form(*args, **kwargs)
+        return self._bulk_actions_handler.action_form(*args, **kwargs)
 
     def get_filters(self):
         return self._filter_handler.get_filters()
@@ -1082,6 +1082,8 @@ class ModelView(View):
 
     @expose_url("/ajax/update/", methods=("POST",))
     def ajax_update(self):
+        if not self.can_edit:
+            abort(403)
         if not self.column_editable_list:
             abort(404)
         if not request.is_json:
@@ -1139,7 +1141,7 @@ class ModelView(View):
         action_name = form.action.data
         if not self.is_action_allowed(action_name):
             raise ValueError(f"Action {action_name!r} is not allowed")
-        if (handler := self.get_rows_action(action_name)) is None:
+        if (handler := self.get_bulk_action(action_name)) is None:
             raise ValueError(f"No action found for {action_name}")
 
         if form.validate():

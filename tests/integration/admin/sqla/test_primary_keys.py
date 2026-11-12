@@ -57,6 +57,9 @@ def test_composite_primary_key(app, client, admin, sqla_view_factory, login_as_a
         assert rv.status_code == 200
         assert "test_multi" in rv.text
 
+        count, _data = view.get_list(None, None, None, None, 0, 20)
+        assert count == 1
+
         rv = client.get("/admin/test/edit/?id=1,2")
         assert rv.status_code == 200
         assert "test_multi" in rv.text
