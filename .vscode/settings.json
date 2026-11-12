@@ -15,4 +15,5 @@
     "tests"
 ],
 "python.analysis.autoImportCompletions": false,
+"makefile.configureOnOpen": false,
 }
