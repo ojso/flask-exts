@@ -1,4 +1,4 @@
-.PHONY: docs-build docs-serve docs-clean ruff-check ruff-format-check djlint-check djlint-format
+.PHONY: docs-build docs-serve docs-clean ruff-check ruff-format-check djlint-check djlint-format dist
 
 docs-build:
 	uv run python -m sphinx -b html docs docs/_build/html -W -n --keep-going
@@ -43,3 +43,6 @@ coverage:
 
 coverage-report:
 	uv run coverage report -m
+
+dist:
+	uv build

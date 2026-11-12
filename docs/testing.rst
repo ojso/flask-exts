@@ -74,6 +74,9 @@ coverage in helpers whose names start with ``_test_`` or otherwise exclude
 them from collection. When tests are renamed or moved, preserve their behavior
 and verify they remain collected.
 
+Use English test names and data. Reserve non-English strings for i18n and
+non-ASCII encoding coverage.
+
 Assertions and coverage
 -----------------------
 

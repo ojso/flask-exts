@@ -61,8 +61,8 @@ Always keep changes focused and declare public re-exports in `__all__`. Never:
 
 ## Coding guidance
 
-- Write code and documentation primarily in English. Tests may use other
-  languages for i18n coverage.
+- Write code and documentation primarily in English. Use non-English strings
+  in tests only for i18n or non-ASCII encoding coverage.
 - Preserve Python 3.11 compatibility; do not use syntax or standard-library
   features introduced in later Python versions.
 - Prefer f-strings for string formatting; avoid `.format()` and `%` formatting.

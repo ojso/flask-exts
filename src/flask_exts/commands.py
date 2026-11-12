@@ -47,7 +47,7 @@ def create_user(name, password, email, active):
 
 
 @security_cli.command(
-    "create_admin", help="create user:admin(defaullt password:admin) with admin:role"
+    "create_admin", help="create user:admin(default password:admin) with admin:role"
 )
 @click.argument("password", default="admin")
 def create_admin(password):

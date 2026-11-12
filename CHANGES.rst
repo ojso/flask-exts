@@ -3,6 +3,41 @@ Changelog
 
 All notable changes to this project are documented in this file.
 
+Unreleased
+----------
+
+Changed
+~~~~~~~
+
+- Rename ``RowsActionHandler`` to ``BulkActionHandler`` and move the handlers
+  to ``row_actions.py`` / ``bulk_actions.py``.
+- Measure coverage for ``src/flask_exts`` only.
+
+Removed
+~~~~~~~
+
+- Remove the unused ``datastore/sqla/query_builders`` package.
+- Remove the ``requires_active`` decorator; disabled accounts are rejected at
+  login and their sessions are invalidated by ``user_loader``.
+- Remove commented-out API-key and Basic Auth placeholders from the request
+  loader; only Bearer JWT is supported.
+
+Fixed
+~~~~~
+
+- Validate the registration email format and maximum length.
+- Encode admin list URLs with ``urlencode`` and remove the dead
+  ``hasattr`` branch in pagination.
+- Align admin list totals with the number of rows returned by the list query.
+- Deny inactive users with the admin role access to admin views.
+- Reject AJAX inline updates when the view disables editing.
+- Isolate extension shutdown exceptions so the remaining extensions
+  still close.
+- Log only the email type and a masked recipient when no sender is
+  registered, instead of the full payload.
+- Refuse login for disabled accounts and invalidate their existing
+  sessions in ``user_loader``.
+
 0.4.1 - 2026-11-11
 ------------------
 

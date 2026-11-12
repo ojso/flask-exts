@@ -197,6 +197,6 @@ class CheckboxListField(QuerySelectMultipleField):
 
 
 def get_pk_from_identity(obj):
-    # TODO: Remove me
+    """Return a string primary key for an ORM instance."""
     key = identity_key(instance=obj)[1]
     return ":".join(str(x) for x in key)
