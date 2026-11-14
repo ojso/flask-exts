@@ -50,7 +50,8 @@ Disabled accounts
 Disabled accounts cannot log in: the login view refuses them, and the Flask-Login
 ``user_loader`` rejects a disabled account's existing session on its next
 request, clearing the session id and the remember-me cookie. The JWT
-``request_loader`` also checks ``is_active``.
+``request_loader`` also checks ``is_active`` and rejects a token whose ``pwd``
+claim no longer matches the user's current password hash.
 
 Protected routes therefore only need ``login_required``; disabled accounts are
 already anonymous by the time authorization runs. Views that set
@@ -98,7 +99,34 @@ Flask-Login's ``request_loader`` only accepts a Bearer token in the
 
    Authorization: Bearer <JWT>
 
-API-key query parameters (``?api_key=...``) and HTTP Basic authentication are
-not supported and are not checked.
+The auth-scheme is case-insensitive, so ``bearer`` and ``Bearer`` are both
+accepted. API-key query parameters (``?api_key=...``) and HTTP Basic
+authentication are not supported and are not checked.
+
+Issue tokens through
+``flask_exts.builtin_extensions.login_ext.jwt_encode_for_user``. The helper
+adds ``pwd`` and ``amr`` claims so that the request loader can bind a token to
+the user's current credentials:
+
+- ``pwd`` is a keyed fingerprint of the current password hash. Changing or
+  resetting the password invalidates every previously issued token. Tokens
+  without ``pwd`` are rejected; there is no compatibility mode.
+- ``amr`` lists the completed authentication methods. It always contains
+  ``pwd``; add ``otp`` only after verifying a TOTP code or recovery code. A
+  user with ``tfa_enabled=True`` needs an ``otp`` entry, otherwise the helper
+  raises ``ValueError`` and the request loader rejects the token.
+- ``iat``, ``exp``, and ``token_use="access"`` are written by
+  ``jwt_encode``. ``JWT_ACCESS_TOKEN_MAX_AGE`` controls the lifetime
+  (default 900 seconds). ``JWT_LEEWAY`` optionally tolerates clock skew
+  between application instances.
+
+``JWT_SECRET_KEY`` must be set before issuing or validating a token, must be at
+least 32 bytes, and must differ from ``SECRET_KEY``. ``JWT_HASH`` is restricted
+to ``HS256``, ``HS384``, or ``HS512``; any other value, including ``none``,
+raises ``RuntimeError`` at first use.
+
+The helper only encodes the claims it is given. It cannot verify a second
+factor, so application code must complete TFA verification before passing
+``amr="otp"``.
 
 See :doc:`modelview` for authorization of model views.
