@@ -3,6 +3,49 @@ Changelog
 
 All notable changes to this project are documented in this file.
 
+Unreleased
+----------
+
+Added
+~~~~~
+
+- Add the ``jwt_encode_for_user`` and ``password_fingerprint`` helpers for
+  issuing access tokens bound to a user's current credentials.
+- Add the ``JWT_LEEWAY`` configuration to tolerate clock skew when validating
+  tokens.
+
+Changed
+~~~~~~~
+
+- **Breaking:** ``load_user_from_request`` now rejects Bearer tokens without a
+  ``pwd`` claim and requires ``amr`` to contain ``otp`` for TFA-enabled users.
+  Previously issued tokens are therefore invalid after upgrading.
+- **Breaking:** JWT signing and validation are restricted to ``HS256``,
+  ``HS384``, and ``HS512``. Configuring ``JWT_HASH`` to another value,
+  including ``none``, raises ``RuntimeError`` at first use.
+- **Breaking:** ``JWT_SECRET_KEY`` must be set before JWT use, be at least 32
+  bytes, and differ from ``SECRET_KEY``.
+- ``jwt_encode`` now writes an ``iat`` claim, and ``jwt_decode`` honours
+  ``JWT_LEEWAY``.
+- ``Authorization`` accepts the ``Bearer`` scheme case-insensitively.
+- ``jwt_encode_for_user`` treats a string ``amr`` value as one method and
+  rejects non-string entries.
+
+Fixed
+~~~~~
+
+- Reject non-integer JWT ``id`` claims such as ``true`` and ``1.9`` instead of
+  resolving them to a different user id.
+- Avoid splitting ``amr="otp"`` into individual characters.
+
+Security
+~~~~~~~~
+
+- Bind JWT access tokens to the current password hash so password changes and
+  resets invalidate previously issued tokens (SEC-08).
+- Require completed second-factor authentication in the ``amr`` claim for
+  TFA-enabled users (SEC-02).
+
 0.4.2 - 2026-11-13
 ------------------
 

@@ -44,10 +44,6 @@ admin access, CSRF, i18n, and email behavior.
        default CA store; configure a private CA through ``SSL_CERT_FILE`` or
        the system trust store instead of disabling verification.
        Default is ``None``.
-   * - ``TFA_EXEMPT_ENDPOINTS``
-     - Endpoints that authenticated users may access before completing the
-       TFA challenge.
-       Default is an empty set.
    * - ``USER_LOGIN_MAX_FAILURES``
      - Consecutive failed authentication steps allowed before the account is
        locked. Password and second-factor failures share the counter.
