@@ -1,4 +1,10 @@
 from ..extension_core.base import Extension
+from ..security.browser import (
+    configure_secure_cookies,
+    install_security_headers,
+    validate_secure_cookie_config,
+    validate_security_config,
+)
 from ..security.core import Security
 from ..signals import user_registered
 
@@ -11,6 +17,10 @@ class SecurityExtension(Extension):
     def init_app(self, app):
         self._security = Security()
         self._security.init_app(app)
+        configure_secure_cookies(app)
+        validate_secure_cookie_config(app)
+        validate_security_config(app)
+        install_security_headers(app)
         self._subscribe_signals(app)
 
     def get_security(self):

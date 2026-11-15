@@ -75,6 +75,24 @@ Always keep changes focused and declare public re-exports in `__all__`. Never:
 For test organization, naming, coverage, integration models, and validation,
 see `docs/testing.rst`.
 
+## Documentation boundaries
+
+This repository is the published library, so its code, docstrings,
+`CHANGES.rst`, and Sphinx docs must stand on their own. Do not reference the
+internal requirements, security, and testing documents maintained in a
+separate repository:
+
+- Do not cite their contract, defect, or test identifiers (`REQ-*`, `SEC-*`,
+  `TC-*`, `CR-*`), section numbers, or file names anywhere in this
+  repository.
+- Describe the behavior in the library's own terms instead, for example
+  "tokens are bound to the current password hash", not an internal ticket
+  code.
+- Public identifiers readers can resolve are still fine: CVE/GHSA IDs, GitHub
+  issue or PR numbers, dependency versions, and release versions.
+- Keep traceability in those internal documents; this repository records only
+  user-visible effects.
+
 ## Dependency upgrades and compatibility
 
 Support only the single dependency baseline declared in `pyproject.toml`. When

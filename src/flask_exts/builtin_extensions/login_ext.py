@@ -159,7 +159,7 @@ def jwt_encode_for_user(user, amr=None, delta=None):
 
     The token carries a ``pwd`` fingerprint and an ``amr`` claim so that
     ``load_user_from_request`` can reject tokens issued before a password
-    change (SEC-08) and password-only tokens for TFA users (SEC-02).
+    change and password-only tokens for TFA users.
 
     This helper only encodes the claims it is given; it cannot verify that a
     second factor actually happened. Callers must only pass ``"otp"`` after
