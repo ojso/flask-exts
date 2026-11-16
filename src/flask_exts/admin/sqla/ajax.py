@@ -47,7 +47,7 @@ class AjaxSqlaModelLoader(AjaxModelLoader):
         if self.order_by:
             query.add_order_by(self.order_by)
 
-        query.offset(offset)
+        query.offset(max(0, offset or 0))
         query.limit(limit)
         stmt = query.build()
         result = self.session.execute(stmt).scalars().all()

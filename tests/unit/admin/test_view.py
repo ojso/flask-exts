@@ -26,3 +26,19 @@ def test_view():
     assert view.static_folder is None
     assert view.admin is None
     assert view.blueprint is None
+
+
+class MultipleIndexView(View):
+    @expose_url("/")
+    def index(self):
+        return "index"
+
+    @expose_url("/")
+    def z_index(self):
+        return "z_index"
+
+
+def test_first_exposed_index_view_is_the_default():
+    view = MultipleIndexView()
+
+    assert view._default_view == "index"

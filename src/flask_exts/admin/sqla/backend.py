@@ -337,8 +337,10 @@ class SqlaBackend(DataBackend):
                     query.add_order_by(default_sort_field, default_sort_desc)
 
     def _apply_pagination(self, query: Query, page, page_size):
+        page = max(0, page or 0)
         if page_size is None:
             page_size = self.view.page_size
+        page_size = max(0, page_size or 0)
         if page_size:
             query.limit(page_size)
         if page and page_size:

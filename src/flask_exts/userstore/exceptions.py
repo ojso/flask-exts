@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from .._time import ensure_utc, utc_now
+
 
 class UserStoreError(Exception):
     """Base class for expected user-store errors."""
@@ -25,7 +27,8 @@ class AccountLockedError(UserStoreError):
 
     def __init__(self, locked_until: datetime, now: datetime | None = None):
         self.locked_until = locked_until
-        remaining = (locked_until - (now or datetime.now())).total_seconds()
+        current = ensure_utc(now) if now is not None else utc_now()
+        remaining = (ensure_utc(locked_until) - current).total_seconds()
         self.retry_after = max(int(remaining), 0)
         super().__init__(
             "Too many failed sign-in attempts. "

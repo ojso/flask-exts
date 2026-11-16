@@ -5,6 +5,7 @@ import jwt
 from flask import current_app, has_request_context, session
 from flask_login import LoginManager
 
+from .._time import utc_now
 from ..extension_core.base import Extension
 from ..proxies import current_security, current_userstore
 
@@ -96,7 +97,7 @@ def _jwt_algorithm(algorithm=None):
 def jwt_encode(payload, key=None, delta: int | None = None, algorithm=None):
     if delta is None:
         delta = current_app.config.get("JWT_ACCESS_TOKEN_MAX_AGE", 900)
-    now = datetime.datetime.now(tz=datetime.UTC)
+    now = utc_now()
     token_payload = dict(payload)
     token_payload["iat"] = now
     token_payload["exp"] = now + datetime.timedelta(seconds=delta)
@@ -114,7 +115,7 @@ def jwt_decode(token, key=None, algorithm=None):
         token,
         key=_jwt_secret_key(key),
         algorithms=[_jwt_algorithm(algorithm)],
-        options={"require": ["exp", "token_use"]},
+        options={"require": ["exp", "iat", "token_use"]},
         leeway=current_app.config.get("JWT_LEEWAY", 0),
     )
     return payload
@@ -181,9 +182,7 @@ def jwt_encode_for_user(user, amr=None, delta=None):
     if "pwd" not in methods:
         methods.insert(0, "pwd")
     if getattr(user, "tfa_enabled", False) and "otp" not in methods:
-        raise ValueError(
-            "A token for a TFA-enabled user requires the 'otp' amr claim."
-        )
+        raise ValueError("A token for a TFA-enabled user requires the 'otp' amr claim.")
     return jwt_encode(
         {"id": user.id, "pwd": password_fingerprint(user), "amr": methods},
         delta=delta,

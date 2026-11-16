@@ -5,6 +5,7 @@ from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
+from ...._time import UTCDateTime, utc_now
 from ....proxies import current_security
 from ....security.user_mixin import UserMixin
 from .. import db
@@ -22,24 +23,24 @@ class User(db.Model, UserMixin):
     password: Mapped[str | None]
     _is_active: Mapped[bool] = mapped_column("is_active", default=True)
     status: Mapped[int] = mapped_column(default=0)
-    expired_at: Mapped[datetime | None]
+    expired_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     failed_login_count: Mapped[int] = mapped_column(default=0)
-    locked_until: Mapped[datetime | None]
+    locked_until: Mapped[datetime | None] = mapped_column(UTCDateTime)
     email: Mapped[str | None] = mapped_column(unique=True)
     email_verified: Mapped[bool] = mapped_column(default=False)
-    email_verified_at: Mapped[datetime | None]
+    email_verified_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     phone_number: Mapped[str | None] = mapped_column(unique=True)
     phone_verified: Mapped[bool] = mapped_column(default=False)
-    phone_verified_at: Mapped[datetime | None]
+    phone_verified_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     tfa_enabled: Mapped[bool] = mapped_column(default=False)
     tfa_method: Mapped[str | None]
     totp_secret: Mapped[str | None]
     recovery_codes: Mapped[list[str] | None] = mapped_column(
         type_=MutableList.as_mutable(JSON)
     )
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
-        default=datetime.now, onupdate=datetime.now
+        UTCDateTime, default=utc_now, onupdate=utc_now
     )
 
     roles: Mapped[list["Role"]] = relationship(secondary=user_role_table)
@@ -83,7 +84,7 @@ class User(db.Model, UserMixin):
             tfa = current_security.get_plugin("two_factor_authentication")
             plaintext = tfa.generate_totp_secret()
             self.totp_secret = current_security.encryptor.encrypt(plaintext)
-            db.session.commit()
+            db.session.flush()
             return plaintext
         return self.get_totp_secret()
 

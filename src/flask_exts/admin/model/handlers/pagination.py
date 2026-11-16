@@ -85,8 +85,9 @@ class PaginationHandler:
         Returns:
             ViewArgs: A container with page, sort, search, and filter settings.
         """
+        page = max(0, request.args.get("page", 0, type=int) or 0)
         return ViewArgs(
-            page=request.args.get("page", 0, type=int),
+            page=page,
             page_size=request.args.get("page_size", 0, type=int),
             sort=request.args.get("sort", None, type=int),
             sort_desc=request.args.get("desc", None, type=int),
@@ -119,7 +120,7 @@ class PaginationHandler:
         """
         params = {}
 
-        if view_args.page and view_args.page > 1:
+        if view_args.page:
             params["page"] = view_args.page
 
         page_size = self.get_safe_page_size(view_args.page_size)

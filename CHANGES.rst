@@ -3,6 +3,40 @@ Changelog
 
 All notable changes to this project are documented in this file.
 
+Unreleased
+----------
+
+Changed
+~~~~~~~
+
+- Model timestamps and login-lockout timestamps are timezone-aware UTC.
+  Databases without timezone support store the UTC wall time; existing rows
+  are interpreted as UTC.
+- CSV and tablib exports continue to write values as-is. Spreadsheet
+  formula-injection neutralization is intentionally not applied.
+
+Fixed
+~~~~~
+
+- ``FileSize`` validates using ``Content-Length`` or a seek-to-end lookup
+  instead of reading the whole upload into memory.
+- Negative ``page`` and ajax ``offset`` values are clamped to zero.
+- Pagination links preserve the zero-based page number, so the second page and
+  later pages open the requested page.
+- The default admin view is the first exposed ``/`` or ``/index/`` method
+  instead of the last one returned by ``inspect.getmembers``.
+- ``User.get_or_create_totp_secret`` flushes instead of committing.
+- Boolean admin formatters escape the generated title attribute.
+- ``Security.init_app`` explains that ``SECRET_KEY`` must be configured first.
+- Token serializers without an explicit default use 30 minutes instead of 7
+  days.
+
+Security
+~~~~~~~~
+
+- CSRF session tokens use ``secrets.token_urlsafe`` instead of SHA-1.
+- JWT decoding requires the ``iat`` claim.
+
 0.4.3 - 2026-11-15
 ------------------
 

@@ -18,6 +18,16 @@ class FakeView:
     def get_active_filters_kwargs(self, filters):
         return dict(self.filters_kwargs)
 
+    def get_active_filters(self):
+        return []
+
+
+def test_get_list_args_clamps_negative_page(app):
+    handler = PaginationHandler(FakeView())
+
+    with app.test_request_context("/admin/example/?page=-1"):
+        assert handler.get_list_args().page == 0
+
 
 def test_get_list_url_without_parameters():
     view = FakeView()
@@ -27,11 +37,17 @@ def test_get_list_url_without_parameters():
     assert handler.get_list_url(ViewArgs()) == "/admin/example/"
 
 
-def test_get_list_url_omits_first_page():
+def test_get_list_url_omits_first_page_and_keeps_later_pages():
     handler = PaginationHandler(FakeView())
 
-    assert handler.get_list_url(ViewArgs(page=1, page_size=20)) == (
+    assert handler.get_list_url(ViewArgs(page=0, page_size=20)) == (
         "/admin/example/?page_size=20"
+    )
+    assert handler.get_list_url(ViewArgs(page=1, page_size=20)) == (
+        "/admin/example/?page=1&page_size=20"
+    )
+    assert handler.get_list_url(ViewArgs(page=2, page_size=20)) == (
+        "/admin/example/?page=2&page_size=20"
     )
 
 

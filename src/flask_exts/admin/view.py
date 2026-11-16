@@ -114,7 +114,7 @@ class View(metaclass=ViewMeta):
             if hasattr(attr, "_urls"):
                 for url, methods in attr._urls:
                     self._urls.append((url, name, methods))
-                    if url == "/" or url == "/index/" and self._default_view is None:
+                    if url in ("/", "/index/") and self._default_view is None:
                         self._default_view = name
 
     def _get_endpoint(self):

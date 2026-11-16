@@ -8,6 +8,10 @@ from flask import Response, flash, redirect, stream_with_context
 from flask_babel import gettext
 from werkzeug.utils import secure_filename
 
+# Export values are written as-is. Spreadsheet formula-injection
+# neutralization is intentionally not applied; preserve this behavior unless
+# the export contract changes.
+
 
 class ExportHandler:
     """Handler for exporting model data in tabular formats."""

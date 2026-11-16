@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy.sql import select
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from ..._time import ensure_utc, utc_now
 from ..base import UserStore
 from ..exceptions import (
     AccountLockedError,
@@ -95,7 +96,7 @@ class SqlaUserStore(UserStore):
         if user is None or not user.password:
             check_password_hash(_DUMMY_PASSWORD_HASH, password)
             raise InvalidCredentialsError
-        now = datetime.now()
+        now = utc_now()
         if self.is_locked(user, now):
             raise AccountLockedError(user.locked_until, now)
         if not user.check_password(password):
@@ -107,7 +108,8 @@ class SqlaUserStore(UserStore):
         """Return True while a failed-login lockout is in effect."""
         if user is None or user.locked_until is None:
             return False
-        return user.locked_until > (now or datetime.now())
+        current = ensure_utc(now) if now is not None else utc_now()
+        return ensure_utc(user.locked_until) > current
 
     def record_login_failure(self, user, now=None):
         """Count one failed authentication step and lock when the limit is hit.
@@ -116,7 +118,7 @@ class SqlaUserStore(UserStore):
         are failed attempts against the same account.
         """
         max_failures, base_seconds, max_seconds = self._lockout_policy()
-        now = now or datetime.now()
+        now = ensure_utc(now) if now is not None else utc_now()
         count = (user.failed_login_count or 0) + 1
         user.failed_login_count = count
         if count >= max_failures:

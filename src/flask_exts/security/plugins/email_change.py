@@ -1,7 +1,6 @@
-from datetime import datetime
-
 from flask import current_app, url_for
 
+from ..._time import utc_now
 from ...proxies import current_security, current_userstore
 from ...signals import to_send_email
 from ...userstore.exceptions import UserAlreadyExistsError
@@ -77,6 +76,6 @@ class EmailChange:
 
         user.email = new_email
         user.email_verified = True
-        user.email_verified_at = datetime.now()
+        user.email_verified_at = utc_now()
         current_userstore.save_user(user)
         return "verified"

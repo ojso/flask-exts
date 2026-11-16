@@ -1,3 +1,6 @@
+import datetime
+
+import jwt
 import pytest
 from flask_login import current_user
 from jwt import ExpiredSignatureError
@@ -96,9 +99,7 @@ def test_tfa_user_requires_otp_claim(app):
         )
         verified = jwt_encode_for_user(user, amr=["otp"])
 
-    with app.test_request_context(
-        headers={"Authorization": "Bearer " + password_only}
-    ):
+    with app.test_request_context(headers={"Authorization": "Bearer " + password_only}):
         assert not current_user.is_authenticated
     with app.test_request_context(headers={"Authorization": "Bearer " + verified}):
         assert current_user.id == user.id
@@ -160,6 +161,22 @@ def test_jwt_encode_records_issued_at(app):
         payload = jwt_decode(jwt_encode({"id": 1}))
     assert "iat" in payload
     assert payload["token_use"] == "access"
+
+
+def test_jwt_decode_requires_issued_at(app):
+    with app.app_context():
+        now = datetime.datetime.now(tz=datetime.UTC)
+        token = jwt.encode(
+            {
+                "exp": now + datetime.timedelta(seconds=60),
+                "token_use": "access",
+            },
+            app.config["JWT_SECRET_KEY"],
+            algorithm="HS256",
+        )
+
+        with pytest.raises(jwt.MissingRequiredClaimError):
+            jwt_decode(token)
 
 
 def test_jwt_decode_honours_configured_leeway(app, monkeypatch):

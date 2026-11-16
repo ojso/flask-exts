@@ -70,5 +70,12 @@ def test_bool_formatter(value, expected):
     assert BASE_FORMATTERS[bool](None, value, "field") == expected
 
 
+def test_bool_formatter_escapes_column_name():
+    result = BASE_FORMATTERS[bool](None, True, '"><script>alert(1)</script>')
+
+    assert "<script>" not in result
+    assert "&lt;script&gt;" in result
+
+
 def test_null_formatter():
     assert null_formatter(None, None, "field") == Markup("<i>NULL</i>")

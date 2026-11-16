@@ -4,7 +4,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Any
 
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 T_FORMATTERS = dict[type, Callable[[Any, Any, Any], Any]]
 
@@ -36,7 +36,7 @@ def bool_formatter(view, value, name):
         value:
             Value to check
     """
-    label = f"{name}: {'true' if value else 'false'}"
+    label = escape(f"{name}: {'true' if value else 'false'}")
     return Markup(f'<span title="{label}">{"✓" if value else "✗"}</span>')
 
 

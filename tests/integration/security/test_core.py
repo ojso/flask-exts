@@ -3,6 +3,7 @@ import pytest
 from flask_exts.builtin_extensions.login_ext import user_loader
 from flask_exts.datastore.sqla import db
 from flask_exts.proxies import current_security, current_userstore
+from flask_exts.security.core import Security
 from flask_exts.security.exceptions import (
     InvalidTokenError,
     MissingPasswordError,
@@ -11,6 +12,19 @@ from flask_exts.security.keys import derive_key
 
 
 class TestSecurity:
+    def test_secret_key_must_be_configured_before_init_app(self, app):
+        app.config["SECRET_KEY"] = None
+
+        with pytest.raises(RuntimeError, match="before Security.init_app"):
+            Security().init_app(app)
+
+    def test_unknown_serializer_uses_conservative_default_max_age(self, app):
+        with app.app_context():
+            assert current_security.get_within("custom_action") == 1800
+
+            app.config["CUSTOM_ACTION_MAX_AGE"] = 60
+            assert current_security.get_within("custom_action") == 60
+
     def test_security_keys_are_derived_per_purpose(self, app):
         with app.app_context():
             master_key = app.secret_key

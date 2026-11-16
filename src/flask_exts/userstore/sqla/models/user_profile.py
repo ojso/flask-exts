@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from ...._time import UTCDateTime, utc_now
 from .. import db
 
 
@@ -19,9 +20,9 @@ class UserProfile(db.Model):
     avatar: Mapped[str | None]
     locale: Mapped[str | None]
     timezone: Mapped[str | None]
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
-        default=datetime.now, onupdate=datetime.now
+        UTCDateTime, default=utc_now, onupdate=utc_now
     )
 
     user: Mapped["User"] = relationship("User", back_populates="profile")  # type: ignore  # noqa: F821, UP037

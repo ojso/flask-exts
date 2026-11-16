@@ -1,3 +1,5 @@
+import os
+
 from werkzeug.datastructures import FileStorage
 from wtforms.validators import DataRequired, StopValidation, ValidationError
 
@@ -74,8 +76,15 @@ class FileSize:
             return
 
         for f in field_data:
-            file_size = len(f.read())
-            f.seek(0)  # reset cursor position to beginning of file
+            try:
+                file_size = f.content_length if "Content-Length" in f.headers else 0
+                if not file_size:
+                    # Seek to the end instead of reading the file so a large
+                    # upload cannot exhaust memory before the limit is checked.
+                    f.seek(0, os.SEEK_END)
+                    file_size = f.tell()
+            finally:
+                f.seek(0)  # reset cursor position to beginning of file
 
             if (file_size < self.min_size) or (file_size > self.max_size):
                 # the file is too small or too big => validation failure

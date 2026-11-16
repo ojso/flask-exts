@@ -290,6 +290,7 @@ class UserView(View):
             )
         tfa = current_security.get_plugin("two_factor_authentication")
         totp_secret = current_user.get_or_create_totp_secret()
+        current_userstore.save_user(current_user)
 
         totp_uri = tfa.get_totp_uri(totp_secret, current_user.username)
         return self.render(

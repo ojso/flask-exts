@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from ..._time import utc_now
 from ...proxies import current_userstore
 from ..token_action import TokenBasedAction
 
@@ -43,7 +42,7 @@ class EmailVerification(TokenBasedAction):
             return "already_verified"
 
         user.email_verified = True
-        user.email_verified_at = datetime.now()
+        user.email_verified_at = utc_now()
 
         current_userstore.save_user(user)
 

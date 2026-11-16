@@ -1072,7 +1072,7 @@ class ModelView(View):
     def ajax_lookup(self):
         name = request.args.get("name")
         query = request.args.get("query")
-        offset = request.args.get("offset", type=int)
+        offset = max(0, request.args.get("offset", 0, type=int) or 0)
         limit = min(max(1, request.args.get("limit", 10, type=int)), 100)
         loader = self.get_ajax_loader(name)
         if not loader:

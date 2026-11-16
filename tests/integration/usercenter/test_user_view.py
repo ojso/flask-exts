@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from flask import session, url_for
@@ -613,7 +613,9 @@ class TestUserView:
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
             tfa = current_security.get_plugin("two_factor_authentication")
-            totp_code = tfa.get_totp_code(u.get_or_create_totp_secret())
+            totp_secret = u.get_or_create_totp_secret()
+            current_userstore.save_user(u)
+            totp_code = tfa.get_totp_code(totp_secret)
 
         rv = client.post(
             self.user_enable_tfa_url,
@@ -827,7 +829,7 @@ class TestUserView:
             current_userstore.user_set(
                 user,
                 failed_login_count=5,
-                locked_until=datetime.now() + timedelta(minutes=30),
+                locked_until=datetime.now(UTC) + timedelta(minutes=30),
             )
 
         rv = client.post(
@@ -1290,7 +1292,9 @@ class TestUserView:
         with app.app_context():
             u = current_userstore.get_user_by_id(self.test_user_id)
             tfa = current_security.get_plugin("two_factor_authentication")
-            totp_code = tfa.get_totp_code(u.get_or_create_totp_secret())
+            totp_secret = u.get_or_create_totp_secret()
+            current_userstore.save_user(u)
+            totp_code = tfa.get_totp_code(totp_secret)
 
         rv = client.post(
             self.user_enable_tfa_url,

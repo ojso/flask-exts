@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -125,7 +125,7 @@ def test_expired_lockout_allows_login(app):
         us.user_set(
             user,
             failed_login_count=5,
-            locked_until=datetime.now() - timedelta(seconds=1),
+            locked_until=datetime.now(UTC) - timedelta(seconds=1),
         )
 
         assert us.is_locked(user) is False
@@ -142,7 +142,7 @@ def test_lockout_delay_grows_and_is_capped(app):
     with app.app_context():
         db.create_all()
         user = us.create_user(username="u1", password="password")
-        now = datetime(2026, 1, 1, 12, 0, 0)
+        now = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
 
         assert us.record_login_failure(user, now) is None
         assert us.record_login_failure(user, now) == now + timedelta(seconds=60)
@@ -150,6 +150,33 @@ def test_lockout_delay_grows_and_is_capped(app):
         assert us.record_login_failure(user, now) == now + timedelta(seconds=240)
         assert us.record_login_failure(user, now) == now + timedelta(seconds=300)
         assert us.record_login_failure(user, now) == now + timedelta(seconds=300)
+
+
+def test_model_timestamps_are_timezone_aware_utc(app):
+    us = SqlaUserStore()
+    with app.app_context():
+        db.create_all()
+        user = us.create_user(username="u1", password="password")
+
+        assert user.created_at.tzinfo is UTC
+        assert user.updated_at.tzinfo is UTC
+
+
+def test_get_or_create_totp_secret_does_not_commit(app):
+    us = SqlaUserStore()
+    with app.app_context():
+        db.create_all()
+        user = us.create_user(username="u1", password="password")
+
+        secret = user.get_or_create_totp_secret()
+        assert secret
+        assert user.totp_secret is not None
+
+        db.session.rollback()
+        db.session.expire_all()
+
+        reloaded = us.get_user_by_id(user.id)
+        assert reloaded.totp_secret is None
 
 
 @pytest.mark.parametrize(

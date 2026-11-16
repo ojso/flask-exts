@@ -61,6 +61,12 @@ def test_ajax_foreign_key_field(app, client, admin, sqla_view_factory, login_as_
         req = client.get("/admin/view/ajax/lookup/?name=admin_record&query=foo")
         assert json.loads(req.data.decode("utf-8")) == [[model2.id, "foo"]]
 
+        # Negative offsets are clamped instead of reaching the database.
+        req = client.get(
+            "/admin/view/ajax/lookup/?name=admin_record&query=foo&offset=-10"
+        )
+        assert json.loads(req.data.decode("utf-8")) == [[model2.id, "foo"]]
+
         # Check submitting
         req = client.post(
             "/admin/view/new/",

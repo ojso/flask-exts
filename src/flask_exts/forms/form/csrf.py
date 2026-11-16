@@ -1,6 +1,5 @@
-import hashlib
 import hmac
-import os
+import secrets
 
 from flask import current_app, g, session
 from itsdangerous import BadData, SignatureExpired, URLSafeTimedSerializer
@@ -20,7 +19,7 @@ def get_csrf_token():
     if csrf_field_name in g:
         return g.get(csrf_field_name)
     if csrf_field_name not in session:
-        session[csrf_field_name] = hashlib.sha1(os.urandom(64)).hexdigest()
+        session[csrf_field_name] = secrets.token_urlsafe(32)
     session_csrf_token = session[csrf_field_name]
     csrf_secret_key = csrf_key(current_app.secret_key, current_app.config)
     s = URLSafeTimedSerializer(csrf_secret_key, salt=CSRF_SALT)

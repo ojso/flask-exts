@@ -1,3 +1,11 @@
+_DEFAULT_MAX_AGES = {
+    "reset_password": 1800,
+    "verify_email": 86400 * 7,
+    "change_email": 86400 * 7,
+}
+_FALLBACK_MAX_AGE = 1800
+
+
 class Security:
     def __init__(self, app=None):
         self.app = app
@@ -7,6 +15,11 @@ class Security:
     def init_app(self, app):
         self.app = app
         secret_key = app.secret_key
+        if not secret_key:
+            raise RuntimeError(
+                "SECRET_KEY must be configured before Security.init_app(); "
+                "security keys are derived once during initialization."
+            )
 
         from .encryptor import AesGcmEncryptor
         from .hasher import Blake2bHasher
@@ -34,7 +47,7 @@ class Security:
 
     def get_within(self, serializer_name):
         """Get the max age for a serializer."""
-        default_max_age = 1800 if serializer_name == "reset_password" else 86400 * 7
+        default_max_age = _DEFAULT_MAX_AGES.get(serializer_name, _FALLBACK_MAX_AGE)
         return self.app.config.get(
             f"{serializer_name.upper()}_MAX_AGE", default_max_age
         )
