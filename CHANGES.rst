@@ -6,6 +6,23 @@ All notable changes to this project are documented in this file.
 Unreleased
 ----------
 
+Added
+~~~~~
+
+- ``RBACAuthorizer`` adds an optional Flask-RPBAC style authorization model:
+  ``Role``, ``Permission`` and ``Predicate`` requirements can be composed with
+  ``All`` / ``Any`` / ``Not`` and declared on views through ``permission``,
+  ``permissions`` and ``roles``. An authenticated, active ``admin`` passes the
+  shared view gate before any requirement runs. Select it with
+  ``SECURITY_AUTHORIZER = "rbac"``; the default remains ``SimpleAuthorizer``.
+  See :doc:`advanced/authorization`.
+- ``View.login_required_functions`` declares exposed methods that require an
+  authenticated user on views with ``allow_access = True``. Anonymous calls to
+  a listed method are denied with the view's forbidden response (403 by
+  default); unlisted methods stay public. Views with ``allow_access = False``
+  now require an authenticated user for every method. Unknown method names fail
+  when the view is constructed.
+
 Changed
 ~~~~~~~
 
@@ -14,6 +31,9 @@ Changed
   are interpreted as UTC.
 - CSV and tablib exports continue to write values as-is. Spreadsheet
   formula-injection neutralization is intentionally not applied.
+- The ``admin`` role is the only built-in superuser. An authenticated, active
+  ``admin`` passes every view through the shared gate before role or permission
+  requirements run.
 
 Fixed
 ~~~~~
@@ -30,6 +50,14 @@ Fixed
 - ``Security.init_app`` explains that ``SECRET_KEY`` must be configured first.
 - Token serializers without an explicit default use 30 minutes instead of 7
   days.
+
+Removed
+~~~~~~~
+
+- **Breaking:** ``flask_exts.admin.login_required`` is removed. Declare the
+  method name in ``View.login_required_functions`` instead; anonymous requests
+  now receive the view's 403 response rather than a login redirect.
+- Remove the unused ``flask_exts.usercenter.auth_requires`` module.
 
 Security
 ~~~~~~~~

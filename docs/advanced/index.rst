@@ -11,5 +11,6 @@ initialized, configured, or integrated with your application structure.
    :maxdepth: 2
 
    authentication
+   authorization
    database
    modelview

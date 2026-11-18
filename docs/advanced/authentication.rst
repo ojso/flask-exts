@@ -2,46 +2,60 @@ Authentication and Flask-Login
 ==============================
 
 Flask-Exts uses Flask-Login to manage authenticated users. Its login extension
-registers a ``LoginManager`` and sets ``user.login`` as the login view. For
-methods exposed by a Flask-Exts :class:`~flask_exts.admin.View`, use the
-``login_required`` decorator exported by ``flask_exts.admin``:
+registers a ``LoginManager`` and sets ``user.login`` as the login view.
+
+Requiring a login for view methods
+----------------------------------
+
+A :class:`~flask_exts.admin.View` declares which exposed methods need an
+authenticated user with ``login_required_functions``:
 
 .. code-block:: python
 
-   from flask_exts.admin import View, expose_url, login_required
+   from flask_exts.admin import View, expose_url
 
    class AccountView(View):
-       @login_required
+       allow_access = True
+       login_required_functions = ("account",)
+
        @expose_url("/account/")
        def account(self):
            return "Account"
 
-The Flask-Exts ``View`` metaclass wraps each exposed method with its own access
-check. Without an explicit login marker, ``view.allow`` can reject an anonymous
-request before Flask-Login's ``login_required`` wrapper runs. That may return
-the view's forbidden response instead of redirecting the user to the login
-page.
+The ``View`` metaclass wraps each exposed method with its own access check.
+On a view with ``allow_access = True``, an anonymous request reaches
+``view.allow`` and is denied when the method is named in
+``login_required_functions``; the view's ``inaccessible_callback`` then runs and
+the default callback aborts with ``403``. Methods that are not listed stay
+public.
 
-The ``flask_exts.admin.login_required`` decorator applies Flask-Login's
-``login_required`` and marks the method for the ``View`` wrapper. For an
-anonymous request, the wrapper invokes Flask-Login first, so the request is
-redirected to the configured login view (or receives the configured
-unauthorized response). For an authenticated request, the normal
-``view.allow`` check still runs; requiring a login does not grant permission
-to a user who fails the view's authorization rules.
+Views with ``allow_access = False`` do not need
+``login_required_functions``: every method already requires an authenticated
+user before the role rules run. Listing names on such a view is harmless but
+redundant.
 
-Use Flask-Login's own decorator directly for ordinary Flask routes that are not
-methods exposed through a Flask-Exts ``View``. For exposed view methods, import
-the decorator from ``flask_exts.admin`` so Flask-Exts can recognize the
-requirement:
+The 403 response is deliberate: these rules describe API-style authorization,
+not a browser redirect. Override ``inaccessible_callback`` on the view if an
+unauthenticated request should go to the login page instead.
+
+Names must match methods exposed with ``@expose_url``. An unknown name raises
+``ValueError`` when the view is instantiated, and a bare string raises
+``TypeError``; a typo therefore cannot silently leave a route open.
+
+Authentication alone does not grant permission. An authenticated user still
+has to pass the view's normal authorization rules.
+
+For ordinary Flask routes that are not methods exposed through a Flask-Exts
+``View``, use Flask-Login's own decorator:
 
 .. code-block:: python
 
-   # For a Flask-Exts View method:
-   from flask_exts.admin import login_required
-
-   # For a regular Flask route, use Flask-Login directly:
    from flask_login import login_required
+
+   @app.get("/account")
+   @login_required
+   def account():
+       return "Account"
 
 Disabled accounts
 -----------------
@@ -53,10 +67,10 @@ request, clearing the session id and the remember-me cookie. The JWT
 ``request_loader`` also checks ``is_active`` and rejects a token whose ``pwd``
 claim no longer matches the user's current password hash.
 
-Protected routes therefore only need ``login_required``; disabled accounts are
-already anonymous by the time authorization runs. Views that set
-``allow_access = True`` stay public for anonymous users such as login and
-registration.
+Account methods only need to be listed in ``login_required_functions``;
+disabled accounts are already anonymous by the time authorization runs. Views
+that set ``allow_access = True`` stay public for anonymous users such as login
+and registration; list account methods to keep them behind a login.
 
 Failed-login lockout
 --------------------
@@ -129,4 +143,5 @@ The helper only encodes the claims it is given. It cannot verify a second
 factor, so application code must complete TFA verification before passing
 ``amr="otp"``.
 
-See :doc:`modelview` for authorization of model views.
+See :doc:`modelview` for authorization of model views, and
+:doc:`authorization` for the optional RBAC authorizer.

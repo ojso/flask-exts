@@ -373,11 +373,11 @@ class TestUserView:
         assert "Invalid email address." in rv.text
         assert len(mail_outbox) == sent_before
 
-    def test_login_required_precedes_view_authorization(self, client, setup):
+    def test_login_required_functions_deny_anonymous_before_allow_access(
+        self, client, setup
+    ):
         response = client.get(self.user_setup_tfa_url)
-
-        assert response.status_code == 302
-        assert response.location.startswith(self.user_login_url)
+        assert response.status_code == 403
 
     def test_tfa(self, app, client, register_and_login_user, monkeypatch):
         # get tfa_enabled status
@@ -550,9 +550,9 @@ class TestUserView:
 
         # Nothing that requires login is reachable during the pending-TFA
         # window: a password-only login must not unlock anything.
-        assert client.get(self.user_setup_tfa_url).status_code == 302
-        assert client.get(self.user_change_password_url).status_code == 302
-        assert client.get(self.user_index_url).status_code == 302
+        assert client.get(self.user_setup_tfa_url).status_code == 403
+        assert client.get(self.user_change_password_url).status_code == 403
+        assert client.get(self.user_index_url).status_code == 403
 
         # abandoning verify_tfa (e.g. closing the browser) and starting over
         # must require username/password again -- there is no persisted
@@ -682,11 +682,10 @@ class TestUserView:
             self.user_recovery_codes_url,
         ):
             rv = client.get(url)
-            assert rv.status_code == 302, (
+            assert rv.status_code == 403, (
                 f"{url} was reachable after the account was disabled "
                 f"(status={rv.status_code})"
             )
-            assert self.user_login_url in rv.location
 
         with client.session_transaction() as sess:
             assert "_user_id" not in sess
@@ -696,7 +695,7 @@ class TestUserView:
             current_userstore.user_set(
                 current_userstore.get_user_by_id(self.test_user_id), is_active=True
             )
-        assert client.get(self.user_index_url).status_code == 302
+        assert client.get(self.user_index_url).status_code == 403
 
         rv = client.post(
             self.user_login_url,
@@ -1079,7 +1078,7 @@ class TestUserView:
 
     def test_recovery(self, app, client, register_user, mail_outbox):
         rv = client.get(self.user_recovery_codes_url)
-        assert rv.status_code == 302
+        assert rv.status_code == 403
 
         # No pending TFA login exists yet (TFA isn't even enabled), so
         # recovery bounces to login rather than 403ing on an authenticated

@@ -129,5 +129,4 @@ class TestSecurity:
                 assert user_loader(old_session_user_id) is None
 
             response = client.get("/user/change_password/")
-            assert response.status_code == 302
-            assert "/user/login" in response.headers["Location"]
+            assert response.status_code == 403

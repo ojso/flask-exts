@@ -1,3 +1,5 @@
+import pytest
+
 from flask_exts.admin import View, expose_url
 
 
@@ -42,3 +44,47 @@ def test_first_exposed_index_view_is_the_default():
     view = MultipleIndexView()
 
     assert view._default_view == "index"
+
+
+class LoginRequiredView(View):
+    allow_access = True
+    login_required_functions = ("index",)
+
+    @expose_url("/")
+    def index(self):
+        return "index"
+
+    @expose_url("/open/")
+    def open(self):
+        return "open"
+
+
+def test_login_required_functions_are_kept_on_the_view():
+    view = LoginRequiredView()
+
+    assert view.login_required_functions == ("index",)
+    assert view.allow_access is True
+
+
+def test_login_required_functions_must_be_exposed():
+    class BrokenView(View):
+        login_required_functions = ("index", "missing")
+
+        @expose_url("/")
+        def index(self):
+            return "index"
+
+    with pytest.raises(ValueError, match="not exposed: missing"):
+        BrokenView()
+
+
+def test_login_required_functions_reject_a_bare_string():
+    class BrokenView(View):
+        login_required_functions = "index"
+
+        @expose_url("/")
+        def index(self):
+            return "index"
+
+    with pytest.raises(TypeError, match="not a string"):
+        BrokenView()

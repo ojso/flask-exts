@@ -3,7 +3,6 @@ from functools import wraps
 from re import sub
 
 from flask import Blueprint, abort, url_for
-from flask_login import current_user
 
 
 class AlreadyWrappedError(Exception):
@@ -18,8 +17,6 @@ def _wrap_view_func_with_access(f):
 
     @wraps(f)
     def wrapper(self, *args, **kwargs):
-        if getattr(f, "_login_required", False) and not current_user.is_authenticated:
-            return f(self, *args, **kwargs)
         if not self.allow(f, *args, **kwargs):
             return self.inaccessible_callback(f, *args, **kwargs)
         return f(self, *args, **kwargs)
@@ -44,6 +41,19 @@ class View(metaclass=ViewMeta):
     """
 
     allow_access = False
+
+    #: Names of exposed view methods that require an authenticated user.
+    #:
+    #: This matters on views with ``allow_access = True``: an anonymous request
+    #: for a named method is denied with the view's ``inaccessible_callback()``
+    #: (403 by default), while unlisted methods stay public.
+    #:
+    #: Views with ``allow_access = False`` already require an authenticated user
+    #: for every method; listing names there is redundant but harmless.
+    #:
+    #: Names must match exposed methods exactly: a typo would silently leave a
+    #: route open, so unknown names raise ``ValueError``.
+    login_required_functions: tuple[str, ...] = ()
 
     def __init__(
         self,
@@ -97,6 +107,7 @@ class View(metaclass=ViewMeta):
         self._urls = []
         self._default_view = None
         self.collect_urls()
+        self._validate_login_required_functions()
         # print(self._urls)
         # print(self._default_view)
 
@@ -116,6 +127,32 @@ class View(metaclass=ViewMeta):
                     self._urls.append((url, name, methods))
                     if url in ("/", "/index/") and self._default_view is None:
                         self._default_view = name
+
+    def _validate_login_required_functions(self):
+        """Fail fast when a login rule cannot protect an exposed method.
+
+        A misspelled method name would otherwise leave the route open, which is
+        the opposite of what declaring a login requirement is meant to do.
+
+        Raises:
+            TypeError: If ``login_required_functions`` is a bare string.
+            ValueError: If it names a method that is not exposed with
+                ``expose_url``.
+        """
+        names = self.login_required_functions
+        if isinstance(names, str):
+            raise TypeError(
+                f"{self.__class__.__name__}.login_required_functions must be a "
+                "sequence of method names, not a string"
+            )
+
+        exposed = {name for _, name, _ in self._urls}
+        unknown = [name for name in names if name not in exposed]
+        if unknown:
+            raise ValueError(
+                f"{self.__class__.__name__}.login_required_functions names "
+                "methods that are not exposed: " + ", ".join(sorted(unknown))
+            )
 
     def _get_endpoint(self):
         """Generate Flask endpoint name. By default converts class name to lower

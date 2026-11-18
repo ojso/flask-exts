@@ -11,7 +11,7 @@ from flask import (
 from flask_login import current_user, login_user, logout_user
 from werkzeug.datastructures import MultiDict
 
-from ..admin import View, expose_url, login_required
+from ..admin import View, expose_url
 from ..constants import NO_CACHE_HEADER
 from ..proxies import current_security, current_userstore
 from ..security import (
@@ -45,6 +45,18 @@ class UserView(View):
 
     allow_access = True
 
+    login_required_functions = (
+        "index",
+        "profile",
+        "email_change",
+        "resend_verification",
+        "enable_tfa",
+        "setup_tfa",
+        "rebind_tfa",
+        "change_password",
+        "recovery_codes",
+    )
+
     index_template = "user/index.html"
     list_template = "user/list.html"
     login_template = "user/login.html"
@@ -75,17 +87,14 @@ class UserView(View):
     def register_form(self, *args, **kwargs):
         return RegisterForm(*args, **kwargs)
 
-    @login_required
     @expose_url("/index/")
     def index(self):
         return self.render(self.index_template, resend_form=ResendVerificationForm())
 
-    @login_required
     @expose_url("/profile/")
     def profile(self):
         return self.render("user/profile.html", resend_form=ResendVerificationForm())
 
-    @login_required
     @expose_url("/email_change/", methods=("GET", "POST"))
     def email_change(self):
         form = EmailChangeForm()
@@ -104,7 +113,6 @@ class UserView(View):
                 return redirect(url_for(".profile"))
         return self.render("user/email_change.html", form=form)
 
-    @login_required
     @expose_url("/resend_verification/", methods=("POST",))
     def resend_verification(self):
         form = ResendVerificationForm()
@@ -221,7 +229,6 @@ class UserView(View):
             result = "email_exists"
         return self.render(self.verify_email_template, result=result)
 
-    @login_required
     @expose_url("/enable_tfa/", methods=("GET", "POST"))
     def enable_tfa(self):
         enable = request.args.get("enable")
@@ -280,7 +287,6 @@ class UserView(View):
 
         return jsonify({"tfa_enabled": current_user.tfa_enabled})
 
-    @login_required
     @expose_url("/setup_tfa/")
     def setup_tfa(self):
         if current_user.tfa_enabled:
@@ -337,7 +343,7 @@ class UserView(View):
     def verify_tfa(self):
         """Second half of a TFA-protected login.
 
-        Deliberately NOT ``@login_required``: at this point the user is not
+        Deliberately NOT ``login_required``: at this point the user is not
         logged in yet (see ``login``). The pending user id in the session is
         the only link to who is trying to log in, and it only unlocks a real
         login session once the TFA code is verified.
@@ -404,7 +410,6 @@ class UserView(View):
                 self._record_second_factor_failure(user, "Invalid recovery code")
         return self.render("user/recovery.html", form=form)
 
-    @login_required
     @expose_url("/rebind_tfa/", methods=("GET", "POST"))
     def rebind_tfa(self):
         if (
@@ -456,7 +461,6 @@ class UserView(View):
             _headers=NO_CACHE_HEADER,
         )
 
-    @login_required
     @expose_url("/change_password/", methods=("GET", "POST"))
     def change_password(self):
         form = ChangePasswordForm()
@@ -506,7 +510,6 @@ class UserView(View):
                 return redirect(url_for(".login"))
         return self.render("user/reset_password.html", form=form)
 
-    @login_required
     @expose_url("/recovery_codes/")
     def recovery_codes(self):
         if not current_user.tfa_enabled or not session.get(SESSION_KEY_TFA_VERIFIED):

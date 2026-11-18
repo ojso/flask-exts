@@ -36,6 +36,10 @@ admin access, CSRF, i18n, and email behavior.
        CSRF tokens, URL tokens, and BLAKE2b fingerprints. Deploying this
        key-separation change invalidates existing CSRF/URL tokens and active
        login sessions; changing ``SECRET_KEY`` also invalidates Flask sessions.
+   * - ``SECURITY_AUTHORIZER``
+     - Authorizer implementation: ``"simple"`` (default) or ``"rbac"``.
+       Unknown values raise ``ValueError`` during security initialization.
+       See :doc:`advanced/authorization`.
    * - ``SECURITY_HEADERS_ENABLED``
      - Set to ``False`` to stop Flask-Exts from adding its default security
        response headers. Default is ``True``.

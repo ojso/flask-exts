@@ -298,11 +298,12 @@ Permissions
 gate the corresponding routes at the view level: when ``False``, the
 route redirects back to the list view instead of performing the action.
 
-This is a separate, narrower check from the application-wide authorizer
-(:class:`~flask_exts.security.authorizer.simple_authorizer.SimpleAuthorizer`),
-which decides whether a user can reach the view at all. A view can be
-reachable by a logged-in user but still refuse to create or delete
-records if these flags say so.
+This is a separate, narrower check from the application-wide authorizer,
+which decides whether a user can reach the view at all. It is the default
+:class:`~flask_exts.security.authorizer.simple_authorizer.SimpleAuthorizer`,
+or ``RBACAuthorizer`` when ``SECURITY_AUTHORIZER = "rbac"`` (see
+:doc:`authorization`). A view can be reachable by a logged-in user but still
+refuse to create or delete records if these flags say so.
 
 Templates
 ---------

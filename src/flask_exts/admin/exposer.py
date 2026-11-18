@@ -1,6 +1,3 @@
-from flask_login import login_required as flask_login_required
-
-
 def expose_url(url="/", methods=("GET",)):
     """Use this decorator to expose views in your view classes.
 
@@ -18,13 +15,6 @@ def expose_url(url="/", methods=("GET",)):
         return f
 
     return wrap
-
-
-def login_required(f):
-    """Apply Flask-Login and mark the view for login-first dispatch."""
-    f = flask_login_required(f)
-    f._login_required = True
-    return f
 
 
 def expose_action(name, text, confirmation=None):
