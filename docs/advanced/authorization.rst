@@ -103,8 +103,12 @@ not use route decorators::
 
     class TicketView(SqlaModelView):
         permission = All(Role("editor"), Predicate(owns_ticket))
-        permissions = {"delete": Permission("ticket:delete")}
+        permissions = {"delete_view": Permission("ticket:delete")}
         roles = ("admin", "support")
+
+The keys in ``permissions`` are the wrapped method names, not the URL action
+names: ModelView exposes ``create_view``, ``edit_view``, ``delete_view`` and
+``details_view``, so a ``"delete"`` key would never match.
 
 The authorizer resolves declarations in this order:
 
@@ -152,6 +156,12 @@ Every authorizer applies the shared view login gate before its own rules:
   runs.
 - An authenticated user with ``is_active = False`` is denied before the
   requirement is evaluated.
+- Requirements apply only to the method they are declared on. ModelView bulk
+  actions (``action_view``), inline edits (``ajax_update``) and inline child
+  writes (``ajax_inline_model``, ``ajax_create_parent``) are separate methods:
+  declare a requirement for every write path you expose, or disable it through
+  ``can_delete``, ``action_disallowed_list``, ``column_editable_list`` or
+  ``inline_models``.
 - A public view short-circuits requirements entirely. Keep
   ``allow_access = True`` for login, registration and other genuinely public
   endpoints, not for pages that should be protected by a requirement.

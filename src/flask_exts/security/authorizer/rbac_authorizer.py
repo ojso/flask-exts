@@ -31,7 +31,7 @@ decorators, because this authorizer plugs into the existing
 
     class TicketView(ModelView):
         permission = All(Role("editor"), Predicate(owns_ticket))
-        permissions = {"delete": Permission("ticket:delete")}
+        permissions = {"delete_view": Permission("ticket:delete")}
         roles = ("admin",)
 
 Enable it with ``app.config["SECURITY_AUTHORIZER"] = "rbac"``. Roles and
