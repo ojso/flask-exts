@@ -8,6 +8,7 @@ from .models.author import AVAILABLE_USER_TYPES, Author
 from .models.post import Post
 from .models.tag import Tag
 from .models.tree import Tree
+from .models.user_interest import UserInterest
 
 
 def build_user_admin():
@@ -16,6 +17,22 @@ def build_user_admin():
     )
     role_admin = current_userstore.create_role(name="admin")
     current_userstore.user_add_role(user_admin, role_admin)
+
+
+def build_sample_user_interest():
+    # Non-admin accounts used by the RBAC demo: they can read every interest
+    # row but may edit only their own. Passwords are for local demos only.
+    for username, content in (
+        ("alice", "Hiking, photography, sourdough baking"),
+        ("bob", "Cooking, cycling, jazz records"),
+    ):
+        user = current_userstore.create_user(
+            username=username,
+            password=username,
+            email=f"{username}@example.com",
+        )
+        db.session.add(UserInterest(user=user, content=content))
+    db.session.commit()
 
 
 def build_sample_tree():
@@ -223,3 +240,4 @@ def build_sample_db():
     build_sample_tree()
     build_sample_post()
     build_user_admin()
+    build_sample_user_interest()

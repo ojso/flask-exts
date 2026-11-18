@@ -9,6 +9,7 @@ def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.config["APP_NAME"] = "FlaskDemo"
     app.config["SECRET_KEY"] = "demo"
+    app.config["SECURITY_AUTHORIZER"] = "rbac"
     app.config.from_pyfile("config.py", silent=True)
     app.config.from_pyfile("config_prod.py", silent=True)
     # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
