@@ -3,8 +3,8 @@ Changelog
 
 All notable changes to this project are documented in this file.
 
-Unreleased
-----------
+0.5.0 - 2026-11-18
+------------------
 
 Added
 ~~~~~
@@ -67,6 +67,9 @@ Security
 
 0.4.3 - 2026-11-15
 ------------------
+
+This version was prepared but never published; its changes first shipped in
+0.5.0.
 
 Added
 ~~~~~
