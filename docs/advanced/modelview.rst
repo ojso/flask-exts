@@ -272,6 +272,22 @@ their primary key value, while rows added in the current session display
 
 Use ``form_label`` on an ``InlineForm`` to customize the generated field label.
 
+Set ``ajax_refs`` on an ``InlineForm`` to replace a relationship field of the
+child model with an AJAX-backed select. The loader is registered on the parent
+view under ``<child-model-name>-<relationship-name>`` and is served by the
+parent view's ``/ajax/lookup/`` route. The relationship must point to another
+model; the reverse relationship back to the parent is managed by the inline
+field itself and cannot be configured this way:
+
+.. code-block:: python
+
+   class Model2InlineForm(InlineForm):
+       form_columns = ("name", "category")
+       ajax_refs = {"category": {"fields": ("name",)}}
+
+   class Model1View(SqlaModelView):
+       inline_models = (Model2InlineForm,)
+
 Export
 ------
 

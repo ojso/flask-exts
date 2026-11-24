@@ -1,6 +1,7 @@
 from sqlalchemy import inspect
 
 from ....forms.fields.inline import InlineModelField
+from ..ajax import create_ajax_loader
 from ..form import get_model_form
 from .inline_form import InlineForm
 
@@ -78,7 +79,7 @@ class InlineModelConverter:
 
                 loader = None
                 if isinstance(opts, dict):
-                    loader = self.view.create_ajax_loader(
+                    loader = create_ajax_loader(
                         inline_form.model, self.session, new_name, name, opts
                     )
                 else:

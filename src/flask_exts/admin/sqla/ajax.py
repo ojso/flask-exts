@@ -3,6 +3,23 @@ from ...datastore.sqla.utils import get_model_primary_key
 from ..model.ajax import DEFAULT_PAGE_SIZE, AjaxModelLoader
 
 
+def create_ajax_loader(model, session, name, field_name, options):
+    """Create an AJAX loader for a relationship field on ``model``.
+
+    Args:
+        model: Model that declares the relationship.
+        session: SQLAlchemy session used for lookups.
+        name: Name the loader is registered under on the view.
+        field_name: Relationship attribute name on ``model``.
+        options: Loader options such as ``fields`` or ``order_by``.
+
+    Returns:
+        AjaxSqlaModelLoader: Loader bound to the related model.
+    """
+    remote_model = getattr(model, field_name).prop.mapper.class_
+    return AjaxSqlaModelLoader(name, remote_model, session, **options)
+
+
 class AjaxSqlaModelLoader(AjaxModelLoader):
     def __init__(self, name, model, session, **options):
         super().__init__(name, options)

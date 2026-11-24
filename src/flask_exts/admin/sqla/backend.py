@@ -10,7 +10,7 @@ from ...datastore.sqla.utils import (
     get_model_primary_key,
 )
 from ..model import DataBackend
-from .ajax import AjaxSqlaModelLoader
+from .ajax import create_ajax_loader
 from .filter.filter_converter import FilterConverter
 from .form import get_model_form
 from .form.model_field_convert import ModelFieldConverter
@@ -287,9 +287,7 @@ class SqlaBackend(DataBackend):
             raise
 
     def create_ajax_loader(self, name, options):
-        attr = getattr(self.model, name, None)
-        remote_model = attr.prop.mapper.class_
-        return AjaxSqlaModelLoader(name, remote_model, self.session, **options)
+        return create_ajax_loader(self.model, self.session, name, name, options)
 
     def scaffold_inline_models_form(self, form_class):
         """Contribute inline models to the form

@@ -14,6 +14,11 @@ Fixed
   the field list is inferred from the model. Previously the exclusion was only
   applied when no field list was provided.
 
+- ``ajax_refs`` configured on an ``InlineForm`` now create AJAX loaders for
+  child relationship fields instead of raising ``TypeError``. The generated
+  child form renders those fields as AJAX-backed selects and persists the
+  selected related record.
+
 0.5.0 - 2026-11-18
 ------------------
 
