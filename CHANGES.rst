@@ -3,6 +3,17 @@ Changelog
 
 All notable changes to this project are documented in this file.
 
+Unreleased
+----------
+
+Fixed
+~~~~~
+
+- ``form_excluded_columns`` now removes fields from generated create and edit
+  forms even when ``form_columns`` or ``create_form_columns`` is set, and when
+  the field list is inferred from the model. Previously the exclusion was only
+  applied when no field list was provided.
+
 0.5.0 - 2026-11-18
 ------------------
 

@@ -188,6 +188,52 @@ def test_form_column_selection(app, admin, sqla_view_factory):
         assert "integer_value" in form4._fields
 
 
+def test_form_excluded_columns_with_form_columns(app, admin, sqla_view_factory):
+    with app.app_context():
+        db.reset_all()
+        view = sqla_view_factory(
+            AdminFormModel,
+            form_columns=("integer_value", "text", "excluded_text"),
+            form_excluded_columns=("text",),
+        )
+
+        create_form = view.create_form()
+        assert "integer_value" in create_form._fields
+        assert "excluded_text" in create_form._fields
+        assert "text" not in create_form._fields
+
+        edit_form = view.edit_form()
+        assert "excluded_text" in edit_form._fields
+        assert "text" not in edit_form._fields
+
+        create_only_view = sqla_view_factory(
+            AdminFormModel,
+            endpoint="create_only",
+            create_form_columns=("integer_value", "text"),
+            form_excluded_columns=("text",),
+        )
+        create_only_form = create_only_view.create_form()
+        assert "integer_value" in create_only_form._fields
+        assert "text" not in create_only_form._fields
+
+
+def test_form_excluded_columns_with_inferred_form_columns(
+    app, admin, sqla_view_factory
+):
+    with app.app_context():
+        db.reset_all()
+        view = sqla_view_factory(
+            AdminFormModel,
+            form_excluded_columns=("text", "date_time"),
+        )
+
+        create_form = view.create_form()
+        assert "integer_value" in create_form._fields
+        assert "excluded_text" in create_form._fields
+        assert "text" not in create_form._fields
+        assert "date_time" not in create_form._fields
+
+
 def test_form_field_validators(app, admin, sqla_view_factory):
     with app.app_context():
         db.reset_all()

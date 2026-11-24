@@ -31,7 +31,7 @@ def get_model_form(
         only:
             Include fields
         exclude:
-            Exclude fields
+            Exclude fields; applied to explicitly included and inferred fields
         field_args:
             Dictionary with additional field arguments
         extra_fields:
@@ -39,18 +39,18 @@ def get_model_form(
     """
 
     field_args = field_args or {}
+    excluded = set(exclude or ())
     mapper = inspect(model)
 
     if only:
         properties = []
         for name in only:
             column, _path = get_field_with_path(model, name)
+            if column.key in excluded or name in excluded:
+                continue
             properties.append((column.key, column.property))
     else:
-        properties = [(p.key, p) for p in mapper.attrs]
-
-        if exclude:
-            properties = [x for x in properties if x[0] not in exclude]
+        properties = [(p.key, p) for p in mapper.attrs if p.key not in excluded]
 
     field_dict = {}
     for name, p in properties:
