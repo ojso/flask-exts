@@ -7,6 +7,10 @@ class AdminExtension(Extension):
     def name(self) -> str:
         return "admin"
 
+    def __init__(self):
+        self._admin = None
+        self._registered_view_names = set()
+
     def init_app(self, app):
         self._admin = Admin()
         self._admin.init_app(app)
@@ -15,18 +19,28 @@ class AdminExtension(Extension):
         return self._admin
 
     def post_init(self, app):
-        """Collect views from every extension that implements AdminViewMixin.
+        """Collect views from every extension that implements AdminViewMixin."""
+        self.rescan_views(app)
 
-        Runs after all extensions' init_app, so this does not care whether
-        admin was registered before or after its view providers.
+    def on_extension_registered(self, app, extension):
+        """Pick up views from a provider registered after app initialization."""
+        if isinstance(extension, AdminViewMixin):
+            self.rescan_views(app)
 
-        Note: this only sees extensions registered up to this point. An
-        extension registered via ExtensionManager.register_extension *after*
-        app.init_app() has already run will not be rescanned automatically
-        (same limitation the previous push-based implementation had).
+    def rescan_views(self, app):
+        """Register views published by ``AdminViewMixin`` providers.
+
+        Safe to call more than once: views whose names are already registered
+        are skipped, so late registrations and explicit rescans do not raise
+        duplicate-view errors.
         """
         exts = app.extensions["exts"]
         for ext in exts.list_extensions():
-            if isinstance(ext, AdminViewMixin):
-                for view, is_menu in ext.get_admin_views():
-                    self._admin.register_view(view, is_menu=is_menu)
+            if not isinstance(ext, AdminViewMixin):
+                continue
+            for view, is_menu in ext.get_admin_views():
+                view_name = view.name.lower().replace(" ", "")
+                if view_name in self._registered_view_names:
+                    continue
+                self._admin.register_view(view, is_menu=is_menu)
+                self._registered_view_names.add(view_name)

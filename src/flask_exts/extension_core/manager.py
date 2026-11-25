@@ -68,11 +68,11 @@ class ExtensionManager:
         Note:
             If the manager already has an app (``init_app`` already ran),
             this immediately runs both lifecycle phases -- ``init_app`` then
-            ``post_init`` -- for the new extension alone. It will not,
-            however, retroactively re-run other extensions' ``post_init`` to
-            pick up a newly added contribution (e.g. a late-registered
-            ``AdminViewMixin`` provider will not be seen by an admin whose
-            own ``post_init`` already ran).
+            ``post_init`` -- for the new extension alone, then notifies every
+            already post-initialized extension through
+            :meth:`Extension.on_extension_registered`. Admin uses that hook to
+            rescan ``AdminViewMixin`` providers, so a late registered extension
+            no longer needs a manual refresh.
 
         Examples:
             class MyExtension(Extension):
@@ -94,8 +94,18 @@ class ExtensionManager:
         if self.app:
             self._registry.init(ext.name, self.app)
             self._registry.post_init(ext.name, self.app)
+            self._notify_extension_registered(ext)
 
         return ext
+
+    def _notify_extension_registered(self, extension: Extension) -> None:
+        """Let initialized extensions react to a late registration."""
+        for existing in self._registry.list_extensions():
+            if existing is extension:
+                continue
+            if not self._registry.is_post_initialized(existing.name):
+                continue
+            existing.on_extension_registered(self.app, extension)
 
     def init_app(self, app) -> None:
         """Initialize all registered extensions for a Flask application.

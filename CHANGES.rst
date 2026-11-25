@@ -30,6 +30,11 @@ Fixed
   child form renders those fields as AJAX-backed selects and persists the
   selected related record.
 
+- Extensions registered after application startup now notify already
+  initialized extensions through ``on_extension_registered``. The admin
+  extension uses that hook to pick up views from late registered
+  ``AdminViewMixin`` providers without a manual refresh.
+
 0.5.0 - 2026-11-18
 ------------------
 

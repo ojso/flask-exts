@@ -158,3 +158,34 @@ def test_builtin_admin_collects_portal_and_usercenter_views(app):
 
     assert "index" in view_names  # from PortalExtension
     assert "user" in view_names  # from UserCenterExtension
+
+
+def test_late_registration_notifies_post_initialized_extensions():
+    """A late registration lets existing extensions refresh contributions."""
+    seen = []
+
+    class Listener(Extension):
+        @property
+        def name(self):
+            return "listener"
+
+        def init_app(self, app):
+            pass
+
+        def on_extension_registered(self, app, extension):
+            seen.append(extension.name)
+
+    class Late(Extension):
+        @property
+        def name(self):
+            return "late"
+
+        def init_app(self, app):
+            pass
+
+    exts = ExtensionManager(register_builtin=False)
+    exts.register_extension(Listener)
+    exts.init_app(FakeApp())
+    exts.register_extension(Late)
+
+    assert seen == ["late"]

@@ -1,5 +1,8 @@
 from flask import url_for
 
+from flask_exts.admin import AdminViewMixin, View, expose_url
+from flask_exts.extension_core.base import Extension
+
 
 def get_app_endpoint_rule(app, endpoint):
     rules = list(app.url_map.iter_rules())
@@ -73,3 +76,38 @@ def test_app_admin_default(app):
     assert user_login_url == "/user/login/"
     assert user_logout_url == "/user/logout/"
     assert user_register_url == "/user/register/"
+
+
+class LateAdminView(View):
+    allow_access = True
+
+    @expose_url("/")
+    def index(self):
+        return "late view"
+
+
+class LateAdminExtension(AdminViewMixin, Extension):
+    @property
+    def name(self):
+        return "late_admin"
+
+    def init_app(self, app):
+        pass
+
+    def get_admin_views(self):
+        return [(LateAdminView(name="Late", endpoint="late"), False)]
+
+
+def test_late_registered_extension_views_are_collected(app):
+    """A provider registered after startup is rescanned by the admin."""
+    exts = app.extensions["exts"]
+    admin = exts.get_extension("admin").get_admin()
+    assert admin.get_view("late") is None
+
+    exts.register_extension(LateAdminExtension)
+
+    assert admin.get_view("late") is not None
+    assert "late" in app.blueprints
+    rv = app.test_client().get("/admin/late/")
+    assert rv.status_code == 200
+    assert rv.get_data(as_text=True) == "late view"

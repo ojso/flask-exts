@@ -74,6 +74,19 @@ class Extension(ABC):
             app: Flask application instance
         """
 
+    def on_extension_registered(self, app, extension):
+        """React to an extension registered after the app was initialized.
+
+        Called on every already post-initialized extension after a late
+        registered extension finishes its own ``init_app`` / ``post_init``.
+        Override when this extension collects contributions from peers and
+        must refresh them.
+
+        Args:
+            app: Flask application instance
+            extension: The newly registered extension instance
+        """
+
     def shutdown(self):
         """Optional cleanup when app context is destroyed.
 
