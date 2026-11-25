@@ -1,4 +1,3 @@
-from flask import request
 from flask_login import current_user
 from sqlalchemy import select
 
@@ -10,27 +9,12 @@ from ..models.user_interest import UserInterest
 
 
 def owns_interest(ctx):
-    """Allow the action only when the target row belongs to ``ctx.user``."""
+    """Allow the action only when the resolved row belongs to ``ctx.user``."""
     user_id = getattr(ctx.user, "id", None)
-    if user_id is None:
+    obj = getattr(ctx, "object", None)
+    if user_id is None or obj is None:
         return False
-
-    # ``edit_view`` reads the id from the query string; ``delete_view`` reads
-    # it from the submitted form. Keep the source aligned with the handler so a
-    # forged id in the other location cannot pass the check.
-    fn_name = getattr(ctx.fn, "__name__", "")
-    raw_id = (
-        request.form.get("id") if fn_name == "delete_view" else request.args.get("id")
-    )
-    try:
-        interest_id = int(raw_id) if raw_id is not None else None
-    except (TypeError, ValueError):
-        return False
-    if interest_id is None:
-        return False
-
-    interest = db.session.get(UserInterest, interest_id)
-    return interest is not None and interest.user_id == user_id
+    return getattr(obj, "user_id", None) == user_id
 
 
 def has_no_interest(ctx):
@@ -45,7 +29,7 @@ def has_no_interest(ctx):
 
 
 class InterestView(SqlaModelView):
-    """Show every user's interest; let each user edit only their own."""
+    """Show every user's interest; let each user manage only their own."""
 
     column_list = ("id", "user.username", "content")
     column_labels = {"user.username": "User", "content": "Interests"}  # noqa: RUF012
@@ -53,17 +37,19 @@ class InterestView(SqlaModelView):
     column_default_sort = ("id", False)
     # Owner is assigned on create and can never be changed through the form.
     form_columns = ("content",)
-
-    # The demo only demonstrates editing; delete stays disabled.
-    can_delete = False
+    column_editable_list = ("content",)
+    can_delete = True
+    # Row deletion is enabled; bulk delete stays disabled.
     action_disallowed_list = ("delete",)
 
-    # Any logged-in user may read every row. Per-method requirements below
-    # replace this default for the write actions.
+    # Any logged-in user may read every row. Write entry points are authorized
+    # per record through ``object_requirements`` below.
     permission = Authenticated()
-    permissions = {  # noqa: RUF012
-        "create_view": Predicate(has_no_interest),
+    permissions = {"create_view": Predicate(has_no_interest)}  # noqa: RUF012
+    object_requirements = {  # noqa: RUF012
         "edit_view": Predicate(owns_interest),
+        "delete_view": Predicate(owns_interest),
+        "ajax_update": Predicate(owns_interest),
     }
 
     def create_model(self, model):
