@@ -2,7 +2,7 @@
 
 {% from "macro/menu.html" import render_menu, render_menu_user %}
 {% from "macro/message.html" import render_messages %}
-{% from "macro/nav.html" import render_nav_item %}
+{% from "macro/nav.html" import render_nav_item, render_language_selector %}
 
 {% do _template.plugin_manager.add_request_plugins(["admin"]) %}
 
@@ -28,6 +28,7 @@
           {{ render_menu(admin.menu.get_menus() ,view) }}
         </ul>
         <ul class="navbar-nav">
+          {{ render_language_selector(babel_languages, lang, babel_language_url) }}
           {{ render_menu_user(current_user) }}
         </ul>
       </div>

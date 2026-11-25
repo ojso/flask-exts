@@ -28,6 +28,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "simple"
 app.config["APP_NAME"] = "FlaskSimple"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+app.config["BABEL_ACCEPT_LANGUAGES"] = "en;zh"
 exts = ExtensionManager()
 exts.init_app(app)
 

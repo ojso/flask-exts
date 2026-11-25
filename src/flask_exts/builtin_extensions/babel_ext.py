@@ -4,9 +4,12 @@ from flask import (
     current_app,
     request,
     session,
+    url_for,
 )
 from flask_babel import Babel, get_locale
 from wtforms.i18n import messages_path
+
+from babel import Locale
 
 from .. import translations
 from ..extension_core.base import Extension
@@ -29,6 +32,42 @@ def locale_selector():
         accept_languages = current_app.config["BABEL_ACCEPT_LANGUAGES"].split(";")
         accept_language = request.accept_languages.best_match(accept_languages)
         return accept_language
+
+
+def _configured_languages():
+    """Return the configured locales with names for the language selector."""
+    configured = current_app.config.get("BABEL_ACCEPT_LANGUAGES") or ""
+    languages = []
+    seen = set()
+    for code in (item.strip() for item in configured.split(";")):
+        if not code or code in seen:
+            continue
+        seen.add(code)
+        try:
+            locale = Locale.parse(code.replace("-", "_"))
+        except (TypeError, ValueError):
+            name = code
+        else:
+            name = locale.get_display_name(locale)
+        languages.append({"code": code, "name": name})
+    return languages
+
+
+def _language_url(code):
+    """Return the current URL with the ``lang`` parameter set to ``code``."""
+    if request.endpoint is None:
+        return f"{request.path}?lang={code}"
+    values = dict(request.view_args or ())
+    for key, value in request.args.items(multi=True):
+        existing = values.get(key)
+        if existing is None:
+            values[key] = value
+        elif isinstance(existing, list):
+            existing.append(value)
+        else:
+            values[key] = [existing, value]
+    values["lang"] = code
+    return url_for(request.endpoint, **values)
 
 
 def timezone_selector():
@@ -97,4 +136,8 @@ class BabelExtension(Extension):
 
         @app.context_processor
         def get_lang():
-            return {"lang": get_locale()}
+            return {
+                "lang": get_locale(),
+                "babel_languages": _configured_languages(),
+                "babel_language_url": _language_url,
+            }

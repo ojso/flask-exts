@@ -10,6 +10,7 @@ def create_app():
     app.config["APP_NAME"] = "FlaskDemo"
     app.config["SECRET_KEY"] = "demo"
     app.config["SECURITY_AUTHORIZER"] = "rbac"
+    app.config["BABEL_ACCEPT_LANGUAGES"] = "en;zh;es;fr;ja;ru;de;ko;zh_Hant;ar;id;pt"
     app.config.from_pyfile("config.py", silent=True)
     app.config.from_pyfile("config_prod.py", silent=True)
     # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"

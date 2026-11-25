@@ -1,3 +1,5 @@
+{% from "macro/icon.html" import render_icon %}
+
 {% macro render_nav_item(endpoint, text) -%}
   {% set active = True if request.endpoint and request.endpoint == endpoint else False -%}
   {% set href = url_for(endpoint, **kwargs) if not active else "#" -%}
@@ -15,4 +17,27 @@
       <a href="{{ url_for(endpoint, **kwargs) }}">{{ text }}</a>
     {% endif %}
   </li>
+{% endmacro %}
+
+{% macro render_language_selector(languages, current_lang, build_url) %}
+  {% if languages and languages|length > 1 %}
+    {% set active_language = languages|selectattr("code", "equalto", current_lang|string)|first|default(none, true) %}
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle"
+         aria-expanded="false"
+         data-bs-toggle="dropdown"
+         href="#"
+         role="button">{{ render_icon("language") }} {{ active_language.name if active_language else current_lang }}</a>
+      <ul class="dropdown-menu dropdown-menu-end">
+        {% for language in languages %}
+          {% set active = language.code == current_lang|string %}
+          <li>
+            <a class="dropdown-item{% if active %} active{% endif %}"
+               href="{{ build_url(language.code) }}"
+               lang="{{ language.code }}">{{ language.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </li>
+  {% endif %}
 {% endmacro %}

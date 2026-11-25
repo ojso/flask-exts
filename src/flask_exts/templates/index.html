@@ -1,43 +1,46 @@
-{% extends "layout.html" %}
+{% extends "admin/master.html" %}
 
-{% block body %}
-  <div class="container">
-    <div>template location: index.html</div>
-    <br>
-    <div>
-      <p>
-        <a href="{{ url_for('index.adminindex') }}">Click me to get to Admin!</a>
+{% block title %}Flask-Exts{% endblock %}
+
+{% block main %}
+  <div class="container py-4">
+    <div class="p-4 mb-4 bg-body-tertiary rounded-3">
+      <h1 class="display-6">Flask-Exts</h1>
+      <p class="lead mb-0">
+        Composable extensions for Flask: admin views, authentication, security,
+        forms, and database helpers.
       </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='en') }}">Click me to get to Admin! (English)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='zh') }}">Click me to get to Admin! (Chinese)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='cs') }}">Click me to get to Admin! (Czech)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='fa') }}">Click me to get to Admin! (Farsi)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='fr') }}">Click me to get to Admin! (French)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='de') }}">Click me to get to Admin! (German)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='pt') }}">Click me to get to Admin! (Portuguese)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='pa') }}">Click me to get to Admin! (Punjabi)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='es') }}">Click me to get to Admin! (Spanish)</a>
-      </p>
-      <p>
-        <a href="{{ url_for('index.adminindex',lang='ru') }}">Click me to get to Admin! (Russian)</a>
-      </p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <h2 class="h5">Quick start</h2>
+        <pre class="bg-body-tertiary border rounded p-3"><code>pip install flask-exts</code></pre>
+        <pre class="bg-body-tertiary border rounded p-3"><code>from flask import Flask
+from flask_exts import ExtensionManager
+
+app = Flask(__name__)
+ExtensionManager().init_app(app)</code></pre>
+        <p class="text-muted mb-0">
+          Configure the extensions you need through <code>app.config</code>, then start
+          your application as usual.
+        </p>
+      </div>
+
+      <div class="col-lg-5">
+        <h2 class="h5">Included</h2>
+        <ul class="list-group">
+          <li class="list-group-item">Admin views and model CRUD</li>
+          <li class="list-group-item">Login, users, and role-based access</li>
+          <li class="list-group-item">Forms, JSON fields, and translations</li>
+          <li class="list-group-item">SQLAlchemy helpers and query utilities</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-4 d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" href="{{ url_for('index.adminindex') }}">Open Admin</a>
+      <a class="btn btn-outline-secondary" href="https://flask-exts.readthedocs.io">Documentation</a>
     </div>
   </div>
 {% endblock %}

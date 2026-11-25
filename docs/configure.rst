@@ -14,8 +14,11 @@ admin access, CSRF, i18n, and email behavior.
      - Application name used as the issuer in TOTP provisioning URIs.
        Default is ``"UnknownApp"``.
    * - ``BABEL_ACCEPT_LANGUAGES``
-     - Set to ``en;zh`` for Babel's accepted languages.
-       Default is ``None``.
+     - Semicolon-separated locales such as ``en;zh``. Babel uses them for
+       ``Accept-Language`` matching, and the admin navbar renders a language
+       selector when at least two locales are configured. The selector keeps the
+       current URL and sets ``?lang=<code>``; language names come from Babel.
+       Default is ``None`` (no selector).
    * - ``BABEL_DEFAULT_TIMEZONE``
      - Set to ``Asia/Shanghai`` as the default timezone for Babel.
        Default is ``None``.

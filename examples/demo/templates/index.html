@@ -1,0 +1,72 @@
+{% extends "admin/master.html" %}
+
+{% block title %}Flask-Exts Demo{% endblock %}
+
+{% block main %}
+  <div class="container py-4">
+    <div class="p-4 mb-4 bg-body-tertiary rounded-3">
+      <h1 class="display-6">Flask-Exts Demo</h1>
+      <p class="lead mb-0">
+        A small reference app for admin views, inline editing, filters, AJAX
+        lookups, exports, and object-level authorization.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <h2 class="h5">Demo accounts</h2>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th scope="col">Username</th>
+                <th scope="col">Password</th>
+                <th scope="col">Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>admin</code></td>
+                <td><code>admin</code></td>
+                <td>Admin</td>
+              </tr>
+              <tr>
+                <td><code>alice</code></td>
+                <td><code>alice</code></td>
+                <td>User, owns one interest</td>
+              </tr>
+              <tr>
+                <td><code>bob</code></td>
+                <td><code>bob</code></td>
+                <td>User, owns one interest</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-muted small mb-0">Local demo only. Do not reuse these credentials in production.</p>
+      </div>
+
+      <div class="col-lg-7">
+        <h2 class="h5">What to try</h2>
+        <ul>
+          <li>
+            After signing in as <code>admin</code>, open Posts for search,
+            multi-column sorting, custom filters, and CSV/XLS export.
+          </li>
+          <li>Edit authors and posts, and try inline editing in the list view.</li>
+          <li>
+            Sign in as <code>alice</code> or <code>bob</code> to see Interests
+            limited to the rows they own.
+          </li>
+          <li>Use the language selector in the navbar to switch English and Chinese.</li>
+        </ul>
+
+        <h2 class="h5">Notes</h2>
+        <ul class="text-muted">
+          <li>Data lives in <code>demo.sqlite</code> and is rebuilt from sample data when missing.</li>
+          <li>The demo uses <code>SECRET_KEY="demo"</code> and skips production hardening.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}
