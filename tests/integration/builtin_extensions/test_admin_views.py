@@ -111,3 +111,16 @@ def test_late_registered_extension_views_are_collected(app):
     rv = app.test_client().get("/admin/late/")
     assert rv.status_code == 200
     assert rv.get_data(as_text=True) == "late view"
+
+
+def test_rescan_skips_views_registered_manually(app):
+    """A rescan does not re-register a view already added through the admin."""
+    exts = app.extensions["exts"]
+    admin = exts.get_extension("admin").get_admin()
+    manual_view = LateAdminView(name="Late", endpoint="late")
+    admin.register_view(manual_view, is_menu=False)
+
+    exts.register_extension(LateAdminExtension)
+
+    assert admin.get_view("late") is manual_view
+    assert [view.name for view in admin.get_views()].count("Late") == 1

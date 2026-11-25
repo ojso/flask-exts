@@ -634,13 +634,11 @@ class ModelView(View):
         if (
             self.can_delete
             and "delete_view" not in requirements
-            and ("delete_view" not in exempt)
+            and "delete_view" not in exempt
         ):
-            warnings.warn(
-                "Object-level authorization is enabled but delete_view has no"
-                " object requirement; record ownership is not checked.",
-                UserWarning,
-                stacklevel=2,
+            raise ValueError(
+                "can_delete requires an object requirement for 'delete_view'"
+                " or an explicit object_requirement_exempt entry."
             )
         if self.can_export and "export" not in exempt:
             warnings.warn(

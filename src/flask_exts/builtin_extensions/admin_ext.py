@@ -40,7 +40,10 @@ class AdminExtension(Extension):
                 continue
             for view, is_menu in ext.get_admin_views():
                 view_name = view.name.lower().replace(" ", "")
-                if view_name in self._registered_view_names:
+                if (
+                    view_name in self._registered_view_names
+                    or self._admin.get_view(view_name) is not None
+                ):
                     continue
                 self._admin.register_view(view, is_menu=is_menu)
                 self._registered_view_names.add(view_name)

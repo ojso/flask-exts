@@ -151,10 +151,10 @@ means the entry does not operate on existing objects; an entry with no resolver
 is denied once object-level authorization is enabled.
 
 Startup validation runs only when object-level authorization is enabled. It
-raises ``ValueError`` when ``column_editable_list``, ``inline_models``, or bulk
-actions are enabled without the matching requirement, unless the method is
-listed in ``object_requirement_exempt``. Custom exposed methods need a resolver
-or an exemption. ``create_view``, ``index_view``, ``export`` and
+raises ``ValueError`` when ``column_editable_list``, ``inline_models``, bulk
+actions, or ``can_delete`` are enabled without the matching requirement, unless
+the method is listed in ``object_requirement_exempt``. Custom exposed methods
+need a resolver or an exemption. ``create_view``, ``index_view``, ``export`` and
 ``ajax_lookup`` do not check existing objects, and exports are not row-filtered.
 Object-level checks require an authorizer that implements them; the RBAC
 authorizer does, and any other authorizer fails closed for these entries.

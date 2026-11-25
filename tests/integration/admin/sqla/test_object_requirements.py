@@ -323,6 +323,31 @@ def test_startup_rejects_capabilities_without_object_requirements(
             sqla_view_factory(AdminTestModel, permission=predicate)
 
 
+def test_startup_rejects_delete_without_object_requirement(app, sqla_view_factory):
+    with app.app_context(), pytest.raises(ValueError, match="delete_view"):
+        sqla_view_factory(
+            AdminTestModel,
+            permission=Predicate(lambda ctx: True),
+            action_disallowed_list=("delete",),
+        )
+
+
+def test_startup_allows_delete_with_requirement_or_exemption(app, sqla_view_factory):
+    with app.app_context():
+        sqla_view_factory(
+            AdminTestModel,
+            permission=Predicate(lambda ctx: True),
+            action_disallowed_list=("delete",),
+            object_requirement_exempt=("delete_view",),
+        )
+        sqla_view_factory(
+            AdminTestModel,
+            permission=Predicate(lambda ctx: True),
+            action_disallowed_list=("delete",),
+            object_requirements={"delete_view": Predicate(lambda ctx: True)},
+        )
+
+
 def test_startup_rejects_any_mode_for_write_entries(app, sqla_view_factory):
     with (
         app.app_context(),
