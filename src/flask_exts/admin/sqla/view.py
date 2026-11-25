@@ -40,6 +40,31 @@ class SqlaModelView(ModelView):
         if self.form_choices is None:
             self.form_choices = {}
 
+    def _resolve_ajax_inline_model_objects(self):
+        """Resolve the parent and child objects touched by an inline AJAX call."""
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return None
+
+        parent_id = payload.get("parent_id")
+        if parent_id is None:
+            return None
+        parent = self.get_one(str(parent_id))
+        if parent is None:
+            return None
+
+        child_id = payload.get("child_id")
+        if child_id is None:
+            return [parent]
+
+        relationship_name = (request.view_args or {}).get("relationship_name")
+        if not relationship_name:
+            return None
+        child = self._backend.get_inline_object(parent, relationship_name, child_id)
+        if child is None:
+            return None
+        return [parent, child]
+
     def remove_inline_child(self, parent, relationship_name, child_id):
         return self._backend.remove_inline_child(parent, relationship_name, child_id)
 

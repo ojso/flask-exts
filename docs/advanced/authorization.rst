@@ -123,6 +123,42 @@ A bare string is shorthand for ``Role``: ``permission = "admin"`` is the same
 as ``permission = Role("admin")``. An unsupported declaration type raises
 ``TypeError``.
 
+Object-level requirements across entry points
+---------------------------------------------
+
+A ``Predicate`` in ``permission`` or ``permissions`` is only evaluated for the
+method that resolves to it. Other entry points that touch the same record do not
+inherit it. Declare ``object_requirements`` to authorize the records a request
+resolves to before the handler runs::
+
+    class TicketView(SqlaModelView):
+        permission = Authenticated()
+        object_requirements = {
+            "details_view": Predicate(owns_ticket),
+            "edit_view": Predicate(owns_ticket),
+            "delete_view": Predicate(owns_ticket),
+            "ajax_update": Predicate(owns_ticket),
+            "action_view": Predicate(owns_ticket),
+            "ajax_inline_model": Predicate(owns_ticket),
+        }
+
+The predicate receives ``BuildContext.object`` for the current record and
+``BuildContext.objects`` for the full batch. The wrapper resolves objects per
+entry point (query id, form id, JSON ``pk``, ``rowid`` list, or parent/child ids)
+and evaluates the requirement before the handler runs. Batch checks default to
+``all``; write methods reject the ``any`` mode. A resolver returning ``None``
+means the entry does not operate on existing objects; an entry with no resolver
+is denied once object-level authorization is enabled.
+
+Startup validation runs only when object-level authorization is enabled. It
+raises ``ValueError`` when ``column_editable_list``, ``inline_models``, or bulk
+actions are enabled without the matching requirement, unless the method is
+listed in ``object_requirement_exempt``. Custom exposed methods need a resolver
+or an exemption. ``create_view``, ``index_view``, ``export`` and
+``ajax_lookup`` do not check existing objects, and exports are not row-filtered.
+Object-level checks require an authorizer that implements them; the RBAC
+authorizer does, and any other authorizer fails closed for these entries.
+
 Identity data
 -------------
 

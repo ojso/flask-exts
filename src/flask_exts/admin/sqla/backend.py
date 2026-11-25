@@ -382,6 +382,10 @@ class SqlaBackend(DataBackend):
                 return child
         return None
 
+    def get_inline_object(self, parent, relationship_name, child_id):
+        """Return an inline child by id, or ``None`` when it does not exist."""
+        return self._get_related_inline_object(parent, relationship_name, child_id)
+
     def remove_inline_child(self, parent, relationship_name, child_id):
         child = self._get_related_inline_object(parent, relationship_name, child_id)
         if child is None:

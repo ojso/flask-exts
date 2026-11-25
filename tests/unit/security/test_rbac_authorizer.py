@@ -13,6 +13,7 @@ from flask_exts.security.authorizer.rbac_authorizer import (
     RBACAuthorizer,
     Requirements,
     Role,
+    contains_predicate,
 )
 from flask_exts.security.registry import Registry
 
@@ -344,3 +345,58 @@ class TestRegistrySelection:
         registry = Registry()
         with pytest.raises(ValueError):
             registry.init_all(FakeApp({"SECURITY_AUTHORIZER": "typo"}))
+
+
+class TestObjectAuthorization:
+    """Object-level checks evaluate the resolved record, not the request shape."""
+
+    def test_authorize_object_uses_ctx_object(self):
+        authorizer = make_authorizer()
+        view = make_view(permission=Authenticated())
+
+        def edit(self):
+            return "edited"
+
+        requirement = Predicate(
+            lambda context: context.object.owner_id == context.user.id
+        )
+        allowed = type("Record", (), {"owner_id": 7})()
+        denied = type("Record", (), {"owner_id": 8})()
+        user = MockUser()
+
+        assert authorizer.authorize_object(view, edit, allowed, requirement, user=user)
+        assert not authorizer.authorize_object(
+            view, edit, denied, requirement, user=user
+        )
+
+    def test_admin_role_bypasses_object_requirement(self):
+        authorizer = make_authorizer()
+        view = make_view(permission=Authenticated())
+
+        def edit(self):
+            return "edited"
+
+        requirement = Predicate(lambda context: False)
+        record = type("Record", (), {"owner_id": 8})()
+
+        assert authorizer.authorize_object(
+            view, edit, record, requirement, user=MockUser(["admin"])
+        )
+
+    def test_build_context_exposes_object_and_batch(self):
+        authorizer = make_authorizer()
+        first = type("Record", (), {"id": 1})()
+        second = type("Record", (), {"id": 2})()
+
+        context = authorizer.build_context(
+            MockUser(), obj=first, objects=[first, second]
+        )
+
+        assert context.object is first
+        assert context.objects == (first, second)
+
+    def test_contains_predicate_searches_composites(self):
+        assert contains_predicate(All(Role("admin"), Predicate(lambda ctx: True)))
+        assert contains_predicate(Any(Predicate(lambda ctx: True)))
+        assert not contains_predicate(Role("admin"))
+        assert not contains_predicate(None)

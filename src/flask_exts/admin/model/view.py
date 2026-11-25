@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Callable, Sequence
 from math import ceil
 from typing import Any
@@ -13,6 +14,8 @@ from flask import (
 from flask_babel import gettext, lazy_gettext, ngettext
 
 from ...forms.form.flask_form import FlaskForm
+from ...proxies import current_security
+from ...security.authorizer.rbac_authorizer import contains_predicate
 from ...security.urls import safe_redirect_target
 from ..exposer import expose_action, expose_url
 from ..view import View
@@ -26,6 +29,11 @@ from .handlers import (
     PaginationHandler,
     RowActionHandler,
     ValueHandler,
+)
+
+_UNRESOLVED = object()
+_WRITE_METHODS = frozenset(
+    {"delete_view", "ajax_update", "ajax_inline_model", "action_view"}
 )
 
 
@@ -75,6 +83,20 @@ class ModelView(View):
 
     can_export: bool = False
     """Whether export is enabled for the current view."""
+
+    # Object-level authorization
+
+    object_requirements = None
+    """Object-level requirements keyed by exposed view method name."""
+
+    object_requirement_modes = None
+    """Combine mode per method; ``"all"`` by default, ``"any"`` for reads only."""
+
+    object_resolvers = None
+    """Optional per-method callables returning the objects to authorize."""
+
+    object_requirement_exempt = ()
+    """Methods explicitly allowed to skip object-level checks."""
 
     # Columns
 
@@ -546,6 +568,190 @@ class ModelView(View):
 
     def _init_components(self, **kwargs):
         """Initialize the list, sort, detail, export, and form metadata."""
+        self._validate_object_requirements()
+
+    # --- Object-level authorization --------------------------------------
+
+    def _object_authorization_enabled(self) -> bool:
+        """Return whether this view opts into object-level authorization."""
+        if self.object_requirements:
+            return True
+
+        declarations = [getattr(self, "permission", None)]
+        declared = getattr(self, "permissions", None)
+        if isinstance(declared, dict):
+            declarations.extend(declared.values())
+        return any(contains_predicate(item) for item in declarations)
+
+    def _validate_object_requirements(self) -> None:
+        """Reject capability combinations that bypass object checks.
+
+        Raises:
+            ValueError: If a capability is enabled without a matching
+                object-level requirement and is not explicitly exempted, or if
+                a write entry uses the ``"any"`` combine mode.
+        """
+        if not self._object_authorization_enabled():
+            return
+
+        requirements = self.object_requirements or {}
+        exempt = set(self.object_requirement_exempt or ())
+
+        capability_checks = (
+            (
+                bool(self.column_editable_list),
+                "ajax_update",
+                "column_editable_list",
+            ),
+            (
+                bool(getattr(self, "inline_models", None)),
+                "ajax_inline_model",
+                "inline_models",
+            ),
+            (
+                bool(self.get_bulk_actions()),
+                "action_view",
+                "bulk actions",
+            ),
+        )
+        for enabled, method, capability in capability_checks:
+            if enabled and method not in requirements and method not in exempt:
+                raise ValueError(
+                    f"{capability} requires an object requirement for {method!r}"
+                    " or an explicit object_requirement_exempt entry."
+                )
+
+        for method, mode in (self.object_requirement_modes or {}).items():
+            if mode not in {"all", "any"}:
+                raise ValueError(
+                    f"object_requirement_modes[{method!r}] must be 'all' or 'any'."
+                )
+            if mode == "any" and method in _WRITE_METHODS:
+                raise ValueError(
+                    f"Write method {method!r} cannot use the 'any' object mode."
+                )
+
+        if (
+            self.can_delete
+            and "delete_view" not in requirements
+            and ("delete_view" not in exempt)
+        ):
+            warnings.warn(
+                "Object-level authorization is enabled but delete_view has no"
+                " object requirement; record ownership is not checked.",
+                UserWarning,
+                stacklevel=2,
+            )
+        if self.can_export and "export" not in exempt:
+            warnings.warn(
+                "Object-level authorization does not filter exports;"
+                " add export to object_requirement_exempt to acknowledge this.",
+                UserWarning,
+                stacklevel=2,
+            )
+
+    def resolve_request_objects(self, fn_name: str):
+        """Return the objects a request resolves to for ``fn_name``.
+
+        Args:
+            fn_name: Name of the exposed view method.
+
+        Returns:
+            Sequence[Any] | None | object: Objects to authorize, ``None`` when
+                the method does not operate on existing objects, or the
+                internal unresolved sentinel when no resolver is registered.
+        """
+        resolver = (self.object_resolvers or {}).get(fn_name)
+        if resolver is not None:
+            return resolver(self)
+
+        method = getattr(self, f"_resolve_{fn_name}_objects", None)
+        if method is None:
+            return _UNRESOLVED
+        return method()
+
+    def check_object_requirements(self, fn) -> bool:
+        """Authorize the objects resolved for the current request.
+
+        Args:
+            fn: The exposed view method being called.
+
+        Returns:
+            bool: ``True`` when the request may proceed.
+        """
+        fn_name = getattr(fn, "__name__", "")
+        if not self._object_authorization_enabled():
+            return True
+
+        if fn_name in set(self.object_requirement_exempt or ()):
+            return True
+
+        objects = self.resolve_request_objects(fn_name)
+        if objects is _UNRESOLVED:
+            return False
+        if objects is None:
+            return True
+        if not objects:
+            return False
+
+        requirement = (self.object_requirements or {}).get(fn_name)
+        if requirement is None:
+            return True
+
+        mode = (self.object_requirement_modes or {}).get(fn_name, "all")
+        if mode == "any":
+            return any(
+                current_security.authorize_object(self, fn, obj, requirement)
+                for obj in objects
+            )
+        return all(
+            current_security.authorize_object(self, fn, obj, requirement)
+            for obj in objects
+        )
+
+    def _objects_from_id(self, value):
+        """Resolve a single object by primary key value."""
+        if value is None:
+            return None
+        obj = self.get_one(value)
+        return None if obj is None else [obj]
+
+    def _resolve_index_view_objects(self):
+        return None
+
+    def _resolve_create_view_objects(self):
+        return None
+
+    def _resolve_details_view_objects(self):
+        return self._objects_from_id(request.args.get("id"))
+
+    def _resolve_edit_view_objects(self):
+        return self._objects_from_id(request.args.get("id"))
+
+    def _resolve_delete_view_objects(self):
+        return self._objects_from_id(request.form.get("id"))
+
+    def _resolve_ajax_update_objects(self):
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return None
+        return self._objects_from_id(payload.get("pk"))
+
+    def _resolve_action_view_objects(self):
+        ids = request.form.getlist("rowid")
+        if not ids:
+            return None
+        objects = [obj for pk in ids if (obj := self.get_one(pk)) is not None]
+        return objects
+
+    def _resolve_ajax_lookup_objects(self):
+        return None
+
+    def _resolve_ajax_create_parent_objects(self):
+        return None
+
+    def _resolve_export_objects(self):
+        return None
 
     # --- Delegation to the data backend -----------------------------------
     #

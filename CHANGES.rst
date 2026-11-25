@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 Unreleased
 ----------
 
+Added
+~~~~~
+
+- Object-level authorization can be declared per exposed view method with
+  ``object_requirements``. The admin view wrapper resolves the records a
+  request touches and evaluates the requirement before the handler runs, with
+  startup validation for inline models, editable list columns, and bulk
+  actions. Views that already declare ``Predicate`` requirements must add the
+  matching ``object_requirements`` entries (or ``object_requirement_exempt``)
+  for the capabilities they enable.
+
 Fixed
 ~~~~~
 

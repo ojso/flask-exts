@@ -19,6 +19,8 @@ def _wrap_view_func_with_access(f):
     def wrapper(self, *args, **kwargs):
         if not self.allow(f, *args, **kwargs):
             return self.inaccessible_callback(f, *args, **kwargs)
+        if not self.check_object_requirements(f):
+            return self.inaccessible_callback(f, *args, **kwargs)
         return f(self, *args, **kwargs)
 
     wrapper._wrapped_access = True
@@ -275,6 +277,21 @@ class View(metaclass=ViewMeta):
             return True
 
         return self.admin.allow(*args, view=self, fn=fn, **kwargs)
+
+    def check_object_requirements(self, fn):
+        """Authorize the model objects a request resolves to.
+
+        The base ``View`` has no model-backed objects, so it always allows the
+        request. :class:`~flask_exts.admin.model.view.ModelView` overrides this
+        to evaluate object-level requirements before the handler runs.
+
+        Args:
+            fn: The exposed view method being called.
+
+        Returns:
+            bool: ``True`` when the request may proceed.
+        """
+        return True
 
     def is_accessible(self):
         """Check if the view is accessible."""

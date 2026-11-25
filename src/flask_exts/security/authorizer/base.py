@@ -20,6 +20,22 @@ class Authorizer(ABC):
     @abstractmethod
     def allow(self, *args, **kwargs): ...
 
+    def authorize_object(self, view, fn, obj, requirement):
+        """Authorize a single object for an exposed view method.
+
+        Args:
+            view: The admin view instance owning the object.
+            fn: The exposed view method being called.
+            obj: The model object the request resolved to.
+            requirement: Object-level requirement to evaluate.
+
+        Returns:
+            bool: ``True`` when the object may be accessed. The default
+                implementation fails closed; authorizers that support
+                object-level requirements must override it.
+        """
+        return False
+
     def authorize(self, *args, **kwargs):
         """Authorize access using the current user unless one is provided."""
         kwargs.setdefault("user", current_user)

@@ -55,3 +55,18 @@ class Security:
     def authorize_allow(self, *args, **kwargs):
         authorizer = self.get_plugin("authorizer")
         return authorizer.authorize(*args, **kwargs)
+
+    def authorize_object(self, view, fn, obj, requirement):
+        """Authorize a single object for an exposed admin view method.
+
+        Args:
+            view: The admin view instance owning the object.
+            fn: The exposed view method being called.
+            obj: The object the request resolved to.
+            requirement: Object-level requirement to evaluate.
+
+        Returns:
+            bool: ``True`` when the object is allowed.
+        """
+        authorizer = self.get_plugin("authorizer")
+        return authorizer.authorize_object(view, fn, obj, requirement)

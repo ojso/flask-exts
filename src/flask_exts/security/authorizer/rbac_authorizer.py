@@ -45,6 +45,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 
+from flask_login import current_user
+
 from .base import Authorizer
 
 __all__ = [
@@ -58,6 +60,7 @@ __all__ = [
     "RBACAuthorizer",
     "Requirements",
     "Role",
+    "contains_predicate",
 ]
 
 _MATCH_MODES = frozenset({"any", "all"})
@@ -87,6 +90,8 @@ class BuildContext:
     kwargs: dict[str, t.Any] = field(default_factory=dict)
     view: t.Any = None
     fn: t.Any = None
+    object: t.Any = None
+    objects: tuple[t.Any, ...] = ()
     pstore: dict[str, t.Any] = field(default_factory=dict)
 
 
@@ -264,6 +269,25 @@ def _as_requirement(value: t.Any) -> Requirements | None:
     )
 
 
+def contains_predicate(requirement: t.Any) -> bool:
+    """Return whether a requirement declaration contains a ``Predicate``.
+
+    Composite requirements are searched recursively so a view that declares
+    ``All(Role(...), Predicate(...))`` still counts as object-level.
+
+    Args:
+        requirement: Requirement declaration or ``None``.
+
+    Returns:
+        bool: ``True`` when a ``Predicate`` appears anywhere in the tree.
+    """
+    if isinstance(requirement, Predicate):
+        return True
+    return any(
+        contains_predicate(item) for item in getattr(requirement, "requirements", ())
+    )
+
+
 class RBACAuthorizer(Authorizer):
     """Requirement-first authorizer with the existing role rule as fallback."""
 
@@ -306,6 +330,8 @@ class RBACAuthorizer(Authorizer):
         user: t.Any,
         view: t.Any = None,
         fn: t.Any = None,
+        obj: t.Any = None,
+        objects: Iterable[t.Any] = (),
         **kwargs: t.Any,
     ) -> BuildContext:
         """Return a build context for ``user``.
@@ -314,6 +340,8 @@ class RBACAuthorizer(Authorizer):
             user: The user the check applies to.
             view: The admin view instance, when applicable.
             fn: The view function being called, when known.
+            obj: The single object currently being checked, when applicable.
+            objects: The full batch of objects for the current request.
             **kwargs: Extra request data exposed to predicates.
 
         Returns:
@@ -333,6 +361,8 @@ class RBACAuthorizer(Authorizer):
             kwargs=dict(kwargs),
             view=view,
             fn=fn,
+            object=obj,
+            objects=tuple(objects),
         )
 
     def can(self, *requirements: Requirements, **kwargs: t.Any) -> bool:
@@ -377,6 +407,33 @@ class RBACAuthorizer(Authorizer):
         ctx = self.build_context(
             user, view=view, fn=kwargs.get("fn"), **self._extra(kwargs)
         )
+        return requirement.check(ctx)
+
+    def authorize_object(self, view, fn, obj, requirement, user=None):
+        """Authorize ``obj`` for the exposed method ``fn``.
+
+        The shared login/superuser gate runs first so the existing ``admin``
+        and public-view rules keep working. Otherwise the requirement is
+        evaluated with ``ctx.object`` set to ``obj``.
+
+        Args:
+            view: The admin view instance owning the object.
+            fn: The exposed view method being called.
+            obj: The object the request resolved to.
+            requirement: Object-level requirement to evaluate.
+            user: User to check; defaults to the current user.
+
+        Returns:
+            bool: ``True`` when the object is allowed.
+        """
+        if user is None:
+            user = current_user
+
+        decision = self.check_view_access(user, view, fn)
+        if decision is not None:
+            return decision
+
+        ctx = self.build_context(user, view=view, fn=fn, obj=obj)
         return requirement.check(ctx)
 
     def resolve_requirement(self, view: t.Any, fn: t.Any = None) -> Requirements | None:
