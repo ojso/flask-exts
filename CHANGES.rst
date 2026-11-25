@@ -3,6 +3,35 @@ Changelog
 
 All notable changes to this project are documented in this file.
 
+1.0.0 - 2026-11-25
+------------------
+
+Added
+~~~~~
+
+- The admin navbar renders a language selector when
+  ``BABEL_ACCEPT_LANGUAGES`` lists at least two locales. Each entry keeps the
+  current URL and sets ``lang``, and language names come from Babel. The current
+  language is shown with the built-in globe icon.
+
+Changed
+~~~~~~~
+
+- Object-level authorization now rejects views that enable ``can_delete``
+  without a ``delete_view`` object requirement or an explicit
+  ``object_requirement_exempt`` entry. Previously the view only emitted a
+  warning even though the delete entry skipped the object check.
+
+- The default portal landing page now shows installation and quick-start
+  guidance instead of language shortcut links.
+
+Fixed
+~~~~~
+
+- Rescanning admin views skips a view name already present on the ``Admin``
+  instance, so a view registered directly on the admin is not registered a
+  second time and no duplicate-view error is raised.
+
 0.6.0 - 2026-11-25
 ------------------
 
